@@ -1142,9 +1142,9 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   }
                } else {
                   var6 = (String[])((String[])(var23 = (Object[])((Object[])var10.pop()))[0]);
-                  var4 = (Integer)var23[1];
-                  var7 = (Integer)var23[2];
-                  var8 = (Integer)var23[3];
+      //            var4 = (Integer)var23[1];
+       //           var7 = (Integer)var23[2];
+        //          var8 = (Integer)var23[3];
                   var5 = 0;
                }
             }

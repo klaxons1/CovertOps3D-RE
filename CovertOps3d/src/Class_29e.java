@@ -1,4 +1,5 @@
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Random;
@@ -2254,7 +2255,7 @@ public final class Class_29e {
                         break label233;
                      }
 
-                     Class_30a var39;
+                     Class_30a var39 = null;
                      (var39 = var36[var37]).var_214 = sub_cb(var39.var_fd);
                      var39.var_262 = sub_cb(var39.var_dd);
                      ++var37;
@@ -2348,23 +2349,23 @@ public final class Class_29e {
       }
    }
 
-   private static short sub_6ea(DataInputStream var0) {
+   private static short sub_6ea(DataInputStream var0) throws IOException {
       return (short)((var0.read() << 8) + var0.read());
    }
 
-   private static int sub_73f(DataInputStream var0) {
+   private static int sub_73f(DataInputStream var0) throws IOException {
       return (var0.read() << 24) + (var0.read() << 16) + (var0.read() << 8) + var0.read();
    }
 
-   private static short sub_775(DataInputStream var0) {
+   private static short sub_775(DataInputStream var0) throws IOException {
       return (short)(var0.read() + (var0.read() << 8));
    }
 
-   private static int sub_7c5(DataInputStream var0) {
+   private static int sub_7c5(DataInputStream var0) throws IOException {
       return var0.read() + (var0.read() << 8) + (var0.read() << 16) + (var0.read() << 24);
    }
 
-   private static void sub_7e1(DataInputStream var0, int var1) {
+   private static void sub_7e1(DataInputStream var0, int var1) throws IOException {
       while(var1 > 0) {
          int var2 = var1 > 4096 ? 4096 : var1;
          int var3 = (int)var0.skip((long)var2);

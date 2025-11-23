@@ -35,9 +35,6 @@ public class CovertOps3D extends MIDlet {
    }
 
    public static void sub_24() {
-      try {
-         var_149.destroyApp(true);
-      } catch (MIDletStateChangeException var0) {
-      }
+       var_149.destroyApp(true);
    }
 }
