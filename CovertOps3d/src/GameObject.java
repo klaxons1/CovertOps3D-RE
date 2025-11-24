@@ -45,27 +45,27 @@ public final class GameObject {
                 this.aiState = 0;
                 break;
             case 3001:
-                this.health = Class_3aa.var_146a[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.var_146a[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3002:
-                this.health = Class_3aa.var_1492[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.var_1492[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3003:
-                this.health = Class_3aa.var_139c[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.var_139c[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3004:
-                this.health = Class_3aa.var_13e4[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.var_13e4[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3005:
-                this.health = Class_3aa.var_13fe[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.var_13fe[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3006:
-                this.health = Class_3aa.var_143e[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.var_143e[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             default:
@@ -76,17 +76,17 @@ public final class GameObject {
     public final int getMovementSpeed() {
         switch(this.objectType) {
             case 3001:
-                return Class_3aa.var_1a4a[GameEngine.difficultyLevel];
+                return MainGameCanvas.var_1a4a[GameEngine.difficultyLevel];
             case 3002:
-                return Class_3aa.var_1a74[GameEngine.difficultyLevel];
+                return MainGameCanvas.var_1a74[GameEngine.difficultyLevel];
             case 3003:
-                return Class_3aa.var_1966[GameEngine.difficultyLevel];
+                return MainGameCanvas.var_1966[GameEngine.difficultyLevel];
             case 3004:
-                return Class_3aa.var_19bb[GameEngine.difficultyLevel];
+                return MainGameCanvas.var_19bb[GameEngine.difficultyLevel];
             case 3005:
-                return Class_3aa.var_19fd[GameEngine.difficultyLevel];
+                return MainGameCanvas.var_19fd[GameEngine.difficultyLevel];
             case 3006:
-                return Class_3aa.var_1a1b[GameEngine.difficultyLevel];
+                return MainGameCanvas.var_1a1b[GameEngine.difficultyLevel];
             default:
                 return 65536;
         }

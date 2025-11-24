@@ -7,7 +7,7 @@ import javax.microedition.lcdui.game.GameCanvas;
 import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException;
 
-public class Class_3aa extends GameCanvas implements Runnable {
+public class MainGameCanvas extends GameCanvas implements Runnable {
    public boolean var_50 = false;
    public boolean var_b0 = false;
    public boolean var_16f = true;
@@ -42,13 +42,13 @@ public class Class_3aa extends GameCanvas implements Runnable {
    private long var_7de;
    private long var_842;
    private int var_863;
-   private Image var_881;
+   private Image statusBarImage;
    private Image[] var_8ba;
    private boolean var_8fd;
    private int var_933;
    public static int var_98c = 0;
-   private Image var_9d7;
-   private Image var_a0c;
+   private Image crosshairImage;
+   private Image fontImage;
    private Image var_a63;
    private GameObject[] var_ab7;
    private GameObject[] var_ae7;
@@ -70,7 +70,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
    public static byte var_e38 = 1;
    public static byte var_e8b = 0;
    public static byte[][] var_ee2;
-   public static boolean var_ef8 = false;
+   public static boolean mapEnabled = false;
    public static final int[] var_f4a = new int[]{5, 5, 5};
    public static final int[] var_f5c = new int[]{25, 25, 25};
    public static final int[] var_f76 = new int[]{30, 30, 30};
@@ -129,7 +129,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
    public static final int[] var_1a74 = new int[]{196608, 262144, 327680};
    public static final int[] var_1ad2 = new int[]{4, 3, 2};
 
-   public Class_3aa() {
+   public MainGameCanvas() {
       super(false);
       System.currentTimeMillis();
       this.var_4db = 18;
@@ -321,16 +321,16 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
          var10000.drawImage(var10001, var10002, 288 - var3 - var2 + 3, 0);
          var_98c = this.var_933;
-         var1.drawImage(this.var_881, 0, 288, 0);
+         var1.drawImage(this.statusBarImage, 0, 288, 0);
          this.sub_547(GameEngine.playerHealth, var1, 58, 294);
          this.sub_547(GameEngine.playerArmor, var1, 138, 294);
          var4 = GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 ? GameEngine.currentWeapon : 1;
          this.sub_547(GameEngine.ammoCounts[var4], var1, 218, 294);
-         if (GameEngine.currentWeapon > 0 && GameEngine.messageTimer == 0 && !var_ef8) {
-            var1.drawImage(this.var_9d7, 240 - this.var_9d7.getWidth() >> 1, 288 - this.var_9d7.getHeight() >> 1, 0);
+         if (GameEngine.currentWeapon > 0 && GameEngine.messageTimer == 0 && !mapEnabled) {
+            var1.drawImage(this.crosshairImage, 240 - this.crosshairImage.getWidth() >> 1, 288 - this.crosshairImage.getHeight() >> 1, 0);
          }
 
-         if (var_ef8) {
+         if (mapEnabled) {
             var1.setClip(0, 0, 240, 288);
             GameEngine.gameWorld.drawDebugInfo(var1);
             var1.setClip(0, 0, 240, 320);
@@ -419,7 +419,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
 
                label170: {
-                  Class_3aa var10000;
+                  MainGameCanvas var10000;
                   if (GameEngine.var_480 == 1) {
                      switch(var_259) {
                      case 0:
@@ -587,7 +587,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          int var11;
          byte[] var12 = new byte[var11 = var4.readInt()];
          var4.readFully(var12, 0, var11);
-         GameEngine.sub_912(var12, 0, var10, 0, var9, var5);
+         GameEngine.decompressSprite(var12, 0, var10, 0, var9, var5);
          int[] var13 = new int[var8];
 
          int var14;
@@ -634,7 +634,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             int var16;
             byte[] var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
-            GameEngine.sub_912(var17, 0, var4, 0, var15, var11);
+            GameEngine.decompressSprite(var17, 0, var4, 0, var15, var11);
             this.var_b23 = new int[var14];
             this.var_b56 = new int[var14];
             this.var_b60 = new int[var14];
@@ -662,13 +662,13 @@ public class Class_3aa extends GameCanvas implements Runnable {
             var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
             var10.close();
-            GameEngine.sub_912(var17, 0, var6, 0, 4096, 1);
+            GameEngine.decompressSprite(var17, 0, var6, 0, 4096, 1);
             var9 = (new Object()).getClass().getResourceAsStream(var8 + "_mask");
             (var10 = new DataInputStream(var9)).skipBytes(8);
             var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
             var10.close();
-            GameEngine.sub_912(var17, 0, var5, 0, var15, 1);
+            GameEngine.decompressSprite(var17, 0, var5, 0, var15, 1);
 
             for(var18 = 0; var18 < var15; ++var18) {
                var5[var18] = var5[var18] == 0 ? -1 : var4[var18];
@@ -1833,7 +1833,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 288, false);
             var1.drawImage(var61, var62, var31, 20);
-            var1.drawImage(this.var_881, 0, 288, 0);
+            var1.drawImage(this.statusBarImage, 0, 288, 0);
             this.sub_547(GameEngine.playerHealth, var1, 58, 294);
             this.sub_547(GameEngine.playerArmor, var1, 138, 294);
             this.sub_8c1();
@@ -1975,7 +1975,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
                try {
                   label190: {
-                     Class_3aa var3;
+                     MainGameCanvas var3;
                      boolean var4;
                      label162: {
                         Image[] var10000;
@@ -2197,12 +2197,12 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
    private void sub_3d0() {
       try {
-         this.var_881 = Image.createImage("/bar.png");
+         this.statusBarImage = Image.createImage("/bar.png");
          this.var_8ba[0] = Image.createImage("/fist_a.png");
          this.var_8ba[1] = Image.createImage("/fist_b.png");
          this.var_8ba[2] = null;
-         this.var_9d7 = Image.createImage("/aim.png");
-         this.var_a0c = Image.createImage("/font.png");
+         this.crosshairImage = Image.createImage("/aim.png");
+         this.fontImage = Image.createImage("/font.png");
          MathUtils.initializeMathTables();
          GameEngine.initializeEngine();
       } catch (Exception var1) {
@@ -3017,7 +3017,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             int var9 = this.var_65d[var8];
             int var10 = this.var_5fa[var8];
             int var11 = var7[1] * this.var_550;
-            var2.drawRegion(this.var_a0c, var10, var11, var9, this.var_550, 0, var3, var4, 20);
+            var2.drawRegion(this.fontImage, var10, var11, var9, this.var_550, 0, var3, var4, 20);
             var10000 = var3;
             var10001 = var9;
          }

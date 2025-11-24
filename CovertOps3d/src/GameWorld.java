@@ -228,7 +228,7 @@ public final class GameWorld {
                var13 = var11 < 0 ? -var11 : var11;
                var14 = var12 < 0 ? -var12 : var12;
                if (var13 < var16 && var14 < var16) {
-                  if (var9.objectType == 10 && Class_3aa.var_259 == 4) {
+                  if (var9.objectType == 10 && MainGameCanvas.var_259 == 4) {
                      GameEngine.messageText = GameEngine.ammoCounts[6] > 0 ? "find the wall i told you|and blow it up!" : "go, get the dynamite!";
                      GameEngine.messageTimer = 30;
                   }
@@ -280,7 +280,7 @@ public final class GameWorld {
             case 2004:
                GameEngine.weaponsAvailable[5] = true;
                var20 = GameEngine.ammoCounts;
-               var20[5] += Class_3aa.var_1616[GameEngine.difficultyLevel];
+               var20[5] += MainGameCanvas.var_1616[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
                GameEngine.var_d46 = 5;
                GameEngine.levelComplete = true;
@@ -289,40 +289,40 @@ public final class GameWorld {
             case 2006:
                GameEngine.weaponsAvailable[7] = true;
                var20 = GameEngine.ammoCounts;
-               var20[7] += Class_3aa.var_1677[GameEngine.difficultyLevel];
+               var20[7] += MainGameCanvas.var_1677[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
                GameEngine.var_d46 = 7;
                GameEngine.levelComplete = true;
                GameEngine.var_1044 = 8;
-               Class_3aa.var_295 = Class_3aa.var_259++;
+               MainGameCanvas.var_295 = MainGameCanvas.var_259++;
                GameEngine.levelVariant = 0;
                GameEngine.var_480 = 1;
                break;
             case 2007:
                var20 = GameEngine.ammoCounts;
-               var20[1] += Class_3aa.var_14be[GameEngine.difficultyLevel];
+               var20[1] += MainGameCanvas.var_14be[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
                break;
             case 2008:
                var20 = GameEngine.ammoCounts;
-               var20[2] += Class_3aa.var_14f5[GameEngine.difficultyLevel];
+               var20[2] += MainGameCanvas.var_14f5[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
                break;
             case 2010:
                var20 = GameEngine.ammoCounts;
-               var20[5] += Class_3aa.var_151d[GameEngine.difficultyLevel];
+               var20[5] += MainGameCanvas.var_151d[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
                break;
             case 2047:
                var20 = GameEngine.ammoCounts;
-               var20[7] += Class_3aa.var_156b[GameEngine.difficultyLevel];
+               var20[7] += MainGameCanvas.var_156b[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
                break;
             default:
                continue;
             }
 
-            Class_3aa.sub_84e(1, false, 80, 0);
+            MainGameCanvas.sub_84e(1, false, 80, 0);
          }
       }
 
@@ -354,21 +354,21 @@ public final class GameWorld {
                   case 2001:
                      GameEngine.weaponsAvailable[1] = true;
                      var20 = GameEngine.ammoCounts;
-                     var20[1] += Class_3aa.var_157a[GameEngine.difficultyLevel];
+                     var20[1] += MainGameCanvas.var_157a[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.var_d46 = 1;
                      GameEngine.levelComplete = true;
                      GameEngine.var_1044 = 8;
                      break label173;
                   case 2002:
-                     if (Class_3aa.var_259 == 3) {
+                     if (MainGameCanvas.var_259 == 3) {
                         GameEngine.messageText = "to change weapon press 3";
                         GameEngine.messageTimer = 30;
                      }
 
                      GameEngine.weaponsAvailable[2] = true;
                      var20 = GameEngine.ammoCounts;
-                     var20[2] += Class_3aa.var_1592[GameEngine.difficultyLevel];
+                     var20[2] += MainGameCanvas.var_1592[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.var_d46 = 2;
                      GameEngine.levelComplete = true;
@@ -377,7 +377,7 @@ public final class GameWorld {
                   case 2003:
                      GameEngine.weaponsAvailable[3] = true;
                      var20 = GameEngine.ammoCounts;
-                     var20[1] += Class_3aa.var_15c4[GameEngine.difficultyLevel];
+                     var20[1] += MainGameCanvas.var_15c4[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.var_d46 = 3;
                      GameEngine.levelComplete = true;
@@ -386,7 +386,7 @@ public final class GameWorld {
                   case 2004:
                      GameEngine.weaponsAvailable[5] = true;
                      var20 = GameEngine.ammoCounts;
-                     var20[5] += Class_3aa.var_1616[GameEngine.difficultyLevel];
+                     var20[5] += MainGameCanvas.var_1616[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.var_d46 = 5;
                      GameEngine.levelComplete = true;
@@ -395,7 +395,7 @@ public final class GameWorld {
                   case 2005:
                      GameEngine.weaponsAvailable[6] = true;
                      var20 = GameEngine.ammoCounts;
-                     var20[6] += Class_3aa.var_1630[GameEngine.difficultyLevel];
+                     var20[6] += MainGameCanvas.var_1630[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.var_d46 = 6;
                      GameEngine.levelComplete = true;
@@ -404,7 +404,7 @@ public final class GameWorld {
                   case 2006:
                      GameEngine.weaponsAvailable[7] = true;
                      var20 = GameEngine.ammoCounts;
-                     var20[7] += Class_3aa.var_1677[GameEngine.difficultyLevel];
+                     var20[7] += MainGameCanvas.var_1677[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.var_d46 = 7;
                      GameEngine.levelComplete = true;
@@ -412,17 +412,17 @@ public final class GameWorld {
                      break;
                   case 2007:
                      var20 = GameEngine.ammoCounts;
-                     var20[1] += Class_3aa.var_14be[GameEngine.difficultyLevel];
+                     var20[1] += MainGameCanvas.var_14be[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      break label173;
                   case 2008:
                      var20 = GameEngine.ammoCounts;
-                     var20[2] += Class_3aa.var_14f5[GameEngine.difficultyLevel];
+                     var20[2] += MainGameCanvas.var_14f5[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      break label173;
                   case 2010:
                      var20 = GameEngine.ammoCounts;
-                     var20[5] += Class_3aa.var_151d[GameEngine.difficultyLevel];
+                     var20[5] += MainGameCanvas.var_151d[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      break label173;
                   case 2012:
@@ -430,7 +430,7 @@ public final class GameWorld {
                         continue;
                      }
 
-                     GameEngine.playerHealth += Class_3aa.var_16e8[GameEngine.difficultyLevel];
+                     GameEngine.playerHealth += MainGameCanvas.var_16e8[GameEngine.difficultyLevel];
                      if (GameEngine.playerHealth > 100) {
                         GameEngine.playerHealth = 100;
                      }
@@ -445,7 +445,7 @@ public final class GameWorld {
                         continue;
                      }
 
-                     GameEngine.playerHealth += Class_3aa.var_16c7[GameEngine.difficultyLevel];
+                     GameEngine.playerHealth += MainGameCanvas.var_16c7[GameEngine.difficultyLevel];
                      if (GameEngine.playerHealth > 100) {
                         GameEngine.playerHealth = 100;
                      }
@@ -457,7 +457,7 @@ public final class GameWorld {
                         continue;
                      }
 
-                     GameEngine.playerArmor += Class_3aa.var_1731[GameEngine.difficultyLevel];
+                     GameEngine.playerArmor += MainGameCanvas.var_1731[GameEngine.difficultyLevel];
                      if (GameEngine.playerArmor > 100) {
                         GameEngine.playerArmor = 100;
                      }
@@ -467,7 +467,7 @@ public final class GameWorld {
                   case 2024:
                      GameEngine.weaponsAvailable[4] = true;
                      var20 = GameEngine.ammoCounts;
-                     var20[1] += Class_3aa.var_15d0[GameEngine.difficultyLevel];
+                     var20[1] += MainGameCanvas.var_15d0[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.var_d46 = 4;
                      GameEngine.levelComplete = true;
@@ -475,19 +475,19 @@ public final class GameWorld {
                      break label173;
                   case 2047:
                      var20 = GameEngine.ammoCounts;
-                     var20[7] += Class_3aa.var_156b[GameEngine.difficultyLevel];
+                     var20[7] += MainGameCanvas.var_156b[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      break label173;
                   default:
                      continue;
                   }
 
-                  Class_3aa.var_295 = Class_3aa.var_259++;
+                  MainGameCanvas.var_295 = MainGameCanvas.var_259++;
                   GameEngine.levelVariant = 0;
                   GameEngine.var_480 = 1;
                }
 
-               Class_3aa.sub_84e(1, false, 80, 0);
+               MainGameCanvas.sub_84e(1, false, 80, 0);
             }
          }
       }
@@ -760,7 +760,7 @@ public final class GameWorld {
       int var6 = GameEngine.player.x + MathUtils.fixedPointMultiply(var5, var4);
       int var7 = GameEngine.player.z + MathUtils.fixedPointMultiply(var5, var3);
       if (GameEngine.currentWeapon == 5) {
-         Class_3aa.sub_84e(4, false, 100, 2);
+         MainGameCanvas.sub_84e(4, false, 100, 2);
          Transform3D var15 = new Transform3D(var6, GameEngine.cameraHeight - 655360, var7, var1);
          if (!this.sub_47e(GameEngine.player.x, GameEngine.player.z, var15.x, var15.z, var15.y)) {
             GameObject var16;
@@ -773,7 +773,7 @@ public final class GameWorld {
       } else {
          int var9;
          if (GameEngine.currentWeapon == 7) {
-            Class_3aa.sub_84e(5, false, 100, 2);
+            MainGameCanvas.sub_84e(5, false, 100, 2);
             var3 = MathUtils.fastSin(var1);
             var4 = MathUtils.fastCos(var1);
             int var14 = 10 * var4;
@@ -811,21 +811,21 @@ public final class GameWorld {
                               int[] var10000;
                               switch(GameEngine.currentWeapon) {
                               case 0:
-                                 var13 = Class_3aa.var_f4a[GameEngine.difficultyLevel];
+                                 var13 = MainGameCanvas.var_f4a[GameEngine.difficultyLevel];
                                  break label85;
                               case 1:
-                                 var13 = Class_3aa.var_f5c[GameEngine.difficultyLevel];
+                                 var13 = MainGameCanvas.var_f5c[GameEngine.difficultyLevel];
                                  var19 = 7;
                                  break label84;
                               case 2:
-                                 var13 = Class_3aa.var_f76[GameEngine.difficultyLevel];
+                                 var13 = MainGameCanvas.var_f76[GameEngine.difficultyLevel];
                                  var19 = 7;
                                  break label84;
                               case 3:
-                                 var10000 = Class_3aa.var_fa7;
+                                 var10000 = MainGameCanvas.var_fa7;
                                  break;
                               case 4:
-                                 var10000 = Class_3aa.var_ff1;
+                                 var10000 = MainGameCanvas.var_ff1;
                                  break;
                               default:
                                  break label85;
@@ -835,7 +835,7 @@ public final class GameWorld {
                               var19 = 9;
                            }
 
-                           Class_3aa.sub_84e(var19, false, 100, 1);
+                           MainGameCanvas.sub_84e(var19, false, 100, 1);
                            var8 = true;
                         }
 
@@ -848,11 +848,11 @@ public final class GameWorld {
 
             if (!var8) {
                if (GameEngine.currentWeapon == 1 || GameEngine.currentWeapon == 2) {
-                  Class_3aa.sub_84e((GameEngine.var_ea3.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
+                  MainGameCanvas.sub_84e((GameEngine.var_ea3.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                }
 
                if (GameEngine.currentWeapon == 3 || GameEngine.currentWeapon == 4) {
-                  Class_3aa.sub_84e((GameEngine.var_ea3.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
+                  MainGameCanvas.sub_84e((GameEngine.var_ea3.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
                }
             }
 
@@ -941,13 +941,13 @@ public final class GameWorld {
                continue;
             }
 
-            Class_3aa.sub_84e(4, false, 100, 2);
+            MainGameCanvas.sub_84e(4, false, 100, 2);
             int var3;
             if (this.checkLineOfSight(var2.transform, GameEngine.player)) {
                var3 = var2.transform.x - GameEngine.player.x;
                var4 = var2.transform.z - GameEngine.player.z;
-               if ((var5 = Class_3aa.var_1113[GameEngine.difficultyLevel] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var3, var4), Class_3aa.var_10c4[GameEngine.difficultyLevel]) >> 16)) > 0) {
-                  Class_3aa.sub_882(var5 * 10);
+               if ((var5 = MainGameCanvas.var_1113[GameEngine.difficultyLevel] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var3, var4), MainGameCanvas.var_10c4[GameEngine.difficultyLevel]) >> 16)) > 0) {
+                  MainGameCanvas.sub_882(var5 * 10);
                   if (GameEngine.applyDamage(var5)) {
                      return true;
                   }
@@ -962,7 +962,7 @@ public final class GameWorld {
                      var6 = var2.transform.x - var16.transform.x;
                      var7 = var2.transform.z - var16.transform.z;
                      int var8;
-                     if ((var8 = Class_3aa.var_1113[GameEngine.difficultyLevel] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var6, var7), Class_3aa.var_10c4[GameEngine.difficultyLevel]) >> 16)) > 0) {
+                     if ((var8 = MainGameCanvas.var_1113[GameEngine.difficultyLevel] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var6, var7), MainGameCanvas.var_10c4[GameEngine.difficultyLevel]) >> 16)) > 0) {
                         sub_4c6(var16, var8);
                      }
                   }
@@ -970,10 +970,10 @@ public final class GameWorld {
             }
 
             GameEngine.screenShake = 16;
-            if (Class_3aa.var_259 == 4) {
+            if (MainGameCanvas.var_259 == 4) {
                var15 = var2.transform;
                if (this.getSectorDataAtPoint(var15.x, var15.z).getSectorType() == 666) {
-                  Class_3aa.var_295 = Class_3aa.var_259++;
+                  MainGameCanvas.var_295 = MainGameCanvas.var_259++;
                   GameEngine.levelVariant = 0;
                   GameEngine.var_480 = 1;
                }
@@ -987,13 +987,13 @@ public final class GameWorld {
             var6 = var15.x;
             var7 = var15.z;
             boolean var18 = false;
-            int var9 = (var2.objectType == 102 ? Class_3aa.var_104c : Class_3aa.var_1071)[GameEngine.difficultyLevel];
+            int var9 = (var2.objectType == 102 ? MainGameCanvas.var_104c : MainGameCanvas.var_1071)[GameEngine.difficultyLevel];
             if (sub_37f(var4, var5, var6, var7, GameEngine.player.x, GameEngine.player.z, 655360)) {
                if (var2.objectType == 101) {
-                  Class_3aa.sub_84e(4, false, 100, 2);
+                  MainGameCanvas.sub_84e(4, false, 100, 2);
                }
 
-               Class_3aa.sub_882(var9 * 10);
+               MainGameCanvas.sub_882(var9 * 10);
                if (GameEngine.applyDamage(var9)) {
                   return true;
                }

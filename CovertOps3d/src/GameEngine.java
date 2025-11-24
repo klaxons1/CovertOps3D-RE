@@ -86,7 +86,7 @@ public final class GameEngine {
    public static int var_119a;
 
    public static void initializeEngine() {
-      Class_3aa.sub_57c();
+      MainGameCanvas.sub_57c();
       sub_5f4();
       player = new PhysicsBody(0, 1572864, 0, 65536);
       tempTransform = new Transform3D(0, 0, 0, 0);
@@ -125,7 +125,7 @@ public final class GameEngine {
       var_1103 = MathUtils.fixedPointMultiply(MathUtils.fixedPointDivide(65536, 15794176), 102943);
       var_1142 = MathUtils.fixedPointDivide(65536, 18874368);
       var_1171 = MathUtils.fixedPointDivide(65536, 411775);
-      Class_3aa.sub_57c();
+      MainGameCanvas.sub_57c();
    }
 
    public static void resetLevelState() {
@@ -429,7 +429,7 @@ public final class GameEngine {
       int var7 = var3 << 1;
       int var8 = MathUtils.fastSin(var3);
       int var9 = MathUtils.fastCos(var3);
-      var_10a4 = Class_3aa.var_98c == 1 && currentWeapon != 0;
+      var_10a4 = MainGameCanvas.var_98c == 1 && currentWeapon != 0;
       var_a80.resetRenderer();
       Sector.resetClipArrays();
 
@@ -501,7 +501,7 @@ public final class GameEngine {
 
       var0.drawRGB(screenBuffer, 0, 240, 0, 0, 240, 288, false);
       if (currentSector.getSectorType() == 666) {
-         switch(Class_3aa.var_259) {
+         switch(MainGameCanvas.var_259) {
          case 3:
             if (!weaponsAvailable[8]) {
                messageText = "get the sniper rifle!";
@@ -509,7 +509,7 @@ public final class GameEngine {
                break;
             }
          default:
-            Class_3aa.var_295 = Class_3aa.var_259++;
+            MainGameCanvas.var_295 = MainGameCanvas.var_259++;
             levelVariant = 0;
             var_480 = 1;
             break;
@@ -519,7 +519,7 @@ public final class GameEngine {
          }
       }
 
-      if ((Class_3aa.var_e8b & 1) == 0 && Class_3aa.var_259 == 0 && currentSector.sectorId == 31) {
+      if ((MainGameCanvas.var_e8b & 1) == 0 && MainGameCanvas.var_259 == 0 && currentSector.sectorId == 31) {
          messageText = "press 1 to open the door";
          messageTimer = 30;
       }
@@ -613,7 +613,7 @@ public final class GameEngine {
       }
 
       if (var_446) {
-         Class_3aa.var_ef8 = !Class_3aa.var_ef8;
+         MainGameCanvas.mapEnabled = !MainGameCanvas.mapEnabled;
          var_446 = false;
       }
 
@@ -651,8 +651,8 @@ public final class GameEngine {
                Point2D var13 = var32[var11.startVertexId & '\uffff'];
                Point2D var14 = var32[var11.endVertexId & '\uffff'];
                if (GameWorld.sub_365(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
-                  if ((Class_3aa.var_e8b & 1) == 0) {
-                     Class_3aa.var_e8b = (byte)(Class_3aa.var_e8b | 1);
+                  if ((MainGameCanvas.var_e8b & 1) == 0) {
+                     MainGameCanvas.var_e8b = (byte)(MainGameCanvas.var_e8b | 1);
                   }
 
                   DoorController var38;
@@ -663,13 +663,13 @@ public final class GameEngine {
                      var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
                      break label389;
                   case 11:
-                     if (Class_3aa.var_259 == 7 && ammoCounts[6] == 0) {
+                     if (MainGameCanvas.var_259 == 7 && ammoCounts[6] == 0) {
                         messageText = "we'll need some dynamite|maybe i should look for some";
                         messageTimer = 50;
                         break label389;
                      }
 
-                     Class_3aa.var_295 = Class_3aa.var_259++;
+                     MainGameCanvas.var_295 = MainGameCanvas.var_259++;
                      levelVariant = var11.getSpecialType();
                      var42 = 1;
                      break;
@@ -692,7 +692,7 @@ public final class GameEngine {
                      }
                      break label389;
                   case 51:
-                     Class_3aa.var_295 = Class_3aa.var_259--;
+                     MainGameCanvas.var_295 = MainGameCanvas.var_259--;
                      levelVariant = var11.getSpecialType();
                      var42 = -1;
                      break;
@@ -873,18 +873,18 @@ public final class GameEngine {
                   switch(var27.aiState) {
                   case 1:
                      var27.aiState = 2;
-                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
+                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_177d[difficultyLevel];
                      var27.currentState = 0;
                      break;
                   case 2:
                      if (((var6 = var_ea3.nextInt() & Integer.MAX_VALUE) & 1) == 0) {
                         var27.aiState = 3;
-                        var27.stateTimer = var6 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
+                        var27.stateTimer = var6 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
                         var46 = var27;
                         var10001 = 2;
                      } else {
                         var27.aiState = 1;
-                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1851[difficultyLevel];
+                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_1851[difficultyLevel];
                         var46 = var27;
                         var10001 = 0;
                      }
@@ -902,10 +902,10 @@ public final class GameEngine {
                         }
 
                         if (var5 == 3001) {
-                           Class_3aa.sub_84e(4, false, 100, 1);
+                           MainGameCanvas.sub_84e(4, false, 100, 1);
                            gameWorld.shootProjectile(var29, var33);
                         } else if (var5 == 3002) {
-                           Class_3aa.sub_84e(5, false, 80, 1);
+                           MainGameCanvas.sub_84e(5, false, 80, 1);
                            gameWorld.shootSpreadWeapon(var29, var33);
                         } else {
                            label320: {
@@ -913,20 +913,20 @@ public final class GameEngine {
                               int[] var48;
                               switch(var5) {
                               case 3003:
-                                 Class_3aa.sub_84e(2, false, 80, 0);
-                                 var48 = Class_3aa.var_122a;
+                                 MainGameCanvas.sub_84e(2, false, 80, 0);
+                                 var48 = MainGameCanvas.var_122a;
                                  break;
                               case 3004:
-                                 Class_3aa.sub_84e(2, false, 80, 0);
-                                 var48 = Class_3aa.var_125b;
+                                 MainGameCanvas.sub_84e(2, false, 80, 0);
+                                 var48 = MainGameCanvas.var_125b;
                                  break;
                               case 3005:
-                                 Class_3aa.sub_84e(2, false, 80, 0);
-                                 var48 = Class_3aa.var_1284;
+                                 MainGameCanvas.sub_84e(2, false, 80, 0);
+                                 var48 = MainGameCanvas.var_1284;
                                  break;
                               case 3006:
-                                 Class_3aa.sub_84e(3, false, 80, 0);
-                                 var48 = Class_3aa.var_12d2;
+                                 MainGameCanvas.sub_84e(3, false, 80, 0);
+                                 var48 = MainGameCanvas.var_12d2;
                                  break;
                               default:
                                  break label320;
@@ -936,7 +936,7 @@ public final class GameEngine {
                            }
 
                            if (var31 > 0) {
-                              Class_3aa.sub_882(var31 * 10);
+                              MainGameCanvas.sub_882(var31 * 10);
                            }
 
                            if (applyDamage(var31)) {
@@ -945,19 +945,19 @@ public final class GameEngine {
                         }
                      } else {
                         var27.aiState = 2;
-                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
+                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_177d[difficultyLevel];
                         var27.currentState = 0;
                      }
                      break;
                   case 4:
                      var27.aiState = 2;
-                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
+                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_177d[difficultyLevel];
                      var27.currentState = 0;
                      break;
                   case 5:
                      var6 = var_ea3.nextInt() & Integer.MAX_VALUE;
                      var27.aiState = 3;
-                     var27.stateTimer = var6 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
+                     var27.stateTimer = var6 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
                      var27.currentState = 2;
                      break;
                   case 6:
@@ -997,7 +997,7 @@ public final class GameEngine {
                      var36 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var31, var35), var27.getMovementSpeed());
                      var12 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var34, var35), var27.getMovementSpeed());
                      int var37;
-                     if ((var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1ad2[difficultyLevel] == 0) {
+                     if ((var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_1ad2[difficultyLevel] == 0) {
                         int var47;
                         if ((var_ea3.nextInt() & 1) == 0) {
                            var37 = var36;
@@ -1039,7 +1039,7 @@ public final class GameEngine {
                   } else {
                      var36 = var_ea3.nextInt() & Integer.MAX_VALUE;
                      var27.aiState = 3;
-                     var27.stateTimer = var36 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
+                     var27.stateTimer = var36 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
                      var27.currentState = 2;
                   }
                }
@@ -1047,7 +1047,7 @@ public final class GameEngine {
          }
 
          if (currentSector.getSectorType() == 555) {
-            Class_3aa.sub_882(10);
+            MainGameCanvas.sub_882(10);
             if (applyDamage(1)) {
                return true;
             }
@@ -2126,7 +2126,7 @@ public final class GameEngine {
                                  var26 = new byte[var13];
                               }
 
-                              sub_920(var49, var27 * var13, var26, 0, var13, var45, var27 & 1);
+                              decompressTexture(var49, var27 * var13, var26, 0, var13, var45, var27 & 1);
                               var48.setPixelData(var27, var26);
                            }
 
@@ -2293,7 +2293,7 @@ public final class GameEngine {
                      byte[] var21 = new byte[var20];
                      byte[] var22 = new byte[var12 * var13];
                      var8.readFully(var21, 0, var20);
-                     sub_912(var21, 0, var22, 0, var12 * var13, var18);
+                     decompressSprite(var21, 0, var22, 0, var12 * var13, var18);
                      spriteTable[var15] = new Sprite(var15, var22);
                      var5.put(new Byte(var15), new Integer(var4 + var17));
                   } else if (sub_8bc(var15)) {
@@ -2307,7 +2307,7 @@ public final class GameEngine {
                            var24 = new byte[var13];
                         }
 
-                        sub_920(var23, var25 * var13, var24, 0, var13, var18, var25 & 1);
+                        decompressTexture(var23, var25 * var13, var24, 0, var13, var18, var25 & 1);
                         var46.setPixelData(var25, var24);
                      }
 
@@ -2407,7 +2407,7 @@ public final class GameEngine {
       }
    }
 
-   public static void sub_912(byte[] var0, int var1, byte[] var2, int var3, int var4, int var5) {
+   public static void decompressSprite(byte[] var0, int var1, byte[] var2, int var3, int var4, int var5) {
       int var6 = var1 * var5 / 8;
       int var7 = var1 * var5 % 8;
       int var8 = (1 << var5) - 1;
@@ -2435,7 +2435,7 @@ public final class GameEngine {
 
    }
 
-   private static void sub_920(byte[] var0, int var1, byte[] var2, int var3, int var4, int var5, int var6) {
+   private static void decompressTexture(byte[] var0, int var1, byte[] var2, int var3, int var4, int var5, int var6) {
       int var7 = var1 * var5 / 8;
       int var8 = var1 * var5 % 8;
       int var9 = (1 << var5) - 1;
@@ -2499,7 +2499,7 @@ public final class GameEngine {
       var_f88 = 0;
       levelComplete = true;
       var_1044 = 1;
-      Class_3aa.var_e8b = 0;
+      MainGameCanvas.var_e8b = 0;
       levelVariant = 0;
    }
 }

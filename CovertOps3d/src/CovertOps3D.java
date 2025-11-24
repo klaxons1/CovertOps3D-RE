@@ -1,10 +1,9 @@
 import javax.microedition.lcdui.Display;
 import javax.microedition.midlet.MIDlet;
-import javax.microedition.midlet.MIDletStateChangeException;
 
 public class CovertOps3D extends MIDlet {
    public static Display var_ee = null;
-   public static Class_3aa var_108 = null;
+   public static MainGameCanvas var_108 = null;
    private static CovertOps3D var_149 = null;
 
    public void startApp() {
@@ -12,10 +11,10 @@ public class CovertOps3D extends MIDlet {
          var_108.sub_32d();
       } else {
          var_ee = Display.getDisplay(this);
-         var_108 = new Class_3aa();
+         var_108 = new MainGameCanvas();
          var_108.sub_71();
          var_ee.setCurrent(var_108);
-         Class_3aa.var_1e5 = this;
+         MainGameCanvas.var_1e5 = this;
          var_149 = this;
       }
    }
