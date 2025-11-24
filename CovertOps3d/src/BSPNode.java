@@ -64,7 +64,7 @@ public final class BSPNode {
       }
    }
 
-   public final void traverseBSP(Transform3D var1, Class_30a var2) {
+   public final void traverseBSP(Transform3D var1, SectorData var2) {
       int var3 = var1.x;
       int var4 = var1.z;
       Object var10000;
@@ -82,32 +82,32 @@ public final class BSPNode {
       Sector var8;
       if (var5 instanceof BSPNode) {
          var7 = (BSPNode)var5;
-         if (var2.sub_101(var7)) {
+         if (var2.isBSPNodeVisible(var7)) {
             var7.traverseBSP(var1, var2);
          }
       } else {
          var8 = (Sector)var5;
-         if (var2.sub_ca(var8)) {
+         if (var2.isSectorConnected(var8)) {
             visibleSectorsList[visibleSectorsCount++] = var8;
          }
       }
 
       if (var6 instanceof BSPNode) {
          var7 = (BSPNode)var6;
-         if (var2.sub_101(var7)) {
+         if (var2.isBSPNodeVisible(var7)) {
             var7.traverseBSP(var1, var2);
          }
 
       } else {
          var8 = (Sector)var6;
-         if (var2.sub_ca(var8)) {
+         if (var2.isSectorConnected(var8)) {
             visibleSectorsList[visibleSectorsCount++] = var8;
          }
 
       }
    }
 
-   public final Class_30a findSectorAtPoint(int var1, int var2) {
+   public final SectorData findSectorAtPoint(int var1, int var2) {
       return this.findSectorNodeAtPoint(var1, var2).getSectorData();
    }
 

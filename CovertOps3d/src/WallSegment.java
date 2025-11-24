@@ -30,7 +30,7 @@ public final class WallSegment {
       var10000.sectorLink = var10001;
    }
 
-   public final Class_30a getWallSector() {
+   public final SectorData getWallSector() {
       return this.sectorLink.linkedSector;
    }
 }

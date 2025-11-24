@@ -2136,7 +2136,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                break;
             case 6:
                if (GameEngine.var_4c8 <= -1 && GameEngine.ammoCounts[6] > 0) {
-                  if ((var_259 == 4 || var_259 == 7 || var_259 == 8) && (var_259 != 4 || GameEngine.currentSector.sub_5c() != 666) && GameEngine.ammoCounts[6] == 1) {
+                  if ((var_259 == 4 || var_259 == 7 || var_259 == 8) && (var_259 != 4 || GameEngine.currentSector.getSectorType() != 666) && GameEngine.ammoCounts[6] == 1) {
                      GameEngine.messageText = "i'd better use it|to finish my mission";
                      GameEngine.messageTimer = 50;
                   } else if (GameEngine.var_505.sub_57a()) {

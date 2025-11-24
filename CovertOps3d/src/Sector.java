@@ -38,7 +38,7 @@ public final class Sector {
 
    }
 
-   public final Class_30a getSectorData() {
+   public final SectorData getSectorData() {
       return this.walls[0].getWallSector();
    }
 
@@ -60,7 +60,7 @@ public final class Sector {
    }
 
    public final boolean[] getVisibilityMask() {
-      this.visibilityMask = this.walls[0].getWallSector().var_1dd;
+      this.visibilityMask = this.walls[0].getWallSector().visitedFlags;
       return this.visibilityMask;
    }
 }

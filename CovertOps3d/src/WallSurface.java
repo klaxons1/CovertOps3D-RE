@@ -3,7 +3,7 @@ public final class WallSurface {
    public byte mainTextureId;
    public byte lowerTextureId;
    private byte sectorLinkId;
-   public Class_30a linkedSector;
+   public SectorData linkedSector;
    public short textureOffsetX;
    public short textureOffsetY;
 

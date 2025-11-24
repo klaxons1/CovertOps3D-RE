@@ -13,7 +13,7 @@ public final class Class_3e6 {
    public GameObject[] var_254;
    private Vector var_2a8;
    private Vector var_2f6;
-   public Class_30a[] var_32c;
+   public SectorData[] var_32c;
    public WallSurface[] var_370;
    public Transform3D var_383;
    public BSPNode[] var_3c0;
@@ -59,7 +59,7 @@ public final class Class_3e6 {
       return this.sub_57().findSectorNodeAtPoint(var1, var2);
    }
 
-   public final Class_30a sub_115(int var1, int var2) {
+   public final SectorData sub_115(int var1, int var2) {
       return this.sub_57().findSectorAtPoint(var1, var2);
    }
 
@@ -133,7 +133,7 @@ public final class Class_3e6 {
       }
    }
 
-   public final boolean sub_1dd(GameObject var1, Transform3D var2, Class_30a var3) {
+   public final boolean sub_1dd(GameObject var1, Transform3D var2, SectorData var3) {
       this.var_cd.x = var2.x;
       this.var_cd.y = var2.z;
 
@@ -179,7 +179,7 @@ public final class Class_3e6 {
       return true;
    }
 
-   public final Class_1e1 sub_205(PhysicsBody var1, Class_30a var2) {
+   public final Class_1e1 sub_205(PhysicsBody var1, SectorData var2) {
       Class_1e1 var5 = null;
       this.var_cd.x = var1.x;
       this.var_cd.y = var1.z;
@@ -495,36 +495,36 @@ public final class Class_3e6 {
       return var5;
    }
 
-   private static boolean sub_24b(Class_30a var0, Class_1e1 var1) {
-      Class_30a var2 = var1.var_133.linkedSector;
-      Class_30a var3 = var1.var_e5.linkedSector;
+   private static boolean sub_24b(SectorData var0, Class_1e1 var1) {
+      SectorData var2 = var1.var_133.linkedSector;
+      SectorData var3 = var1.var_e5.linkedSector;
       short var4;
       if (var2 != var0) {
-         if (var2.var_82 - var0.var_82 > var_14) {
+         if (var2.floorHeight - var0.floorHeight > var_14) {
             return true;
          }
 
-         var4 = var2.var_82;
-         if (var0.var_82 > var4) {
-            var4 = var0.var_82;
+         var4 = var2.floorHeight;
+         if (var0.floorHeight > var4) {
+            var4 = var0.floorHeight;
          }
 
-         if (var2.var_ac - var4 < var_38) {
+         if (var2.ceilingHeight - var4 < var_38) {
             return true;
          }
       }
 
       if (var3 != var0) {
-         if (var3.var_82 - var0.var_82 > var_14) {
+         if (var3.floorHeight - var0.floorHeight > var_14) {
             return true;
          }
 
-         var4 = var3.var_82;
-         if (var0.var_82 > var4) {
-            var4 = var0.var_82;
+         var4 = var3.floorHeight;
+         if (var0.floorHeight > var4) {
+            var4 = var0.floorHeight;
          }
 
-         if (var3.var_ac - var4 < var_38) {
+         if (var3.ceilingHeight - var4 < var_38) {
             return true;
          }
       }
@@ -533,23 +533,23 @@ public final class Class_3e6 {
    }
 
    private static boolean sub_289(Class_1e1 var0) {
-      Class_30a var1 = var0.var_133.linkedSector;
-      Class_30a var2 = var0.var_e5.linkedSector;
-      if (var1.var_ac - var1.var_82 <= 0) {
+      SectorData var1 = var0.var_133.linkedSector;
+      SectorData var2 = var0.var_e5.linkedSector;
+      if (var1.ceilingHeight - var1.floorHeight <= 0) {
          return true;
-      } else if (var2.var_ac - var2.var_82 <= 0) {
+      } else if (var2.ceilingHeight - var2.floorHeight <= 0) {
          return true;
-      } else if (var1.var_82 >= var2.var_ac) {
+      } else if (var1.floorHeight >= var2.ceilingHeight) {
          return true;
       } else {
-         return var2.var_82 >= var1.var_ac;
+         return var2.floorHeight >= var1.ceilingHeight;
       }
    }
 
    private static boolean sub_2bb(int var0, Class_1e1 var1) {
-      Class_30a var2 = var1.var_133.linkedSector;
-      Class_30a var3 = var1.var_e5.linkedSector;
-      return var2.var_ac <= var0 || var2.var_82 >= var0 || var3.var_ac <= var0 || var3.var_82 >= var0;
+      SectorData var2 = var1.var_133.linkedSector;
+      SectorData var3 = var1.var_e5.linkedSector;
+      return var2.ceilingHeight <= var0 || var2.floorHeight >= var0 || var3.ceilingHeight <= var0 || var3.floorHeight >= var0;
    }
 
    private boolean sub_2d4(Class_1e1 var1) {
@@ -699,13 +699,13 @@ public final class Class_3e6 {
       return true;
    }
 
-   public final void sub_3f2(Transform3D var1, Class_30a var2) {
+   public final void sub_3f2(Transform3D var1, SectorData var2) {
       int var3 = sub_547(var1.x, var1.z, GameEngine.player.x, GameEngine.player.z);
       int var4 = MathUtils.fastSin(102943 - var3);
       int var5 = MathUtils.fastCos(102943 - var3);
       int var7 = var1.x + 20 * var5;
       int var8 = var1.z + 20 * var4;
-      Transform3D var9 = new Transform3D(var7, var1.y + (var2.var_82 + 40 << 16), var8, var3);
+      Transform3D var9 = new Transform3D(var7, var1.y + (var2.floorHeight + 40 << 16), var8, var3);
       GameObject var10;
       (var10 = new GameObject(var9, 0, 101, 0)).addSpriteFrame((byte)0, (byte)-46);
       var10.addSpriteFrame((byte)0, (byte)-47);
@@ -713,7 +713,7 @@ public final class Class_3e6 {
       this.var_2a8.addElement(var10);
    }
 
-   public final void sub_420(Transform3D var1, Class_30a var2) {
+   public final void sub_420(Transform3D var1, SectorData var2) {
       int var3 = sub_547(var1.x, var1.z, GameEngine.player.x, GameEngine.player.z);
       int var4 = MathUtils.fastSin(102943 - var3);
       int var5 = MathUtils.fastCos(102943 - var3);
@@ -723,12 +723,12 @@ public final class Class_3e6 {
       var5 = MathUtils.fastCos(var3);
       int var9 = 10 * var5;
       int var10 = -10 * var4;
-      Transform3D var11 = new Transform3D(var7 + var9, var1.y + (var2.var_82 + 40 << 16), var8 + var10, var3);
+      Transform3D var11 = new Transform3D(var7 + var9, var1.y + (var2.floorHeight + 40 << 16), var8 + var10, var3);
       GameObject var12;
       (var12 = new GameObject(var11, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
       var12.currentState = 0;
       this.var_2a8.addElement(var12);
-      var11 = new Transform3D(var7 - var9, var1.y + (var2.var_82 + 40 << 16), var8 - var10, var3);
+      var11 = new Transform3D(var7 - var9, var1.y + (var2.floorHeight + 40 << 16), var8 - var10, var3);
       (var12 = new GameObject(var11, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
       var12.currentState = 0;
       this.var_2a8.addElement(var12);
@@ -972,7 +972,7 @@ public final class Class_3e6 {
             GameEngine.screenShake = 16;
             if (Class_3aa.var_259 == 4) {
                var15 = var2.transform;
-               if (this.sub_115(var15.x, var15.z).sub_5c() == 666) {
+               if (this.sub_115(var15.x, var15.z).getSectorType() == 666) {
                   Class_3aa.var_295 = Class_3aa.var_259++;
                   GameEngine.var_117 = 0;
                   GameEngine.var_480 = 1;

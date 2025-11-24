@@ -109,7 +109,7 @@ public final class RenderUtils {
       RenderSpan var10000;
       int var5;
       RenderSpan var6;
-      Class_30a var7;
+      SectorData var7;
       for(var5 = 0; var5 < 144; ++var5) {
          var10000 = this.renderSpans[var5];
 
@@ -120,7 +120,7 @@ public final class RenderUtils {
             }
 
             var7 = GameEngine.var_505.var_32c[var6.sectorId];
-            GameEngine.sub_430(var6.startX, var6.endX, var5, var7.var_214.pixelData, var7.var_214.colorPalettes, var7.var_282, var1, var2, var3, var7.var_2bf, var4);
+            GameEngine.sub_430(var6.startX, var6.endX, var5, var7.floorTexture.pixelData, var7.floorTexture.colorPalettes, var7.lightLevel, var1, var2, var3, var7.floorOffsetX, var4);
             var10000 = var6.next;
          }
       }
@@ -135,7 +135,7 @@ public final class RenderUtils {
             }
 
             var7 = GameEngine.var_505.var_32c[var6.sectorId];
-            GameEngine.sub_430(var6.startX, var6.endX, var5, var7.var_262.pixelData, var7.var_262.colorPalettes, var7.var_282, var1, var2, var3, var7.var_2f0, var4);
+            GameEngine.sub_430(var6.startX, var6.endX, var5, var7.ceilingTexture.pixelData, var7.ceilingTexture.colorPalettes, var7.lightLevel, var1, var2, var3, var7.ceilingOffsetX, var4);
             var10000 = var6.next;
          }
       }
