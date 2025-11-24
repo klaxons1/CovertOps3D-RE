@@ -10,7 +10,7 @@ public final class Class_3e6 {
    public Point2D[] var_138;
    private Point2D[] var_1af;
    public Class_1e1[] var_210;
-   public Class_445[] var_254;
+   public GameObject[] var_254;
    private Vector var_2a8;
    private Vector var_2f6;
    public Class_30a[] var_32c;
@@ -96,18 +96,18 @@ public final class Class_3e6 {
       }
 
       for(var1 = 0; var1 < this.var_254.length; ++var1) {
-         Class_445 var2;
+         GameObject var2;
          if ((var2 = this.var_254[var1]) != null) {
-            var2.sub_57(this);
+            var2.addToWorld(this);
          }
       }
 
       for(var1 = 0; var1 < this.var_2a8.size(); ++var1) {
-         ((Class_445)this.var_2a8.elementAt(var1)).sub_57(this);
+         ((GameObject)this.var_2a8.elementAt(var1)).addToWorld(this);
       }
 
       for(var1 = 0; var1 < this.var_2f6.size(); ++var1) {
-         ((Class_445)this.var_2f6.elementAt(var1)).sub_57(this);
+         ((GameObject)this.var_2f6.elementAt(var1)).addToWorld(this);
       }
 
    }
@@ -133,7 +133,7 @@ public final class Class_3e6 {
       }
    }
 
-   public final boolean sub_1dd(Class_445 var1, Transform3D var2, Class_30a var3) {
+   public final boolean sub_1dd(GameObject var1, Transform3D var2, Class_30a var3) {
       this.var_cd.x = var2.x;
       this.var_cd.y = var2.z;
 
@@ -151,15 +151,15 @@ public final class Class_3e6 {
       int var7 = this.var_cd.y + 655360;
 
       for(int var8 = 0; var8 < this.var_254.length; ++var8) {
-         Class_445 var9;
-         if ((var9 = this.var_254[var8]) != null && var9 != var1 && var9.var_2cf != -1) {
+         GameObject var9;
+         if ((var9 = this.var_254[var8]) != null && var9 != var1 && var9.aiState != -1) {
             Transform3D var10;
-            int var11 = (var10 = var9.var_c).x - 655360;
+            int var11 = (var10 = var9.transform).x - 655360;
             int var12 = var10.x + 655360;
             int var13 = var10.z - 655360;
             int var14 = var10.z + 655360;
             if (var4 <= var12 && var15 >= var11 && var6 <= var14 && var7 >= var13) {
-               switch(var9.var_24) {
+               switch(var9.objectType) {
                case 10:
                case 12:
                case 3001:
@@ -206,14 +206,14 @@ public final class Class_3e6 {
 
       var16 = 1310720;
 
-      Class_445 var9;
+      GameObject var9;
       int var12;
       int var13;
       int var14;
       int var17;
       for(var17 = 0; var17 < this.var_254.length; ++var17) {
-         if ((var9 = this.var_254[var17]) != null && var9.var_2cf != -1) {
-            switch(var9.var_24) {
+         if ((var9 = this.var_254[var17]) != null && var9.aiState != -1) {
+            switch(var9.objectType) {
             case 10:
             case 12:
             case 3001:
@@ -222,13 +222,13 @@ public final class Class_3e6 {
             case 3004:
             case 3005:
             case 3006:
-               Transform3D var10 = var9.var_c;
+               Transform3D var10 = var9.transform;
                int var11 = this.var_cd.x - var10.x;
                var12 = this.var_cd.y - var10.z;
                var13 = var11 < 0 ? -var11 : var11;
                var14 = var12 < 0 ? -var12 : var12;
                if (var13 < var16 && var14 < var16) {
-                  if (var9.var_24 == 10 && Class_3aa.var_259 == 4) {
+                  if (var9.objectType == 10 && Class_3aa.var_259 == 4) {
                      GameEngine.messageText = GameEngine.ammoCounts[6] > 0 ? "find the wall i told you|and blow it up!" : "go, get the dynamite!";
                      GameEngine.messageTimer = 30;
                   }
@@ -269,8 +269,8 @@ public final class Class_3e6 {
       Transform3D var19;
       int[] var20;
       for(var17 = 0; var17 < this.var_2f6.size(); ++var17) {
-         var18 = (var9 = (Class_445)this.var_2f6.elementAt(var17)).var_24;
-         var19 = var9.var_c;
+         var18 = (var9 = (GameObject)this.var_2f6.elementAt(var17)).objectType;
+         var19 = var9.transform;
          var12 = var1.x - var19.x;
          var13 = var1.z - var19.z;
          var14 = var12 < 0 ? -var12 : var12;
@@ -328,8 +328,8 @@ public final class Class_3e6 {
 
       for(var17 = 0; var17 < this.var_254.length; ++var17) {
          if ((var9 = this.var_254[var17]) != null) {
-            var18 = var9.var_24;
-            var19 = var9.var_c;
+            var18 = var9.objectType;
+            var19 = var9.transform;
             var12 = var1.x - var19.x;
             var13 = var1.z - var19.z;
             var14 = var12 < 0 ? -var12 : var12;
@@ -706,10 +706,10 @@ public final class Class_3e6 {
       int var7 = var1.x + 20 * var5;
       int var8 = var1.z + 20 * var4;
       Transform3D var9 = new Transform3D(var7, var1.y + (var2.var_82 + 40 << 16), var8, var3);
-      Class_445 var10;
-      (var10 = new Class_445(var9, 0, 101, 0)).sub_ea((byte)0, (byte)-46);
-      var10.sub_ea((byte)0, (byte)-47);
-      var10.var_1ce = 0;
+      GameObject var10;
+      (var10 = new GameObject(var9, 0, 101, 0)).addSpriteFrame((byte)0, (byte)-46);
+      var10.addSpriteFrame((byte)0, (byte)-47);
+      var10.currentState = 0;
       this.var_2a8.addElement(var10);
    }
 
@@ -724,13 +724,13 @@ public final class Class_3e6 {
       int var9 = 10 * var5;
       int var10 = -10 * var4;
       Transform3D var11 = new Transform3D(var7 + var9, var1.y + (var2.var_82 + 40 << 16), var8 + var10, var3);
-      Class_445 var12;
-      (var12 = new Class_445(var11, 0, 102, 0)).sub_ea((byte)0, (byte)-71);
-      var12.var_1ce = 0;
+      GameObject var12;
+      (var12 = new GameObject(var11, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
+      var12.currentState = 0;
       this.var_2a8.addElement(var12);
       var11 = new Transform3D(var7 - var9, var1.y + (var2.var_82 + 40 << 16), var8 - var10, var3);
-      (var12 = new Class_445(var11, 0, 102, 0)).sub_ea((byte)0, (byte)-71);
-      var12.var_1ce = 0;
+      (var12 = new GameObject(var11, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
+      var12.currentState = 0;
       this.var_2a8.addElement(var12);
    }
 
@@ -763,10 +763,10 @@ public final class Class_3e6 {
          Class_3aa.sub_84e(4, false, 100, 2);
          Transform3D var15 = new Transform3D(var6, GameEngine.cameraHeight - 655360, var7, var1);
          if (!this.sub_47e(GameEngine.player.x, GameEngine.player.z, var15.x, var15.z, var15.y)) {
-            Class_445 var16;
-            (var16 = new Class_445(var15, 0, 100, 0)).sub_ea((byte)0, (byte)-44);
-            var16.sub_ea((byte)0, (byte)-45);
-            var16.var_1ce = 0;
+            GameObject var16;
+            (var16 = new GameObject(var15, 0, 100, 0)).addSpriteFrame((byte)0, (byte)-44);
+            var16.addSpriteFrame((byte)0, (byte)-45);
+            var16.currentState = 0;
             this.var_2a8.addElement(var16);
          }
 
@@ -779,17 +779,17 @@ public final class Class_3e6 {
             int var14 = 10 * var4;
             var9 = -10 * var3;
             Transform3D var17 = new Transform3D(var6 - var14, GameEngine.cameraHeight - 655360, var7 - var9, var1);
-            Class_445 var18;
+            GameObject var18;
             if (!this.sub_47e(GameEngine.player.x, GameEngine.player.z, var17.x, var17.z, var17.y)) {
-               (var18 = new Class_445(var17, 0, 102, 0)).sub_ea((byte)0, (byte)-71);
-               var18.var_1ce = 0;
+               (var18 = new GameObject(var17, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
+               var18.currentState = 0;
                this.var_2a8.addElement(var18);
             }
 
             var17 = new Transform3D(var6 + var14, GameEngine.cameraHeight - 655360, var7 + var9, var1);
             if (!this.sub_47e(GameEngine.player.x, GameEngine.player.z, var17.x, var17.z, var17.y)) {
-               (var18 = new Class_445(var17, 0, 102, 0)).sub_ea((byte)0, (byte)-71);
-               var18.var_1ce = 0;
+               (var18 = new GameObject(var17, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
+               var18.currentState = 0;
                this.var_2a8.addElement(var18);
             }
 
@@ -797,9 +797,9 @@ public final class Class_3e6 {
             boolean var8 = false;
 
             for(var9 = 0; var9 < this.var_254.length; ++var9) {
-               Class_445 var10;
-               if ((var10 = this.var_254[var9]) != null && var10.var_2cf != -1) {
-                  Transform3D var11 = var10.var_c;
+               GameObject var10;
+               if ((var10 = this.var_254[var9]) != null && var10.aiState != -1) {
+                  Transform3D var11 = var10.transform;
                   if (this.sub_3ce(GameEngine.player, var11)) {
                      int var12 = 327680;
                      if (sub_37f(GameEngine.player.x, GameEngine.player.z, var6, var7, var11.x, var11.z, var12)) {
@@ -860,25 +860,25 @@ public final class Class_3e6 {
       }
    }
 
-   private static void sub_4c6(Class_445 var0, int var1) {
-      var0.var_243 -= var1;
-      Class_445 var10000;
+   private static void sub_4c6(GameObject var0, int var1) {
+      var0.health -= var1;
+      GameObject var10000;
       byte var10001;
-      if (var0.var_243 <= 0) {
-         var0.var_243 = 0;
-         var0.var_2cf = 6;
-         switch(var0.var_24) {
+      if (var0.health <= 0) {
+         var0.health = 0;
+         var0.aiState = 6;
+         switch(var0.objectType) {
          case 3001:
          case 3003:
          case 3004:
          case 3005:
          case 3006:
-            var0.var_296 = 5;
+            var0.stateTimer = 5;
             var10000 = var0;
             var10001 = 5;
             break;
          case 3002:
-            var0.var_296 = 5;
+            var0.stateTimer = 5;
             var10000 = var0;
             var10001 = 4;
             break;
@@ -886,21 +886,21 @@ public final class Class_3e6 {
             return;
          }
 
-         var10000.var_1ce = var10001;
+         var10000.currentState = var10001;
       } else {
-         var0.var_2cf = 5;
-         switch(var0.var_24) {
+         var0.aiState = 5;
+         switch(var0.objectType) {
          case 3001:
          case 3003:
          case 3004:
          case 3005:
          case 3006:
-            var0.var_296 = 5;
+            var0.stateTimer = 5;
             var10000 = var0;
             var10001 = 4;
             break;
          case 3002:
-            var0.var_296 = 5;
+            var0.stateTimer = 5;
             var10000 = var0;
             var10001 = 3;
             break;
@@ -908,15 +908,15 @@ public final class Class_3e6 {
             return;
          }
 
-         var10000.var_1ce = var10001;
+         var10000.currentState = var10001;
       }
    }
 
    public final void sub_4e6() {
       for(int var1 = 0; var1 < this.var_2a8.size(); ++var1) {
-         Class_445 var2;
-         if ((var2 = (Class_445)this.var_2a8.elementAt(var1)).var_24 == 100 || var2.var_24 == 101) {
-            var2.var_1ce ^= 1;
+         GameObject var2;
+         if ((var2 = (GameObject)this.var_2a8.elementAt(var1)).objectType == 100 || var2.objectType == 101) {
+            var2.currentState ^= 1;
          }
       }
 
@@ -924,28 +924,28 @@ public final class Class_3e6 {
 
    public final boolean sub_50b() {
       for(int var1 = 0; var1 < this.var_2a8.size(); ++var1) {
-         Class_445 var2;
+         GameObject var2;
          int var4;
          int var5;
          int var6;
          int var7;
          Transform3D var15;
          Class_3e6 var10000;
-         if ((var2 = (Class_445)this.var_2a8.elementAt(var1)).var_24 == 103) {
-            if (var2.var_f7 <= 0) {
+         if ((var2 = (GameObject)this.var_2a8.elementAt(var1)).objectType == 103) {
+            if (var2.spawnDelay <= 0) {
                continue;
             }
 
-            --var2.var_f7;
-            if (var2.var_f7 != 0) {
+            --var2.spawnDelay;
+            if (var2.spawnDelay != 0) {
                continue;
             }
 
             Class_3aa.sub_84e(4, false, 100, 2);
             int var3;
-            if (this.sub_3ce(var2.var_c, GameEngine.player)) {
-               var3 = var2.var_c.x - GameEngine.player.x;
-               var4 = var2.var_c.z - GameEngine.player.z;
+            if (this.sub_3ce(var2.transform, GameEngine.player)) {
+               var3 = var2.transform.x - GameEngine.player.x;
+               var4 = var2.transform.z - GameEngine.player.z;
                if ((var5 = Class_3aa.var_1113[GameEngine.difficultyLevel] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var3, var4), Class_3aa.var_10c4[GameEngine.difficultyLevel]) >> 16)) > 0) {
                   Class_3aa.sub_882(var5 * 10);
                   if (GameEngine.applyDamage(var5)) {
@@ -955,12 +955,12 @@ public final class Class_3e6 {
             }
 
             for(var3 = 0; var3 < this.var_254.length; ++var3) {
-               Class_445 var16;
-               if ((var16 = this.var_254[var3]) != null && var16.var_2cf != -1) {
+               GameObject var16;
+               if ((var16 = this.var_254[var3]) != null && var16.aiState != -1) {
                   Object var17 = null;
-                  if (this.sub_3ce(var2.var_c, var16.var_c)) {
-                     var6 = var2.var_c.x - var16.var_c.x;
-                     var7 = var2.var_c.z - var16.var_c.z;
+                  if (this.sub_3ce(var2.transform, var16.transform)) {
+                     var6 = var2.transform.x - var16.transform.x;
+                     var7 = var2.transform.z - var16.transform.z;
                      int var8;
                      if ((var8 = Class_3aa.var_1113[GameEngine.difficultyLevel] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var6, var7), Class_3aa.var_10c4[GameEngine.difficultyLevel]) >> 16)) > 0) {
                         sub_4c6(var16, var8);
@@ -971,7 +971,7 @@ public final class Class_3e6 {
 
             GameEngine.screenShake = 16;
             if (Class_3aa.var_259 == 4) {
-               var15 = var2.var_c;
+               var15 = var2.transform;
                if (this.sub_115(var15.x, var15.z).sub_5c() == 666) {
                   Class_3aa.var_295 = Class_3aa.var_259++;
                   GameEngine.var_117 = 0;
@@ -981,15 +981,15 @@ public final class Class_3e6 {
 
             var10000 = this;
          } else {
-            var4 = (var15 = var2.var_c).x;
+            var4 = (var15 = var2.transform).x;
             var5 = var15.z;
             var15.moveRelative(0, -1048576);
             var6 = var15.x;
             var7 = var15.z;
             boolean var18 = false;
-            int var9 = (var2.var_24 == 102 ? Class_3aa.var_104c : Class_3aa.var_1071)[GameEngine.difficultyLevel];
+            int var9 = (var2.objectType == 102 ? Class_3aa.var_104c : Class_3aa.var_1071)[GameEngine.difficultyLevel];
             if (sub_37f(var4, var5, var6, var7, GameEngine.player.x, GameEngine.player.z, 655360)) {
-               if (var2.var_24 == 101) {
+               if (var2.objectType == 101) {
                   Class_3aa.sub_84e(4, false, 100, 2);
                }
 
@@ -1003,10 +1003,10 @@ public final class Class_3e6 {
 
             int var10;
             for(var10 = 0; var10 < this.var_254.length; ++var10) {
-               Class_445 var11;
-               if ((var11 = this.var_254[var10]) != null && var11.var_2cf != -1) {
-                  Transform3D var12 = var11.var_c;
-                  int var13 = var2.var_24 == 102 ? 655360 : 327680;
+               GameObject var11;
+               if ((var11 = this.var_254[var10]) != null && var11.aiState != -1) {
+                  Transform3D var12 = var11.transform;
+                  int var13 = var2.objectType == 102 ? 655360 : 327680;
                   if (sub_37f(var4, var5, var6, var7, var12.x, var12.z, var13)) {
                      sub_4c6(var11, var9);
                      var18 = true;
@@ -1074,40 +1074,40 @@ public final class Class_3e6 {
       int var6 = GameEngine.player.x + MathUtils.fixedPointMultiply(var5, var4);
       int var7 = GameEngine.player.z + MathUtils.fixedPointMultiply(var5, var3);
       Transform3D var8 = new Transform3D(var6, 0, var7, var1);
-      Class_445 var9;
-      (var9 = new Class_445(var8, 0, 103, 100)).sub_ea((byte)0, (byte)-51);
-      var9.var_1ce = 0;
+      GameObject var9;
+      (var9 = new GameObject(var8, 0, 103, 100)).addSpriteFrame((byte)0, (byte)-51);
+      var9.currentState = 0;
       this.var_2a8.addElement(var9);
       return true;
    }
 
-   public final void sub_5cd(Class_445 var1) {
-      Class_445 var2;
+   public final void sub_5cd(GameObject var1) {
+      GameObject var2;
       label15: {
          var2 = null;
-         Class_445 var10000;
+         GameObject var10000;
          byte var10001;
          byte var10002;
-         switch(var1.var_24) {
+         switch(var1.objectType) {
          case 3001:
-            var10000 = var2 = new Class_445(var1.var_c, 0, 2004, 0);
+            var10000 = var2 = new GameObject(var1.transform, 0, 2004, 0);
             var10001 = 0;
             var10002 = -43;
             break;
          case 3002:
-            var10000 = var2 = new Class_445(var1.var_c, 0, 2006, 0);
+            var10000 = var2 = new GameObject(var1.transform, 0, 2006, 0);
             var10001 = 0;
             var10002 = -72;
             break;
          case 3003:
          case 3005:
          case 3006:
-            var10000 = var2 = new Class_445(var1.var_c, 0, 2007, 0);
+            var10000 = var2 = new GameObject(var1.transform, 0, 2007, 0);
             var10001 = 0;
             var10002 = -48;
             break;
          case 3004:
-            var10000 = var2 = new Class_445(var1.var_c, 0, 2008, 0);
+            var10000 = var2 = new GameObject(var1.transform, 0, 2008, 0);
             var10001 = 0;
             var10002 = -54;
             break;
@@ -1115,7 +1115,7 @@ public final class Class_3e6 {
             break label15;
          }
 
-         var10000.sub_ea(var10001, var10002);
+         var10000.addSpriteFrame(var10001, var10002);
       }
 
       this.var_2f6.addElement(var2);

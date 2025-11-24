@@ -82,7 +82,7 @@ public final class GameEngine {
    public static int var_1103;
    public static int var_1142;
    public static int var_1171;
-   public static Class_445[] var_118d;
+   public static GameObject[] var_118d;
    public static int var_119a;
 
    public static void initializeEngine() {
@@ -94,7 +94,7 @@ public final class GameEngine {
       ceilingClipHistory = new Vector();
       var_b86 = new Vector();
       var_bd3 = new Vector();
-      var_118d = new Class_445[64];
+      var_118d = new GameObject[64];
       var_119a = 0;
       BSPNode.visibleSectorsCount = 0;
       var_894 = new Texture((byte)0, 8, 8, 0, 0, new int[]{16777215, 16711680});
@@ -331,28 +331,28 @@ public final class GameEngine {
       var_119a = 0;
 
       int var10;
-      Class_445 var11;
+      GameObject var11;
       for(var10 = 0; var10 < var9.size(); ++var10) {
          Transform3D var12;
-         int var13 = (var12 = (var11 = (Class_445)var9.elementAt(var10)).var_c).x - var1;
+         int var13 = (var12 = (var11 = (GameObject)var9.elementAt(var10)).transform).x - var1;
          int var14 = var12.z - var3;
-         var11.var_2f3.x = (int)(var6 * (long)var13 - var4 * (long)var14 >> 16);
-         var11.var_2f3.y = (int)(var4 * (long)var13 + var6 * (long)var14 >> 16);
-         if (var11.var_2f3.y > 327680) {
-            byte var15 = var11.sub_a9();
-            byte var16 = var11.sub_b7();
+         var11.screenPos.x = (int)(var6 * (long)var13 - var4 * (long)var14 >> 16);
+         var11.screenPos.y = (int)(var4 * (long)var13 + var6 * (long)var14 >> 16);
+         if (var11.screenPos.y > 327680) {
+            byte var15 = var11.getCurrentSprite1();
+            byte var16 = var11.getCurrentSprite2();
             if (var15 != 0 || var16 != 0) {
-               Class_445 var10000;
+               GameObject var10000;
                int var18;
                label99: {
                   short var10001;
-                  if (var11.var_24 >= 59 && var11.var_24 <= 63) {
+                  if (var11.objectType >= 59 && var11.objectType <= 63) {
                      var10000 = var11;
                      var10001 = var8.var_ac;
                   } else {
-                     if (var11.var_24 >= 100 && var11.var_24 <= 102) {
+                     if (var11.objectType >= 100 && var11.objectType <= 102) {
                         var10000 = var11;
-                        var18 = -var11.var_c.y;
+                        var18 = -var11.transform.y;
                         break label99;
                      }
 
@@ -363,7 +363,7 @@ public final class GameEngine {
                   var18 = -var10001 << 16;
                }
 
-               var10000.var_319 = var18 - var2;
+               var10000.screenHeight = var18 - var2;
                Texture var19;
                if (var15 != 0) {
                   var10000 = var11;
@@ -373,7 +373,7 @@ public final class GameEngine {
                   var19 = null;
                }
 
-               var10000.var_363 = var19;
+               var10000.texture1 = var19;
                if (var16 != 0) {
                   var10000 = var11;
                   var19 = var_85[var16 + 128];
@@ -382,7 +382,7 @@ public final class GameEngine {
                   var19 = null;
                }
 
-               var10000.var_399 = var19;
+               var10000.texture2 = var19;
                var_118d[var_119a++] = var11;
                if (var_119a >= 64) {
                   break;
@@ -395,7 +395,7 @@ public final class GameEngine {
          var11 = var_118d[var10];
 
          int var17;
-         for(var17 = var10; var17 > 0 && var_118d[var17 - 1].sub_11b(var11); --var17) {
+         for(var17 = var10; var17 > 0 && var_118d[var17 - 1].compareDepth(var11); --var17) {
             var_118d[var17] = var_118d[var17 - 1];
          }
 
@@ -403,15 +403,15 @@ public final class GameEngine {
       }
 
       for(var10 = 0; var10 < var_119a; ++var10) {
-         if ((var11 = var_118d[var10]).sub_172()) {
-            if (var11.var_399 != null) {
-               var11.sub_1ee();
-               sub_410(var11.var_399, var8.sub_15(), (var11.var_2f3.x >> 16) + 120, (var11.var_319 >> 16) + 144, var11.var_2f3.y, var11.var_41b, var11.var_440);
+         if ((var11 = var_118d[var10]).projectToScreen()) {
+            if (var11.texture2 != null) {
+               var11.calculateSpriteSize2();
+               sub_410(var11.texture2, var8.sub_15(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth2, var11.spriteHeight2);
             }
 
-            if (var11.var_363 != null) {
-               var11.sub_194();
-               sub_410(var11.var_363, var8.sub_15(), (var11.var_2f3.x >> 16) + 120, (var11.var_319 >> 16) + 144, var11.var_2f3.y, var11.var_3e0, var11.var_404);
+            if (var11.texture1 != null) {
+               var11.calculateSpriteSize1();
+               sub_410(var11.texture1, var8.sub_15(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth1, var11.spriteHeight1);
             }
          }
       }
@@ -813,15 +813,15 @@ public final class GameEngine {
       if (var_505.sub_50b()) {
          return true;
       } else {
-         Class_445[] var26 = var_505.var_254;
+         GameObject[] var26 = var_505.var_254;
 
          for(var3 = 0; var3 < var26.length; ++var3) {
-            Class_445 var27;
-            if ((var27 = var26[var3]) != null && var27.var_2cf != -1) {
+            GameObject var27;
+            if ((var27 = var26[var3]) != null && var27.aiState != -1) {
                Transform3D var28;
                int var31;
-               if (var27.var_2cf == 0) {
-                  var28 = var27.var_c;
+               if (var27.aiState == 0) {
+                  var28 = var27.transform;
                   if (var_505.sub_115(var28.x, var28.z).sub_ba(currentSector)) {
                      if ((var7 = var28.x - player.x) < 0) {
                         var7 = -var7;
@@ -832,11 +832,11 @@ public final class GameEngine {
                      }
 
                      if (var7 + var31 <= 67108864 && var_505.sub_3ce(player, var28)) {
-                        var27.var_2cf = 1;
+                        var27.aiState = 1;
                      }
                   }
                } else {
-                  if ((var6 = (var28 = var27.var_c).x - player.x) < 0) {
+                  if ((var6 = (var28 = var27.transform).x - player.x) < 0) {
                      var6 = -var6;
                   }
 
@@ -845,15 +845,15 @@ public final class GameEngine {
                   }
 
                   if (var6 + var7 > 67108864) {
-                     var27.var_2cf = 0;
+                     var27.aiState = 0;
                   }
                }
 
-               if (var27.var_296 > 0) {
-                  --var27.var_296;
+               if (var27.stateTimer > 0) {
+                  --var27.stateTimer;
                }
 
-               switch(var5 = var27.var_24) {
+               switch(var5 = var27.objectType) {
                case 10:
                case 12:
                default:
@@ -868,37 +868,37 @@ public final class GameEngine {
 
                Transform3D var29;
                Class_30a var33;
-               Class_445 var46;
-               if (var27.var_296 == 0) {
-                  switch(var27.var_2cf) {
+               GameObject var46;
+               if (var27.stateTimer == 0) {
+                  switch(var27.aiState) {
                   case 1:
-                     var27.var_2cf = 2;
-                     var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
-                     var27.var_1ce = 0;
+                     var27.aiState = 2;
+                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
+                     var27.currentState = 0;
                      break;
                   case 2:
                      if (((var6 = var_ea3.nextInt() & Integer.MAX_VALUE) & 1) == 0) {
-                        var27.var_2cf = 3;
-                        var27.var_296 = var6 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
+                        var27.aiState = 3;
+                        var27.stateTimer = var6 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
                         var46 = var27;
                         var10001 = 2;
                      } else {
-                        var27.var_2cf = 1;
-                        var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1851[difficultyLevel];
+                        var27.aiState = 1;
+                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1851[difficultyLevel];
                         var46 = var27;
                         var10001 = 0;
                      }
 
-                     var46.var_1ce = var10001;
+                     var46.currentState = var10001;
                      break;
                   case 3:
-                     var29 = var27.var_c;
+                     var29 = var27.transform;
                      var33 = var_505.sub_115(var29.x, var29.z);
                      if (var_505.sub_3ce(player, var29)) {
-                        var27.var_2cf = 4;
-                        var27.var_296 = 2;
+                        var27.aiState = 4;
+                        var27.stateTimer = 2;
                         if (var5 != 3002) {
-                           var27.var_1ce = 3;
+                           var27.currentState = 3;
                         }
 
                         if (var5 == 3001) {
@@ -944,24 +944,24 @@ public final class GameEngine {
                            }
                         }
                      } else {
-                        var27.var_2cf = 2;
-                        var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
-                        var27.var_1ce = 0;
+                        var27.aiState = 2;
+                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
+                        var27.currentState = 0;
                      }
                      break;
                   case 4:
-                     var27.var_2cf = 2;
-                     var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
-                     var27.var_1ce = 0;
+                     var27.aiState = 2;
+                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
+                     var27.currentState = 0;
                      break;
                   case 5:
                      var6 = var_ea3.nextInt() & Integer.MAX_VALUE;
-                     var27.var_2cf = 3;
-                     var27.var_296 = var6 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
-                     var27.var_1ce = 2;
+                     var27.aiState = 3;
+                     var27.stateTimer = var6 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
+                     var27.currentState = 2;
                      break;
                   case 6:
-                     var27.var_2cf = -1;
+                     var27.aiState = -1;
                      if (var5 == 3002) {
                         var46 = var27;
                         var10001 = 5;
@@ -970,14 +970,14 @@ public final class GameEngine {
                         var10001 = 6;
                      }
 
-                     var46.var_1ce = var10001;
+                     var46.currentState = var10001;
                      var_505.sub_5cd(var27);
                   }
                }
 
-               if (var27.var_2cf == 2) {
-                  if ((var27.var_296 & 3) == 0) {
-                     if (var27.var_1ce == 0) {
+               if (var27.aiState == 2) {
+                  if ((var27.stateTimer & 3) == 0) {
+                     if (var27.currentState == 0) {
                         var46 = var27;
                         var10001 = 1;
                      } else {
@@ -985,17 +985,17 @@ public final class GameEngine {
                         var10001 = 0;
                      }
 
-                     var46.var_1ce = var10001;
+                     var46.currentState = var10001;
                   }
 
-                  var29 = var27.var_c;
+                  var29 = var27.transform;
                   var33 = var_505.sub_115(var29.x, var29.z);
                   var31 = var29.x - player.x;
                   int var34 = var29.z - player.z;
                   int var36;
                   if ((var35 = MathUtils.fastHypot(var31, var34)) > var_f32) {
-                     var36 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var31, var35), var27.sub_27());
-                     var12 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var34, var35), var27.sub_27());
+                     var36 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var31, var35), var27.getMovementSpeed());
+                     var12 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var34, var35), var27.getMovementSpeed());
                      int var37;
                      if ((var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1ad2[difficultyLevel] == 0) {
                         int var47;
@@ -1038,9 +1038,9 @@ public final class GameEngine {
                      }
                   } else {
                      var36 = var_ea3.nextInt() & Integer.MAX_VALUE;
-                     var27.var_2cf = 3;
-                     var27.var_296 = var36 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
-                     var27.var_1ce = 2;
+                     var27.aiState = 3;
+                     var27.stateTimer = var36 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
+                     var27.currentState = 2;
                   }
                }
             }
@@ -1819,9 +1819,9 @@ public final class GameEngine {
          }
 
          var8 = var5 / 10;
-         Class_445[] var26 = null;
+         GameObject[] var26 = null;
          if (var1) {
-            var26 = new Class_445[var8];
+            var26 = new GameObject[var8];
          }
 
          short var31;
@@ -1832,9 +1832,9 @@ public final class GameEngine {
             var33 = sub_775(var4);
             var14 = sub_775(var4);
             var15 = sub_775(var4);
-            Class_445[] var10000;
+            GameObject[] var10000;
             int var10001;
-            Class_445 var10002;
+            GameObject var10002;
             if (var14 >= 1 && var14 <= 4) {
                if (var_117 == var14) {
                   var_505.var_383 = new Transform3D(var29 << 16, 0, var31 << 16, -var33 * 1144 + 102943);
@@ -1854,7 +1854,7 @@ public final class GameEngine {
 
                var10000 = var26;
                var10001 = var27;
-               var10002 = new Class_445(new Transform3D(var29 << 16, 0, var31 << 16, -var33 * 1144 + 102943), var33, var14, var15);
+               var10002 = new GameObject(new Transform3D(var29 << 16, 0, var31 << 16, -var33 * 1144 + 102943), var33, var14, var15);
             }
 
             var10000[var10001] = var10002;

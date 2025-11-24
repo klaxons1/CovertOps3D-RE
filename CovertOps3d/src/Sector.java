@@ -46,7 +46,7 @@ public final class Sector {
       this.dynamicObjects.removeAllElements();
    }
 
-   public final void addDynamicObject(Class_445 var1) {
+   public final void addDynamicObject(GameObject var1) {
       this.dynamicObjects.addElement(var1);
    }
 

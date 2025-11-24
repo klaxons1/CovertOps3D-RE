@@ -50,8 +50,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
    private Image var_9d7;
    private Image var_a0c;
    private Image var_a63;
-   private Class_445[] var_ab7;
-   private Class_445[] var_ae7;
+   private GameObject[] var_ab7;
+   private GameObject[] var_ae7;
    private int[] var_b23;
    private int[] var_b56;
    private int[] var_b60;
@@ -2179,11 +2179,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
       }
    }
 
-   private static void sub_3bc(Class_445 var0, byte[] var1, byte[] var2) {
+   private static void sub_3bc(GameObject var0, byte[] var1, byte[] var2) {
       for(int var3 = 0; var3 < var1.length; ++var3) {
          byte var4 = var1[var3];
          byte var5 = var2[var3];
-         var0.sub_ea(var4, var5);
+         var0.addSpriteFrame(var4, var5);
          if (var4 != 0) {
             GameEngine.sub_80f(var4);
          }
@@ -2260,103 +2260,103 @@ public class Class_3aa extends GameCanvas implements Runnable {
          byte[] var14 = new byte[]{-10};
          byte[] var15 = new byte[]{-4, -6, -11, -13, 0, 0};
          byte[] var16 = new byte[]{-5, -7, -12, -14, -15, -8};
-         Class_445[] var17 = GameEngine.var_505.var_254;
+         GameObject[] var17 = GameEngine.var_505.var_254;
 
          for(int var18 = 0; var18 < var17.length; ++var18) {
-            Class_445 var19;
+            GameObject var19;
             if ((var19 = var17[var18]) != null) {
                byte var10000;
                label166: {
                   label165: {
-                     Class_445 var22;
-                     switch(var19.var_24) {
+                     GameObject var22;
+                     switch(var19.objectType) {
                      case 5:
                      case 13:
-                        var19.sub_ea((byte)0, (byte)-53);
+                        var19.addSpriteFrame((byte)0, (byte)-53);
                         var10000 = -53;
                         break label166;
                      case 10:
                         sub_3bc(var19, var9, var10);
                         if (var_1ff[var_259] == "06c") {
-                           var19.var_1ce = 1;
+                           var19.currentState = 1;
                         }
                         continue;
                      case 12:
                         sub_3bc(var19, var13, var14);
                         continue;
                      case 26:
-                        var19.sub_ea((byte)0, (byte)-16);
+                        var19.addSpriteFrame((byte)0, (byte)-16);
                         var10000 = -16;
                         break label166;
                      case 60:
-                        var19.sub_ea((byte)0, (byte)-18);
+                        var19.addSpriteFrame((byte)0, (byte)-18);
                         var10000 = -18;
                         break label166;
                      case 61:
-                        var19.sub_ea((byte)0, (byte)-17);
+                        var19.addSpriteFrame((byte)0, (byte)-17);
                         var10000 = -17;
                         break label166;
                      case 82:
-                        var19.sub_ea((byte)0, (byte)-21);
+                        var19.addSpriteFrame((byte)0, (byte)-21);
                         var10000 = -21;
                         break label166;
                      case 2001:
-                        var19.sub_ea((byte)0, (byte)-19);
+                        var19.addSpriteFrame((byte)0, (byte)-19);
                         var10000 = -19;
                         break label166;
                      case 2002:
-                        var19.sub_ea((byte)0, (byte)-20);
+                        var19.addSpriteFrame((byte)0, (byte)-20);
                         var10000 = -20;
                         break label166;
                      case 2003:
-                        var19.sub_ea((byte)0, (byte)-22);
+                        var19.addSpriteFrame((byte)0, (byte)-22);
                         var10000 = -22;
                         break label166;
                      case 2004:
-                        var19.sub_ea((byte)0, (byte)-43);
+                        var19.addSpriteFrame((byte)0, (byte)-43);
                         var10000 = -43;
                         break label166;
                      case 2005:
-                        var19.sub_ea((byte)0, (byte)-50);
+                        var19.addSpriteFrame((byte)0, (byte)-50);
                         var10000 = -50;
                         break label166;
                      case 2006:
-                        var19.sub_ea((byte)0, (byte)-72);
+                        var19.addSpriteFrame((byte)0, (byte)-72);
                         var10000 = -72;
                         break label166;
                      case 2007:
                         var22 = var19;
                         break;
                      case 2008:
-                        var19.sub_ea((byte)0, (byte)-54);
+                        var19.addSpriteFrame((byte)0, (byte)-54);
                         var10000 = -54;
                         break label166;
                      case 2010:
-                        var19.sub_ea((byte)0, (byte)-57);
+                        var19.addSpriteFrame((byte)0, (byte)-57);
                         var10000 = -57;
                         break label166;
                      case 2012:
-                        var19.sub_ea((byte)0, (byte)-55);
+                        var19.addSpriteFrame((byte)0, (byte)-55);
                         var10000 = -55;
                         break label166;
                      case 2013:
-                        var19.sub_ea((byte)0, (byte)-49);
+                        var19.addSpriteFrame((byte)0, (byte)-49);
                         var10000 = -49;
                         break label166;
                      case 2014:
-                        var19.sub_ea((byte)0, (byte)-52);
+                        var19.addSpriteFrame((byte)0, (byte)-52);
                         var10000 = -52;
                         break label166;
                      case 2015:
-                        var19.sub_ea((byte)0, (byte)-58);
+                        var19.addSpriteFrame((byte)0, (byte)-58);
                         var10000 = -58;
                         break label166;
                      case 2024:
-                        var19.sub_ea((byte)0, (byte)-85);
+                        var19.addSpriteFrame((byte)0, (byte)-85);
                         var10000 = -85;
                         break label166;
                      case 2047:
-                        var19.sub_ea((byte)0, (byte)-56);
+                        var19.addSpriteFrame((byte)0, (byte)-56);
                         var10000 = -56;
                         break label166;
                      case 3001:
@@ -2385,7 +2385,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                         var22 = var19;
                      }
 
-                     var22.sub_ea((byte)0, (byte)-48);
+                     var22.addSpriteFrame((byte)0, (byte)-48);
                   }
 
                   var10000 = -48;
