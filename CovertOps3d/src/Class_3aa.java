@@ -17,7 +17,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
    public static int var_259 = 0;
    public static int var_295 = -1;
    public static int var_2a5;
-   public static Class_48d var_2cb;
+   public static AudioManager var_2cb;
    private String[] var_2d7;
    private String[] var_313;
    private static final String[] var_341 = new String[]{"new game", "settings", "help", "about", "quit"};
@@ -351,17 +351,17 @@ public class Class_3aa extends GameCanvas implements Runnable {
    }
 
    public void run() {
-      var_2cb = new Class_48d();
-      var_2cb.sub_3e("/0.mid");
-      var_2cb.sub_3e("/1.amr");
-      var_2cb.sub_3e("/2.amr");
-      var_2cb.sub_3e("/3.amr");
-      var_2cb.sub_3e("/4.amr");
-      var_2cb.sub_3e("/5.amr");
-      var_2cb.sub_3e("/6.amr");
-      var_2cb.sub_3e("/7.amr");
-      var_2cb.sub_3e("/8.amr");
-      var_2cb.sub_3e("/9.amr");
+      var_2cb = new AudioManager();
+      var_2cb.loadSound("/0.mid");
+      var_2cb.loadSound("/1.amr");
+      var_2cb.loadSound("/2.amr");
+      var_2cb.loadSound("/3.amr");
+      var_2cb.loadSound("/4.amr");
+      var_2cb.loadSound("/5.amr");
+      var_2cb.loadSound("/6.amr");
+      var_2cb.loadSound("/7.amr");
+      var_2cb.loadSound("/8.amr");
+      var_2cb.loadSound("/9.amr");
       Graphics var1;
       (var1 = this.getGraphics()).setClip(0, 0, 240, 320);
       this.sub_175(var1);
@@ -1918,7 +1918,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
       if (!this.var_b0) {
          this.var_b0 = true;
          if (var_2cb != null) {
-            var_2cb.sub_b8();
+            var_2cb.stopCurrentSound();
          }
 
       }
@@ -3201,13 +3201,13 @@ public class Class_3aa extends GameCanvas implements Runnable {
       boolean var4;
       if (!(var4 = var0 > 0) || var_dad != 0) {
          int var5 = var1 ? -1 : 1;
-         var_2cb.sub_e2(var2);
-         var_2cb.sub_72(var0, var5, var3);
+         var_2cb.setVolume(var2);
+         var_2cb.playSound(var0, var5, var3);
       }
    }
 
    public static void sub_85b() {
-      var_2cb.sub_b8();
+      var_2cb.stopCurrentSound();
    }
 
    public static void sub_882(int var0) {

@@ -4,7 +4,7 @@ public final class SoundPlayer {
    public Player player;
    public int soundId = 0;
 
-   public SoundPlayer(Class_48d var1, Player var2, int var3) {
+   public SoundPlayer(AudioManager var1, Player var2, int var3) {
       this.player = var2;
       this.soundId = var3;
    }

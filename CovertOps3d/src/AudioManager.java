@@ -4,12 +4,12 @@ import javax.microedition.media.Manager;
 import javax.microedition.media.Player;
 import javax.microedition.media.control.VolumeControl;
 
-public final class Class_48d {
-   private int var_4b = 0;
-   private Vector var_8b = new Vector();
-   private VolumeControl var_9f;
+public final class AudioManager {
+   private int currentSoundIndex = 0;
+   private Vector soundPlayers = new Vector();
+   private VolumeControl volumeControl;
 
-   public final void sub_3e(String var1) {
+   public final void loadSound(String var1) {
       Player var2 = null;
 
       try {
@@ -33,7 +33,7 @@ public final class Class_48d {
          var2.realize();
          var2.prefetch();
          var2.setLoopCount(1);
-         this.var_9f = (VolumeControl)var2.getControl("VolumeControl");
+         this.volumeControl = (VolumeControl)var2.getControl("VolumeControl");
       } catch (Exception var6) {
          System.err.println(var6.getMessage());
          var6.printStackTrace();
@@ -42,16 +42,16 @@ public final class Class_48d {
          }
       }
 
-      this.var_8b.addElement(new SoundPlayer(this, var2, 0));
+      this.soundPlayers.addElement(new SoundPlayer(this, var2, 0));
    }
 
-   public final void sub_72(int var1, int var2, int var3) {
+   public final void playSound(int var1, int var2, int var3) {
       try {
          SoundPlayer var4;
          Player var5;
-         if (this.var_4b > -1 && (var5 = (var4 = (SoundPlayer)this.var_8b.elementAt(this.var_4b)).player) != null) {
+         if (this.currentSoundIndex > -1 && (var5 = (var4 = (SoundPlayer)this.soundPlayers.elementAt(this.currentSoundIndex)).player) != null) {
             SoundPlayer var6;
-            SoundPlayer.sub_3e(var6 = (SoundPlayer)this.var_8b.elementAt(var1), var3);
+            SoundPlayer.sub_3e(var6 = (SoundPlayer)this.soundPlayers.elementAt(var1), var3);
             if (var5.getState() == 400) {
                if (var4.soundId > var6.soundId) {
                   return;
@@ -65,22 +65,22 @@ public final class Class_48d {
             if ((var7 = var6.player) != null) {
                var7.setLoopCount(var2);
                var7.start();
-               this.var_4b = var1;
+               this.currentSoundIndex = var1;
             }
          }
 
          System.err.print("Exec player:");
-         System.err.println(this.var_8b);
+         System.err.println(this.soundPlayers);
       } catch (Exception var8) {
          System.err.println(var8.getMessage());
          var8.printStackTrace();
       }
    }
 
-   public final void sub_b8() {
+   public final void stopCurrentSound() {
       try {
          Player var2;
-         if (this.var_4b > -1 && (var2 = ((SoundPlayer)this.var_8b.elementAt(this.var_4b)).player) != null) {
+         if (this.currentSoundIndex > -1 && (var2 = ((SoundPlayer)this.soundPlayers.elementAt(this.currentSoundIndex)).player) != null) {
             var2.stop();
             var2.setMediaTime(0L);
          }
@@ -91,9 +91,9 @@ public final class Class_48d {
       }
    }
 
-   public final void sub_e2(int var1) {
-      if (this.var_9f != null) {
-         this.var_9f.setLevel(var1);
+   public final void setVolume(int var1) {
+      if (this.volumeControl != null) {
+         this.volumeControl.setLevel(var1);
       }
 
    }
