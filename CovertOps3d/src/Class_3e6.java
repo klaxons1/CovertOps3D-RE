@@ -18,7 +18,7 @@ public final class Class_3e6 {
    public Transform3D var_383;
    public BSPNode[] var_3c0;
    public Sector[] var_401;
-   public Class_21c[] var_433;
+   public WallSegment[] var_433;
 
    public Class_3e6() {
       new Point2D(0, 0);
@@ -78,7 +78,7 @@ public final class Class_3e6 {
       }
 
       for(var1 = 0; var1 < this.var_433.length; ++var1) {
-         this.var_433[var1].sub_35(this);
+         this.var_433[var1].initializeWallSegment(this);
       }
 
       for(var1 = 0; var1 < this.var_401.length; ++var1) {

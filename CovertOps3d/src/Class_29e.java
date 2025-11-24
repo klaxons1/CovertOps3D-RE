@@ -230,11 +230,11 @@ public final class Class_29e {
       }
    }
 
-   private static void sub_14e(Class_21c var0, Class_1e1 var1, Class_8e var2, Point2D[] var3, int var4, int var5, int var6, int var7) {
+   private static void sub_14e(WallSegment var0, Class_1e1 var1, Class_8e var2, Point2D[] var3, int var4, int var5, int var6, int var7) {
       Class_30a var8 = var2.var_13d;
       int var9 = -var5 + (-var8.var_ac << 16);
       int var10 = -var5 + (-var8.var_82 << 16);
-      if (sub_102(var3[var0.var_80 & '\uffff'], var3[var0.var_10b & '\uffff'], var9, var10, var0.var_1d1 & '\uffff')) {
+      if (sub_102(var3[var0.startVertexIndex & '\uffff'], var3[var0.endVertexIndex & '\uffff'], var9, var10, var0.textureOffset & '\uffff')) {
          Point2D var11 = var_5f8;
          Point2D var12 = var_654;
          int var13 = var11.x + 7864320 >> 16;
@@ -258,14 +258,14 @@ public final class Class_29e {
 
    }
 
-   private static void sub_17a(Class_21c var0, Class_1e1 var1, Class_8e var2, Class_8e var3, Point2D[] var4, int var5, int var6, int var7, int var8) {
+   private static void sub_17a(WallSegment var0, Class_1e1 var1, Class_8e var2, Class_8e var3, Point2D[] var4, int var5, int var6, int var7, int var8) {
       Class_30a var9 = var2.var_13d;
       Class_30a var10 = var3.var_13d;
       int var11 = -var6 + (-var9.var_ac << 16);
       int var12 = -var6 + (-var9.var_82 << 16);
       int var13 = -var6 + (-var10.var_ac << 16);
       int var14 = -var6 + (-var10.var_82 << 16);
-      if (sub_102(var4[var0.var_80 & '\uffff'], var4[var0.var_10b & '\uffff'], var11, var12, var0.var_1d1 & '\uffff')) {
+      if (sub_102(var4[var0.startVertexIndex & '\uffff'], var4[var0.endVertexIndex & '\uffff'], var11, var12, var0.textureOffset & '\uffff')) {
          Point2D var15 = var_5f8;
          Point2D var16 = var_654;
          int var17 = var15.x + 7864320 >> 16;
@@ -308,17 +308,17 @@ public final class Class_29e {
 
    }
 
-   private static void sub_1cf(Class_21c var0, Point2D[] var1, int var2, int var3, int var4, int var5) {
+   private static void sub_1cf(WallSegment var0, Point2D[] var1, int var2, int var3, int var4, int var5) {
       Class_1e1 var6;
-      Class_8e var7 = (var6 = var0.var_131).var_e5;
+      Class_8e var7 = (var6 = var0.wallDefinition).var_e5;
       Class_8e var8;
       if ((var8 = var6.var_133) != null) {
-         if (var0.var_125) {
+         if (var0.isFrontFacing) {
             sub_17a(var0, var6, var7, var8, var1, var2, var3, var4, var5);
          } else {
             sub_17a(var0, var6, var8, var7, var1, var2, var3, var4, var5);
          }
-      } else if (var0.var_125) {
+      } else if (var0.isFrontFacing) {
          sub_14e(var0, var6, var7, var1, var2, var3, var4, var5);
       } else {
          throw new IllegalStateException();
@@ -451,7 +451,7 @@ public final class Class_29e {
 
          System.arraycopy(Sector.floorClip, 0, (short[])((short[])var_b02.elementAt(var10)), 0, 240);
          System.arraycopy(Sector.ceilingClip, 0, (short[])((short[])var_b3f.elementAt(var10)), 0, 240);
-         Class_21c[] var15 = var11.walls;
+         WallSegment[] var15 = var11.walls;
 
          for(int var16 = 0; var16 < var15.length; ++var16) {
             sub_1cf(var15[var16], var4, var6, var1, var5, var7);
@@ -1924,7 +1924,7 @@ public final class Class_29e {
 
                var_505.var_401 = var37;
                BSPNode.visibleSectorsList = new Sector[var5 / 4];
-               Class_21c[] var40 = new Class_21c[sub_7c5(var4) / 9];
+               WallSegment[] var40 = new WallSegment[sub_7c5(var4) / 9];
 
                int var43;
                for(var43 = 0; var43 < var40.length; ++var43) {
@@ -1933,7 +1933,7 @@ public final class Class_29e {
                   var18 = sub_775(var4);
                   boolean var49 = var4.readByte() == 0;
                   short var20 = sub_775(var4);
-                  var40[var43] = new Class_21c(var41, var44, var18, var49, var20);
+                  var40[var43] = new WallSegment(var41, var44, var18, var49, var20);
                }
 
                var_505.var_433 = var40;

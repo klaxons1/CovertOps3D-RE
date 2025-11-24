@@ -3,7 +3,7 @@ import java.util.Vector;
 public final class Sector {
    private short wallCount;
    private short wallArrayOffset;
-   public Class_21c[] walls;
+   public WallSegment[] walls;
    public static short[] ceilingClip;
    public static short[] floorClip;
    public Vector dynamicObjects;
@@ -39,7 +39,7 @@ public final class Sector {
    }
 
    public final Class_30a getSectorData() {
-      return this.walls[0].sub_d2();
+      return this.walls[0].getWallSector();
    }
 
    public final void clearDynamicObjects() {
@@ -51,7 +51,7 @@ public final class Sector {
    }
 
    public final void initializeWalls(Class_3e6 var1) {
-      this.walls = new Class_21c[this.wallCount & '\uffff'];
+      this.walls = new WallSegment[this.wallCount & '\uffff'];
 
       for(int var2 = 0; var2 < this.walls.length; ++var2) {
          this.walls[var2] = var1.var_433[(this.wallArrayOffset & '\uffff') + var2];
@@ -60,7 +60,7 @@ public final class Sector {
    }
 
    public final boolean[] getVisibilityMask() {
-      this.visibilityMask = this.walls[0].sub_d2().var_1dd;
+      this.visibilityMask = this.walls[0].getWallSector().var_1dd;
       return this.visibilityMask;
    }
 }
