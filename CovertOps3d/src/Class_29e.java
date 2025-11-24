@@ -28,7 +28,7 @@ public final class Class_29e {
    public static int var_480;
    public static int var_4c8 = 0;
    public static Class_3e6 var_505 = null;
-   public static Class_1b6 var_553;
+   public static PhysicsBody var_553;
    public static Transform3D var_563;
    public static Class_30a var_5c2;
    private static Point2D var_5f8 = new Point2D(0, 0);
@@ -88,7 +88,7 @@ public final class Class_29e {
    public static void sub_52() {
       Class_3aa.sub_57c();
       sub_5f4();
-      var_553 = new Class_1b6(0, 1572864, 0, 65536);
+      var_553 = new PhysicsBody(0, 1572864, 0, 65536);
       var_563 = new Transform3D(0, 0, 0, 0);
       var_b02 = new Vector();
       var_b3f = new Vector();
@@ -474,7 +474,7 @@ public final class Class_29e {
       boolean var2 = false;
       int var3 = var1 - var_f88;
       var_f88 = var1;
-      int var4 = MathUtils.fastHypot(var_553.var_40, var_553.var_72);
+      int var4 = MathUtils.fastHypot(var_553.velocityX, var_553.velocityY);
       var_f5f += var3 * var4 >> 2;
       int var8 = MathUtils.fastSin(var_f5f);
       int var5 = var_ef9 << 15;
@@ -533,41 +533,41 @@ public final class Class_29e {
       }
 
       if (var_161) {
-         var_553.sub_d3(0, -196608);
+         var_553.applyHorizontalForce(0, -196608);
       }
 
       if (var_1ed) {
-         var_553.sub_d3(-196608, 0);
+         var_553.applyHorizontalForce(-196608, 0);
       }
 
       if (var_1bf) {
-         var_553.sub_d3(0, 131072);
+         var_553.applyHorizontalForce(0, 131072);
       }
 
       if (var_1fa) {
-         var_553.sub_d3(196608, 0);
+         var_553.applyHorizontalForce(196608, 0);
       }
 
       if (var_223) {
-         var_553.sub_f9(0, 0, -4500);
+         var_553.applyForce(0, 0, -4500);
       }
 
       if (var_280) {
-         var_553.sub_f9(0, 0, 4500);
+         var_553.applyForce(0, 0, 4500);
       }
 
-      int var0 = MathUtils.fastHypot(var_553.var_40, var_553.var_72);
+      int var0 = MathUtils.fastHypot(var_553.velocityX, var_553.velocityY);
       Class_1e1 var1 = null;
       if (var0 > 262144) {
-         var_553.sub_4a();
+         var_553.applyDampedVelocity();
          var1 = var_505.sub_205(var_553, var_5c2);
-         var_553.sub_4a();
+         var_553.applyDampedVelocity();
          Class_1e1 var2 = var_505.sub_205(var_553, var_5c2);
          if (var1 == null) {
             var1 = var2;
          }
       } else {
-         var_553.sub_36();
+         var_553.applyVelocity();
          var1 = var_505.sub_205(var_553, var_5c2);
       }
 
@@ -1057,7 +1057,7 @@ public final class Class_29e {
             --var_ef9;
          }
 
-         var_553.sub_79(39322, 65536, 39322, 26214);
+         var_553.scaleVelocity(39322, 65536, 39322, 26214);
          return false;
       }
    }

@@ -179,7 +179,7 @@ public final class Class_3e6 {
       return true;
    }
 
-   public final Class_1e1 sub_205(Class_1b6 var1, Class_30a var2) {
+   public final Class_1e1 sub_205(PhysicsBody var1, Class_30a var2) {
       Class_1e1 var5 = null;
       this.var_cd.x = var1.x;
       this.var_cd.y = var1.z;
