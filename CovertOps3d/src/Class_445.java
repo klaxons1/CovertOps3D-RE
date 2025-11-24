@@ -10,7 +10,7 @@ public final class Class_445 {
     public int var_243;
     public int var_296;
     public int var_2cf;
-    public Class_13c var_2f3;
+    public Point2D var_2f3;
     public int var_319;
     public Class_318 var_363;
     public Class_318 var_399;
@@ -22,7 +22,7 @@ public final class Class_445 {
     public Class_445(Class_71 var1, int var2, int var3, int var4) {
         // super(); - в Java ME для классов Object вызов super() не обязателен
         this.var_c = var1;
-        this.var_2f3 = new Class_13c(0, 0);
+        this.var_2f3 = new Point2D(0, 0);
         this.var_24 = var3;
         this.var_f7 = var4;
         this.var_146 = new Vector();
@@ -116,26 +116,26 @@ public final class Class_445 {
     }
 
     public final boolean sub_11b(Class_445 var1) {
-        return this.var_2f3.var_83 < var1.var_2f3.var_83;
+        return this.var_2f3.y < var1.var_2f3.y;
     }
 
     public final boolean sub_172() {
-        if (this.var_2f3.var_83 <= 0) {
+        if (this.var_2f3.y <= 0) {
             return false;
         } else {
-            this.var_2f3.var_2b = (int)((long)Class_48.sub_3c(this.var_2f3.var_2b, this.var_2f3.var_83) * 7864320L >> 16);
-            this.var_319 = Class_48.sub_3c(this.var_319, this.var_2f3.var_83) * 120;
+            this.var_2f3.x = (int)((long) MathUtils.fixedPointDivide(this.var_2f3.x, this.var_2f3.y) * 7864320L >> 16);
+            this.var_319 = MathUtils.fixedPointDivide(this.var_319, this.var_2f3.y) * 120;
             return true;
         }
     }
 
     public final void sub_194() {
-        this.var_3e0 = Class_48.sub_3c(this.var_363.var_11 << 16, this.var_2f3.var_83) * 120 - 131072 >> 18;
-        this.var_404 = Class_48.sub_3c(this.var_363.var_6f << 16, this.var_2f3.var_83) * 120 - 131072 >> 18;
+        this.var_3e0 = MathUtils.fixedPointDivide(this.var_363.var_11 << 16, this.var_2f3.y) * 120 - 131072 >> 18;
+        this.var_404 = MathUtils.fixedPointDivide(this.var_363.var_6f << 16, this.var_2f3.y) * 120 - 131072 >> 18;
     }
 
     public final void sub_1ee() {
-        this.var_41b = Class_48.sub_3c(this.var_399.var_11 << 16, this.var_2f3.var_83) * 120 + 65536 >> 17;
-        this.var_440 = Class_48.sub_3c(this.var_399.var_6f << 16, this.var_2f3.var_83) * 120 + 65536 >> 17;
+        this.var_41b = MathUtils.fixedPointDivide(this.var_399.var_11 << 16, this.var_2f3.y) * 120 + 65536 >> 17;
+        this.var_440 = MathUtils.fixedPointDivide(this.var_399.var_6f << 16, this.var_2f3.y) * 120 + 65536 >> 17;
     }
 }

@@ -2203,7 +2203,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          this.var_8ba[2] = null;
          this.var_9d7 = Image.createImage("/aim.png");
          this.var_a0c = Image.createImage("/font.png");
-         Class_48.sub_17();
+         MathUtils.initializeMathTables();
          Class_29e.sub_52();
       } catch (Exception var1) {
       } catch (OutOfMemoryError var2) {

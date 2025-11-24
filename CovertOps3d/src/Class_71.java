@@ -47,9 +47,9 @@ public class Class_71 {
    }
 
    public final void sub_ca(int var1, int var2) {
-      int var3 = Class_48.sub_1a6(this.var_d7);
-      int var4 = Class_48.sub_1cb(this.var_d7);
-      this.var_49 += Class_48.sub_a0(var4, var1) - Class_48.sub_a0(var3, var2);
-      this.var_ba += Class_48.sub_a0(-var3, var1) - Class_48.sub_a0(var4, var2);
+      int var3 = MathUtils.fastSin(this.var_d7);
+      int var4 = MathUtils.fastCos(this.var_d7);
+      this.var_49 += MathUtils.fixedPointMultiply(var4, var1) - MathUtils.fixedPointMultiply(var3, var2);
+      this.var_ba += MathUtils.fixedPointMultiply(-var3, var1) - MathUtils.fixedPointMultiply(var4, var2);
    }
 }

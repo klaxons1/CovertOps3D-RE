@@ -5,10 +5,10 @@ public final class Class_3e6 {
    public static int var_14 = 16;
    public static int var_38 = 50;
    public static int var_70 = 40;
-   private Class_13c var_cd = new Class_13c(0, 0);
+   private Point2D var_cd = new Point2D(0, 0);
    private int var_f8;
-   public Class_13c[] var_138;
-   private Class_13c[] var_1af;
+   public Point2D[] var_138;
+   private Point2D[] var_1af;
    public Class_1e1[] var_210;
    public Class_445[] var_254;
    private Vector var_2a8;
@@ -21,7 +21,7 @@ public final class Class_3e6 {
    public Class_21c[] var_433;
 
    public Class_3e6() {
-      new Class_13c(0, 0);
+      new Point2D(0, 0);
       this.var_2a8 = new Vector();
       this.var_2f6 = new Vector();
       this.var_f8 = -1;
@@ -31,25 +31,25 @@ public final class Class_3e6 {
       return this.var_3c0[this.var_3c0.length - 1];
    }
 
-   public final void sub_9a(Class_13c[] var1) {
+   public final void sub_9a(Point2D[] var1) {
       this.var_138 = var1;
-      this.var_1af = new Class_13c[var1.length];
+      this.var_1af = new Point2D[var1.length];
 
       for(int var2 = 0; var2 < this.var_1af.length; ++var2) {
-         this.var_1af[var2] = new Class_13c(0, 0);
+         this.var_1af[var2] = new Point2D(0, 0);
       }
 
    }
 
-   public final Class_13c[] sub_b8(int var1, int var2, int var3) {
-      long var4 = (long)Class_48.sub_1a6(var3);
-      long var6 = (long)Class_48.sub_1cb(var3);
+   public final Point2D[] sub_b8(int var1, int var2, int var3) {
+      long var4 = (long) MathUtils.fastSin(var3);
+      long var6 = (long) MathUtils.fastCos(var3);
 
       for(int var8 = 0; var8 < this.var_138.length; ++var8) {
-         int var9 = this.var_138[var8].var_2b - var1;
-         int var10 = this.var_138[var8].var_83 - var2;
-         this.var_1af[var8].var_2b = (int)(var6 * (long)var9 - var4 * (long)var10 >> 16);
-         this.var_1af[var8].var_83 = (int)(var4 * (long)var9 + var6 * (long)var10 >> 16);
+         int var9 = this.var_138[var8].x - var1;
+         int var10 = this.var_138[var8].y - var2;
+         this.var_1af[var8].x = (int)(var6 * (long)var9 - var4 * (long)var10 >> 16);
+         this.var_1af[var8].y = (int)(var4 * (long)var9 + var6 * (long)var10 >> 16);
       }
 
       return this.var_1af;
@@ -112,30 +112,30 @@ public final class Class_3e6 {
 
    }
 
-   private static boolean sub_196(Class_13c var0, Class_13c var1, Class_13c var2) {
-      if (var1.var_2b == var2.var_2b) {
-         if (var0.var_2b <= var1.var_2b) {
-            return var1.var_83 - var2.var_83 > 0;
+   private static boolean sub_196(Point2D var0, Point2D var1, Point2D var2) {
+      if (var1.x == var2.x) {
+         if (var0.x <= var1.x) {
+            return var1.y - var2.y > 0;
          } else {
-            return var1.var_83 - var2.var_83 < 0;
+            return var1.y - var2.y < 0;
          }
-      } else if (var1.var_83 == var2.var_83) {
-         if (var0.var_83 <= var1.var_83) {
-            return var1.var_2b - var2.var_2b < 0;
+      } else if (var1.y == var2.y) {
+         if (var0.y <= var1.y) {
+            return var1.x - var2.x < 0;
          } else {
-            return var1.var_2b - var2.var_2b > 0;
+            return var1.x - var2.x > 0;
          }
       } else {
-         int var3 = var0.var_2b - var1.var_2b;
-         int var4 = var0.var_83 - var1.var_83;
-         long var5 = (long)(var1.var_83 - var2.var_83) * (long)var3;
-         return (long)(var1.var_2b - var2.var_2b) * (long)var4 >= var5;
+         int var3 = var0.x - var1.x;
+         int var4 = var0.y - var1.y;
+         long var5 = (long)(var1.y - var2.y) * (long)var3;
+         return (long)(var1.x - var2.x) * (long)var4 >= var5;
       }
    }
 
    public final boolean sub_1dd(Class_445 var1, Class_71 var2, Class_30a var3) {
-      this.var_cd.var_2b = var2.var_49;
-      this.var_cd.var_83 = var2.var_ba;
+      this.var_cd.x = var2.var_49;
+      this.var_cd.y = var2.var_ba;
 
       int var4;
       for(var4 = 0; var4 < this.var_210.length; ++var4) {
@@ -145,10 +145,10 @@ public final class Class_3e6 {
          }
       }
 
-      var4 = this.var_cd.var_2b - 655360;
-      int var15 = this.var_cd.var_2b + 655360;
-      int var6 = this.var_cd.var_83 - 655360;
-      int var7 = this.var_cd.var_83 + 655360;
+      var4 = this.var_cd.x - 655360;
+      int var15 = this.var_cd.x + 655360;
+      int var6 = this.var_cd.y - 655360;
+      int var7 = this.var_cd.y + 655360;
 
       for(int var8 = 0; var8 < this.var_254.length; ++var8) {
          Class_445 var9;
@@ -174,15 +174,15 @@ public final class Class_3e6 {
          }
       }
 
-      var2.var_49 = this.var_cd.var_2b;
-      var2.var_ba = this.var_cd.var_83;
+      var2.var_49 = this.var_cd.x;
+      var2.var_ba = this.var_cd.y;
       return true;
    }
 
    public final Class_1e1 sub_205(Class_1b6 var1, Class_30a var2) {
       Class_1e1 var5 = null;
-      this.var_cd.var_2b = var1.var_49;
-      this.var_cd.var_83 = var1.var_ba;
+      this.var_cd.x = var1.var_49;
+      this.var_cd.y = var1.var_ba;
       int var6 = -1;
       Class_1e1 var7;
       if (this.var_f8 != -1 && ((var7 = this.var_210[this.var_f8]).sub_129() || sub_24b(var2, var7)) && this.sub_2d4(var7)) {
@@ -223,8 +223,8 @@ public final class Class_3e6 {
             case 3005:
             case 3006:
                Class_71 var10 = var9.var_c;
-               int var11 = this.var_cd.var_2b - var10.var_49;
-               var12 = this.var_cd.var_83 - var10.var_ba;
+               int var11 = this.var_cd.x - var10.var_49;
+               var12 = this.var_cd.y - var10.var_ba;
                var13 = var11 < 0 ? -var11 : var11;
                var14 = var12 < 0 ? -var12 : var12;
                if (var13 < var16 && var14 < var16) {
@@ -233,34 +233,34 @@ public final class Class_3e6 {
                      Class_29e.var_e3a = 30;
                   }
 
-                  Class_13c var10000;
+                  Point2D var10000;
                   if (var13 > var14) {
                      if (var11 > 0) {
                         var10000 = this.var_cd;
-                        var10000.var_2b += var16 - var13;
+                        var10000.x += var16 - var13;
                      } else {
                         var10000 = this.var_cd;
-                        var10000.var_2b -= var16 - var13;
+                        var10000.x -= var16 - var13;
                      }
                   } else {
                      int var10001;
                      if (var12 > 0) {
                         var10000 = this.var_cd;
-                        var10001 = var10000.var_83 + (var16 - var14);
+                        var10001 = var10000.y + (var16 - var14);
                      } else {
                         var10000 = this.var_cd;
-                        var10001 = var10000.var_83 - (var16 - var14);
+                        var10001 = var10000.y - (var16 - var14);
                      }
 
-                     var10000.var_83 = var10001;
+                     var10000.y = var10001;
                   }
                }
             }
          }
       }
 
-      var1.var_49 = this.var_cd.var_2b;
-      var1.var_ba = this.var_cd.var_83;
+      var1.var_49 = this.var_cd.x;
+      var1.var_ba = this.var_cd.y;
       this.var_f8 = var6;
       var16 = 1966080;
 
@@ -553,18 +553,18 @@ public final class Class_3e6 {
    }
 
    private boolean sub_2d4(Class_1e1 var1) {
-      Class_13c var2 = this.var_138[var1.var_22 & '\uffff'];
-      Class_13c var3;
-      int var4 = (var3 = this.var_138[var1.var_5c & '\uffff']).var_2b - var2.var_2b;
-      int var5 = var3.var_83 - var2.var_83;
-      int var6 = var2.var_2b + (var4 >> 1);
-      int var7 = var2.var_83 + (var5 >> 1);
+      Point2D var2 = this.var_138[var1.var_22 & '\uffff'];
+      Point2D var3;
+      int var4 = (var3 = this.var_138[var1.var_5c & '\uffff']).x - var2.x;
+      int var5 = var3.y - var2.y;
+      int var6 = var2.x + (var4 >> 1);
+      int var7 = var2.y + (var5 >> 1);
       int var8 = var4 >= 0 ? var4 >> 1 : -(var4 >> 1);
       int var9 = var5 >= 0 ? var5 >> 1 : -(var5 >> 1);
-      int var10 = (var4 = this.var_cd.var_2b - var6) >= 0 ? var4 : -var4;
+      int var10 = (var4 = this.var_cd.x - var6) >= 0 ? var4 : -var4;
       int var11 = var8 + 655360 - var10;
       if (0 < var11) {
-         int var12 = (var5 = this.var_cd.var_83 - var7) >= 0 ? var5 : -var5;
+         int var12 = (var5 = this.var_cd.y - var7) >= 0 ? var5 : -var5;
          int var13 = var9 + 655360 - var12;
          if (0 < var13) {
             if (var11 < var13) {
@@ -588,15 +588,15 @@ public final class Class_3e6 {
       return false;
    }
 
-   private boolean sub_30b(int var1, int var2, Class_13c var3, Class_13c var4, Class_13c var5, int var6, int var7, int var8, int var9) {
+   private boolean sub_30b(int var1, int var2, Point2D var3, Point2D var4, Point2D var5, int var6, int var7, int var8, int var9) {
       int var10;
       int var10000;
       if (sub_196(this.var_cd, var3, var4)) {
-         var10 = -var5.var_2b;
-         var10000 = -var5.var_83;
+         var10 = -var5.x;
+         var10000 = -var5.y;
       } else {
-         var10 = var5.var_2b;
-         var10000 = var5.var_83;
+         var10 = var5.x;
+         var10000 = var5.y;
       }
 
       int var11;
@@ -605,20 +605,20 @@ public final class Class_3e6 {
          var11 = var10000;
          if (var8 > var9) {
             if (var11 >= 0) {
-               var10000 = var7 + var9 - (this.var_cd.var_83 - 655360);
+               var10000 = var7 + var9 - (this.var_cd.y - 655360);
                break label68;
             }
 
             var10000 = var7 - var9;
-            var10001 = this.var_cd.var_83;
+            var10001 = this.var_cd.y;
          } else {
             if (var10 >= 0) {
-               var10000 = var6 + var8 - (this.var_cd.var_2b - 655360);
+               var10000 = var6 + var8 - (this.var_cd.x - 655360);
                break label68;
             }
 
             var10000 = var6 - var8;
-            var10001 = this.var_cd.var_2b;
+            var10001 = this.var_cd.x;
          }
 
          var10000 = -(var10000 - (var10001 + 655360));
@@ -627,19 +627,19 @@ public final class Class_3e6 {
       int var13 = var10000;
       if (0 < var13) {
          if (var10 >= 0) {
-            var10000 = this.var_cd.var_2b - 655360;
+            var10000 = this.var_cd.x - 655360;
             var10001 = var6 + var8;
          } else {
-            var10000 = this.var_cd.var_2b + 655360;
+            var10000 = this.var_cd.x + 655360;
             var10001 = var6 - var8;
          }
 
          int var14 = var10000 - var10001;
          if (var11 >= 0) {
-            var10000 = this.var_cd.var_83 - 655360;
+            var10000 = this.var_cd.y - 655360;
             var10001 = var7 - var9;
          } else {
-            var10000 = this.var_cd.var_83 + 655360;
+            var10000 = this.var_cd.y + 655360;
             var10001 = var7 + var9;
          }
 
@@ -649,19 +649,19 @@ public final class Class_3e6 {
             int var16 = (int)((long)var10 * (long)(-var18) >> 16);
             int var17 = (int)((long)var11 * (long)(-var18) >> 16);
             int var19 = (var16 >= 0 ? var16 : -var16) + (var17 >= 0 ? var17 : -var17);
-            Class_13c var21;
+            Point2D var21;
             if ((var1 >= 0 ? var1 : -var1) + (var2 >= 0 ? var2 : -var2) < var19) {
                var21 = this.var_cd;
-               var21.var_2b += var1;
+               var21.x += var1;
                var21 = this.var_cd;
-               var21.var_83 += var2;
+               var21.y += var2;
                return true;
             }
 
             var21 = this.var_cd;
-            var21.var_2b += var16;
+            var21.x += var16;
             var21 = this.var_cd;
-            var21.var_83 += var17;
+            var21.y += var17;
             return true;
          }
       }
@@ -688,9 +688,9 @@ public final class Class_3e6 {
       for(int var3 = 0; var3 < this.var_210.length; ++var3) {
          Class_1e1 var4;
          if ((var4 = this.var_210[var3]).sub_1d1() || sub_289(var4)) {
-            Class_13c var5 = this.var_138[var4.var_22 & '\uffff'];
-            Class_13c var6 = this.var_138[var4.var_5c & '\uffff'];
-            if (sub_365(var2.var_49, var2.var_ba, var1.var_49, var1.var_ba, var5.var_2b, var5.var_83, var6.var_2b, var6.var_83)) {
+            Point2D var5 = this.var_138[var4.var_22 & '\uffff'];
+            Point2D var6 = this.var_138[var4.var_5c & '\uffff'];
+            if (sub_365(var2.var_49, var2.var_ba, var1.var_49, var1.var_ba, var5.x, var5.y, var6.x, var6.y)) {
                return false;
             }
          }
@@ -701,8 +701,8 @@ public final class Class_3e6 {
 
    public final void sub_3f2(Class_71 var1, Class_30a var2) {
       int var3 = sub_547(var1.var_49, var1.var_ba, Class_29e.var_553.var_49, Class_29e.var_553.var_ba);
-      int var4 = Class_48.sub_1a6(102943 - var3);
-      int var5 = Class_48.sub_1cb(102943 - var3);
+      int var4 = MathUtils.fastSin(102943 - var3);
+      int var5 = MathUtils.fastCos(102943 - var3);
       int var7 = var1.var_49 + 20 * var5;
       int var8 = var1.var_ba + 20 * var4;
       Class_71 var9 = new Class_71(var7, var1.var_7a + (var2.var_82 + 40 << 16), var8, var3);
@@ -715,12 +715,12 @@ public final class Class_3e6 {
 
    public final void sub_420(Class_71 var1, Class_30a var2) {
       int var3 = sub_547(var1.var_49, var1.var_ba, Class_29e.var_553.var_49, Class_29e.var_553.var_ba);
-      int var4 = Class_48.sub_1a6(102943 - var3);
-      int var5 = Class_48.sub_1cb(102943 - var3);
+      int var4 = MathUtils.fastSin(102943 - var3);
+      int var5 = MathUtils.fastCos(102943 - var3);
       int var7 = var1.var_49 + 20 * var5;
       int var8 = var1.var_ba + 20 * var4;
-      var4 = Class_48.sub_1a6(var3);
-      var5 = Class_48.sub_1cb(var3);
+      var4 = MathUtils.fastSin(var3);
+      var5 = MathUtils.fastCos(var3);
       int var9 = 10 * var5;
       int var10 = -10 * var4;
       Class_71 var11 = new Class_71(var7 + var9, var1.var_7a + (var2.var_82 + 40 << 16), var8 + var10, var3);
@@ -740,9 +740,9 @@ public final class Class_3e6 {
       for(int var7 = 0; var7 < this.var_210.length; ++var7) {
          Class_1e1 var8;
          if ((var8 = this.var_210[var7]).sub_1d1() || sub_2bb(var6, var8)) {
-            Class_13c var9 = this.var_138[var8.var_22 & '\uffff'];
-            Class_13c var10 = this.var_138[var8.var_5c & '\uffff'];
-            if (sub_365(var1, var2, var3, var4, var9.var_2b, var9.var_83, var10.var_2b, var10.var_83)) {
+            Point2D var9 = this.var_138[var8.var_22 & '\uffff'];
+            Point2D var10 = this.var_138[var8.var_5c & '\uffff'];
+            if (sub_365(var1, var2, var3, var4, var9.x, var9.y, var10.x, var10.y)) {
                return true;
             }
          }
@@ -754,11 +754,11 @@ public final class Class_3e6 {
    public final void sub_4ab() {
       int var1 = Class_29e.var_553.var_d7;
       int var2 = 67108864;
-      int var3 = Class_48.sub_1a6(102943 - var1);
-      int var4 = Class_48.sub_1cb(102943 - var1);
+      int var3 = MathUtils.fastSin(102943 - var1);
+      int var4 = MathUtils.fastCos(102943 - var1);
       int var5 = Class_29e.var_d38 != 0 && Class_29e.var_d38 != 5 && Class_29e.var_d38 != 7 ? var2 : 1310720;
-      int var6 = Class_29e.var_553.var_49 + Class_48.sub_a0(var5, var4);
-      int var7 = Class_29e.var_553.var_ba + Class_48.sub_a0(var5, var3);
+      int var6 = Class_29e.var_553.var_49 + MathUtils.fixedPointMultiply(var5, var4);
+      int var7 = Class_29e.var_553.var_ba + MathUtils.fixedPointMultiply(var5, var3);
       if (Class_29e.var_d38 == 5) {
          Class_3aa.sub_84e(4, false, 100, 2);
          Class_71 var15 = new Class_71(var6, Class_29e.var_f27 - 655360, var7, var1);
@@ -774,8 +774,8 @@ public final class Class_3e6 {
          int var9;
          if (Class_29e.var_d38 == 7) {
             Class_3aa.sub_84e(5, false, 100, 2);
-            var3 = Class_48.sub_1a6(var1);
-            var4 = Class_48.sub_1cb(var1);
+            var3 = MathUtils.fastSin(var1);
+            var4 = MathUtils.fastCos(var1);
             int var14 = 10 * var4;
             var9 = -10 * var3;
             Class_71 var17 = new Class_71(var6 - var14, Class_29e.var_f27 - 655360, var7 - var9, var1);
@@ -946,7 +946,7 @@ public final class Class_3e6 {
             if (this.sub_3ce(var2.var_c, Class_29e.var_553)) {
                var3 = var2.var_c.var_49 - Class_29e.var_553.var_49;
                var4 = var2.var_c.var_ba - Class_29e.var_553.var_ba;
-               if ((var5 = Class_3aa.var_1113[Class_29e.var_c79] - (Class_48.sub_a0(Class_48.sub_11f(var3, var4), Class_3aa.var_10c4[Class_29e.var_c79]) >> 16)) > 0) {
+               if ((var5 = Class_3aa.var_1113[Class_29e.var_c79] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var3, var4), Class_3aa.var_10c4[Class_29e.var_c79]) >> 16)) > 0) {
                   Class_3aa.sub_882(var5 * 10);
                   if (Class_29e.sub_59b(var5)) {
                      return true;
@@ -962,7 +962,7 @@ public final class Class_3e6 {
                      var6 = var2.var_c.var_49 - var16.var_c.var_49;
                      var7 = var2.var_c.var_ba - var16.var_c.var_ba;
                      int var8;
-                     if ((var8 = Class_3aa.var_1113[Class_29e.var_c79] - (Class_48.sub_a0(Class_48.sub_11f(var6, var7), Class_3aa.var_10c4[Class_29e.var_c79]) >> 16)) > 0) {
+                     if ((var8 = Class_3aa.var_1113[Class_29e.var_c79] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var6, var7), Class_3aa.var_10c4[Class_29e.var_c79]) >> 16)) > 0) {
                         sub_4c6(var16, var8);
                      }
                   }
@@ -1020,9 +1020,9 @@ public final class Class_3e6 {
                for(int var19 = 0; var19 < this.var_210.length; ++var19) {
                   Class_1e1 var20;
                   if ((var20 = this.var_210[var19]).sub_1d1() || sub_2bb(var10, var20)) {
-                     Class_13c var21 = this.var_138[var20.var_22 & '\uffff'];
-                     Class_13c var14 = this.var_138[var20.var_5c & '\uffff'];
-                     if (sub_365(var4, var5, var6, var7, var21.var_2b, var21.var_83, var14.var_2b, var14.var_83)) {
+                     Point2D var21 = this.var_138[var20.var_22 & '\uffff'];
+                     Point2D var14 = this.var_138[var20.var_5c & '\uffff'];
+                     if (sub_365(var4, var5, var6, var7, var21.x, var21.y, var14.x, var14.y)) {
                         var18 = true;
                         break;
                      }
@@ -1046,11 +1046,11 @@ public final class Class_3e6 {
    private static int sub_547(int var0, int var1, int var2, int var3) {
       int var4 = var2 - var0;
       int var5 = var3 - var1;
-      int var6 = Class_48.sub_11f(var4, var5);
-      var4 = Class_48.sub_d7(var4, var6);
-      long var7 = (long)((var5 = Class_48.sub_d7(var5, var6)) < 0 ? -var5 : var5);
+      int var6 = MathUtils.fastHypot(var4, var5);
+      var4 = MathUtils.preciseDivide(var4, var6);
+      long var7 = (long)((var5 = MathUtils.preciseDivide(var5, var6)) < 0 ? -var5 : var5);
       long var9;
-      int var11 = (var9 = (long)(var4 < 0 ? -var4 : var4)) < 6L ? 0 : Class_48.sub_19c((int)((var7 << 32) / var9 >> 16));
+      int var11 = (var9 = (long)(var4 < 0 ? -var4 : var4)) < 6L ? 0 : MathUtils.fastAtan((int)((var7 << 32) / var9 >> 16));
       if (var4 < 0) {
          var11 = 205887 - var11;
       }
@@ -1068,11 +1068,11 @@ public final class Class_3e6 {
 
    public final boolean sub_57a() {
       int var1 = Class_29e.var_553.var_d7;
-      int var3 = Class_48.sub_1a6(102943 - var1);
-      int var4 = Class_48.sub_1cb(102943 - var1);
+      int var3 = MathUtils.fastSin(102943 - var1);
+      int var4 = MathUtils.fastCos(102943 - var1);
       int var5 = 655360;
-      int var6 = Class_29e.var_553.var_49 + Class_48.sub_a0(var5, var4);
-      int var7 = Class_29e.var_553.var_ba + Class_48.sub_a0(var5, var3);
+      int var6 = Class_29e.var_553.var_49 + MathUtils.fixedPointMultiply(var5, var4);
+      int var7 = Class_29e.var_553.var_ba + MathUtils.fixedPointMultiply(var5, var3);
       Class_71 var8 = new Class_71(var6, 0, var7, var1);
       Class_445 var9;
       (var9 = new Class_445(var8, 0, 103, 100)).sub_ea((byte)0, (byte)-51);
@@ -1127,8 +1127,8 @@ public final class Class_3e6 {
          if (((var3 = this.var_210[var2]).sub_5e() != 0 || !var3.sub_1f8()) && var3.sub_29e()) {
             int var4 = var3.var_22 & '\uffff';
             int var5 = var3.var_5c & '\uffff';
-            Class_13c var6 = this.var_1af[var4];
-            Class_13c var7 = this.var_1af[var5];
+            Point2D var6 = this.var_1af[var4];
+            Point2D var7 = this.var_1af[var5];
             Graphics var10000;
             int var10001;
             if (var3.sub_5e() != 0) {
@@ -1140,10 +1140,10 @@ public final class Class_3e6 {
             }
 
             var10000.setColor(var10001);
-            int var8 = (var6.var_2b >> 18) + 120;
-            int var9 = -(var6.var_83 >> 18) + 144;
-            int var10 = (var7.var_2b >> 18) + 120;
-            int var11 = -(var7.var_83 >> 18) + 144;
+            int var8 = (var6.x >> 18) + 120;
+            int var9 = -(var6.y >> 18) + 144;
+            int var10 = (var7.x >> 18) + 120;
+            int var11 = -(var7.y >> 18) + 144;
             var1.drawLine(var8, var9, var10, var11);
          }
       }

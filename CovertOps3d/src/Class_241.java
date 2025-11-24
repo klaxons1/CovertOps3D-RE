@@ -17,7 +17,7 @@ public final class Class_241 {
       this.var_42 = var1;
       this.var_5f = var2;
       this.var_ad = var3;
-      this.var_d2 = Class_48.sub_3c(var4, var3);
+      this.var_d2 = MathUtils.fixedPointDivide(var4, var3);
       this.var_218 = null;
    }
 

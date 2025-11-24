@@ -26,10 +26,10 @@ public final class Class_1b6 extends Class_71 {
    }
 
    public final void sub_79(int var1, int var2, int var3, int var4) {
-      this.var_40 = Class_48.sub_a0(this.var_40, var1);
-      this.var_63 = Class_48.sub_a0(this.var_63, var2);
-      this.var_72 = Class_48.sub_a0(this.var_72, var3);
-      this.var_b9 = Class_48.sub_a0(this.var_b9, var4);
+      this.var_40 = MathUtils.fixedPointMultiply(this.var_40, var1);
+      this.var_63 = MathUtils.fixedPointMultiply(this.var_63, var2);
+      this.var_72 = MathUtils.fixedPointMultiply(this.var_72, var3);
+      this.var_b9 = MathUtils.fixedPointMultiply(this.var_b9, var4);
       if (this.var_40 < var_e7 && this.var_40 > -var_e7) {
          this.var_40 = 0;
       }
@@ -53,10 +53,10 @@ public final class Class_1b6 extends Class_71 {
    }
 
    public final void sub_f9(int var1, int var2, int var3) {
-      int var4 = Class_48.sub_1a6(super.var_d7);
-      int var5 = Class_48.sub_1cb(super.var_d7);
-      this.var_40 += Class_48.sub_a0(var5, var1) - Class_48.sub_a0(var4, var2);
-      this.var_72 += Class_48.sub_a0(-var4, var1) - Class_48.sub_a0(var5, var2);
+      int var4 = MathUtils.fastSin(super.var_d7);
+      int var5 = MathUtils.fastCos(super.var_d7);
+      this.var_40 += MathUtils.fixedPointMultiply(var5, var1) - MathUtils.fixedPointMultiply(var4, var2);
+      this.var_72 += MathUtils.fixedPointMultiply(-var4, var1) - MathUtils.fixedPointMultiply(var5, var2);
       this.var_b9 += var3;
    }
 }

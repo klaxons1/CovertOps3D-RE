@@ -1,7 +1,7 @@
 public final class Class_1e1 {
    public short var_22;
    public short var_5c;
-   public Class_13c var_88;
+   public Point2D var_88;
    private short var_a7;
    private short var_ce;
    public Class_8e var_e5;
@@ -13,7 +13,7 @@ public final class Class_1e1 {
    public Class_1e1(short var1, short var2, short var3, short var4, byte var5, byte var6, byte var7) {
       this.var_22 = var1;
       this.var_5c = var2;
-      this.var_88 = new Class_13c(0, 0);
+      this.var_88 = new Point2D(0, 0);
       this.var_a7 = var3;
       this.var_ce = var4;
       this.var_18e = var5;
@@ -45,13 +45,13 @@ public final class Class_1e1 {
          }
 
          var10000.var_133 = var10001;
-         Class_13c var2 = var1.var_138[this.var_22 & '\uffff'];
-         Class_13c var3 = var1.var_138[this.var_5c & '\uffff'];
-         int var4 = var2.var_83 - var3.var_83;
-         int var5 = var3.var_2b - var2.var_2b;
-         int var6 = Class_48.sub_169(var4, var5);
-         this.var_88.var_2b = Class_48.sub_3c(var4, var6);
-         this.var_88.var_83 = Class_48.sub_3c(var5, var6);
+         Point2D var2 = var1.var_138[this.var_22 & '\uffff'];
+         Point2D var3 = var1.var_138[this.var_5c & '\uffff'];
+         int var4 = var2.y - var3.y;
+         int var5 = var3.x - var2.x;
+         int var6 = MathUtils.preciseHypot(var4, var5);
+         this.var_88.x = MathUtils.fixedPointDivide(var4, var6);
+         this.var_88.y = MathUtils.fixedPointDivide(var5, var6);
       }
    }
 
