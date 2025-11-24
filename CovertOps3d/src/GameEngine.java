@@ -623,8 +623,8 @@ public final class GameEngine {
       if (var_3e3) {
          ElevatorController var22;
          ElevatorController var41;
-         if (currentSector.getSectorType() == 10 && (var22 = getElevatorController(currentSector)).var_126 == 0) {
-            if (currentSector.floorHeight == var22.var_a0) {
+         if (currentSector.getSectorType() == 10 && (var22 = getElevatorController(currentSector)).elevatorState == 0) {
+            if (currentSector.floorHeight == var22.minHeight) {
                var41 = var22;
                var10001 = 1;
             } else {
@@ -632,7 +632,7 @@ public final class GameEngine {
                var10001 = 2;
             }
 
-            var41.var_126 = var10001;
+            var41.elevatorState = var10001;
          }
 
          var21 = player.rotation;
@@ -659,8 +659,8 @@ public final class GameEngine {
                   byte var42;
                   switch(var12) {
                   case 1:
-                     (var38 = getDoorController(var11.var_133.linkedSector)).var_d5 = 1;
-                     var38.var_87 = var11.var_e5.linkedSector.ceilingHeight;
+                     (var38 = getDoorController(var11.var_133.linkedSector)).doorState = 1;
+                     var38.targetCeilingHeight = var11.var_e5.linkedSector.ceilingHeight;
                      break label389;
                   case 11:
                      if (Class_3aa.var_259 == 7 && ammoCounts[6] == 0) {
@@ -675,8 +675,8 @@ public final class GameEngine {
                      break;
                   case 26:
                      if (var_d98[0]) {
-                        (var38 = getDoorController(var11.var_133.linkedSector)).var_d5 = 1;
-                        var38.var_87 = var11.var_e5.linkedSector.ceilingHeight;
+                        (var38 = getDoorController(var11.var_133.linkedSector)).doorState = 1;
+                        var38.targetCeilingHeight = var11.var_e5.linkedSector.ceilingHeight;
                      } else {
                         messageText = var_d98[1] ? "oops, i need another key..." : "oh, i need a key...";
                         messageTimer = 50;
@@ -684,8 +684,8 @@ public final class GameEngine {
                      break label389;
                   case 28:
                      if (var_d98[1]) {
-                        (var38 = getDoorController(var11.var_133.linkedSector)).var_d5 = 1;
-                        var38.var_87 = var11.var_e5.linkedSector.ceilingHeight;
+                        (var38 = getDoorController(var11.var_133.linkedSector)).doorState = 1;
+                        var38.targetCeilingHeight = var11.var_e5.linkedSector.ceilingHeight;
                      } else {
                         messageText = var_d98[0] ? "oops, i need another key..." : "oh, i need a key...";
                         messageTimer = 50;
@@ -699,8 +699,8 @@ public final class GameEngine {
                   case 62:
                      SectorData var15;
                      ElevatorController var16;
-                     if ((var16 = getElevatorController(var15 = var11.var_133.linkedSector)).var_126 == 0) {
-                        if (var15.floorHeight == var16.var_a0) {
+                     if ((var16 = getElevatorController(var15 = var11.var_133.linkedSector)).elevatorState == 0) {
+                        if (var15.floorHeight == var16.minHeight) {
                            var41 = var16;
                            var10001 = 1;
                         } else {
@@ -708,7 +708,7 @@ public final class GameEngine {
                            var10001 = 2;
                         }
 
-                        var41.var_126 = var10001;
+                        var41.elevatorState = var10001;
                      }
                   default:
                      break label389;
@@ -726,39 +726,39 @@ public final class GameEngine {
       SectorData var43;
       for(var21 = 0; var21 < var_b86.size(); ++var21) {
          DoorController var23;
-         if ((var23 = (DoorController)var_b86.elementAt(var21)).var_46 == currentSector && var23.var_d5 == 2) {
-            var23.var_d5 = 1;
+         if ((var23 = (DoorController)var_b86.elementAt(var21)).controlledSector == currentSector && var23.doorState == 2) {
+            var23.doorState = 1;
          }
 
          DoorController var44;
-         switch(var23.var_d5) {
+         switch(var23.doorState) {
          case 0:
             continue;
          case 1:
-            var43 = var23.var_46;
+            var43 = var23.controlledSector;
             var43.ceilingHeight = (short)(var43.ceilingHeight + 2);
-            if (var23.var_46.ceilingHeight < var23.var_87) {
+            if (var23.controlledSector.ceilingHeight < var23.targetCeilingHeight) {
                continue;
             }
 
-            var23.var_46.ceilingHeight = var23.var_87;
+            var23.controlledSector.ceilingHeight = var23.targetCeilingHeight;
             var44 = var23;
             var10001 = 100;
             break;
          case 2:
-            var43 = var23.var_46;
+            var43 = var23.controlledSector;
             var43.ceilingHeight = (short)(var43.ceilingHeight - 2);
-            if (var23.var_46.ceilingHeight > var23.var_46.floorHeight) {
+            if (var23.controlledSector.ceilingHeight > var23.controlledSector.floorHeight) {
                continue;
             }
 
-            var23.var_46.ceilingHeight = var23.var_46.floorHeight;
+            var23.controlledSector.ceilingHeight = var23.controlledSector.floorHeight;
             var44 = var23;
             var10001 = 0;
             break;
          default:
-            ++var23.var_d5;
-            if (var23.var_d5 < 200) {
+            ++var23.doorState;
+            if (var23.doorState < 200) {
                continue;
             }
 
@@ -766,48 +766,48 @@ public final class GameEngine {
             var10001 = 2;
          }
 
-         var44.var_d5 = var10001;
+         var44.doorState = var10001;
       }
 
       for(var21 = 0; var21 < var_bd3.size(); ++var21) {
          ElevatorController var24;
          short var25;
          short var45;
-         switch((var24 = (ElevatorController)var_bd3.elementAt(var21)).var_126) {
+         switch((var24 = (ElevatorController)var_bd3.elementAt(var21)).elevatorState) {
          case 0:
          default:
             continue;
          case 1:
-            var43 = var24.var_41;
+            var43 = var24.controlledSector;
             var43.ceilingHeight = (short)(var43.ceilingHeight + 2);
-            var43 = var24.var_41;
+            var43 = var24.controlledSector;
             var43.floorHeight = (short)(var43.floorHeight + 2);
-            if (var24.var_41.floorHeight < var24.var_f4) {
+            if (var24.controlledSector.floorHeight < var24.maxHeight) {
                continue;
             }
 
-            var25 = (short)(var24.var_41.ceilingHeight - var24.var_41.floorHeight);
-            var24.var_41.floorHeight = var24.var_f4;
-            var43 = var24.var_41;
-            var45 = var24.var_f4;
+            var25 = (short)(var24.controlledSector.ceilingHeight - var24.controlledSector.floorHeight);
+            var24.controlledSector.floorHeight = var24.maxHeight;
+            var43 = var24.controlledSector;
+            var45 = var24.maxHeight;
             break;
          case 2:
-            var43 = var24.var_41;
+            var43 = var24.controlledSector;
             var43.ceilingHeight = (short)(var43.ceilingHeight - 2);
-            var43 = var24.var_41;
+            var43 = var24.controlledSector;
             var43.floorHeight = (short)(var43.floorHeight - 2);
-            if (var24.var_41.floorHeight > var24.var_a0) {
+            if (var24.controlledSector.floorHeight > var24.minHeight) {
                continue;
             }
 
-            var25 = (short)(var24.var_41.ceilingHeight - var24.var_41.floorHeight);
-            var24.var_41.floorHeight = var24.var_a0;
-            var43 = var24.var_41;
-            var45 = var24.var_a0;
+            var25 = (short)(var24.controlledSector.ceilingHeight - var24.controlledSector.floorHeight);
+            var24.controlledSector.floorHeight = var24.minHeight;
+            var43 = var24.controlledSector;
+            var45 = var24.minHeight;
          }
 
          var43.ceilingHeight = (short)(var45 + var25);
-         var24.var_126 = 0;
+         var24.elevatorState = 0;
       }
 
       if (var_505.updateProjectiles()) {
@@ -1065,13 +1065,13 @@ public final class GameEngine {
    private static DoorController getDoorController(SectorData var0) {
       for(int var1 = 0; var1 < var_b86.size(); ++var1) {
          DoorController var2;
-         if ((var2 = (DoorController)var_b86.elementAt(var1)).var_46 == var0) {
+         if ((var2 = (DoorController)var_b86.elementAt(var1)).controlledSector == var0) {
             return var2;
          }
       }
 
       DoorController var3;
-      (var3 = new DoorController()).var_46 = var0;
+      (var3 = new DoorController()).controlledSector = var0;
       var_b86.addElement(var3);
       return var3;
    }
@@ -1079,32 +1079,32 @@ public final class GameEngine {
    private static ElevatorController getElevatorController(SectorData var0) {
       for(int var1 = 0; var1 < var_bd3.size(); ++var1) {
          ElevatorController var2;
-         if ((var2 = (ElevatorController)var_bd3.elementAt(var1)).var_41 == var0) {
+         if ((var2 = (ElevatorController)var_bd3.elementAt(var1)).controlledSector == var0) {
             return var2;
          }
       }
 
       ElevatorController var6;
-      (var6 = new ElevatorController()).var_126 = 0;
-      var6.var_a0 = 32767;
-      var6.var_f4 = -32768;
+      (var6 = new ElevatorController()).elevatorState = 0;
+      var6.minHeight = 32767;
+      var6.maxHeight = -32768;
       Class_1e1[] var7 = var_505.wallDefinitions;
 
       for(int var3 = 0; var3 < var7.length; ++var3) {
          Class_1e1 var4;
          if ((var4 = var7[var3]).sub_5e() == 62 && var4.var_133.linkedSector == var0) {
             SectorData var5;
-            if ((var5 = var4.var_e5.linkedSector).floorHeight > var6.var_f4) {
-               var6.var_f4 = var5.floorHeight;
+            if ((var5 = var4.var_e5.linkedSector).floorHeight > var6.maxHeight) {
+               var6.maxHeight = var5.floorHeight;
             }
 
-            if (var5.floorHeight < var6.var_a0) {
-               var6.var_a0 = var5.floorHeight;
+            if (var5.floorHeight < var6.minHeight) {
+               var6.minHeight = var5.floorHeight;
             }
          }
       }
 
-      var6.var_41 = var0;
+      var6.controlledSector = var0;
       var_bd3.addElement(var6);
       return var6;
    }
