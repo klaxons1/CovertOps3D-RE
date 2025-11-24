@@ -209,20 +209,20 @@ public class Class_3aa extends GameCanvas implements Runnable {
    public void keyPressed(int var1) {
       switch(this.sub_14(var1)) {
       case 1:
-         Class_29e.var_161 = true;
+         GameEngine.var_161 = true;
          return;
       case 2:
-         Class_29e.var_1bf = true;
+         GameEngine.var_1bf = true;
          return;
       case 3:
-         Class_29e.var_223 = true;
+         GameEngine.var_223 = true;
          return;
       case 4:
-         Class_29e.var_280 = true;
+         GameEngine.var_280 = true;
          return;
       case 5:
-         Class_29e.var_2cd = true;
-         Class_29e.var_2f7 = false;
+         GameEngine.var_2cd = true;
+         GameEngine.var_2f7 = false;
          return;
       case 6:
       case 7:
@@ -232,23 +232,23 @@ public class Class_3aa extends GameCanvas implements Runnable {
       default:
          switch(var1) {
          case 48:
-            Class_29e.var_446 = true;
+            GameEngine.var_446 = true;
             return;
          case 49:
-            Class_29e.var_3e3 = true;
+            GameEngine.var_3e3 = true;
             return;
          case 51:
-            Class_29e.var_3b8 = true;
+            GameEngine.var_3b8 = true;
             return;
          case 53:
-            Class_29e.var_2cd = true;
-            Class_29e.var_2f7 = false;
+            GameEngine.var_2cd = true;
+            GameEngine.var_2f7 = false;
             return;
          case 55:
-            Class_29e.var_1ed = true;
+            GameEngine.var_1ed = true;
             return;
          case 57:
-            Class_29e.var_1fa = true;
+            GameEngine.var_1fa = true;
          case 50:
          case 52:
          case 54:
@@ -257,37 +257,37 @@ public class Class_3aa extends GameCanvas implements Runnable {
             return;
          }
       case 11:
-         Class_29e.var_344 = true;
+         GameEngine.var_344 = true;
          return;
       case 12:
-         Class_29e.var_364 = true;
+         GameEngine.var_364 = true;
       }
    }
 
    public void keyReleased(int var1) {
       switch(this.sub_14(var1)) {
       case 1:
-         Class_29e.var_161 = false;
+         GameEngine.var_161 = false;
          return;
       case 2:
-         Class_29e.var_1bf = false;
+         GameEngine.var_1bf = false;
          return;
       case 3:
-         Class_29e.var_223 = false;
+         GameEngine.var_223 = false;
          return;
       case 4:
-         Class_29e.var_280 = false;
+         GameEngine.var_280 = false;
          return;
       case 5:
-         Class_29e.var_2f7 = true;
+         GameEngine.var_2f7 = true;
          return;
       default:
          switch(var1) {
          case 55:
-            Class_29e.var_1ed = false;
+            GameEngine.var_1ed = false;
             return;
          case 57:
-            Class_29e.var_1fa = false;
+            GameEngine.var_1fa = false;
          default:
          }
       }
@@ -295,11 +295,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
    private void sub_47(Graphics var1) {
       try {
-         int var2 = Class_29e.sub_296(var1, this.var_863) >> 15;
+         int var2 = GameEngine.renderFrame(var1, this.var_863) >> 15;
          int var3 = this.var_8ba[var_98c].getHeight();
          int var4;
-         if (Class_29e.var_fe0) {
-            if ((var4 = Class_29e.var_1044) < 0) {
+         if (GameEngine.levelComplete) {
+            if ((var4 = GameEngine.var_1044) < 0) {
                var4 = -var4;
             }
 
@@ -322,17 +322,17 @@ public class Class_3aa extends GameCanvas implements Runnable {
          var10000.drawImage(var10001, var10002, 288 - var3 - var2 + 3, 0);
          var_98c = this.var_933;
          var1.drawImage(this.var_881, 0, 288, 0);
-         this.sub_547(Class_29e.var_c07, var1, 58, 294);
-         this.sub_547(Class_29e.var_c18, var1, 138, 294);
-         var4 = Class_29e.var_d38 != 3 && Class_29e.var_d38 != 4 ? Class_29e.var_d38 : 1;
-         this.sub_547(Class_29e.var_ced[var4], var1, 218, 294);
-         if (Class_29e.var_d38 > 0 && Class_29e.var_e3a == 0 && !var_ef8) {
+         this.sub_547(GameEngine.playerHealth, var1, 58, 294);
+         this.sub_547(GameEngine.playerArmor, var1, 138, 294);
+         var4 = GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 ? GameEngine.currentWeapon : 1;
+         this.sub_547(GameEngine.ammoCounts[var4], var1, 218, 294);
+         if (GameEngine.currentWeapon > 0 && GameEngine.messageTimer == 0 && !var_ef8) {
             var1.drawImage(this.var_9d7, 240 - this.var_9d7.getWidth() >> 1, 288 - this.var_9d7.getHeight() >> 1, 0);
          }
 
          if (var_ef8) {
             var1.setClip(0, 0, 240, 288);
-            Class_29e.var_505.sub_5ec(var1);
+            GameEngine.var_505.sub_5ec(var1);
             var1.setClip(0, 0, 240, 320);
          }
 
@@ -387,7 +387,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                return;
             }
 
-            Class_29e.sub_95f();
+            GameEngine.sub_95f();
             if (var2 == 66) {
                var_259 = 0;
                var_295 = -1;
@@ -405,7 +405,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             var_259 = var3[var4];
             var_295 = -1;
             sub_746(var4);
-            Class_29e.var_480 = 1;
+            GameEngine.var_480 = 1;
             break;
          }
 
@@ -414,13 +414,13 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
          while(this.var_50) {
             try {
-               if ((Class_29e.var_344 || Class_29e.var_364 || this.var_b0) && (var2 = this.sub_230(var1, false)) != 32) {
+               if ((GameEngine.var_344 || GameEngine.var_364 || this.var_b0) && (var2 = this.sub_230(var1, false)) != 32) {
                   break;
                }
 
                label170: {
                   Class_3aa var10000;
-                  if (Class_29e.var_480 == 1) {
+                  if (GameEngine.var_480 == 1) {
                      switch(var_259) {
                      case 0:
                      case 13:
@@ -524,7 +524,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
                      var10000 = this;
                   } else {
-                     if (Class_29e.var_480 != -1) {
+                     if (GameEngine.var_480 != -1) {
                         break label170;
                      }
 
@@ -546,7 +546,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                while(this.var_7de >= 80L) {
                   ++this.var_863;
                   if (this.sub_393()) {
-                     Class_29e.var_eba = false;
+                     GameEngine.var_eba = false;
                      this.sub_47(var1);
                      this.sub_8c1();
                      this.sub_180(var1);
@@ -558,8 +558,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
 
                this.sub_47(var1);
-               if (Class_29e.var_e3a > 0) {
-                  this.sub_2e3(var1, Class_29e.var_ded);
+               if (GameEngine.messageTimer > 0) {
+                  this.sub_2e3(var1, GameEngine.messageText);
                }
 
                this.sub_8c1();
@@ -587,7 +587,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          int var11;
          byte[] var12 = new byte[var11 = var4.readInt()];
          var4.readFully(var12, 0, var11);
-         Class_29e.sub_912(var12, 0, var10, 0, var9, var5);
+         GameEngine.sub_912(var12, 0, var10, 0, var9, var5);
          int[] var13 = new int[var8];
 
          int var14;
@@ -634,7 +634,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             int var16;
             byte[] var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
-            Class_29e.sub_912(var17, 0, var4, 0, var15, var11);
+            GameEngine.sub_912(var17, 0, var4, 0, var15, var11);
             this.var_b23 = new int[var14];
             this.var_b56 = new int[var14];
             this.var_b60 = new int[var14];
@@ -662,13 +662,13 @@ public class Class_3aa extends GameCanvas implements Runnable {
             var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
             var10.close();
-            Class_29e.sub_912(var17, 0, var6, 0, 4096, 1);
+            GameEngine.sub_912(var17, 0, var6, 0, 4096, 1);
             var9 = (new Object()).getClass().getResourceAsStream(var8 + "_mask");
             (var10 = new DataInputStream(var9)).skipBytes(8);
             var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
             var10.close();
-            Class_29e.sub_912(var17, 0, var5, 0, var15, 1);
+            GameEngine.sub_912(var17, 0, var5, 0, var15, 1);
 
             for(var18 = 0; var18 < var15; ++var18) {
                var5[var18] = var5[var18] == 0 ? -1 : var4[var18];
@@ -752,10 +752,10 @@ public class Class_3aa extends GameCanvas implements Runnable {
    private void sub_180(Graphics var1) {
       try {
          Image var2 = Image.createImage("/splash.png");
-         Class_29e.var_843[0] = -2130771968;
-         sub_159(Class_29e.var_843, 0, 38400);
-         var1.drawRGB(Class_29e.var_843, 0, 240, 0, 0, 240, 160, true);
-         var1.drawRGB(Class_29e.var_843, 0, 240, 0, 160, 240, 160, true);
+         GameEngine.screenBuffer[0] = -2130771968;
+         sub_159(GameEngine.screenBuffer, 0, 38400);
+         var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+         var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
          String var3 = "mission failed|game over";
          this.sub_2e3(var1, "mission failed|game over");
          this.sub_8c1();
@@ -774,11 +774,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
             }
 
-            Class_29e.var_843[0] = var6;
-            sub_159(Class_29e.var_843, 0, 38400);
+            GameEngine.screenBuffer[0] = var6;
+            sub_159(GameEngine.screenBuffer, 0, 38400);
             var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(Class_29e.var_843, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(Class_29e.var_843, 0, 240, 0, 160, 240, 160, true);
+            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.sub_2e3(var1, var3);
             this.sub_8c1();
             sub_922();
@@ -859,11 +859,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
    private int sub_230(Graphics var1, boolean var2) {
       try {
-         Class_29e.var_344 = false;
-         Class_29e.var_364 = false;
-         Class_29e.var_2cd = false;
-         Class_29e.var_161 = false;
-         Class_29e.var_1bf = false;
+         GameEngine.var_344 = false;
+         GameEngine.var_364 = false;
+         GameEngine.var_2cd = false;
+         GameEngine.var_161 = false;
+         GameEngine.var_1bf = false;
          Image var3 = Image.createImage("/bkg.png");
          int var4 = 0;
          int var5 = 0;
@@ -931,9 +931,9 @@ public class Class_3aa extends GameCanvas implements Runnable {
             this.sub_8c1();
             sub_922();
             Object[] var23;
-            if (Class_29e.var_344 || Class_29e.var_2cd) {
-               Class_29e.var_344 = false;
-               Class_29e.var_2cd = false;
+            if (GameEngine.var_344 || GameEngine.var_2cd) {
+               GameEngine.var_344 = false;
+               GameEngine.var_2cd = false;
                switch(var4) {
                case 0:
                case 33:
@@ -943,7 +943,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   var23[3] = new Integer(var8);
                   var10.push(var23);
                   var6 = var_3ad;
-                  var4 = 18 + Class_29e.var_c79;
+                  var4 = 18 + GameEngine.difficultyLevel;
                   var7 = 2;
                   var8 = var6.length - 2;
                   break;
@@ -1047,7 +1047,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   var23[2] = new Integer(var7);
                   var23[3] = new Integer(var8);
                   var10.push(var23);
-                  Class_29e.var_c79 = var4 - 18;
+                  GameEngine.difficultyLevel = var4 - 18;
                   sub_700();
                   var7 = 2;
                   var8 = this.var_313.length - 2;
@@ -1126,8 +1126,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
             }
 
-            if (Class_29e.var_364) {
-               Class_29e.var_364 = false;
+            if (GameEngine.var_364) {
+               GameEngine.var_364 = false;
                if (var6[var6.length - 1] != "back" && var6[var6.length - 1] != "no") {
                   if (var6[var6.length - 1] == "quit") {
                      (var23 = new Object[4])[0] = var6;
@@ -1149,7 +1149,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
             }
 
-            if (Class_29e.var_161) {
+            if (GameEngine.var_161) {
                var16 = var4 & 15;
                --var16;
                if (var16 < var7) {
@@ -1159,10 +1159,10 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
 
                var4 = var4 & -16 | var16;
-               Class_29e.var_161 = false;
+               GameEngine.var_161 = false;
             }
 
-            if (Class_29e.var_1bf) {
+            if (GameEngine.var_1bf) {
                var16 = var4 & 15;
                ++var16;
                if (var16 > var8) {
@@ -1172,7 +1172,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
 
                var4 = var4 & -16 | var16;
-               Class_29e.var_1bf = false;
+               GameEngine.var_1bf = false;
             }
          }
       } catch (Exception var19) {
@@ -1185,11 +1185,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
    }
 
    private void sub_24b(Graphics var1, Image var2, String var3, String[] var4, boolean var5) {
-      Class_29e.var_344 = false;
-      Class_29e.var_364 = false;
-      Class_29e.var_2cd = false;
-      Class_29e.var_161 = false;
-      Class_29e.var_1bf = false;
+      GameEngine.var_344 = false;
+      GameEngine.var_364 = false;
+      GameEngine.var_2cd = false;
+      GameEngine.var_161 = false;
+      GameEngine.var_1bf = false;
 
       try {
          String var6 = var_1e5.getAppProperty("MIDlet-Version");
@@ -1198,11 +1198,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
          int var8 = 320 - this.var_550;
 
          for(int var9 = 1; var9 <= 8; ++var9) {
-            Class_29e.var_843[0] = 16777215 | var9 * 268435456;
-            sub_159(Class_29e.var_843, 0, 38400);
+            GameEngine.screenBuffer[0] = 16777215 | var9 * 268435456;
+            sub_159(GameEngine.screenBuffer, 0, 38400);
             var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(Class_29e.var_843, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(Class_29e.var_843, 0, 240, 0, 160, 240, 160, true);
+            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.sub_8c1();
             sub_922();
             sub_4ef(50);
@@ -1214,8 +1214,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
             if (var7) {
                var1.setClip(0, 0, 240, 320);
                var1.drawImage(var2, 0, 0, 20);
-               var1.drawRGB(Class_29e.var_843, 0, 240, 0, 0, 240, 160, true);
-               var1.drawRGB(Class_29e.var_843, 0, 240, 0, 160, 240, 160, true);
+               var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+               var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
                String var11 = "back";
                this.sub_681(var11, var1, 240 - this.sub_5d2(var11) - 3, 320 - this.var_550 - 3);
                this.sub_681(var3, var1, (240 - this.sub_5d2(var3)) / 2, 3);
@@ -1254,17 +1254,17 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
             var7 = var5;
             sub_922();
-         } while(!Class_29e.var_364);
+         } while(!GameEngine.var_364);
 
-         Class_29e.var_364 = false;
+         GameEngine.var_364 = false;
          var1.setClip(0, 0, 240, 320);
 
          for(int var22 = 8; var22 >= 1; --var22) {
-            Class_29e.var_843[0] = 16777215 | var22 * 268435456;
-            sub_159(Class_29e.var_843, 0, 38400);
+            GameEngine.screenBuffer[0] = 16777215 | var22 * 268435456;
+            sub_159(GameEngine.screenBuffer, 0, 38400);
             var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(Class_29e.var_843, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(Class_29e.var_843, 0, 240, 0, 160, 240, 160, true);
+            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.sub_8c1();
             sub_922();
             sub_4ef(50);
@@ -1273,11 +1273,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
       } catch (OutOfMemoryError var20) {
       }
 
-      Class_29e.var_344 = false;
-      Class_29e.var_364 = false;
-      Class_29e.var_2cd = false;
-      Class_29e.var_161 = false;
-      Class_29e.var_1bf = false;
+      GameEngine.var_344 = false;
+      GameEngine.var_364 = false;
+      GameEngine.var_2cd = false;
+      GameEngine.var_161 = false;
+      GameEngine.var_1bf = false;
       this.var_a63 = null;
       var1.setClip(0, 0, 240, 320);
    }
@@ -1301,11 +1301,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
          if (this.var_cfa < 20) {
             if (var9 > 0) {
-               var10 = Class_29e.var_ea3.nextInt() & 1;
-               var11 = var4[(Class_29e.var_ea3.nextInt() & 7) % var9];
+               var10 = GameEngine.var_ea3.nextInt() & 1;
+               var11 = var4[(GameEngine.var_ea3.nextInt() & 7) % var9];
                var2[var11] = var10;
-               int var12 = Class_29e.var_ea3.nextInt() & Integer.MAX_VALUE;
-               var3[var11] = var12 % var_18ad[Class_29e.var_c79] + var_18a0[Class_29e.var_c79];
+               int var12 = GameEngine.var_ea3.nextInt() & Integer.MAX_VALUE;
+               var3[var11] = var12 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
                var5[var11] = var6[var11];
                if (var6[var11] > var7[var11]) {
                   var10000 = var1;
@@ -1403,10 +1403,10 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   case 5:
                   case 6:
                      var1[var9] = 3;
-                     var11 = Class_29e.var_ea3.nextInt() & Integer.MAX_VALUE;
+                     var11 = GameEngine.var_ea3.nextInt() & Integer.MAX_VALUE;
                      var10000 = var3;
                      var10001 = var9;
-                     var16 = var11 % var_191e[Class_29e.var_c79] + var_1910[Class_29e.var_c79];
+                     var16 = var11 % var_191e[GameEngine.difficultyLevel] + var_1910[GameEngine.difficultyLevel];
                      break;
                   case 3:
                      var1[var9] = 4;
@@ -1434,7 +1434,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
       this.var_d88 += var13[var11];
       this.var_d9b += var15[var11];
       byte var14 = 0;
-      if (Class_29e.var_223) {
+      if (GameEngine.var_223) {
          if (this.var_d2a == 3) {
             --this.var_be4;
          }
@@ -1442,7 +1442,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          var14 = 3;
       }
 
-      if (Class_29e.var_280) {
+      if (GameEngine.var_280) {
          if (this.var_d2a == 4) {
             ++this.var_be4;
          }
@@ -1450,7 +1450,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          var14 = 4;
       }
 
-      if (Class_29e.var_161) {
+      if (GameEngine.var_161) {
          if (this.var_d2a == 1) {
             --this.var_c1f;
          }
@@ -1458,7 +1458,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          var14 = 1;
       }
 
-      if (Class_29e.var_1bf) {
+      if (GameEngine.var_1bf) {
          if (this.var_d2a == 2) {
             ++this.var_c1f;
          }
@@ -1530,7 +1530,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          int[][] var17 = new int[][]{{1, 1, 1, 0, 0, 2, 2, 2}, {1, 1, 1, 1, 1, 1, 1, 1}};
          int[] var18 = new int[]{4, 9, 14};
          int[] var19 = new int[]{8, 18, 30};
-         int[] var20 = new int[]{var_1329[Class_29e.var_c79], var_1358[Class_29e.var_c79], var_1366[Class_29e.var_c79]};
+         int[] var20 = new int[]{var_1329[GameEngine.difficultyLevel], var_1358[GameEngine.difficultyLevel], var_1366[GameEngine.difficultyLevel]};
          boolean var21 = false;
          int[] var22 = new int[]{0, 0};
          int[] var23 = new int[]{0, 0};
@@ -1566,15 +1566,15 @@ public class Class_3aa extends GameCanvas implements Runnable {
          int[] var32 = new int[8];
          this.var_7de = 0L;
          this.var_842 = 0L;
-         Class_29e.var_480 = 2;
+         GameEngine.var_480 = 2;
 
          while(this.var_50) {
-            if (Class_29e.var_480 == 1) {
+            if (GameEngine.var_480 == 1) {
                return -1;
             }
 
             int var34;
-            if ((Class_29e.var_344 || Class_29e.var_364 || this.var_b0) && (var34 = this.sub_230(var1, false)) != 32) {
+            if ((GameEngine.var_344 || GameEngine.var_364 || this.var_b0) && (var34 = this.sub_230(var1, false)) != 32) {
                return var34;
             }
 
@@ -1609,8 +1609,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
                byte var10000;
                boolean var10001;
                byte var10002;
-               if (var36 > var_1329[Class_29e.var_c79]) {
-                  if (var36 > var_1358[Class_29e.var_c79]) {
+               if (var36 > var_1329[GameEngine.difficultyLevel]) {
+                  if (var36 > var_1358[GameEngine.difficultyLevel]) {
                      var10000 = 2;
                      var10001 = false;
                      var10002 = 100;
@@ -1627,7 +1627,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
                sub_84e(var10000, var10001, var10002, 0);
                sub_882(var36 * 10);
-               if (Class_29e.sub_59b(var36)) {
+               if (GameEngine.applyDamage(var36)) {
                   var21 = true;
                } else {
                   var64 = this.var_b96;
@@ -1657,7 +1657,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                var45 = var42 + 240 * var43;
 
                for(var46 = var44; var46 < var45; ++var46) {
-                  Class_29e.var_843[var46] = var38[var7[var46] & 255];
+                  GameEngine.screenBuffer[var46] = var38[var7[var46] & 255];
                }
             }
 
@@ -1711,8 +1711,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   sub_2c3(var24[var44], var48, var49, var45, var46, var36 > 0);
                   if (var26[var44] == 4) {
                      var26[var44] = (var28[var44] & 1) == 1 ? 1 : 5;
-                     var50 = Class_29e.var_ea3.nextInt() & Integer.MAX_VALUE;
-                     var27[var44] = var50 % var_18ad[Class_29e.var_c79] + var_18a0[Class_29e.var_c79];
+                     var50 = GameEngine.var_ea3.nextInt() & Integer.MAX_VALUE;
+                     var27[var44] = var50 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
                   }
                }
             }
@@ -1723,7 +1723,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
                for(var47 = var45; var47 < var46; ++var47) {
                   if ((var48 = var8[var47] & 255) != 255) {
-                     Class_29e.var_843[var47] = var38[var48];
+                     GameEngine.screenBuffer[var47] = var38[var48];
                   }
                }
             }
@@ -1751,8 +1751,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
                      sub_2c3(var24[var44], var48, var49, var45, var46, var36 > 0);
                      if (var26[var44] == 4) {
                         var26[var44] = (var28[var44] & 1) == 1 ? 1 : 5;
-                        var50 = Class_29e.var_ea3.nextInt() & Integer.MAX_VALUE;
-                        var27[var44] = var50 % var_18ad[Class_29e.var_c79] + var_18a0[Class_29e.var_c79];
+                        var50 = GameEngine.var_ea3.nextInt() & Integer.MAX_VALUE;
+                        var27[var44] = var50 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
                      }
                   }
                }
@@ -1761,7 +1761,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             var44 = 240 * var39;
 
             for(var45 = 0; var45 < var44; ++var45) {
-               Class_29e.var_843[var45] = var64[var7[var45] & 255];
+               GameEngine.screenBuffer[var45] = var64[var7[var45] & 255];
             }
 
             var45 = var39 - var31;
@@ -1771,13 +1771,13 @@ public class Class_3aa extends GameCanvas implements Runnable {
                var44 = (var47 = 240 * var46) + var41;
 
                for(var48 = var47; var48 < var44; ++var48) {
-                  Class_29e.var_843[var48] = var64[var7[var48] & 255];
+                  GameEngine.screenBuffer[var48] = var64[var7[var48] & 255];
                }
 
                var44 = var47 + 240;
 
                for(var48 = var42 + var47; var48 < var44; ++var48) {
-                  Class_29e.var_843[var48] = var64[var7[var48] & 255];
+                  GameEngine.screenBuffer[var48] = var64[var7[var48] & 255];
                }
 
                var48 = 64 * var45;
@@ -1786,7 +1786,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                for(var50 = var41; var50 < var42; ++var49) {
                   if (var9[var48 + var49] == 0) {
                      var51 = var47 + var50;
-                     Class_29e.var_843[var51] = var64[var7[var51] & 255];
+                     GameEngine.screenBuffer[var51] = var64[var7[var51] & 255];
                   }
 
                   ++var50;
@@ -1796,10 +1796,10 @@ public class Class_3aa extends GameCanvas implements Runnable {
             }
 
             for(var47 = var46 = 240 * var40; var47 < var5; ++var47) {
-               Class_29e.var_843[var47] = var64[var7[var47] & 255];
+               GameEngine.screenBuffer[var47] = var64[var7[var47] & 255];
             }
 
-            if (Class_29e.var_2cd) {
+            if (GameEngine.var_2cd) {
                var47 = this.var_d88 + 32 - 1;
                var48 = this.var_d9b + 32 - 1;
                var49 = 16777215;
@@ -1824,18 +1824,18 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
 
                if (!var65) {
-                  sub_84e((Class_29e.var_ea3.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
+                  sub_84e((GameEngine.var_ea3.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                }
 
-               Class_29e.var_843[240 * var48 + var47] = var49;
-               Class_29e.var_2cd = false;
+               GameEngine.screenBuffer[240 * var48 + var47] = var49;
+               GameEngine.var_2cd = false;
             }
 
-            var1.drawRGB(Class_29e.var_843, 0, 240, 0, 0, 240, 288, false);
+            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 288, false);
             var1.drawImage(var61, var62, var31, 20);
             var1.drawImage(this.var_881, 0, 288, 0);
-            this.sub_547(Class_29e.var_c07, var1, 58, 294);
-            this.sub_547(Class_29e.var_c18, var1, 138, 294);
+            this.sub_547(GameEngine.playerHealth, var1, 58, 294);
+            this.sub_547(GameEngine.playerArmor, var1, 138, 294);
             this.sub_8c1();
             if (var21) {
                return -2;
@@ -1860,7 +1860,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          for(var8 = 0; var8 < var2; ++var8) {
             for(var9 = 0; var9 < var1; ++var9) {
                if ((var10 = var0[var7++]) != 16711935) {
-                  Class_29e.var_843[var6 + var9] = var10;
+                  GameEngine.screenBuffer[var6 + var9] = var10;
                }
             }
 
@@ -1871,7 +1871,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          for(var8 = 0; var8 < var2; ++var8) {
             for(var9 = 0; var9 < var1; ++var9) {
                if ((var10 = var0[var7++]) != 16711935) {
-                  Class_29e.var_843[var6 + var9] = var10 | 16711680;
+                  GameEngine.screenBuffer[var6 + var9] = var10 | 16711680;
                }
             }
 
@@ -1947,31 +1947,31 @@ public class Class_3aa extends GameCanvas implements Runnable {
    }
 
    public final boolean sub_393() {
-      if (Class_29e.sub_2f3()) {
+      if (GameEngine.updateGameLogic()) {
          return true;
       } else {
-         if (!Class_29e.var_fe0) {
-            Class_29e.var_d46 = Class_29e.var_d38;
-            if (Class_29e.var_3b8) {
-               Class_29e.var_3b8 = false;
-               Class_29e.var_d46 = Class_29e.sub_558(Class_29e.var_d46);
+         if (!GameEngine.levelComplete) {
+            GameEngine.var_d46 = GameEngine.currentWeapon;
+            if (GameEngine.var_3b8) {
+               GameEngine.var_3b8 = false;
+               GameEngine.var_d46 = GameEngine.sub_558(GameEngine.var_d46);
             }
 
-            Class_29e.var_d46 = Class_29e.sub_577(Class_29e.var_d46);
-            if (Class_29e.var_d46 != Class_29e.var_d38) {
-               Class_29e.var_fe0 = true;
-               Class_29e.var_1044 = 8;
+            GameEngine.var_d46 = GameEngine.sub_577(GameEngine.var_d46);
+            if (GameEngine.var_d46 != GameEngine.currentWeapon) {
+               GameEngine.levelComplete = true;
+               GameEngine.var_1044 = 8;
             }
          }
 
-         if (Class_29e.var_fe0) {
-            --Class_29e.var_1044;
-            if (Class_29e.var_1044 == -8) {
-               Class_29e.var_fe0 = false;
+         if (GameEngine.levelComplete) {
+            --GameEngine.var_1044;
+            if (GameEngine.var_1044 == -8) {
+               GameEngine.levelComplete = false;
             }
 
-            if (Class_29e.var_1044 == 0) {
-               Class_29e.var_d38 = Class_29e.var_d46;
+            if (GameEngine.var_1044 == 0) {
+               GameEngine.currentWeapon = GameEngine.var_d46;
 
                try {
                   label190: {
@@ -1983,7 +1983,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                         Image var5;
                         label161: {
                            String var10002;
-                           switch(Class_29e.var_d38) {
+                           switch(GameEngine.currentWeapon) {
                            case 0:
                               this.var_8ba[0] = Image.createImage("/fist_a.png");
                               var10000 = this.var_8ba;
@@ -2060,119 +2060,119 @@ public class Class_3aa extends GameCanvas implements Runnable {
             }
          }
 
-         if (Class_29e.var_4c8 > -32768) {
-            --Class_29e.var_4c8;
+         if (GameEngine.var_4c8 > -32768) {
+            --GameEngine.var_4c8;
          }
 
-         if (Class_29e.var_2cd && !Class_29e.var_fe0) {
+         if (GameEngine.var_2cd && !GameEngine.levelComplete) {
             int var6;
-            switch(Class_29e.var_d38) {
+            switch(GameEngine.currentWeapon) {
             case 0:
-               if (Class_29e.var_4c8 < -var_111e[Class_29e.var_c79]) {
-                  Class_29e.var_505.sub_4ab();
+               if (GameEngine.var_4c8 < -var_111e[GameEngine.difficultyLevel]) {
+                  GameEngine.var_505.sub_4ab();
                   this.var_933 = 1;
                   var_98c = 1;
-                  Class_29e.var_4c8 = 1;
+                  GameEngine.var_4c8 = 1;
                }
                break;
             case 1:
-               if (Class_29e.var_4c8 < -var_1128[Class_29e.var_c79] && Class_29e.var_ced[Class_29e.var_d38] > 0) {
-                  var6 = Class_29e.var_ced[Class_29e.var_d38]--;
-                  Class_29e.var_505.sub_4ab();
+               if (GameEngine.var_4c8 < -var_1128[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+                  var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
+                  GameEngine.var_505.sub_4ab();
                   this.var_933 = 1;
                   var_98c = 1;
-                  Class_29e.var_4c8 = 1;
+                  GameEngine.var_4c8 = 1;
                }
                break;
             case 2:
-               if (Class_29e.var_4c8 < -var_1147[Class_29e.var_c79] && Class_29e.var_ced[Class_29e.var_d38] > 0) {
-                  var6 = Class_29e.var_ced[Class_29e.var_d38]--;
-                  Class_29e.var_505.sub_4ab();
+               if (GameEngine.var_4c8 < -var_1147[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+                  var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
+                  GameEngine.var_505.sub_4ab();
                   this.var_933 = 1;
                   var_98c = 1;
-                  Class_29e.var_4c8 = 1;
+                  GameEngine.var_4c8 = 1;
                }
                break;
             case 3:
-               if (Class_29e.var_4c8 <= 0) {
+               if (GameEngine.var_4c8 <= 0) {
                   if (this.var_933 == 0) {
-                     if (Class_29e.var_ced[1] > 0) {
-                        var6 = Class_29e.var_ced[1]--;
-                        Class_29e.var_505.sub_4ab();
+                     if (GameEngine.ammoCounts[1] > 0) {
+                        var6 = GameEngine.ammoCounts[1]--;
+                        GameEngine.var_505.sub_4ab();
                         this.var_933 = 1;
                         var_98c = 1;
-                        Class_29e.var_4c8 = 1;
+                        GameEngine.var_4c8 = 1;
                      }
                   } else {
                      this.var_933 = 0;
-                     Class_29e.var_4c8 = var_119b[Class_29e.var_c79];
+                     GameEngine.var_4c8 = var_119b[GameEngine.difficultyLevel];
                   }
                }
                break;
             case 4:
-               if (Class_29e.var_4c8 <= 0) {
+               if (GameEngine.var_4c8 <= 0) {
                   if (this.var_933 == 0) {
-                     if (Class_29e.var_ced[1] > 0) {
-                        var6 = Class_29e.var_ced[1]--;
-                        Class_29e.var_505.sub_4ab();
+                     if (GameEngine.ammoCounts[1] > 0) {
+                        var6 = GameEngine.ammoCounts[1]--;
+                        GameEngine.var_505.sub_4ab();
                         this.var_933 = 1;
                         var_98c = 1;
-                        Class_29e.var_4c8 = 1;
+                        GameEngine.var_4c8 = 1;
                      }
                   } else {
                      this.var_933 = 0;
-                     Class_29e.var_4c8 = var_11e0[Class_29e.var_c79];
+                     GameEngine.var_4c8 = var_11e0[GameEngine.difficultyLevel];
                   }
                }
                break;
             case 5:
-               if (Class_29e.var_4c8 <= -1 && Class_29e.var_ced[Class_29e.var_d38] > 0) {
-                  var6 = Class_29e.var_ced[Class_29e.var_d38]--;
-                  Class_29e.var_505.sub_4ab();
+               if (GameEngine.var_4c8 <= -1 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+                  var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
+                  GameEngine.var_505.sub_4ab();
                   this.var_933 = 1;
                   var_98c = 1;
-                  Class_29e.var_4c8 = 2;
+                  GameEngine.var_4c8 = 2;
                }
                break;
             case 6:
-               if (Class_29e.var_4c8 <= -1 && Class_29e.var_ced[6] > 0) {
-                  if ((var_259 == 4 || var_259 == 7 || var_259 == 8) && (var_259 != 4 || Class_29e.var_5c2.sub_5c() != 666) && Class_29e.var_ced[6] == 1) {
-                     Class_29e.var_ded = "i'd better use it|to finish my mission";
-                     Class_29e.var_e3a = 50;
-                  } else if (Class_29e.var_505.sub_57a()) {
-                     var6 = Class_29e.var_ced[6]--;
-                     Class_29e.var_4c8 = 0;
-                     Class_29e.var_1044 = 8;
-                     Class_29e.var_fe0 = true;
-                     Class_29e.var_d46 = Class_29e.sub_577(6);
+               if (GameEngine.var_4c8 <= -1 && GameEngine.ammoCounts[6] > 0) {
+                  if ((var_259 == 4 || var_259 == 7 || var_259 == 8) && (var_259 != 4 || GameEngine.currentSector.sub_5c() != 666) && GameEngine.ammoCounts[6] == 1) {
+                     GameEngine.messageText = "i'd better use it|to finish my mission";
+                     GameEngine.messageTimer = 50;
+                  } else if (GameEngine.var_505.sub_57a()) {
+                     var6 = GameEngine.ammoCounts[6]--;
+                     GameEngine.var_4c8 = 0;
+                     GameEngine.var_1044 = 8;
+                     GameEngine.levelComplete = true;
+                     GameEngine.var_d46 = GameEngine.sub_577(6);
                   }
                }
                break;
             case 7:
-               if (Class_29e.var_4c8 < -var_11f1[Class_29e.var_c79] && Class_29e.var_ced[Class_29e.var_d38] > 0) {
-                  var6 = Class_29e.var_ced[Class_29e.var_d38]--;
-                  Class_29e.var_505.sub_4ab();
+               if (GameEngine.var_4c8 < -var_11f1[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+                  var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
+                  GameEngine.var_505.sub_4ab();
                   this.var_933 = 1;
                   var_98c = 1;
-                  Class_29e.var_4c8 = 1;
+                  GameEngine.var_4c8 = 1;
                }
             }
-         } else if (Class_29e.var_4c8 <= 0) {
-            if (Class_29e.var_d38 == 5) {
+         } else if (GameEngine.var_4c8 <= 0) {
+            if (GameEngine.currentWeapon == 5) {
                if (this.var_933 == 1) {
                   this.var_933 = 2;
                   var_98c = 2;
-                  Class_29e.var_1044 = 8;
-                  Class_29e.var_fe0 = true;
-                  Class_29e.var_d46 = Class_29e.sub_577(5);
+                  GameEngine.var_1044 = 8;
+                  GameEngine.levelComplete = true;
+                  GameEngine.var_d46 = GameEngine.sub_577(5);
                }
             } else {
                this.var_933 = 0;
             }
          }
 
-         if (Class_29e.var_d38 != 3 && Class_29e.var_d38 != 4 || Class_29e.var_2f7) {
-            Class_29e.var_2cd = false;
+         if (GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 || GameEngine.var_2f7) {
+            GameEngine.var_2cd = false;
          }
 
          return false;
@@ -2185,11 +2185,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
          byte var5 = var2[var3];
          var0.sub_ea(var4, var5);
          if (var4 != 0) {
-            Class_29e.sub_80f(var4);
+            GameEngine.sub_80f(var4);
          }
 
          if (var5 != 0) {
-            Class_29e.sub_80f(var5);
+            GameEngine.sub_80f(var5);
          }
       }
 
@@ -2204,7 +2204,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          this.var_9d7 = Image.createImage("/aim.png");
          this.var_a0c = Image.createImage("/font.png");
          MathUtils.initializeMathTables();
-         Class_29e.sub_52();
+         GameEngine.initializeEngine();
       } catch (Exception var1) {
       } catch (OutOfMemoryError var2) {
       }
@@ -2215,36 +2215,36 @@ public class Class_3aa extends GameCanvas implements Runnable {
          sub_57c();
          if (var_295 < var_259) {
             if (var_295 > -1) {
-               this.var_ab7 = Class_29e.var_505.var_254;
+               this.var_ab7 = GameEngine.var_505.var_254;
             }
 
-            if (!Class_29e.sub_61c("/level_" + var_1ff[var_259], this.var_ae7 == null)) {
+            if (!GameEngine.loadMapData("/level_" + var_1ff[var_259], this.var_ae7 == null)) {
                CovertOps3D.sub_24();
             }
 
             if (this.var_ae7 != null) {
-               Class_29e.var_505.var_254 = this.var_ae7;
+               GameEngine.var_505.var_254 = this.var_ae7;
                this.var_ae7 = null;
             } else {
-               Class_29e.var_d98[0] = false;
-               Class_29e.var_d98[1] = false;
+               GameEngine.var_d98[0] = false;
+               GameEngine.var_d98[1] = false;
             }
          } else {
-            this.var_ae7 = Class_29e.var_505.var_254;
-            if (!Class_29e.sub_61c("/level_" + var_1ff[var_259], this.var_ab7 == null)) {
+            this.var_ae7 = GameEngine.var_505.var_254;
+            if (!GameEngine.loadMapData("/level_" + var_1ff[var_259], this.var_ab7 == null)) {
                CovertOps3D.sub_24();
             }
 
             if (this.var_ab7 != null) {
-               Class_29e.var_505.var_254 = this.var_ab7;
+               GameEngine.var_505.var_254 = this.var_ab7;
                this.var_ab7 = null;
             }
          }
 
          sub_57c();
-         Class_29e.sub_6f();
+         GameEngine.resetLevelState();
          boolean var1 = false;
-         Class_29e.sub_80f((byte)25);
+         GameEngine.sub_80f((byte)25);
          byte[] var2 = new byte[]{-23, -25, -28, -30, -32, 0, 0};
          byte[] var3 = new byte[]{-24, -26, -29, -31, -33, -34, -27};
          byte[] var4 = new byte[]{-35, -36, -38, -39, -40, 0, 0};
@@ -2260,7 +2260,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          byte[] var14 = new byte[]{-10};
          byte[] var15 = new byte[]{-4, -6, -11, -13, 0, 0};
          byte[] var16 = new byte[]{-5, -7, -12, -14, -15, -8};
-         Class_445[] var17 = Class_29e.var_505.var_254;
+         Class_445[] var17 = GameEngine.var_505.var_254;
 
          for(int var18 = 0; var18 < var17.length; ++var18) {
             Class_445 var19;
@@ -2391,27 +2391,27 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   var10000 = -48;
                }
 
-               Class_29e.sub_80f(var10000);
+               GameEngine.sub_80f(var10000);
             }
          }
 
-         Class_29e.sub_80f((byte)-44);
-         Class_29e.sub_80f((byte)-45);
-         Class_29e.sub_80f((byte)-46);
-         Class_29e.sub_80f((byte)-47);
-         Class_29e.sub_80f((byte)-71);
-         Class_29e.sub_80f((byte)-51);
-         Class_29e.sub_80f((byte)-43);
+         GameEngine.sub_80f((byte)-44);
+         GameEngine.sub_80f((byte)-45);
+         GameEngine.sub_80f((byte)-46);
+         GameEngine.sub_80f((byte)-47);
+         GameEngine.sub_80f((byte)-71);
+         GameEngine.sub_80f((byte)-51);
+         GameEngine.sub_80f((byte)-43);
          if (var_259 == 10) {
-            Class_29e.sub_80f((byte)-72);
+            GameEngine.sub_80f((byte)-72);
          }
 
          sub_57c();
-         if (!Class_29e.sub_691("/tx", 4, "/sp", 4)) {
+         if (!GameEngine.sub_691("/tx", 4, "/sp", 4)) {
             CovertOps3D.sub_24();
          }
 
-         Class_29e.sub_bc((byte)25);
+         GameEngine.handleWeaponChange((byte)25);
          sub_57c();
       } catch (Exception var20) {
       } catch (OutOfMemoryError var21) {
@@ -2422,10 +2422,10 @@ public class Class_3aa extends GameCanvas implements Runnable {
       String var2 = "please wait...";
       int var3 = (240 - this.sub_5d2(var2)) / 2;
       int var4 = 160 - this.var_550 / 2;
-      Class_29e.var_843[0] = Integer.MIN_VALUE;
-      sub_159(Class_29e.var_843, 0, 38400);
-      var1.drawRGB(Class_29e.var_843, 0, 240, 0, 0, 240, 160, true);
-      var1.drawRGB(Class_29e.var_843, 0, 240, 0, 160, 240, 160, true);
+      GameEngine.screenBuffer[0] = Integer.MIN_VALUE;
+      sub_159(GameEngine.screenBuffer, 0, 38400);
+      var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+      var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
       this.sub_681(var2, var1, var3, var4);
       this.sub_8c1();
    }
@@ -2600,27 +2600,27 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   }
                }
 
-               if (Class_29e.var_344) {
-                  Class_29e.var_344 = false;
+               if (GameEngine.var_344) {
+                  GameEngine.var_344 = false;
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("pause"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
                   this.sub_681("resume", var1, 3, 320 - this.var_550 - 3);
                   this.sub_8c1();
 
-                  while(!Class_29e.var_344 && !Class_29e.var_364 && !this.var_b0 && !Class_29e.var_2cd) {
+                  while(!GameEngine.var_344 && !GameEngine.var_364 && !this.var_b0 && !GameEngine.var_2cd) {
                      sub_922();
                   }
                }
 
-               if (Class_29e.var_344) {
+               if (GameEngine.var_344) {
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("resume"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
                   this.sub_681("pause", var1, 3, 320 - this.var_550 - 3);
                   this.sub_8c1();
-                  Class_29e.var_344 = false;
+                  GameEngine.var_344 = false;
                }
 
-               if (Class_29e.var_364 || this.var_b0) {
-                  Class_29e.var_344 = false;
-                  Class_29e.var_364 = false;
+               if (GameEngine.var_364 || this.var_b0) {
+                  GameEngine.var_344 = false;
+                  GameEngine.var_364 = false;
                   if ((var37 = this.sub_230(var1, false)) != 32) {
                      this.var_a63 = null;
                      return var37;
@@ -2696,8 +2696,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   this.sub_8c1();
                }
 
-               if (Class_29e.var_2cd) {
-                  Class_29e.var_2cd = false;
+               if (GameEngine.var_2cd) {
+                  GameEngine.var_2cd = false;
                   this.var_a63 = null;
                   return -1;
                }
@@ -3058,11 +3058,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
             var0 = "data";
             StringBuffer var10000;
             String var10001;
-            if (Class_29e.var_c79 == 0) {
+            if (GameEngine.difficultyLevel == 0) {
                var10000 = (new StringBuffer()).append(var0);
                var10001 = "e";
             } else {
-               if (Class_29e.var_c79 != 2) {
+               if (GameEngine.difficultyLevel != 2) {
                   break label33;
                }
 
@@ -3091,30 +3091,30 @@ public class Class_3aa extends GameCanvas implements Runnable {
    }
 
    public static void sub_746(int var0) {
-      Class_29e.var_c07 = var_ee2[var0][0];
-      Class_29e.var_c18 = var_ee2[var0][1];
+      GameEngine.playerHealth = var_ee2[var0][0];
+      GameEngine.playerArmor = var_ee2[var0][1];
 
       for(int var1 = 0; var1 < 9; ++var1) {
-         Class_29e.var_c8b[var1] = var_ee2[var0][2 + var1] == 1;
-         Class_29e.var_ced[var1] = (var_ee2[var0][11 + var1] & 255) + ((var_ee2[var0][20 + var1] & 255) << 8);
+         GameEngine.weaponsAvailable[var1] = var_ee2[var0][2 + var1] == 1;
+         GameEngine.ammoCounts[var1] = (var_ee2[var0][11 + var1] & 255) + ((var_ee2[var0][20 + var1] & 255) << 8);
       }
 
-      Class_29e.var_d38 = var_ee2[var0][29];
-      Class_29e.var_d46 = Class_29e.var_d38;
+      GameEngine.currentWeapon = var_ee2[var0][29];
+      GameEngine.var_d46 = GameEngine.currentWeapon;
    }
 
    public static void sub_786(int var0) {
       var_ee2[var0] = new byte[30];
-      var_ee2[var0][0] = (byte)Class_29e.var_c07;
-      var_ee2[var0][1] = (byte)Class_29e.var_c18;
+      var_ee2[var0][0] = (byte) GameEngine.playerHealth;
+      var_ee2[var0][1] = (byte) GameEngine.playerArmor;
 
       for(int var1 = 0; var1 < 9; ++var1) {
-         var_ee2[var0][2 + var1] = (byte)(Class_29e.var_c8b[var1] ? 1 : 0);
-         var_ee2[var0][11 + var1] = (byte)(Class_29e.var_ced[var1] & 255);
-         var_ee2[var0][20 + var1] = (byte)(Class_29e.var_ced[var1] >> 8 & 255);
+         var_ee2[var0][2 + var1] = (byte)(GameEngine.weaponsAvailable[var1] ? 1 : 0);
+         var_ee2[var0][11 + var1] = (byte)(GameEngine.ammoCounts[var1] & 255);
+         var_ee2[var0][20 + var1] = (byte)(GameEngine.ammoCounts[var1] >> 8 & 255);
       }
 
-      var_ee2[var0][29] = (byte)Class_29e.var_d38;
+      var_ee2[var0][29] = (byte) GameEngine.currentWeapon;
       sub_7c1();
    }
 
@@ -3125,11 +3125,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
             var0 = "data";
             StringBuffer var10000;
             String var10001;
-            if (Class_29e.var_c79 == 0) {
+            if (GameEngine.difficultyLevel == 0) {
                var10000 = (new StringBuffer()).append(var0);
                var10001 = "e";
             } else {
-               if (Class_29e.var_c79 != 2) {
+               if (GameEngine.difficultyLevel != 2) {
                   break label39;
                }
 

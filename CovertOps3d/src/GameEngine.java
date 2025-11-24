@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.Vector;
 import javax.microedition.lcdui.Graphics;
 
-public final class Class_29e {
+public final class GameEngine {
    private static int var_37;
    private static Class_358[] var_75;
    private static Class_318[] var_85;
@@ -28,9 +28,9 @@ public final class Class_29e {
    public static int var_480;
    public static int var_4c8 = 0;
    public static Class_3e6 var_505 = null;
-   public static PhysicsBody var_553;
-   public static Transform3D var_563;
-   public static Class_30a var_5c2;
+   public static PhysicsBody player;
+   public static Transform3D tempTransform;
+   public static Class_30a currentSector;
    private static Point2D var_5f8 = new Point2D(0, 0);
    private static Point2D var_654 = new Point2D(0, 0);
    private static int var_6a4;
@@ -39,10 +39,10 @@ public final class Class_29e {
    private static int var_771;
    private static int var_7ba;
    private static int var_817;
-   public static int[] var_843;
+   public static int[] screenBuffer;
    private static Class_318 var_894;
    private static Class_318 var_8f4;
-   private static short[] var_926;
+   private static short[] depthBuffer;
    private static int var_958;
    private static int var_9b4;
    private static int var_9e4;
@@ -52,30 +52,30 @@ public final class Class_29e {
    private static Class_b0 var_a80;
    private static int[] var_ab4;
    private static int[] var_acc;
-   public static Vector var_b02;
-   public static Vector var_b3f;
+   public static Vector floorClipHistory;
+   public static Vector ceilingClipHistory;
    public static Vector var_b86;
    public static Vector var_bd3;
-   public static int var_c07 = 100;
-   public static int var_c18 = 0;
-   public static int var_c79 = 1;
-   public static boolean[] var_c8b = new boolean[]{true, false, false, false, false, false, true, false, false};
-   public static int[] var_ced = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
-   public static int var_d38 = 0;
+   public static int playerHealth = 100;
+   public static int playerArmor = 0;
+   public static int difficultyLevel = 1;
+   public static boolean[] weaponsAvailable = new boolean[]{true, false, false, false, false, false, true, false, false};
+   public static int[] ammoCounts = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
+   public static int currentWeapon = 0;
    public static int var_d46 = 0;
    public static boolean[] var_d98 = new boolean[]{false, false};
-   public static String var_ded = "";
-   public static int var_e3a = 0;
+   public static String messageText = "";
+   public static int messageTimer = 0;
    public static int var_e72 = 0;
    public static Class_1e1 var_e96 = null;
    public static Random var_ea3 = new Random();
    public static boolean var_eba = false;
-   public static byte var_ef9 = 0;
-   public static int var_f27;
+   public static byte screenShake = 0;
+   public static int cameraHeight;
    private static int var_f32 = MathUtils.fixedPointMultiply(1310720, 92682);
    private static int var_f5f = 0;
    private static int var_f88 = 0;
-   public static boolean var_fe0 = false;
+   public static boolean levelComplete = false;
    public static int var_1044 = 0;
    public static boolean var_10a4 = false;
    public static int var_10bb;
@@ -85,13 +85,13 @@ public final class Class_29e {
    public static Class_445[] var_118d;
    public static int var_119a;
 
-   public static void sub_52() {
+   public static void initializeEngine() {
       Class_3aa.sub_57c();
       sub_5f4();
-      var_553 = new PhysicsBody(0, 1572864, 0, 65536);
-      var_563 = new Transform3D(0, 0, 0, 0);
-      var_b02 = new Vector();
-      var_b3f = new Vector();
+      player = new PhysicsBody(0, 1572864, 0, 65536);
+      tempTransform = new Transform3D(0, 0, 0, 0);
+      floorClipHistory = new Vector();
+      ceilingClipHistory = new Vector();
       var_b86 = new Vector();
       var_bd3 = new Vector();
       var_118d = new Class_445[64];
@@ -105,8 +105,8 @@ public final class Class_29e {
       var_894.sub_2a(2, var1);
       var_894.sub_2a(4, var2);
       var_894.sub_2a(6, var0);
-      var_843 = new int[69120];
-      var_926 = new short[288];
+      screenBuffer = new int[69120];
+      depthBuffer = new short[288];
       var_a80 = new Class_b0();
       var_ab4 = new int[240];
 
@@ -128,22 +128,22 @@ public final class Class_29e {
       Class_3aa.sub_57c();
    }
 
-   public static void sub_6f() {
-      sub_391();
+   public static void resetLevelState() {
+      clearInputState();
       var_505.sub_133();
-      var_553.copyFrom(var_505.var_383);
-      var_5c2 = var_505.sub_57().findSectorAtPoint(var_553.x, var_553.z);
+      player.copyFrom(var_505.var_383);
+      currentSector = var_505.sub_57().findSectorAtPoint(player.x, player.z);
       var_b86.removeAllElements();
       var_bd3.removeAllElements();
       var_119a = 0;
       BSPNode.visibleSectorsCount = 0;
-      var_ded = "";
-      var_e3a = 0;
+      messageText = "";
+      messageTimer = 0;
       var_e72 = 0;
       var_e96 = null;
    }
 
-   public static void sub_bc(byte var0) {
+   public static void handleWeaponChange(byte var0) {
       sub_3f5(sub_f6(var0));
    }
 
@@ -253,7 +253,7 @@ public final class Class_29e {
 
          var1.sub_2ea();
          int var23 = (var2.var_192 & '\uffff') << 16;
-         sub_420(var8, var20, var20, var13, var14, var17, var17, var17, var11.y, var15, var16, var18, var18, var18, var12.y, var_7ba + var23, var_817 - var_7ba, var22, var19, var22, var19, -var4, -var6, var7, var9, var10);
+         drawWallColumn(var8, var20, var20, var13, var14, var17, var17, var17, var11.y, var15, var16, var18, var18, var18, var12.y, var_7ba + var23, var_817 - var_7ba, var22, var19, var22, var19, -var4, -var6, var7, var9, var10);
       }
 
    }
@@ -303,12 +303,12 @@ public final class Class_29e {
 
          var1.sub_2ea();
          int var34 = (var2.var_192 & '\uffff') << 16;
-         sub_420(var9, var29, var30, var17, var18, var23, var24, var19, var15.y, var20, var21, var25, var26, var22, var16.y, var_7ba + var34, var_817 - var_7ba, var32, var27, var33, var28, -var5, -var7, var8, var11, var12);
+         drawWallColumn(var9, var29, var30, var17, var18, var23, var24, var19, var15.y, var20, var21, var25, var26, var22, var16.y, var_7ba + var34, var_817 - var_7ba, var32, var27, var33, var28, -var5, -var7, var8, var11, var12);
       }
 
    }
 
-   private static void sub_1cf(WallSegment var0, Point2D[] var1, int var2, int var3, int var4, int var5) {
+   private static void renderWallSegment(WallSegment var0, Point2D[] var1, int var2, int var3, int var4, int var5) {
       Class_1e1 var6;
       Class_8e var7 = (var6 = var0.wallDefinition).var_e5;
       Class_8e var8;
@@ -325,7 +325,7 @@ public final class Class_29e {
       }
    }
 
-   private static void sub_1e9(Sector var0, int var1, int var2, int var3, long var4, long var6) {
+   private static void renderDynamicObjects(Sector var0, int var1, int var2, int var3, long var4, long var6) {
       Class_30a var8 = var0.getSectorData();
       Vector var9 = var0.dynamicObjects;
       var_119a = 0;
@@ -418,18 +418,18 @@ public final class Class_29e {
 
    }
 
-   private static void sub_246(int var0, int var1, int var2, int var3) {
+   private static void renderWorld(int var0, int var1, int var2, int var3) {
       var_505.sub_4e6();
       Point2D[] var4 = var_505.sub_b8(var0, var2, var3);
       var_505.sub_178();
       BSPNode.visibleSectorsCount = 0;
-      var_505.sub_57().traverseBSP(var_553, var_505.sub_115(var0, var2));
+      var_505.sub_57().traverseBSP(player, var_505.sub_115(var0, var2));
       int var5 = var2 << 8;
       int var6 = var0 << 8;
       int var7 = var3 << 1;
       int var8 = MathUtils.fastSin(var3);
       int var9 = MathUtils.fastCos(var3);
-      var_10a4 = Class_3aa.var_98c == 1 && var_d38 != 0;
+      var_10a4 = Class_3aa.var_98c == 1 && currentWeapon != 0;
       var_a80.sub_4e();
       Sector.resetClipArrays();
 
@@ -442,19 +442,19 @@ public final class Class_29e {
             break;
          }
 
-         if (var10 >= var_b02.size()) {
+         if (var10 >= floorClipHistory.size()) {
             short[] var12 = new short[240];
             short[] var13 = new short[240];
-            var_b02.addElement(var12);
-            var_b3f.addElement(var13);
+            floorClipHistory.addElement(var12);
+            ceilingClipHistory.addElement(var13);
          }
 
-         System.arraycopy(Sector.floorClip, 0, (short[])((short[])var_b02.elementAt(var10)), 0, 240);
-         System.arraycopy(Sector.ceilingClip, 0, (short[])((short[])var_b3f.elementAt(var10)), 0, 240);
+         System.arraycopy(Sector.floorClip, 0, (short[])((short[]) floorClipHistory.elementAt(var10)), 0, 240);
+         System.arraycopy(Sector.ceilingClip, 0, (short[])((short[]) ceilingClipHistory.elementAt(var10)), 0, 240);
          WallSegment[] var15 = var11.walls;
 
          for(int var16 = 0; var16 < var15.length; ++var16) {
-            sub_1cf(var15[var16], var4, var6, var1, var5, var7);
+            renderWallSegment(var15[var16], var4, var6, var1, var5, var7);
          }
       }
 
@@ -462,50 +462,50 @@ public final class Class_29e {
 
       for(var10 = BSPNode.visibleSectorsCount - 1; var10 >= 0; --var10) {
          var11 = BSPNode.visibleSectorsList[var10];
-         System.arraycopy(var_b02.elementAt(var10), 0, Sector.floorClip, 0, 240);
-         System.arraycopy(var_b3f.elementAt(var10), 0, Sector.ceilingClip, 0, 240);
-         sub_1e9(var11, var0, var1, var2, (long)var8, (long)var9);
+         System.arraycopy(floorClipHistory.elementAt(var10), 0, Sector.floorClip, 0, 240);
+         System.arraycopy(ceilingClipHistory.elementAt(var10), 0, Sector.ceilingClip, 0, 240);
+         renderDynamicObjects(var11, var0, var1, var2, (long)var8, (long)var9);
       }
 
    }
 
-   public static int sub_296(Graphics var0, int var1) {
-      var_5c2 = var_505.sub_57().findSectorAtPoint(var_553.x, var_553.z);
+   public static int renderFrame(Graphics var0, int var1) {
+      currentSector = var_505.sub_57().findSectorAtPoint(player.x, player.z);
       boolean var2 = false;
       int var3 = var1 - var_f88;
       var_f88 = var1;
-      int var4 = MathUtils.fastHypot(var_553.velocityX, var_553.velocityY);
+      int var4 = MathUtils.fastHypot(player.velocityX, player.velocityY);
       var_f5f += var3 * var4 >> 2;
       int var8 = MathUtils.fastSin(var_f5f);
-      int var5 = var_ef9 << 15;
-      if ((var_ef9 & 1) > 0) {
+      int var5 = screenShake << 15;
+      if ((screenShake & 1) > 0) {
          var5 = -var5;
       }
 
-      var_f27 = (var_5c2.var_82 + Class_3e6.var_70 << 16) + var8 + var5;
-      sub_246(var_553.x, -var_f27, var_553.z, var_553.rotation);
+      cameraHeight = (currentSector.var_82 + Class_3e6.var_70 << 16) + var8 + var5;
+      renderWorld(player.x, -cameraHeight, player.z, player.rotation);
       if (var_eba) {
          int var6 = 69120;
 
          for(int var7 = 0; var7 < var6; ++var7) {
-            int[] var10000 = var_843;
+            int[] var10000 = screenBuffer;
             var10000[var7] |= 16711680;
          }
 
          var_eba = false;
       }
 
-      if (var_ef9 == 16) {
-         --var_ef9;
+      if (screenShake == 16) {
+         --screenShake;
       }
 
-      var0.drawRGB(var_843, 0, 240, 0, 0, 240, 288, false);
-      if (var_5c2.sub_5c() == 666) {
+      var0.drawRGB(screenBuffer, 0, 240, 0, 0, 240, 288, false);
+      if (currentSector.sub_5c() == 666) {
          switch(Class_3aa.var_259) {
          case 3:
-            if (!var_c8b[8]) {
-               var_ded = "get the sniper rifle!";
-               var_e3a = 30;
+            if (!weaponsAvailable[8]) {
+               messageText = "get the sniper rifle!";
+               messageTimer = 30;
                break;
             }
          default:
@@ -514,61 +514,61 @@ public final class Class_29e {
             var_480 = 1;
             break;
          case 4:
-            var_ded = "i think that's the wall|she mentioned";
-            var_e3a = 30;
+            messageText = "i think that's the wall|she mentioned";
+            messageTimer = 30;
          }
       }
 
-      if ((Class_3aa.var_e8b & 1) == 0 && Class_3aa.var_259 == 0 && var_5c2.var_10 == 31) {
-         var_ded = "press 1 to open the door";
-         var_e3a = 30;
+      if ((Class_3aa.var_e8b & 1) == 0 && Class_3aa.var_259 == 0 && currentSector.var_10 == 31) {
+         messageText = "press 1 to open the door";
+         messageTimer = 30;
       }
 
       return var8;
    }
 
-   public static boolean sub_2f3() {
-      if (var_e3a > 0) {
-         --var_e3a;
+   public static boolean updateGameLogic() {
+      if (messageTimer > 0) {
+         --messageTimer;
       }
 
       if (var_161) {
-         var_553.applyHorizontalForce(0, -196608);
+         player.applyHorizontalForce(0, -196608);
       }
 
       if (var_1ed) {
-         var_553.applyHorizontalForce(-196608, 0);
+         player.applyHorizontalForce(-196608, 0);
       }
 
       if (var_1bf) {
-         var_553.applyHorizontalForce(0, 131072);
+         player.applyHorizontalForce(0, 131072);
       }
 
       if (var_1fa) {
-         var_553.applyHorizontalForce(196608, 0);
+         player.applyHorizontalForce(196608, 0);
       }
 
       if (var_223) {
-         var_553.applyForce(0, 0, -4500);
+         player.applyForce(0, 0, -4500);
       }
 
       if (var_280) {
-         var_553.applyForce(0, 0, 4500);
+         player.applyForce(0, 0, 4500);
       }
 
-      int var0 = MathUtils.fastHypot(var_553.velocityX, var_553.velocityY);
+      int var0 = MathUtils.fastHypot(player.velocityX, player.velocityY);
       Class_1e1 var1 = null;
       if (var0 > 262144) {
-         var_553.applyDampedVelocity();
-         var1 = var_505.sub_205(var_553, var_5c2);
-         var_553.applyDampedVelocity();
-         Class_1e1 var2 = var_505.sub_205(var_553, var_5c2);
+         player.applyDampedVelocity();
+         var1 = var_505.sub_205(player, currentSector);
+         player.applyDampedVelocity();
+         Class_1e1 var2 = var_505.sub_205(player, currentSector);
          if (var1 == null) {
             var1 = var2;
          }
       } else {
-         var_553.applyVelocity();
-         var1 = var_505.sub_205(var_553, var_5c2);
+         player.applyVelocity();
+         var1 = var_505.sub_205(player, currentSector);
       }
 
       int var21;
@@ -587,16 +587,16 @@ public final class Class_29e {
       int var7;
       int var10000;
       if (var_e96 != null) {
-         var21 = var_553.rotation;
+         var21 = player.rotation;
          var3 = MathUtils.fastSin(102943 - var21);
          var4 = MathUtils.fastCos(102943 - var21);
          var5 = 1310720;
-         var6 = var_553.x + MathUtils.fixedPointMultiply(var5, var4);
-         var7 = var_553.z + MathUtils.fixedPointMultiply(var5, var3);
+         var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
+         var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
          Point2D[] var8;
          Point2D var9 = (var8 = var_505.var_138)[var_e96.var_22 & '\uffff'];
          Point2D var10 = var8[var_e96.var_5c & '\uffff'];
-         if (Class_3e6.sub_365(var_553.x, var_553.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
+         if (Class_3e6.sub_365(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
             var10000 = var_e72 + 1;
          } else {
             var_e96 = null;
@@ -605,8 +605,8 @@ public final class Class_29e {
 
          var_e72 = var10000;
          if (var_e72 >= 50) {
-            var_ded = var_e96.sub_5e() == 62 ? "press 1 to move the lift" : "press 1 to open the door";
-            var_e3a = 10;
+            messageText = var_e96.sub_5e() == 62 ? "press 1 to move the lift" : "press 1 to open the door";
+            messageTimer = 10;
          }
       } else {
          var_e72 = 0;
@@ -623,8 +623,8 @@ public final class Class_29e {
       if (var_3e3) {
          Class_2d8 var22;
          Class_2d8 var41;
-         if (var_5c2.sub_5c() == 10 && (var22 = sub_34f(var_5c2)).var_126 == 0) {
-            if (var_5c2.var_82 == var22.var_a0) {
+         if (currentSector.sub_5c() == 10 && (var22 = getElevatorController(currentSector)).var_126 == 0) {
+            if (currentSector.var_82 == var22.var_a0) {
                var41 = var22;
                var10001 = 1;
             } else {
@@ -635,12 +635,12 @@ public final class Class_29e {
             var41.var_126 = var10001;
          }
 
-         var21 = var_553.rotation;
+         var21 = player.rotation;
          var3 = MathUtils.fastSin(102943 - var21);
          var4 = MathUtils.fastCos(102943 - var21);
          var5 = 1310720;
-         var6 = var_553.x + MathUtils.fixedPointMultiply(var5, var4);
-         var7 = var_553.z + MathUtils.fixedPointMultiply(var5, var3);
+         var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
+         var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
          Class_1e1[] var30 = var_505.var_210;
          Point2D[] var32 = var_505.var_138;
 
@@ -650,7 +650,7 @@ public final class Class_29e {
             if ((var12 = (var11 = var30[var35]).sub_5e()) == 1 || var12 == 11 || var12 == 26 || var12 == 28 || var12 == 51 || var12 == 62) {
                Point2D var13 = var32[var11.var_22 & '\uffff'];
                Point2D var14 = var32[var11.var_5c & '\uffff'];
-               if (Class_3e6.sub_365(var_553.x, var_553.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
+               if (Class_3e6.sub_365(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
                   if ((Class_3aa.var_e8b & 1) == 0) {
                      Class_3aa.var_e8b = (byte)(Class_3aa.var_e8b | 1);
                   }
@@ -659,13 +659,13 @@ public final class Class_29e {
                   byte var42;
                   switch(var12) {
                   case 1:
-                     (var38 = sub_33a(var11.var_133.var_13d)).var_d5 = 1;
+                     (var38 = getDoorController(var11.var_133.var_13d)).var_d5 = 1;
                      var38.var_87 = var11.var_e5.var_13d.var_ac;
                      break label389;
                   case 11:
-                     if (Class_3aa.var_259 == 7 && var_ced[6] == 0) {
-                        var_ded = "we'll need some dynamite|maybe i should look for some";
-                        var_e3a = 50;
+                     if (Class_3aa.var_259 == 7 && ammoCounts[6] == 0) {
+                        messageText = "we'll need some dynamite|maybe i should look for some";
+                        messageTimer = 50;
                         break label389;
                      }
 
@@ -675,20 +675,20 @@ public final class Class_29e {
                      break;
                   case 26:
                      if (var_d98[0]) {
-                        (var38 = sub_33a(var11.var_133.var_13d)).var_d5 = 1;
+                        (var38 = getDoorController(var11.var_133.var_13d)).var_d5 = 1;
                         var38.var_87 = var11.var_e5.var_13d.var_ac;
                      } else {
-                        var_ded = var_d98[1] ? "oops, i need another key..." : "oh, i need a key...";
-                        var_e3a = 50;
+                        messageText = var_d98[1] ? "oops, i need another key..." : "oh, i need a key...";
+                        messageTimer = 50;
                      }
                      break label389;
                   case 28:
                      if (var_d98[1]) {
-                        (var38 = sub_33a(var11.var_133.var_13d)).var_d5 = 1;
+                        (var38 = getDoorController(var11.var_133.var_13d)).var_d5 = 1;
                         var38.var_87 = var11.var_e5.var_13d.var_ac;
                      } else {
-                        var_ded = var_d98[0] ? "oops, i need another key..." : "oh, i need a key...";
-                        var_e3a = 50;
+                        messageText = var_d98[0] ? "oops, i need another key..." : "oh, i need a key...";
+                        messageTimer = 50;
                      }
                      break label389;
                   case 51:
@@ -699,7 +699,7 @@ public final class Class_29e {
                   case 62:
                      Class_30a var15;
                      Class_2d8 var16;
-                     if ((var16 = sub_34f(var15 = var11.var_133.var_13d)).var_126 == 0) {
+                     if ((var16 = getElevatorController(var15 = var11.var_133.var_13d)).var_126 == 0) {
                         if (var15.var_82 == var16.var_a0) {
                            var41 = var16;
                            var10001 = 1;
@@ -726,7 +726,7 @@ public final class Class_29e {
       Class_30a var43;
       for(var21 = 0; var21 < var_b86.size(); ++var21) {
          Class_197 var23;
-         if ((var23 = (Class_197)var_b86.elementAt(var21)).var_46 == var_5c2 && var23.var_d5 == 2) {
+         if ((var23 = (Class_197)var_b86.elementAt(var21)).var_46 == currentSector && var23.var_d5 == 2) {
             var23.var_d5 = 1;
          }
 
@@ -822,25 +822,25 @@ public final class Class_29e {
                int var31;
                if (var27.var_2cf == 0) {
                   var28 = var27.var_c;
-                  if (var_505.sub_115(var28.x, var28.z).sub_ba(var_5c2)) {
-                     if ((var7 = var28.x - var_553.x) < 0) {
+                  if (var_505.sub_115(var28.x, var28.z).sub_ba(currentSector)) {
+                     if ((var7 = var28.x - player.x) < 0) {
                         var7 = -var7;
                      }
 
-                     if ((var31 = var28.z - var_553.z) < 0) {
+                     if ((var31 = var28.z - player.z) < 0) {
                         var31 = -var31;
                      }
 
-                     if (var7 + var31 <= 67108864 && var_505.sub_3ce(var_553, var28)) {
+                     if (var7 + var31 <= 67108864 && var_505.sub_3ce(player, var28)) {
                         var27.var_2cf = 1;
                      }
                   }
                } else {
-                  if ((var6 = (var28 = var27.var_c).x - var_553.x) < 0) {
+                  if ((var6 = (var28 = var27.var_c).x - player.x) < 0) {
                      var6 = -var6;
                   }
 
-                  if ((var7 = var28.z - var_553.z) < 0) {
+                  if ((var7 = var28.z - player.z) < 0) {
                      var7 = -var7;
                   }
 
@@ -873,18 +873,18 @@ public final class Class_29e {
                   switch(var27.var_2cf) {
                   case 1:
                      var27.var_2cf = 2;
-                     var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[var_c79];
+                     var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
                      var27.var_1ce = 0;
                      break;
                   case 2:
                      if (((var6 = var_ea3.nextInt() & Integer.MAX_VALUE) & 1) == 0) {
                         var27.var_2cf = 3;
-                        var27.var_296 = var6 % Class_3aa.var_180b[var_c79] + Class_3aa.var_17b5[var_c79];
+                        var27.var_296 = var6 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
                         var46 = var27;
                         var10001 = 2;
                      } else {
                         var27.var_2cf = 1;
-                        var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1851[var_c79];
+                        var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1851[difficultyLevel];
                         var46 = var27;
                         var10001 = 0;
                      }
@@ -894,7 +894,7 @@ public final class Class_29e {
                   case 3:
                      var29 = var27.var_c;
                      var33 = var_505.sub_115(var29.x, var29.z);
-                     if (var_505.sub_3ce(var_553, var29)) {
+                     if (var_505.sub_3ce(player, var29)) {
                         var27.var_2cf = 4;
                         var27.var_296 = 2;
                         if (var5 != 3002) {
@@ -932,32 +932,32 @@ public final class Class_29e {
                                  break label320;
                               }
 
-                              var31 = var48[var_c79];
+                              var31 = var48[difficultyLevel];
                            }
 
                            if (var31 > 0) {
                               Class_3aa.sub_882(var31 * 10);
                            }
 
-                           if (sub_59b(var31)) {
+                           if (applyDamage(var31)) {
                               return true;
                            }
                         }
                      } else {
                         var27.var_2cf = 2;
-                        var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[var_c79];
+                        var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
                         var27.var_1ce = 0;
                      }
                      break;
                   case 4:
                      var27.var_2cf = 2;
-                     var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[var_c79];
+                     var27.var_296 = (var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_177d[difficultyLevel];
                      var27.var_1ce = 0;
                      break;
                   case 5:
                      var6 = var_ea3.nextInt() & Integer.MAX_VALUE;
                      var27.var_2cf = 3;
-                     var27.var_296 = var6 % Class_3aa.var_180b[var_c79] + Class_3aa.var_17b5[var_c79];
+                     var27.var_296 = var6 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
                      var27.var_1ce = 2;
                      break;
                   case 6:
@@ -990,14 +990,14 @@ public final class Class_29e {
 
                   var29 = var27.var_c;
                   var33 = var_505.sub_115(var29.x, var29.z);
-                  var31 = var29.x - var_553.x;
-                  int var34 = var29.z - var_553.z;
+                  var31 = var29.x - player.x;
+                  int var34 = var29.z - player.z;
                   int var36;
                   if ((var35 = MathUtils.fastHypot(var31, var34)) > var_f32) {
                      var36 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var31, var35), var27.sub_27());
                      var12 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var34, var35), var27.sub_27());
                      int var37;
-                     if ((var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1ad2[var_c79] == 0) {
+                     if ((var_ea3.nextInt() & Integer.MAX_VALUE) % Class_3aa.var_1ad2[difficultyLevel] == 0) {
                         int var47;
                         if ((var_ea3.nextInt() & 1) == 0) {
                            var37 = var36;
@@ -1027,42 +1027,42 @@ public final class Class_29e {
                      int var19 = var12 / var40;
 
                      for(int var20 = 0; var20 < var40; ++var20) {
-                        var_563.x = var29.x - var18;
-                        var_563.z = var29.z - var19;
-                        if (!var_505.sub_1dd(var27, var_563, var33)) {
+                        tempTransform.x = var29.x - var18;
+                        tempTransform.z = var29.z - var19;
+                        if (!var_505.sub_1dd(var27, tempTransform, var33)) {
                            break;
                         }
 
-                        var29.x = var_563.x;
-                        var29.z = var_563.z;
+                        var29.x = tempTransform.x;
+                        var29.z = tempTransform.z;
                      }
                   } else {
                      var36 = var_ea3.nextInt() & Integer.MAX_VALUE;
                      var27.var_2cf = 3;
-                     var27.var_296 = var36 % Class_3aa.var_180b[var_c79] + Class_3aa.var_17b5[var_c79];
+                     var27.var_296 = var36 % Class_3aa.var_180b[difficultyLevel] + Class_3aa.var_17b5[difficultyLevel];
                      var27.var_1ce = 2;
                   }
                }
             }
          }
 
-         if (var_5c2.sub_5c() == 555) {
+         if (currentSector.sub_5c() == 555) {
             Class_3aa.sub_882(10);
-            if (sub_59b(1)) {
+            if (applyDamage(1)) {
                return true;
             }
          }
 
-         if (var_ef9 < 16 && var_ef9 > 0) {
-            --var_ef9;
+         if (screenShake < 16 && screenShake > 0) {
+            --screenShake;
          }
 
-         var_553.scaleVelocity(39322, 65536, 39322, 26214);
+         player.scaleVelocity(39322, 65536, 39322, 26214);
          return false;
       }
    }
 
-   private static Class_197 sub_33a(Class_30a var0) {
+   private static Class_197 getDoorController(Class_30a var0) {
       for(int var1 = 0; var1 < var_b86.size(); ++var1) {
          Class_197 var2;
          if ((var2 = (Class_197)var_b86.elementAt(var1)).var_46 == var0) {
@@ -1076,7 +1076,7 @@ public final class Class_29e {
       return var3;
    }
 
-   private static Class_2d8 sub_34f(Class_30a var0) {
+   private static Class_2d8 getElevatorController(Class_30a var0) {
       for(int var1 = 0; var1 < var_bd3.size(); ++var1) {
          Class_2d8 var2;
          if ((var2 = (Class_2d8)var_bd3.elementAt(var1)).var_41 == var0) {
@@ -1109,7 +1109,7 @@ public final class Class_29e {
       return var6;
    }
 
-   private static void sub_391() {
+   private static void clearInputState() {
       var_161 = false;
       var_1ed = false;
       var_1bf = false;
@@ -1210,7 +1210,7 @@ public final class Class_29e {
       }
    }
 
-   private static void sub_420(Class_30a var0, Class_318 var1, Class_318 var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9, int var10, int var11, int var12, int var13, int var14, int var15, int var16, int var17, int var18, int var19, int var20, int var21, int var22, int var23, int var24, int var25) {
+   private static void drawWallColumn(Class_30a var0, Class_318 var1, Class_318 var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9, int var10, int var11, int var12, int var13, int var14, int var15, int var16, int var17, int var18, int var19, int var20, int var21, int var22, int var23, int var24, int var25) {
       int var26 = var3;
       int var27 = var9;
       if (var3 < 240 && var9 >= 0) {
@@ -1359,7 +1359,7 @@ public final class Class_29e {
             var67 = (short)var_a34;
 
             for(var68 = var_9e4; var68 <= var_9fa; ++var68) {
-               var_a80.sub_82(var_926[var68], var67, var42, var68);
+               var_a80.sub_82(depthBuffer[var68], var67, var42, var68);
             }
          }
 
@@ -1367,7 +1367,7 @@ public final class Class_29e {
             var67 = (short)var_a27;
 
             for(var68 = var_958; var68 <= var_9b4; ++var68) {
-               var_a80.sub_82(var_926[var68], var67, var42, var68);
+               var_a80.sub_82(depthBuffer[var68], var67, var42, var68);
             }
          }
 
@@ -1407,7 +1407,7 @@ public final class Class_29e {
       int var23 = (-var6 * var21 >> 14) * var14;
       var0 += var11;
       var1 += var11;
-      int[] var24 = var_843;
+      int[] var24 = screenBuffer;
 
       for(int var25 = var0; var25 <= var1; ++var25) {
          var24[var25] = var16[var3[(var19 & 16515072) + (var20 & 1056964608) >> 18]];
@@ -1439,31 +1439,31 @@ public final class Class_29e {
 
             int var14;
             for(var14 = var6; var14 <= var11; ++var14) {
-               var_926[var14] = var8;
+               depthBuffer[var14] = var8;
             }
 
             for(var14 = var10; var14 <= var7; ++var14) {
-               var_926[var14] = var8;
+               depthBuffer[var14] = var8;
             }
 
             for(var14 = var_9e4; var14 <= var13; ++var14) {
-               var_a80.sub_82(var_926[var14], var9, var0, var14);
+               var_a80.sub_82(depthBuffer[var14], var9, var0, var14);
             }
 
             for(var14 = var12; var14 <= var_9fa; ++var14) {
-               var_a80.sub_82(var_926[var14], var9, var0, var14);
+               var_a80.sub_82(depthBuffer[var14], var9, var0, var14);
             }
          } else {
             if (var_9e4 >= 0) {
                var9 = (short)var_a34;
 
                for(var10 = var_9e4; var10 <= var_9fa; ++var10) {
-                  var_a80.sub_82(var_926[var10], var9, var0, var10);
+                  var_a80.sub_82(depthBuffer[var10], var9, var0, var10);
                }
             }
 
             for(int var15 = var6; var15 <= var7; ++var15) {
-               var_926[var15] = var8;
+               depthBuffer[var15] = var8;
             }
          }
 
@@ -1494,31 +1494,31 @@ public final class Class_29e {
 
             int var14;
             for(var14 = var4; var14 <= var11; ++var14) {
-               var_926[var14] = var8;
+               depthBuffer[var14] = var8;
             }
 
             for(var14 = var10; var14 <= var7; ++var14) {
-               var_926[var14] = var8;
+               depthBuffer[var14] = var8;
             }
 
             for(var14 = var_958; var14 <= var13; ++var14) {
-               var_a80.sub_82(var_926[var14], var9, var0, var14);
+               var_a80.sub_82(depthBuffer[var14], var9, var0, var14);
             }
 
             for(var14 = var12; var14 <= var_9b4; ++var14) {
-               var_a80.sub_82(var_926[var14], var9, var0, var14);
+               var_a80.sub_82(depthBuffer[var14], var9, var0, var14);
             }
          } else {
             if (var_958 >= 0) {
                var9 = (short)var_a27;
 
                for(var10 = var_958; var10 <= var_9b4; ++var10) {
-                  var_a80.sub_82(var_926[var10], var9, var0, var10);
+                  var_a80.sub_82(depthBuffer[var10], var9, var0, var10);
                }
             }
 
             for(int var15 = var4; var15 <= var7; ++var15) {
-               var_926[var15] = var8;
+               depthBuffer[var15] = var8;
             }
          }
 
@@ -1556,7 +1556,7 @@ public final class Class_29e {
             int var14 = (var14 = var5 - var4) > 288 ? (var7 << 16) / var14 : var7 * var_acc[var14];
             int var15 = (var10 - var4) * var14 + (var6 << 16);
             int var16 = var0.length;
-            int[] var17 = var_843;
+            int[] var17 = screenBuffer;
             int var18;
             int var19;
             int var20;
@@ -1602,7 +1602,7 @@ public final class Class_29e {
          int var15 = (var15 = var5 - var4) > 288 ? (var7 - 1 << 16) / var15 : (var7 - 1) * var_acc[var15];
          int var16 = var8 - 1;
          int var17 = (var11 - var4) * var15 + ((var6 & var16) << 16);
-         int[] var18 = var_843;
+         int[] var18 = screenBuffer;
          int var19;
          switch(var8 + var1) {
          case 16:
@@ -1674,7 +1674,7 @@ public final class Class_29e {
       int var17 = var7 * 240 + var0;
       int var18;
       int var19 = -(var18 = MathUtils.fixedPointMultiply(var9 * 200, var_1142)) * (144 - var6) + 6553600;
-      int[] var20 = var_843;
+      int[] var20 = screenBuffer;
       int var21;
       if ((var13 & 1) == 0) {
          for(var21 = var16; var21 <= var17; var21 += 240) {
@@ -1701,7 +1701,7 @@ public final class Class_29e {
 
          for(int var2 = var1; var2 <= 7; ++var2) {
             int var3 = var2 != 3 && var2 != 4 ? var2 : 1;
-            if (var_c8b[var2] && var_ced[var3] > 0) {
+            if (weaponsAvailable[var2] && ammoCounts[var3] > 0) {
                var0 = var2;
                break;
             }
@@ -1716,7 +1716,7 @@ public final class Class_29e {
          return var0;
       } else {
          int var1 = var0 != 3 && var0 != 4 ? var0 : 1;
-         if (var_ced[var1] > 0) {
+         if (ammoCounts[var1] > 0) {
             return var0;
          } else {
             int var2 = 0;
@@ -1724,14 +1724,14 @@ public final class Class_29e {
             for(int var3 = 7; var3 > 0; --var3) {
                if (var3 != 6) {
                   var1 = var3 != 3 && var3 != 4 ? var3 : 1;
-                  if (var_c8b[var3] && var_ced[var1] > 0) {
+                  if (weaponsAvailable[var3] && ammoCounts[var1] > 0) {
                      var2 = var3;
                      break;
                   }
                }
             }
 
-            if (var2 == 0 && var_c8b[6] && var_ced[6] > 0) {
+            if (var2 == 0 && weaponsAvailable[6] && ammoCounts[6] > 0) {
                var2 = 6;
             }
 
@@ -1740,19 +1740,19 @@ public final class Class_29e {
       }
    }
 
-   public static boolean sub_59b(int var0) {
-      var_c18 -= var0;
-      if (var_c18 < 0) {
-         var0 = -var_c18;
-         var_c18 = 0;
+   public static boolean applyDamage(int var0) {
+      playerArmor -= var0;
+      if (playerArmor < 0) {
+         var0 = -playerArmor;
+         playerArmor = 0;
       } else {
          var0 = 0;
       }
 
       var_eba = true;
-      var_c07 -= var0;
-      if (var_c07 <= 0) {
-         var_c07 = 0;
+      playerHealth -= var0;
+      if (playerHealth <= 0) {
+         playerHealth = 0;
          return true;
       } else {
          return false;
@@ -1781,7 +1781,7 @@ public final class Class_29e {
       var_e1.clear();
    }
 
-   public static boolean sub_61c(String var0, boolean var1) {
+   public static boolean loadMapData(String var0, boolean var1) {
       sub_60e();
 
       try {
@@ -2477,27 +2477,27 @@ public final class Class_29e {
    }
 
    public static void sub_95f() {
-      var_c07 = 100;
-      var_c18 = 0;
+      playerHealth = 100;
+      playerArmor = 0;
 
-      for(int var0 = 0; var0 < var_c8b.length; ++var0) {
-         var_c8b[var0] = false;
-         var_ced[var0] = 0;
+      for(int var0 = 0; var0 < weaponsAvailable.length; ++var0) {
+         weaponsAvailable[var0] = false;
+         ammoCounts[var0] = 0;
       }
 
-      var_c8b[0] = true;
-      var_c8b[6] = true;
-      var_d38 = 0;
+      weaponsAvailable[0] = true;
+      weaponsAvailable[6] = true;
+      currentWeapon = 0;
       var_d46 = 0;
-      var_ded = "";
-      var_e3a = 0;
+      messageText = "";
+      messageTimer = 0;
       var_e72 = 0;
       var_e96 = null;
       var_eba = false;
-      var_ef9 = 0;
+      screenShake = 0;
       var_f5f = 0;
       var_f88 = 0;
-      var_fe0 = true;
+      levelComplete = true;
       var_1044 = 1;
       Class_3aa.var_e8b = 0;
       var_117 = 0;

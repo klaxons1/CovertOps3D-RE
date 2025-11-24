@@ -45,27 +45,27 @@ public final class Class_445 {
                 this.var_2cf = 0;
                 break;
             case 3001:
-                this.var_243 = Class_3aa.var_146a[Class_29e.var_c79];
+                this.var_243 = Class_3aa.var_146a[GameEngine.difficultyLevel];
                 this.var_2cf = 0;
                 break;
             case 3002:
-                this.var_243 = Class_3aa.var_1492[Class_29e.var_c79];
+                this.var_243 = Class_3aa.var_1492[GameEngine.difficultyLevel];
                 this.var_2cf = 0;
                 break;
             case 3003:
-                this.var_243 = Class_3aa.var_139c[Class_29e.var_c79];
+                this.var_243 = Class_3aa.var_139c[GameEngine.difficultyLevel];
                 this.var_2cf = 0;
                 break;
             case 3004:
-                this.var_243 = Class_3aa.var_13e4[Class_29e.var_c79];
+                this.var_243 = Class_3aa.var_13e4[GameEngine.difficultyLevel];
                 this.var_2cf = 0;
                 break;
             case 3005:
-                this.var_243 = Class_3aa.var_13fe[Class_29e.var_c79];
+                this.var_243 = Class_3aa.var_13fe[GameEngine.difficultyLevel];
                 this.var_2cf = 0;
                 break;
             case 3006:
-                this.var_243 = Class_3aa.var_143e[Class_29e.var_c79];
+                this.var_243 = Class_3aa.var_143e[GameEngine.difficultyLevel];
                 this.var_2cf = 0;
                 break;
             default:
@@ -76,17 +76,17 @@ public final class Class_445 {
     public final int sub_27() {
         switch(this.var_24) {
             case 3001:
-                return Class_3aa.var_1a4a[Class_29e.var_c79];
+                return Class_3aa.var_1a4a[GameEngine.difficultyLevel];
             case 3002:
-                return Class_3aa.var_1a74[Class_29e.var_c79];
+                return Class_3aa.var_1a74[GameEngine.difficultyLevel];
             case 3003:
-                return Class_3aa.var_1966[Class_29e.var_c79];
+                return Class_3aa.var_1966[GameEngine.difficultyLevel];
             case 3004:
-                return Class_3aa.var_19bb[Class_29e.var_c79];
+                return Class_3aa.var_19bb[GameEngine.difficultyLevel];
             case 3005:
-                return Class_3aa.var_19fd[Class_29e.var_c79];
+                return Class_3aa.var_19fd[GameEngine.difficultyLevel];
             case 3006:
-                return Class_3aa.var_1a1b[Class_29e.var_c79];
+                return Class_3aa.var_1a1b[GameEngine.difficultyLevel];
             default:
                 return 65536;
         }

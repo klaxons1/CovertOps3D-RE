@@ -25,9 +25,9 @@ public final class Class_30a {
    }
 
    public final int sub_15() {
-      if (Class_29e.var_ef9 > 0) {
+      if (GameEngine.screenShake > 0) {
          int var1;
-         if ((var1 = (this.var_114 & '\uffff') + (Class_29e.var_ef9 >> 1)) > 16) {
+         if ((var1 = (this.var_114 & '\uffff') + (GameEngine.screenShake >> 1)) > 16) {
             var1 = 16;
          }
 

@@ -119,8 +119,8 @@ public final class Class_b0 {
                break;
             }
 
-            var7 = Class_29e.var_505.var_32c[var6.var_79];
-            Class_29e.sub_430(var6.var_59, var6.var_6e, var5, var7.var_214.var_84, var7.var_214.var_bb, var7.var_282, var1, var2, var3, var7.var_2bf, var4);
+            var7 = GameEngine.var_505.var_32c[var6.var_79];
+            GameEngine.sub_430(var6.var_59, var6.var_6e, var5, var7.var_214.var_84, var7.var_214.var_bb, var7.var_282, var1, var2, var3, var7.var_2bf, var4);
             var10000 = var6.var_119;
          }
       }
@@ -134,8 +134,8 @@ public final class Class_b0 {
                break;
             }
 
-            var7 = Class_29e.var_505.var_32c[var6.var_79];
-            Class_29e.sub_430(var6.var_59, var6.var_6e, var5, var7.var_262.var_84, var7.var_262.var_bb, var7.var_282, var1, var2, var3, var7.var_2f0, var4);
+            var7 = GameEngine.var_505.var_32c[var6.var_79];
+            GameEngine.sub_430(var6.var_59, var6.var_6e, var5, var7.var_262.var_84, var7.var_262.var_bb, var7.var_282, var1, var2, var3, var7.var_2f0, var4);
             var10000 = var6.var_119;
          }
       }
