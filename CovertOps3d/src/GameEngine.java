@@ -152,7 +152,7 @@ public final class GameEngine {
          return null;
       } else {
          Sprite var1;
-         return (var1 = var_75[var0]) != null && var1.var_84 != null ? var1 : null;
+         return (var1 = var_75[var0]) != null && var1.pixelData != null ? var1 : null;
       }
    }
 
@@ -2160,11 +2160,11 @@ public final class GameEngine {
                   for(var6 = 0; var6 < 128; ++var6) {
                      Sprite var30;
                      if ((var30 = var_75[var6]) != null) {
-                        if (var30.var_84 == null) {
+                        if (var30.pixelData == null) {
                            throw new IllegalStateException();
                         }
 
-                        var30.var_bb = (int[][])((int[][])var_e1.get(((Integer)((Integer)var5.get(new Byte(var30.var_115)))).toString()));
+                        var30.colorPalettes = (int[][])((int[][])var_e1.get(((Integer)((Integer)var5.get(new Byte(var30.spriteId)))).toString()));
                      }
                   }
 

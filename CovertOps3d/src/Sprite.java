@@ -1,24 +1,39 @@
+/**
+ * Sprite class for handling game sprites (objects, items, UI elements)
+ * Fixed 64x64 pixel size with palette-based rendering
+ */
 public final class Sprite {
-   public byte[] var_84;
-   public int[][] var_bb;
-   public byte var_115;
+    public byte[] pixelData;     // Sprite pixel data (64x64 = 4096 bytes, 4-bit color)
+    public int[][] colorPalettes; // Color palettes for different lighting conditions
+    public byte spriteId;        // Unique identifier for this sprite
 
-   public Sprite(byte var1) {
-      this.var_115 = var1;
-      this.var_84 = null;
-      this.var_bb = (int[][])null;
-   }
+    /**
+     * Create an empty sprite (placeholder)
+     * @param spriteId Unique identifier for the sprite
+     */
+    public Sprite(byte spriteId) {
+        this.spriteId = spriteId;
+        this.pixelData = null;
+        this.colorPalettes = null;
+    }
 
-   public Sprite(byte var1, byte[] var2) {
-      this.var_115 = var1;
-      this.var_84 = var2;
-      this.var_84 = new byte[4096];
+    /**
+     * Create a sprite from pixel data with 90-degree rotation
+     * Sprites are stored rotated for efficient rendering
+     * @param spriteId Unique identifier for the sprite
+     * @param sourcePixels Source pixel data (64x64 array)
+     */
+    public Sprite(byte spriteId, byte[] sourcePixels) {
+        this.spriteId = spriteId;
+        this.pixelData = new byte[4096]; // 64x64 pixels
 
-      for(int var3 = 0; var3 < 64; ++var3) {
-         for(int var4 = 0; var4 < 64; ++var4) {
-            this.var_84[var3 + (63 - var4 << 6)] = var2[var4 + (var3 << 6)];
-         }
-      }
-
-   }
+        // Rotate sprite 90 degrees clockwise for rendering optimization
+        for(int x = 0; x < 64; ++x) {
+            for(int y = 0; y < 64; ++y) {
+                // Original: sourcePixels[y + (x << 6)]
+                // Rotated:  pixelData[x + (63 - y << 6)]
+                this.pixelData[x + ((63 - y) << 6)] = sourcePixels[y + (x << 6)];
+            }
+        }
+    }
 }

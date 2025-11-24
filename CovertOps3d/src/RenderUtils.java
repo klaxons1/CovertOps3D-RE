@@ -120,7 +120,7 @@ public final class RenderUtils {
             }
 
             var7 = GameEngine.var_505.var_32c[var6.var_79];
-            GameEngine.sub_430(var6.var_59, var6.var_6e, var5, var7.var_214.var_84, var7.var_214.var_bb, var7.var_282, var1, var2, var3, var7.var_2bf, var4);
+            GameEngine.sub_430(var6.var_59, var6.var_6e, var5, var7.var_214.pixelData, var7.var_214.colorPalettes, var7.var_282, var1, var2, var3, var7.var_2bf, var4);
             var10000 = var6.var_119;
          }
       }
@@ -135,7 +135,7 @@ public final class RenderUtils {
             }
 
             var7 = GameEngine.var_505.var_32c[var6.var_79];
-            GameEngine.sub_430(var6.var_59, var6.var_6e, var5, var7.var_262.var_84, var7.var_262.var_bb, var7.var_282, var1, var2, var3, var7.var_2f0, var4);
+            GameEngine.sub_430(var6.var_59, var6.var_6e, var5, var7.var_262.pixelData, var7.var_262.colorPalettes, var7.var_282, var1, var2, var3, var7.var_2f0, var4);
             var10000 = var6.var_119;
          }
       }
