@@ -4,7 +4,7 @@ public final class WallSegment {
    public short endVertexIndex;
    public boolean isFrontFacing;
    public Class_1e1 wallDefinition;
-   private Class_8e sectorLink;
+   private WallSurface sectorLink;
    public short textureOffset;
 
    public WallSegment(short var1, short var2, short var3, boolean var4, short var5) {
@@ -18,7 +18,7 @@ public final class WallSegment {
    public final void initializeWallSegment(Class_3e6 var1) {
       this.wallDefinition = var1.var_210[this.wallDefinitionIndex & '\uffff'];
       WallSegment var10000;
-      Class_8e var10001;
+      WallSurface var10001;
       if (this.isFrontFacing) {
          var10000 = this;
          var10001 = this.wallDefinition.var_e5;
@@ -31,6 +31,6 @@ public final class WallSegment {
    }
 
    public final Class_30a getWallSector() {
-      return this.sectorLink.var_13d;
+      return this.sectorLink.linkedSector;
    }
 }

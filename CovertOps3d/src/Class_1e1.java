@@ -4,8 +4,8 @@ public final class Class_1e1 {
    public Point2D var_88;
    private short var_a7;
    private short var_ce;
-   public Class_8e var_e5;
-   public Class_8e var_133;
+   public WallSurface var_e5;
+   public WallSurface var_133;
    private byte var_18e;
    private byte var_1be;
    private byte var_1d8;
@@ -35,7 +35,7 @@ public final class Class_1e1 {
       } else {
          this.var_e5 = var1.var_370[this.var_a7 & '\uffff'];
          Class_1e1 var10000;
-         Class_8e var10001;
+         WallSurface var10001;
          if (this.var_ce == -1) {
             var10000 = this;
             var10001 = null;

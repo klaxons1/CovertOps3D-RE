@@ -14,7 +14,7 @@ public final class Class_3e6 {
    private Vector var_2a8;
    private Vector var_2f6;
    public Class_30a[] var_32c;
-   public Class_8e[] var_370;
+   public WallSurface[] var_370;
    public Transform3D var_383;
    public BSPNode[] var_3c0;
    public Sector[] var_401;
@@ -74,7 +74,7 @@ public final class Class_3e6 {
       }
 
       for(var1 = 0; var1 < this.var_370.length; ++var1) {
-         this.var_370[var1].sub_55(this);
+         this.var_370[var1].resolveSectorLink(this);
       }
 
       for(var1 = 0; var1 < this.var_433.length; ++var1) {
@@ -496,8 +496,8 @@ public final class Class_3e6 {
    }
 
    private static boolean sub_24b(Class_30a var0, Class_1e1 var1) {
-      Class_30a var2 = var1.var_133.var_13d;
-      Class_30a var3 = var1.var_e5.var_13d;
+      Class_30a var2 = var1.var_133.linkedSector;
+      Class_30a var3 = var1.var_e5.linkedSector;
       short var4;
       if (var2 != var0) {
          if (var2.var_82 - var0.var_82 > var_14) {
@@ -533,8 +533,8 @@ public final class Class_3e6 {
    }
 
    private static boolean sub_289(Class_1e1 var0) {
-      Class_30a var1 = var0.var_133.var_13d;
-      Class_30a var2 = var0.var_e5.var_13d;
+      Class_30a var1 = var0.var_133.linkedSector;
+      Class_30a var2 = var0.var_e5.linkedSector;
       if (var1.var_ac - var1.var_82 <= 0) {
          return true;
       } else if (var2.var_ac - var2.var_82 <= 0) {
@@ -547,8 +547,8 @@ public final class Class_3e6 {
    }
 
    private static boolean sub_2bb(int var0, Class_1e1 var1) {
-      Class_30a var2 = var1.var_133.var_13d;
-      Class_30a var3 = var1.var_e5.var_13d;
+      Class_30a var2 = var1.var_133.linkedSector;
+      Class_30a var3 = var1.var_e5.linkedSector;
       return var2.var_ac <= var0 || var2.var_82 >= var0 || var3.var_ac <= var0 || var3.var_82 >= var0;
    }
 
