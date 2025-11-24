@@ -42,18 +42,18 @@ public final class Class_48d {
          }
       }
 
-      this.var_8b.addElement(new Class_12e(this, var2, 0));
+      this.var_8b.addElement(new SoundPlayer(this, var2, 0));
    }
 
    public final void sub_72(int var1, int var2, int var3) {
       try {
-         Class_12e var4;
+         SoundPlayer var4;
          Player var5;
-         if (this.var_4b > -1 && (var5 = (var4 = (Class_12e)this.var_8b.elementAt(this.var_4b)).var_36) != null) {
-            Class_12e var6;
-            Class_12e.sub_3e(var6 = (Class_12e)this.var_8b.elementAt(var1), var3);
+         if (this.var_4b > -1 && (var5 = (var4 = (SoundPlayer)this.var_8b.elementAt(this.var_4b)).player) != null) {
+            SoundPlayer var6;
+            SoundPlayer.sub_3e(var6 = (SoundPlayer)this.var_8b.elementAt(var1), var3);
             if (var5.getState() == 400) {
-               if (var4.var_6c > var6.var_6c) {
+               if (var4.soundId > var6.soundId) {
                   return;
                }
 
@@ -62,7 +62,7 @@ public final class Class_48d {
             }
 
             Player var7;
-            if ((var7 = var6.var_36) != null) {
+            if ((var7 = var6.player) != null) {
                var7.setLoopCount(var2);
                var7.start();
                this.var_4b = var1;
@@ -80,7 +80,7 @@ public final class Class_48d {
    public final void sub_b8() {
       try {
          Player var2;
-         if (this.var_4b > -1 && (var2 = ((Class_12e)this.var_8b.elementAt(this.var_4b)).var_36) != null) {
+         if (this.var_4b > -1 && (var2 = ((SoundPlayer)this.var_8b.elementAt(this.var_4b)).player) != null) {
             var2.stop();
             var2.setMediaTime(0L);
          }
