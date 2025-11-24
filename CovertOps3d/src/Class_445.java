@@ -93,7 +93,7 @@ public final class Class_445 {
     }
 
     public final void sub_57(Class_3e6 var1) {
-        var1.sub_e0(this.var_c.x, this.var_c.z).sub_119(this);
+        var1.sub_e0(this.var_c.x, this.var_c.z).addDynamicObject(this);
     }
 
     public final byte sub_a9() {

@@ -17,7 +17,7 @@ public final class Class_3e6 {
    public Class_8e[] var_370;
    public Transform3D var_383;
    public BSPNode[] var_3c0;
-   public Class_110[] var_401;
+   public Sector[] var_401;
    public Class_21c[] var_433;
 
    public Class_3e6() {
@@ -55,7 +55,7 @@ public final class Class_3e6 {
       return this.var_1af;
    }
 
-   public final Class_110 sub_e0(int var1, int var2) {
+   public final Sector sub_e0(int var1, int var2) {
       return this.sub_57().findSectorNodeAtPoint(var1, var2);
    }
 
@@ -82,7 +82,7 @@ public final class Class_3e6 {
       }
 
       for(var1 = 0; var1 < this.var_401.length; ++var1) {
-         this.var_401[var1].sub_148(this);
+         this.var_401[var1].initializeWalls(this);
       }
 
       this.sub_178();
@@ -92,7 +92,7 @@ public final class Class_3e6 {
    public final void sub_178() {
       int var1;
       for(var1 = 0; var1 < this.var_401.length; ++var1) {
-         this.var_401[var1].sub_fc();
+         this.var_401[var1].clearDynamicObjects();
       }
 
       for(var1 = 0; var1 < this.var_254.length; ++var1) {

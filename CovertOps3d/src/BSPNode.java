@@ -8,7 +8,7 @@ public final class BSPNode {
    private Object frontChild;
    private Object backChild;
    public boolean[] visibleSectors;
-   public static Class_110[] visibleSectorsList;
+   public static Sector[] visibleSectorsList;
    public static int visibleSectorsCount;
 
    public BSPNode(int var1, int var2, int var3, int var4, int var5, int var6) {
@@ -79,14 +79,14 @@ public final class BSPNode {
 
       Object var6 = var10000;
       BSPNode var7;
-      Class_110 var8;
+      Sector var8;
       if (var5 instanceof BSPNode) {
          var7 = (BSPNode)var5;
          if (var2.sub_101(var7)) {
             var7.traverseBSP(var1, var2);
          }
       } else {
-         var8 = (Class_110)var5;
+         var8 = (Sector)var5;
          if (var2.sub_ca(var8)) {
             visibleSectorsList[visibleSectorsCount++] = var8;
          }
@@ -99,7 +99,7 @@ public final class BSPNode {
          }
 
       } else {
-         var8 = (Class_110)var6;
+         var8 = (Sector)var6;
          if (var2.sub_ca(var8)) {
             visibleSectorsList[visibleSectorsCount++] = var8;
          }
@@ -108,17 +108,17 @@ public final class BSPNode {
    }
 
    public final Class_30a findSectorAtPoint(int var1, int var2) {
-      return this.findSectorNodeAtPoint(var1, var2).sub_da();
+      return this.findSectorNodeAtPoint(var1, var2).getSectorData();
    }
 
-   public final Class_110 findSectorNodeAtPoint(int var1, int var2) {
+   public final Sector findSectorNodeAtPoint(int var1, int var2) {
       Object var3;
-      return (var3 = this.isPointInFront(var1, var2) ? this.backChild : this.frontChild) instanceof BSPNode ? ((BSPNode)var3).findSectorNodeAtPoint(var1, var2) : (Class_110)var3;
+      return (var3 = this.isPointInFront(var1, var2) ? this.backChild : this.frontChild) instanceof BSPNode ? ((BSPNode)var3).findSectorNodeAtPoint(var1, var2) : (Sector)var3;
    }
 
    public final boolean[] calculateVisibleSectors() {
-      boolean[] var1 = this.frontChild instanceof BSPNode ? ((BSPNode)this.frontChild).calculateVisibleSectors() : ((Class_110)this.frontChild).sub_19b();
-      boolean[] var2 = this.backChild instanceof BSPNode ? ((BSPNode)this.backChild).calculateVisibleSectors() : ((Class_110)this.backChild).sub_19b();
+      boolean[] var1 = this.frontChild instanceof BSPNode ? ((BSPNode)this.frontChild).calculateVisibleSectors() : ((Sector)this.frontChild).getVisibilityMask();
+      boolean[] var2 = this.backChild instanceof BSPNode ? ((BSPNode)this.backChild).calculateVisibleSectors() : ((Sector)this.backChild).getVisibilityMask();
       this.visibleSectors = new boolean[var1.length];
 
       for(int var3 = 0; var3 < this.visibleSectors.length; ++var3) {

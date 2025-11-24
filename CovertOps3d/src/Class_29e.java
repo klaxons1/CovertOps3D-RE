@@ -325,9 +325,9 @@ public final class Class_29e {
       }
    }
 
-   private static void sub_1e9(Class_110 var0, int var1, int var2, int var3, long var4, long var6) {
-      Class_30a var8 = var0.sub_da();
-      Vector var9 = var0.var_193;
+   private static void sub_1e9(Sector var0, int var1, int var2, int var3, long var4, long var6) {
+      Class_30a var8 = var0.getSectorData();
+      Vector var9 = var0.dynamicObjects;
       var_119a = 0;
 
       int var10;
@@ -431,13 +431,13 @@ public final class Class_29e {
       int var9 = MathUtils.fastCos(var3);
       var_10a4 = Class_3aa.var_98c == 1 && var_d38 != 0;
       var_a80.sub_4e();
-      Class_110.sub_85();
+      Sector.resetClipArrays();
 
       int var10;
-      Class_110 var11;
+      Sector var11;
       for(var10 = 0; var10 < BSPNode.visibleSectorsCount; ++var10) {
          var11 = BSPNode.visibleSectorsList[var10];
-         if (var10 > 0 && Class_110.sub_33()) {
+         if (var10 > 0 && Sector.isRenderComplete()) {
             BSPNode.visibleSectorsCount = var10;
             break;
          }
@@ -449,9 +449,9 @@ public final class Class_29e {
             var_b3f.addElement(var13);
          }
 
-         System.arraycopy(Class_110.var_144, 0, (short[])((short[])var_b02.elementAt(var10)), 0, 240);
-         System.arraycopy(Class_110.var_130, 0, (short[])((short[])var_b3f.elementAt(var10)), 0, 240);
-         Class_21c[] var15 = var11.var_dc;
+         System.arraycopy(Sector.floorClip, 0, (short[])((short[])var_b02.elementAt(var10)), 0, 240);
+         System.arraycopy(Sector.ceilingClip, 0, (short[])((short[])var_b3f.elementAt(var10)), 0, 240);
+         Class_21c[] var15 = var11.walls;
 
          for(int var16 = 0; var16 < var15.length; ++var16) {
             sub_1cf(var15[var16], var4, var6, var1, var5, var7);
@@ -462,8 +462,8 @@ public final class Class_29e {
 
       for(var10 = BSPNode.visibleSectorsCount - 1; var10 >= 0; --var10) {
          var11 = BSPNode.visibleSectorsList[var10];
-         System.arraycopy(var_b02.elementAt(var10), 0, Class_110.var_144, 0, 240);
-         System.arraycopy(var_b3f.elementAt(var10), 0, Class_110.var_130, 0, 240);
+         System.arraycopy(var_b02.elementAt(var10), 0, Sector.floorClip, 0, 240);
+         System.arraycopy(var_b3f.elementAt(var10), 0, Sector.ceilingClip, 0, 240);
          sub_1e9(var11, var0, var1, var2, (long)var8, (long)var9);
       }
 
@@ -1214,8 +1214,8 @@ public final class Class_29e {
       int var26 = var3;
       int var27 = var9;
       if (var3 < 240 && var9 >= 0) {
-         short[] var28 = Class_110.var_144;
-         short[] var29 = Class_110.var_130;
+         short[] var28 = Sector.floorClip;
+         short[] var29 = Sector.ceilingClip;
          if (var3 < 0) {
             var26 = 0;
          }
@@ -1418,8 +1418,8 @@ public final class Class_29e {
    }
 
    private static void sub_477(short var0, int var1, int var2, int var3) {
-      short var4 = Class_110.var_144[var1];
-      short var5 = Class_110.var_130[var1];
+      short var4 = Sector.floorClip[var1];
+      short var5 = Sector.ceilingClip[var1];
       if (var2 <= var5 && var2 > 144 && var3 > 0) {
          int var6 = var2;
          short var7 = var5;
@@ -1474,8 +1474,8 @@ public final class Class_29e {
    }
 
    private static void sub_4be(short var0, int var1, int var2, int var3) {
-      short var4 = Class_110.var_144[var1];
-      short var5 = Class_110.var_130[var1];
+      short var4 = Sector.floorClip[var1];
+      short var5 = Sector.ceilingClip[var1];
       if (var2 >= var4 && var2 < 144 && var3 < 0) {
          int var7 = var2;
          if (var2 > var5) {
@@ -1529,8 +1529,8 @@ public final class Class_29e {
    }
 
    private static void sub_4e2(byte[] var0, int var1, int[] var2, int var3, int var4, int var5, int var6, int var7) {
-      short var8 = Class_110.var_144[var3];
-      short var9 = Class_110.var_130[var3];
+      short var8 = Sector.floorClip[var3];
+      short var9 = Sector.ceilingClip[var3];
       if (var4 <= var9 && var5 >= var8) {
          int var10 = var4;
          int var11 = var5;
@@ -1584,8 +1584,8 @@ public final class Class_29e {
    }
 
    private static void sub_50e(byte[] var0, int var1, int[] var2, int var3, int var4, int var5, int var6, int var7, int var8) {
-      short var9 = Class_110.var_144[var3];
-      short var10 = Class_110.var_130[var3];
+      short var9 = Sector.floorClip[var3];
+      short var10 = Sector.ceilingClip[var3];
       if (var5 >= var9 && var4 <= var10) {
          int var11 = var4;
          int var12 = var5;
@@ -1651,8 +1651,8 @@ public final class Class_29e {
    }
 
    private static void sub_523(int var0, int var1, int var2, int var3) {
-      short var4 = Class_110.var_144[var0];
-      short var5 = Class_110.var_130[var0];
+      short var4 = Sector.floorClip[var0];
+      short var5 = Sector.ceilingClip[var0];
       int var6 = var1;
       int var7 = var2;
       if (var1 < var4) {
@@ -1914,16 +1914,16 @@ public final class Class_29e {
                }
 
                var_505.var_3c0 = var34;
-               Class_110[] var37 = new Class_110[(var5 = sub_7c5(var4)) / 4];
+               Sector[] var37 = new Sector[(var5 = sub_7c5(var4)) / 4];
 
                for(int var39 = 0; var39 < var37.length; ++var39) {
                   var15 = sub_775(var4);
                   var41 = sub_775(var4);
-                  var37[var39] = new Class_110(var15, var41);
+                  var37[var39] = new Sector(var15, var41);
                }
 
                var_505.var_401 = var37;
-               BSPNode.visibleSectorsList = new Class_110[var5 / 4];
+               BSPNode.visibleSectorsList = new Sector[var5 / 4];
                Class_21c[] var40 = new Class_21c[sub_7c5(var4) / 9];
 
                int var43;
