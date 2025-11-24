@@ -1,72 +1,72 @@
 public final class RenderUtils {
-   private Class_282[] var_4d = new Class_282[288];
-   private Class_282 var_95 = null;
+   private RenderSpan[] renderSpans = new RenderSpan[288];
+   private RenderSpan freeList = null;
 
    public RenderUtils() {
-      this.sub_4e();
+      this.resetRenderer();
    }
 
-   public final void sub_4e() {
+   public final void resetRenderer() {
       for(int var1 = 0; var1 < 288; ++var1) {
-         if (this.var_4d[var1] != null) {
-            Class_282 var10000 = this.var_4d[var1];
+         if (this.renderSpans[var1] != null) {
+            RenderSpan var10000 = this.renderSpans[var1];
 
             while(true) {
-               Class_282 var2 = var10000;
-               if (var10000.var_119 == null) {
-                  var2.var_119 = this.var_95;
-                  this.var_95 = this.var_4d[var1];
+               RenderSpan var2 = var10000;
+               if (var10000.next == null) {
+                  var2.next = this.freeList;
+                  this.freeList = this.renderSpans[var1];
                   break;
                }
 
-               var10000 = var2.var_119;
+               var10000 = var2.next;
             }
          }
 
-         this.var_4d[var1] = null;
+         this.renderSpans[var1] = null;
       }
 
    }
 
-   public final void sub_82(short var1, short var2, short var3, int var4) {
-      Class_282 var10000 = this.var_4d[var4];
+   public final void addRenderSpan(short var1, short var2, short var3, int var4) {
+      RenderSpan var10000 = this.renderSpans[var4];
 
       while(true) {
-         Class_282 var5 = var10000;
-         Class_282 var6;
+         RenderSpan var5 = var10000;
+         RenderSpan var6;
          if (var10000 == null) {
-            if (this.var_95 != null) {
-               var6 = this.var_95;
-               this.var_95 = this.var_95.var_119;
-               var6.var_59 = var1;
-               var6.var_6e = var2;
-               var6.var_79 = var3;
+            if (this.freeList != null) {
+               var6 = this.freeList;
+               this.freeList = this.freeList.next;
+               var6.startX = var1;
+               var6.endX = var2;
+               var6.sectorId = var3;
             } else {
-               var6 = new Class_282(var1, var2, var3);
+               var6 = new RenderSpan(var1, var2, var3);
             }
 
-            var6.var_119 = this.var_4d[var4];
-            this.var_4d[var4] = var6;
+            var6.next = this.renderSpans[var4];
+            this.renderSpans[var4] = var6;
             return;
          }
 
-         if (var5.var_79 == var3) {
-            Class_282 var7;
-            if (var5.var_6e == var1 - 1) {
-               var5.var_6e = var2;
-               var6 = this.var_4d[var4];
+         if (var5.sectorId == var3) {
+            RenderSpan var7;
+            if (var5.endX == var1 - 1) {
+               var5.endX = var2;
+               var6 = this.renderSpans[var4];
 
-               for(var7 = null; var6 != null; var6 = var6.var_119) {
-                  if (var6.var_79 == var3 && var6.var_59 == var2 + 1) {
-                     var5.var_6e = var6.var_6e;
+               for(var7 = null; var6 != null; var6 = var6.next) {
+                  if (var6.sectorId == var3 && var6.startX == var2 + 1) {
+                     var5.endX = var6.endX;
                      if (var7 != null) {
-                        var7.var_119 = var6.var_119;
+                        var7.next = var6.next;
                      } else {
-                        this.var_4d[var4] = var6.var_119;
+                        this.renderSpans[var4] = var6.next;
                      }
 
-                     var6.var_119 = this.var_95;
-                     this.var_95 = var6;
+                     var6.next = this.freeList;
+                     this.freeList = var6;
                      return;
                   }
 
@@ -76,21 +76,21 @@ public final class RenderUtils {
                return;
             }
 
-            if (var5.var_59 == var2 + 1) {
-               var5.var_59 = var1;
-               var6 = this.var_4d[var4];
+            if (var5.startX == var2 + 1) {
+               var5.startX = var1;
+               var6 = this.renderSpans[var4];
 
-               for(var7 = null; var6 != null; var6 = var6.var_119) {
-                  if (var6.var_79 == var3 && var6.var_6e == var1 - 1) {
-                     var5.var_59 = var6.var_59;
+               for(var7 = null; var6 != null; var6 = var6.next) {
+                  if (var6.sectorId == var3 && var6.endX == var1 - 1) {
+                     var5.startX = var6.startX;
                      if (var7 != null) {
-                        var7.var_119 = var6.var_119;
+                        var7.next = var6.next;
                      } else {
-                        this.var_4d[var4] = var6.var_119;
+                        this.renderSpans[var4] = var6.next;
                      }
 
-                     var6.var_119 = this.var_95;
-                     this.var_95 = var6;
+                     var6.next = this.freeList;
+                     this.freeList = var6;
                      return;
                   }
 
@@ -101,17 +101,17 @@ public final class RenderUtils {
             }
          }
 
-         var10000 = var5.var_119;
+         var10000 = var5.next;
       }
    }
 
-   public final void sub_e5(int var1, int var2, int var3, int var4) {
-      Class_282 var10000;
+   public final void renderAllSpans(int var1, int var2, int var3, int var4) {
+      RenderSpan var10000;
       int var5;
-      Class_282 var6;
+      RenderSpan var6;
       Class_30a var7;
       for(var5 = 0; var5 < 144; ++var5) {
-         var10000 = this.var_4d[var5];
+         var10000 = this.renderSpans[var5];
 
          while(true) {
             var6 = var10000;
@@ -119,14 +119,14 @@ public final class RenderUtils {
                break;
             }
 
-            var7 = GameEngine.var_505.var_32c[var6.var_79];
-            GameEngine.sub_430(var6.var_59, var6.var_6e, var5, var7.var_214.pixelData, var7.var_214.colorPalettes, var7.var_282, var1, var2, var3, var7.var_2bf, var4);
-            var10000 = var6.var_119;
+            var7 = GameEngine.var_505.var_32c[var6.sectorId];
+            GameEngine.sub_430(var6.startX, var6.endX, var5, var7.var_214.pixelData, var7.var_214.colorPalettes, var7.var_282, var1, var2, var3, var7.var_2bf, var4);
+            var10000 = var6.next;
          }
       }
 
       for(var5 = 144; var5 < 288; ++var5) {
-         var10000 = this.var_4d[var5];
+         var10000 = this.renderSpans[var5];
 
          while(true) {
             var6 = var10000;
@@ -134,9 +134,9 @@ public final class RenderUtils {
                break;
             }
 
-            var7 = GameEngine.var_505.var_32c[var6.var_79];
-            GameEngine.sub_430(var6.var_59, var6.var_6e, var5, var7.var_262.pixelData, var7.var_262.colorPalettes, var7.var_282, var1, var2, var3, var7.var_2f0, var4);
-            var10000 = var6.var_119;
+            var7 = GameEngine.var_505.var_32c[var6.sectorId];
+            GameEngine.sub_430(var6.startX, var6.endX, var5, var7.var_262.pixelData, var7.var_262.colorPalettes, var7.var_282, var1, var2, var3, var7.var_2f0, var4);
+            var10000 = var6.next;
          }
       }
 

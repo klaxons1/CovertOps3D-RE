@@ -430,7 +430,7 @@ public final class GameEngine {
       int var8 = MathUtils.fastSin(var3);
       int var9 = MathUtils.fastCos(var3);
       var_10a4 = Class_3aa.var_98c == 1 && currentWeapon != 0;
-      var_a80.sub_4e();
+      var_a80.resetRenderer();
       Sector.resetClipArrays();
 
       int var10;
@@ -458,7 +458,7 @@ public final class GameEngine {
          }
       }
 
-      var_a80.sub_e5(var8, var9, -var6, -var5);
+      var_a80.renderAllSpans(var8, var9, -var6, -var5);
 
       for(var10 = BSPNode.visibleSectorsCount - 1; var10 >= 0; --var10) {
          var11 = BSPNode.visibleSectorsList[var10];
@@ -1359,7 +1359,7 @@ public final class GameEngine {
             var67 = (short)var_a34;
 
             for(var68 = var_9e4; var68 <= var_9fa; ++var68) {
-               var_a80.sub_82(depthBuffer[var68], var67, var42, var68);
+               var_a80.addRenderSpan(depthBuffer[var68], var67, var42, var68);
             }
          }
 
@@ -1367,7 +1367,7 @@ public final class GameEngine {
             var67 = (short)var_a27;
 
             for(var68 = var_958; var68 <= var_9b4; ++var68) {
-               var_a80.sub_82(depthBuffer[var68], var67, var42, var68);
+               var_a80.addRenderSpan(depthBuffer[var68], var67, var42, var68);
             }
          }
 
@@ -1447,18 +1447,18 @@ public final class GameEngine {
             }
 
             for(var14 = var_9e4; var14 <= var13; ++var14) {
-               var_a80.sub_82(depthBuffer[var14], var9, var0, var14);
+               var_a80.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
 
             for(var14 = var12; var14 <= var_9fa; ++var14) {
-               var_a80.sub_82(depthBuffer[var14], var9, var0, var14);
+               var_a80.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
          } else {
             if (var_9e4 >= 0) {
                var9 = (short)var_a34;
 
                for(var10 = var_9e4; var10 <= var_9fa; ++var10) {
-                  var_a80.sub_82(depthBuffer[var10], var9, var0, var10);
+                  var_a80.addRenderSpan(depthBuffer[var10], var9, var0, var10);
                }
             }
 
@@ -1502,18 +1502,18 @@ public final class GameEngine {
             }
 
             for(var14 = var_958; var14 <= var13; ++var14) {
-               var_a80.sub_82(depthBuffer[var14], var9, var0, var14);
+               var_a80.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
 
             for(var14 = var12; var14 <= var_9b4; ++var14) {
-               var_a80.sub_82(depthBuffer[var14], var9, var0, var14);
+               var_a80.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
          } else {
             if (var_958 >= 0) {
                var9 = (short)var_a27;
 
                for(var10 = var_958; var10 <= var_9b4; ++var10) {
-                  var_a80.sub_82(depthBuffer[var10], var9, var0, var10);
+                  var_a80.addRenderSpan(depthBuffer[var10], var9, var0, var10);
                }
             }
 
