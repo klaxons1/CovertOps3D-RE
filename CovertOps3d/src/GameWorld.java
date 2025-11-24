@@ -9,7 +9,7 @@ public final class GameWorld {
    private int lastWallIndex;
    public Point2D[] vertices;
    private Point2D[] transformedVerticles;
-   public Class_1e1[] wallDefinitions;
+   public WallDefinition[] wallDefinitions;
    public GameObject[] staticObjects;
    private Vector projectiles;
    private Vector pickupItems;
@@ -70,7 +70,7 @@ public final class GameWorld {
       }
 
       for(var1 = 0; var1 < this.wallDefinitions.length; ++var1) {
-         this.wallDefinitions[var1].sub_ca(this);
+         this.wallDefinitions[var1].initializeWall(this);
       }
 
       for(var1 = 0; var1 < this.wallSurfaces.length; ++var1) {
@@ -139,8 +139,8 @@ public final class GameWorld {
 
       int var4;
       for(var4 = 0; var4 < this.wallDefinitions.length; ++var4) {
-         Class_1e1 var5;
-         if ((var5 = this.wallDefinitions[var4]).sub_18c() || sub_24b(var3, var5)) {
+         WallDefinition var5;
+         if ((var5 = this.wallDefinitions[var4]).isCollidable() || sub_24b(var3, var5)) {
             this.sub_2d4(var5);
          }
       }
@@ -179,26 +179,26 @@ public final class GameWorld {
       return true;
    }
 
-   public final Class_1e1 handlePlayerMovement(PhysicsBody var1, SectorData var2) {
-      Class_1e1 var5 = null;
+   public final WallDefinition handlePlayerMovement(PhysicsBody var1, SectorData var2) {
+      WallDefinition var5 = null;
       this.collisionTestPoint.x = var1.x;
       this.collisionTestPoint.y = var1.z;
       int var6 = -1;
-      Class_1e1 var7;
-      if (this.lastWallIndex != -1 && ((var7 = this.wallDefinitions[this.lastWallIndex]).sub_129() || sub_24b(var2, var7)) && this.sub_2d4(var7)) {
+      WallDefinition var7;
+      if (this.lastWallIndex != -1 && ((var7 = this.wallDefinitions[this.lastWallIndex]).isPassable() || sub_24b(var2, var7)) && this.sub_2d4(var7)) {
          var6 = this.lastWallIndex;
          var5 = var7;
       }
 
       int var16;
       for(var16 = 0; var16 < this.wallDefinitions.length; ++var16) {
-         Class_1e1 var8;
-         if (var16 != this.lastWallIndex && ((var8 = this.wallDefinitions[var16]).sub_129() || sub_24b(var2, var8)) && this.sub_2d4(var8)) {
+         WallDefinition var8;
+         if (var16 != this.lastWallIndex && ((var8 = this.wallDefinitions[var16]).isPassable() || sub_24b(var2, var8)) && this.sub_2d4(var8)) {
             if (var6 == -1) {
                var6 = var16;
             }
 
-            if (var5 == null || var5.sub_5e() == 0) {
+            if (var5 == null || var5.getWallType() == 0) {
                var5 = var8;
             }
          }
@@ -495,9 +495,9 @@ public final class GameWorld {
       return var5;
    }
 
-   private static boolean sub_24b(SectorData var0, Class_1e1 var1) {
-      SectorData var2 = var1.var_133.linkedSector;
-      SectorData var3 = var1.var_e5.linkedSector;
+   private static boolean sub_24b(SectorData var0, WallDefinition var1) {
+      SectorData var2 = var1.backSurface.linkedSector;
+      SectorData var3 = var1.frontSurface.linkedSector;
       short var4;
       if (var2 != var0) {
          if (var2.floorHeight - var0.floorHeight > MIN_WALL_HEIGHT) {
@@ -532,9 +532,9 @@ public final class GameWorld {
       return false;
    }
 
-   private static boolean sub_289(Class_1e1 var0) {
-      SectorData var1 = var0.var_133.linkedSector;
-      SectorData var2 = var0.var_e5.linkedSector;
+   private static boolean sub_289(WallDefinition var0) {
+      SectorData var1 = var0.backSurface.linkedSector;
+      SectorData var2 = var0.frontSurface.linkedSector;
       if (var1.ceilingHeight - var1.floorHeight <= 0) {
          return true;
       } else if (var2.ceilingHeight - var2.floorHeight <= 0) {
@@ -546,16 +546,16 @@ public final class GameWorld {
       }
    }
 
-   private static boolean sub_2bb(int var0, Class_1e1 var1) {
-      SectorData var2 = var1.var_133.linkedSector;
-      SectorData var3 = var1.var_e5.linkedSector;
+   private static boolean sub_2bb(int var0, WallDefinition var1) {
+      SectorData var2 = var1.backSurface.linkedSector;
+      SectorData var3 = var1.frontSurface.linkedSector;
       return var2.ceilingHeight <= var0 || var2.floorHeight >= var0 || var3.ceilingHeight <= var0 || var3.floorHeight >= var0;
    }
 
-   private boolean sub_2d4(Class_1e1 var1) {
-      Point2D var2 = this.vertices[var1.var_22 & '\uffff'];
+   private boolean sub_2d4(WallDefinition var1) {
+      Point2D var2 = this.vertices[var1.startVertexId & '\uffff'];
       Point2D var3;
-      int var4 = (var3 = this.vertices[var1.var_5c & '\uffff']).x - var2.x;
+      int var4 = (var3 = this.vertices[var1.endVertexId & '\uffff']).x - var2.x;
       int var5 = var3.y - var2.y;
       int var6 = var2.x + (var4 >> 1);
       int var7 = var2.y + (var5 >> 1);
@@ -581,7 +581,7 @@ public final class GameWorld {
                var11 = 0;
             }
 
-            return this.sub_30b(var11, var13, var2, var3, var1.var_88, var6, var7, var8, var9);
+            return this.sub_30b(var11, var13, var2, var3, var1.normalVector, var6, var7, var8, var9);
          }
       }
 
@@ -686,10 +686,10 @@ public final class GameWorld {
 
    public final boolean checkLineOfSight(Transform3D var1, Transform3D var2) {
       for(int var3 = 0; var3 < this.wallDefinitions.length; ++var3) {
-         Class_1e1 var4;
-         if ((var4 = this.wallDefinitions[var3]).sub_1d1() || sub_289(var4)) {
-            Point2D var5 = this.vertices[var4.var_22 & '\uffff'];
-            Point2D var6 = this.vertices[var4.var_5c & '\uffff'];
+         WallDefinition var4;
+         if ((var4 = this.wallDefinitions[var3]).isSolid() || sub_289(var4)) {
+            Point2D var5 = this.vertices[var4.startVertexId & '\uffff'];
+            Point2D var6 = this.vertices[var4.endVertexId & '\uffff'];
             if (sub_365(var2.x, var2.z, var1.x, var1.z, var5.x, var5.y, var6.x, var6.y)) {
                return false;
             }
@@ -738,10 +738,10 @@ public final class GameWorld {
       int var6 = var5 >> 16;
 
       for(int var7 = 0; var7 < this.wallDefinitions.length; ++var7) {
-         Class_1e1 var8;
-         if ((var8 = this.wallDefinitions[var7]).sub_1d1() || sub_2bb(var6, var8)) {
-            Point2D var9 = this.vertices[var8.var_22 & '\uffff'];
-            Point2D var10 = this.vertices[var8.var_5c & '\uffff'];
+         WallDefinition var8;
+         if ((var8 = this.wallDefinitions[var7]).isSolid() || sub_2bb(var6, var8)) {
+            Point2D var9 = this.vertices[var8.startVertexId & '\uffff'];
+            Point2D var10 = this.vertices[var8.endVertexId & '\uffff'];
             if (sub_365(var1, var2, var3, var4, var9.x, var9.y, var10.x, var10.y)) {
                return true;
             }
@@ -1018,10 +1018,10 @@ public final class GameWorld {
                var10 = var15.y >> 16;
 
                for(int var19 = 0; var19 < this.wallDefinitions.length; ++var19) {
-                  Class_1e1 var20;
-                  if ((var20 = this.wallDefinitions[var19]).sub_1d1() || sub_2bb(var10, var20)) {
-                     Point2D var21 = this.vertices[var20.var_22 & '\uffff'];
-                     Point2D var14 = this.vertices[var20.var_5c & '\uffff'];
+                  WallDefinition var20;
+                  if ((var20 = this.wallDefinitions[var19]).isSolid() || sub_2bb(var10, var20)) {
+                     Point2D var21 = this.vertices[var20.startVertexId & '\uffff'];
+                     Point2D var14 = this.vertices[var20.endVertexId & '\uffff'];
                      if (sub_365(var4, var5, var6, var7, var21.x, var21.y, var14.x, var14.y)) {
                         var18 = true;
                         break;
@@ -1123,15 +1123,15 @@ public final class GameWorld {
 
    public final void drawDebugInfo(Graphics var1) {
       for(int var2 = 0; var2 < this.wallDefinitions.length; ++var2) {
-         Class_1e1 var3;
-         if (((var3 = this.wallDefinitions[var2]).sub_5e() != 0 || !var3.sub_1f8()) && var3.sub_29e()) {
-            int var4 = var3.var_22 & '\uffff';
-            int var5 = var3.var_5c & '\uffff';
+         WallDefinition var3;
+         if (((var3 = this.wallDefinitions[var2]).getWallType() != 0 || !var3.isTransparent()) && var3.isRendered()) {
+            int var4 = var3.startVertexId & '\uffff';
+            int var5 = var3.endVertexId & '\uffff';
             Point2D var6 = this.transformedVerticles[var4];
             Point2D var7 = this.transformedVerticles[var5];
             Graphics var10000;
             int var10001;
-            if (var3.sub_5e() != 0) {
+            if (var3.getWallType() != 0) {
                var10000 = var1;
                var10001 = 16776960;
             } else {

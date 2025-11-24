@@ -67,7 +67,7 @@ public final class GameEngine {
    public static String messageText = "";
    public static int messageTimer = 0;
    public static int var_e72 = 0;
-   public static Class_1e1 var_e96 = null;
+   public static WallDefinition var_e96 = null;
    public static Random var_ea3 = new Random();
    public static boolean var_eba = false;
    public static byte screenShake = 0;
@@ -230,7 +230,7 @@ public final class GameEngine {
       }
    }
 
-   private static void sub_14e(WallSegment var0, Class_1e1 var1, WallSurface var2, Point2D[] var3, int var4, int var5, int var6, int var7) {
+   private static void sub_14e(WallSegment var0, WallDefinition var1, WallSurface var2, Point2D[] var3, int var4, int var5, int var6, int var7) {
       SectorData var8 = var2.linkedSector;
       int var9 = -var5 + (-var8.ceilingHeight << 16);
       int var10 = -var5 + (-var8.floorHeight << 16);
@@ -247,18 +247,18 @@ public final class GameEngine {
          Texture var20 = sub_f6(var2.mainTextureId);
          int var21 = var2.textureOffsetY & '\uffff';
          int var22 = var20.height - var19 + var21;
-         if (!var1.sub_25c()) {
+         if (!var1.isSecret()) {
             var22 = var21;
          }
 
-         var1.sub_2ea();
+         var1.markAsRendered();
          int var23 = (var2.textureOffsetX & '\uffff') << 16;
          drawWallColumn(var8, var20, var20, var13, var14, var17, var17, var17, var11.y, var15, var16, var18, var18, var18, var12.y, var_7ba + var23, var_817 - var_7ba, var22, var19, var22, var19, -var4, -var6, var7, var9, var10);
       }
 
    }
 
-   private static void sub_17a(WallSegment var0, Class_1e1 var1, WallSurface var2, WallSurface var3, Point2D[] var4, int var5, int var6, int var7, int var8) {
+   private static void sub_17a(WallSegment var0, WallDefinition var1, WallSurface var2, WallSurface var3, Point2D[] var4, int var5, int var6, int var7, int var8) {
       SectorData var9 = var2.linkedSector;
       SectorData var10 = var3.linkedSector;
       int var11 = -var6 + (-var9.ceilingHeight << 16);
@@ -292,16 +292,16 @@ public final class GameEngine {
 
          int var31 = var2.textureOffsetY & '\uffff';
          int var32 = var29.height - var27 + var31;
-         if (var1.sub_232()) {
+         if (var1.isDoor()) {
             var32 = var31;
          }
 
          int var33 = var9.ceilingHeight - var10.floorHeight + var31;
-         if (!var1.sub_25c()) {
+         if (!var1.isSecret()) {
             var33 = var31;
          }
 
-         var1.sub_2ea();
+         var1.markAsRendered();
          int var34 = (var2.textureOffsetX & '\uffff') << 16;
          drawWallColumn(var9, var29, var30, var17, var18, var23, var24, var19, var15.y, var20, var21, var25, var26, var22, var16.y, var_7ba + var34, var_817 - var_7ba, var32, var27, var33, var28, -var5, -var7, var8, var11, var12);
       }
@@ -309,10 +309,10 @@ public final class GameEngine {
    }
 
    private static void renderWallSegment(WallSegment var0, Point2D[] var1, int var2, int var3, int var4, int var5) {
-      Class_1e1 var6;
-      WallSurface var7 = (var6 = var0.wallDefinition).var_e5;
+      WallDefinition var6;
+      WallSurface var7 = (var6 = var0.wallDefinition).frontSurface;
       WallSurface var8;
-      if ((var8 = var6.var_133) != null) {
+      if ((var8 = var6.backSurface) != null) {
          if (var0.isFrontFacing) {
             sub_17a(var0, var6, var7, var8, var1, var2, var3, var4, var5);
          } else {
@@ -557,12 +557,12 @@ public final class GameEngine {
       }
 
       int var0 = MathUtils.fastHypot(player.velocityX, player.velocityY);
-      Class_1e1 var1 = null;
+      WallDefinition var1 = null;
       if (var0 > 262144) {
          player.applyDampedVelocity();
          var1 = var_505.handlePlayerMovement(player, currentSector);
          player.applyDampedVelocity();
-         Class_1e1 var2 = var_505.handlePlayerMovement(player, currentSector);
+         WallDefinition var2 = var_505.handlePlayerMovement(player, currentSector);
          if (var1 == null) {
             var1 = var2;
          }
@@ -574,7 +574,7 @@ public final class GameEngine {
       int var21;
       if (!var_3e3) {
          if (var1 != null) {
-            var_e96 = (var21 = var1.sub_5e()) != 1 && var21 != 11 && var21 != 26 && var21 != 28 && var21 != 51 && var21 != 62 ? null : var1;
+            var_e96 = (var21 = var1.getWallType()) != 1 && var21 != 11 && var21 != 26 && var21 != 28 && var21 != 51 && var21 != 62 ? null : var1;
          }
       } else {
          var_e96 = null;
@@ -594,8 +594,8 @@ public final class GameEngine {
          var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
          var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
          Point2D[] var8;
-         Point2D var9 = (var8 = var_505.vertices)[var_e96.var_22 & '\uffff'];
-         Point2D var10 = var8[var_e96.var_5c & '\uffff'];
+         Point2D var9 = (var8 = var_505.vertices)[var_e96.startVertexId & '\uffff'];
+         Point2D var10 = var8[var_e96.endVertexId & '\uffff'];
          if (GameWorld.sub_365(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
             var10000 = var_e72 + 1;
          } else {
@@ -605,7 +605,7 @@ public final class GameEngine {
 
          var_e72 = var10000;
          if (var_e72 >= 50) {
-            messageText = var_e96.sub_5e() == 62 ? "press 1 to move the lift" : "press 1 to open the door";
+            messageText = var_e96.getWallType() == 62 ? "press 1 to move the lift" : "press 1 to open the door";
             messageTimer = 10;
          }
       } else {
@@ -641,15 +641,15 @@ public final class GameEngine {
          var5 = 1310720;
          var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
          var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
-         Class_1e1[] var30 = var_505.wallDefinitions;
+         WallDefinition[] var30 = var_505.wallDefinitions;
          Point2D[] var32 = var_505.vertices;
 
          label389:
          for(var35 = 0; var35 < var30.length; ++var35) {
-            Class_1e1 var11;
-            if ((var12 = (var11 = var30[var35]).sub_5e()) == 1 || var12 == 11 || var12 == 26 || var12 == 28 || var12 == 51 || var12 == 62) {
-               Point2D var13 = var32[var11.var_22 & '\uffff'];
-               Point2D var14 = var32[var11.var_5c & '\uffff'];
+            WallDefinition var11;
+            if ((var12 = (var11 = var30[var35]).getWallType()) == 1 || var12 == 11 || var12 == 26 || var12 == 28 || var12 == 51 || var12 == 62) {
+               Point2D var13 = var32[var11.startVertexId & '\uffff'];
+               Point2D var14 = var32[var11.endVertexId & '\uffff'];
                if (GameWorld.sub_365(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
                   if ((Class_3aa.var_e8b & 1) == 0) {
                      Class_3aa.var_e8b = (byte)(Class_3aa.var_e8b | 1);
@@ -659,8 +659,8 @@ public final class GameEngine {
                   byte var42;
                   switch(var12) {
                   case 1:
-                     (var38 = getDoorController(var11.var_133.linkedSector)).doorState = 1;
-                     var38.targetCeilingHeight = var11.var_e5.linkedSector.ceilingHeight;
+                     (var38 = getDoorController(var11.backSurface.linkedSector)).doorState = 1;
+                     var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
                      break label389;
                   case 11:
                      if (Class_3aa.var_259 == 7 && ammoCounts[6] == 0) {
@@ -670,13 +670,13 @@ public final class GameEngine {
                      }
 
                      Class_3aa.var_295 = Class_3aa.var_259++;
-                     var_117 = var11.sub_90();
+                     var_117 = var11.getSpecialType();
                      var42 = 1;
                      break;
                   case 26:
                      if (var_d98[0]) {
-                        (var38 = getDoorController(var11.var_133.linkedSector)).doorState = 1;
-                        var38.targetCeilingHeight = var11.var_e5.linkedSector.ceilingHeight;
+                        (var38 = getDoorController(var11.backSurface.linkedSector)).doorState = 1;
+                        var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
                      } else {
                         messageText = var_d98[1] ? "oops, i need another key..." : "oh, i need a key...";
                         messageTimer = 50;
@@ -684,8 +684,8 @@ public final class GameEngine {
                      break label389;
                   case 28:
                      if (var_d98[1]) {
-                        (var38 = getDoorController(var11.var_133.linkedSector)).doorState = 1;
-                        var38.targetCeilingHeight = var11.var_e5.linkedSector.ceilingHeight;
+                        (var38 = getDoorController(var11.backSurface.linkedSector)).doorState = 1;
+                        var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
                      } else {
                         messageText = var_d98[0] ? "oops, i need another key..." : "oh, i need a key...";
                         messageTimer = 50;
@@ -693,13 +693,13 @@ public final class GameEngine {
                      break label389;
                   case 51:
                      Class_3aa.var_295 = Class_3aa.var_259--;
-                     var_117 = var11.sub_90();
+                     var_117 = var11.getSpecialType();
                      var42 = -1;
                      break;
                   case 62:
                      SectorData var15;
                      ElevatorController var16;
-                     if ((var16 = getElevatorController(var15 = var11.var_133.linkedSector)).elevatorState == 0) {
+                     if ((var16 = getElevatorController(var15 = var11.backSurface.linkedSector)).elevatorState == 0) {
                         if (var15.floorHeight == var16.minHeight) {
                            var41 = var16;
                            var10001 = 1;
@@ -1088,13 +1088,13 @@ public final class GameEngine {
       (var6 = new ElevatorController()).elevatorState = 0;
       var6.minHeight = 32767;
       var6.maxHeight = -32768;
-      Class_1e1[] var7 = var_505.wallDefinitions;
+      WallDefinition[] var7 = var_505.wallDefinitions;
 
       for(int var3 = 0; var3 < var7.length; ++var3) {
-         Class_1e1 var4;
-         if ((var4 = var7[var3]).sub_5e() == 62 && var4.var_133.linkedSector == var0) {
+         WallDefinition var4;
+         if ((var4 = var7[var3]).getWallType() == 62 && var4.backSurface.linkedSector == var0) {
             SectorData var5;
-            if ((var5 = var4.var_e5.linkedSector).floorHeight > var6.maxHeight) {
+            if ((var5 = var4.frontSurface.linkedSector).floorHeight > var6.maxHeight) {
                var6.maxHeight = var5.floorHeight;
             }
 
@@ -1796,7 +1796,7 @@ public final class GameEngine {
          }
 
          var_505.setVertices(var6);
-         Class_1e1[] var25 = new Class_1e1[sub_7c5(var4) / 11];
+         WallDefinition[] var25 = new WallDefinition[sub_7c5(var4) / 11];
 
          int var8;
          short var14;
@@ -1809,7 +1809,7 @@ public final class GameEngine {
             byte var13 = var4.readByte();
             var14 = sub_775(var4);
             var15 = sub_775(var4);
-            var25[var8] = new Class_1e1(var9, var10, var14, var15, var11, var12, var13);
+            var25[var8] = new WallDefinition(var9, var10, var14, var15, var11, var12, var13);
          }
 
          var_505.wallDefinitions = var25;

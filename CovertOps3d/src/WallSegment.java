@@ -3,7 +3,7 @@ public final class WallSegment {
    public short startVertexIndex;
    public short endVertexIndex;
    public boolean isFrontFacing;
-   public Class_1e1 wallDefinition;
+   public WallDefinition wallDefinition;
    private WallSurface sectorLink;
    public short textureOffset;
 
@@ -21,10 +21,10 @@ public final class WallSegment {
       WallSurface var10001;
       if (this.isFrontFacing) {
          var10000 = this;
-         var10001 = this.wallDefinition.var_e5;
+         var10001 = this.wallDefinition.frontSurface;
       } else {
          var10000 = this;
-         var10001 = this.wallDefinition.var_133;
+         var10001 = this.wallDefinition.backSurface;
       }
 
       var10000.sectorLink = var10001;
