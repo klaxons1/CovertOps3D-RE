@@ -49,7 +49,7 @@ public final class Class_30a {
       return !var1.var_1b6[this.var_10];
    }
 
-   public final boolean sub_101(Class_241 var1) {
-      return !var1.var_218[this.var_10];
+   public final boolean sub_101(BSPNode var1) {
+      return !var1.visibleSectors[this.var_10];
    }
 }

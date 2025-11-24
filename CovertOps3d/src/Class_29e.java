@@ -96,7 +96,7 @@ public final class Class_29e {
       var_bd3 = new Vector();
       var_118d = new Class_445[64];
       var_119a = 0;
-      Class_241.var_27f = 0;
+      BSPNode.visibleSectorsCount = 0;
       var_894 = new Class_318((byte)0, 8, 8, 0, 0, new int[]{16777215, 16711680});
       byte[] var0 = new byte[]{17, 17, 17, 17, 17, 17, 17, 17};
       byte[] var1 = new byte[]{17, 16, 16, 16, 16, 17, 16, 17};
@@ -132,11 +132,11 @@ public final class Class_29e {
       sub_391();
       var_505.sub_133();
       var_553.copyFrom(var_505.var_383);
-      var_5c2 = var_505.sub_57().sub_13a(var_553.x, var_553.z);
+      var_5c2 = var_505.sub_57().findSectorAtPoint(var_553.x, var_553.z);
       var_b86.removeAllElements();
       var_bd3.removeAllElements();
       var_119a = 0;
-      Class_241.var_27f = 0;
+      BSPNode.visibleSectorsCount = 0;
       var_ded = "";
       var_e3a = 0;
       var_e72 = 0;
@@ -422,8 +422,8 @@ public final class Class_29e {
       var_505.sub_4e6();
       Point2D[] var4 = var_505.sub_b8(var0, var2, var3);
       var_505.sub_178();
-      Class_241.var_27f = 0;
-      var_505.sub_57().sub_110(var_553, var_505.sub_115(var0, var2));
+      BSPNode.visibleSectorsCount = 0;
+      var_505.sub_57().traverseBSP(var_553, var_505.sub_115(var0, var2));
       int var5 = var2 << 8;
       int var6 = var0 << 8;
       int var7 = var3 << 1;
@@ -435,10 +435,10 @@ public final class Class_29e {
 
       int var10;
       Class_110 var11;
-      for(var10 = 0; var10 < Class_241.var_27f; ++var10) {
-         var11 = Class_241.var_24c[var10];
+      for(var10 = 0; var10 < BSPNode.visibleSectorsCount; ++var10) {
+         var11 = BSPNode.visibleSectorsList[var10];
          if (var10 > 0 && Class_110.sub_33()) {
-            Class_241.var_27f = var10;
+            BSPNode.visibleSectorsCount = var10;
             break;
          }
 
@@ -460,8 +460,8 @@ public final class Class_29e {
 
       var_a80.sub_e5(var8, var9, -var6, -var5);
 
-      for(var10 = Class_241.var_27f - 1; var10 >= 0; --var10) {
-         var11 = Class_241.var_24c[var10];
+      for(var10 = BSPNode.visibleSectorsCount - 1; var10 >= 0; --var10) {
+         var11 = BSPNode.visibleSectorsList[var10];
          System.arraycopy(var_b02.elementAt(var10), 0, Class_110.var_144, 0, 240);
          System.arraycopy(var_b3f.elementAt(var10), 0, Class_110.var_130, 0, 240);
          sub_1e9(var11, var0, var1, var2, (long)var8, (long)var9);
@@ -470,7 +470,7 @@ public final class Class_29e {
    }
 
    public static int sub_296(Graphics var0, int var1) {
-      var_5c2 = var_505.sub_57().sub_13a(var_553.x, var_553.z);
+      var_5c2 = var_505.sub_57().findSectorAtPoint(var_553.x, var_553.z);
       boolean var2 = false;
       int var3 = var1 - var_f88;
       var_f88 = var1;
@@ -1899,7 +1899,7 @@ public final class Class_29e {
             short var44;
             if (var42 >= var32.length) {
                var_505.var_32c = var32;
-               Class_241[] var34 = new Class_241[sub_7c5(var4) / 12];
+               BSPNode[] var34 = new BSPNode[sub_7c5(var4) / 12];
 
                short var41;
                int var48;
@@ -1910,7 +1910,7 @@ public final class Class_29e {
                   var44 = sub_775(var4);
                   int var46 = sub_775(var4) & '\uffff';
                   var48 = sub_775(var4) & '\uffff';
-                  var34[var35] = new Class_241(var14 << 16, var15 << 16, var41 << 16, var44 << 16, var46, var48);
+                  var34[var35] = new BSPNode(var14 << 16, var15 << 16, var41 << 16, var44 << 16, var46, var48);
                }
 
                var_505.var_3c0 = var34;
@@ -1923,7 +1923,7 @@ public final class Class_29e {
                }
 
                var_505.var_401 = var37;
-               Class_241.var_24c = new Class_110[var5 / 4];
+               BSPNode.visibleSectorsList = new Class_110[var5 / 4];
                Class_21c[] var40 = new Class_21c[sub_7c5(var4) / 9];
 
                int var43;

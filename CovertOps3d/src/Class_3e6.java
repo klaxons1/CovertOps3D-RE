@@ -16,7 +16,7 @@ public final class Class_3e6 {
    public Class_30a[] var_32c;
    public Class_8e[] var_370;
    public Transform3D var_383;
-   public Class_241[] var_3c0;
+   public BSPNode[] var_3c0;
    public Class_110[] var_401;
    public Class_21c[] var_433;
 
@@ -27,7 +27,7 @@ public final class Class_3e6 {
       this.var_f8 = -1;
    }
 
-   public final Class_241 sub_57() {
+   public final BSPNode sub_57() {
       return this.var_3c0[this.var_3c0.length - 1];
    }
 
@@ -56,17 +56,17 @@ public final class Class_3e6 {
    }
 
    public final Class_110 sub_e0(int var1, int var2) {
-      return this.sub_57().sub_153(var1, var2);
+      return this.sub_57().findSectorNodeAtPoint(var1, var2);
    }
 
    public final Class_30a sub_115(int var1, int var2) {
-      return this.sub_57().sub_13a(var1, var2);
+      return this.sub_57().findSectorAtPoint(var1, var2);
    }
 
    public final void sub_133() {
       int var1;
       for(var1 = 0; var1 < this.var_3c0.length; ++var1) {
-         this.var_3c0[var1].sub_5c(this);
+         this.var_3c0[var1].initializeBSPNode(this);
       }
 
       for(var1 = 0; var1 < this.var_210.length; ++var1) {
@@ -86,7 +86,7 @@ public final class Class_3e6 {
       }
 
       this.sub_178();
-      this.sub_57().sub_1a8();
+      this.sub_57().calculateVisibleSectors();
    }
 
    public final void sub_178() {
