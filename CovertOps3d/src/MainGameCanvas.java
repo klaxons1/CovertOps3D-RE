@@ -13,7 +13,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public boolean var_16f = true;
    public boolean var_1ae = false;
    public static CovertOps3D var_1e5 = null;
-   private static final String[] var_1ff = new String[]{"01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"};
+   private static final String[] levelNames = new String[]{"01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"};
    public static int var_259 = 0;
    public static int var_295 = -1;
    public static int var_2a5;
@@ -69,7 +69,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public static byte var_de2 = 1;
    public static byte var_e38 = 1;
    public static byte var_e8b = 0;
-   public static byte[][] var_ee2;
+   public static byte[][] saveData;
    public static boolean mapEnabled = false;
    public static final int[] var_f4a = new int[]{5, 5, 5};
    public static final int[] var_f5c = new int[]{25, 25, 25};
@@ -86,9 +86,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public static final int[] var_119b = new int[]{3, 3, 3};
    public static final int[] var_11e0 = new int[]{2, 2, 2};
    public static final int[] var_11f1 = new int[]{10, 10, 10};
-   public static final int[] var_122a = new int[]{10, 15, 20};
-   public static final int[] var_125b = new int[]{15, 20, 25};
-   public static final int[] var_1284 = new int[]{20, 25, 30};
+   public static final int[] enemyDamageEasy = new int[]{10, 15, 20};
+   public static final int[] enemyDamageNormal = new int[]{15, 20, 25};
+   public static final int[] enemyDamageHard = new int[]{20, 25, 30};
    public static final int[] var_12d2 = new int[]{25, 30, 40};
    public static final int[] var_1329 = new int[]{1, 2, 3};
    public static final int[] var_1358 = new int[]{2, 4, 5};
@@ -113,7 +113,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public static final int[] var_16c7 = new int[]{25, 25, 25};
    public static final int[] var_16e8 = new int[]{50, 50, 50};
    public static final int[] var_1731 = new int[]{25, 25, 25};
-   public static final int[] var_177d = new int[]{64, 64, 64};
+   public static final int[] enemyReactionTime = new int[]{64, 64, 64};
    public static final int[] var_17b5 = new int[]{6, 4, 2};
    public static final int[] var_180b = new int[]{32, 22, 12};
    public static final int[] var_1851 = new int[]{32, 22, 12};
@@ -546,7 +546,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                while(this.var_7de >= 80L) {
                   ++this.var_863;
                   if (this.sub_393()) {
-                     GameEngine.var_eba = false;
+                     GameEngine.damageFlash = false;
                      this.sub_47(var1);
                      this.sub_8c1();
                      this.sub_180(var1);
@@ -1056,7 +1056,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      String[] var10000;
                      int var10001;
                      String var10002;
-                     if (var_ee2[var17 - 3] != null) {
+                     if (saveData[var17 - 3] != null) {
                         var10000 = this.var_313;
                         var10001 = var17;
                         var10002 = var_3de[var17];
@@ -2218,7 +2218,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                this.var_ab7 = GameEngine.gameWorld.staticObjects;
             }
 
-            if (!GameEngine.loadMapData("/level_" + var_1ff[var_259], this.var_ae7 == null)) {
+            if (!GameEngine.loadMapData("/level_" + levelNames[var_259], this.var_ae7 == null)) {
                CovertOps3D.sub_24();
             }
 
@@ -2231,7 +2231,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
          } else {
             this.var_ae7 = GameEngine.gameWorld.staticObjects;
-            if (!GameEngine.loadMapData("/level_" + var_1ff[var_259], this.var_ab7 == null)) {
+            if (!GameEngine.loadMapData("/level_" + levelNames[var_259], this.var_ab7 == null)) {
                CovertOps3D.sub_24();
             }
 
@@ -2277,7 +2277,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         break label166;
                      case 10:
                         sub_3bc(var19, var9, var10);
-                        if (var_1ff[var_259] == "06c") {
+                        if (levelNames[var_259] == "06c") {
                            var19.currentState = 1;
                         }
                         continue;
@@ -3074,14 +3074,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          }
 
          RecordStore var1 = RecordStore.openRecordStore(var0, true);
-         var_ee2 = new byte[9][];
+         saveData = new byte[9][];
          int var2;
          if ((var2 = var1.getNumRecords()) > 9) {
             var2 = 9;
          }
 
          for(int var3 = 0; var3 < var2; ++var3) {
-            var_ee2[var3] = var1.getRecord(var3 + 1);
+            saveData[var3] = var1.getRecord(var3 + 1);
          }
 
          var1.closeRecordStore();
@@ -3091,30 +3091,30 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public static void sub_746(int var0) {
-      GameEngine.playerHealth = var_ee2[var0][0];
-      GameEngine.playerArmor = var_ee2[var0][1];
+      GameEngine.playerHealth = saveData[var0][0];
+      GameEngine.playerArmor = saveData[var0][1];
 
       for(int var1 = 0; var1 < 9; ++var1) {
-         GameEngine.weaponsAvailable[var1] = var_ee2[var0][2 + var1] == 1;
-         GameEngine.ammoCounts[var1] = (var_ee2[var0][11 + var1] & 255) + ((var_ee2[var0][20 + var1] & 255) << 8);
+         GameEngine.weaponsAvailable[var1] = saveData[var0][2 + var1] == 1;
+         GameEngine.ammoCounts[var1] = (saveData[var0][11 + var1] & 255) + ((saveData[var0][20 + var1] & 255) << 8);
       }
 
-      GameEngine.currentWeapon = var_ee2[var0][29];
+      GameEngine.currentWeapon = saveData[var0][29];
       GameEngine.var_d46 = GameEngine.currentWeapon;
    }
 
    public static void sub_786(int var0) {
-      var_ee2[var0] = new byte[30];
-      var_ee2[var0][0] = (byte) GameEngine.playerHealth;
-      var_ee2[var0][1] = (byte) GameEngine.playerArmor;
+      saveData[var0] = new byte[30];
+      saveData[var0][0] = (byte) GameEngine.playerHealth;
+      saveData[var0][1] = (byte) GameEngine.playerArmor;
 
       for(int var1 = 0; var1 < 9; ++var1) {
-         var_ee2[var0][2 + var1] = (byte)(GameEngine.weaponsAvailable[var1] ? 1 : 0);
-         var_ee2[var0][11 + var1] = (byte)(GameEngine.ammoCounts[var1] & 255);
-         var_ee2[var0][20 + var1] = (byte)(GameEngine.ammoCounts[var1] >> 8 & 255);
+         saveData[var0][2 + var1] = (byte)(GameEngine.weaponsAvailable[var1] ? 1 : 0);
+         saveData[var0][11 + var1] = (byte)(GameEngine.ammoCounts[var1] & 255);
+         saveData[var0][20 + var1] = (byte)(GameEngine.ammoCounts[var1] >> 8 & 255);
       }
 
-      var_ee2[var0][29] = (byte) GameEngine.currentWeapon;
+      saveData[var0][29] = (byte) GameEngine.currentWeapon;
       sub_7c1();
    }
 
@@ -3144,11 +3144,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var2 = (var1 = RecordStore.openRecordStore(var0, true)).getNumRecords();
 
          for(int var3 = 0; var3 < 9; ++var3) {
-            int var4 = var_ee2[var3] == null ? 0 : var_ee2[var3].length;
+            int var4 = saveData[var3] == null ? 0 : saveData[var3].length;
             if (var2 > var3) {
-               var1.setRecord(var3 + 1, var_ee2[var3], 0, var4);
+               var1.setRecord(var3 + 1, saveData[var3], 0, var4);
             } else if (var4 > 0) {
-               var1.addRecord(var_ee2[var3], 0, var4);
+               var1.addRecord(saveData[var3], 0, var4);
             }
          }
 

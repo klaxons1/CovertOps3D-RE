@@ -69,7 +69,7 @@ public final class GameEngine {
    public static int var_e72 = 0;
    public static WallDefinition var_e96 = null;
    public static Random var_ea3 = new Random();
-   public static boolean var_eba = false;
+   public static boolean damageFlash = false;
    public static byte screenShake = 0;
    public static int cameraHeight;
    private static int var_f32 = MathUtils.fixedPointMultiply(1310720, 92682);
@@ -484,7 +484,7 @@ public final class GameEngine {
 
       cameraHeight = (currentSector.floorHeight + GameWorld.PLAYER_HEIGHT_OFFSET << 16) + var8 + var5;
       renderWorld(player.x, -cameraHeight, player.z, player.rotation);
-      if (var_eba) {
+      if (damageFlash) {
          int var6 = 69120;
 
          for(int var7 = 0; var7 < var6; ++var7) {
@@ -492,7 +492,7 @@ public final class GameEngine {
             var10000[var7] |= 16711680;
          }
 
-         var_eba = false;
+         damageFlash = false;
       }
 
       if (screenShake == 16) {
@@ -873,7 +873,7 @@ public final class GameEngine {
                   switch(var27.aiState) {
                   case 1:
                      var27.aiState = 2;
-                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_177d[difficultyLevel];
+                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
                      var27.currentState = 0;
                      break;
                   case 2:
@@ -914,15 +914,15 @@ public final class GameEngine {
                               switch(var5) {
                               case 3003:
                                  MainGameCanvas.sub_84e(2, false, 80, 0);
-                                 var48 = MainGameCanvas.var_122a;
+                                 var48 = MainGameCanvas.enemyDamageEasy;
                                  break;
                               case 3004:
                                  MainGameCanvas.sub_84e(2, false, 80, 0);
-                                 var48 = MainGameCanvas.var_125b;
+                                 var48 = MainGameCanvas.enemyDamageNormal;
                                  break;
                               case 3005:
                                  MainGameCanvas.sub_84e(2, false, 80, 0);
-                                 var48 = MainGameCanvas.var_1284;
+                                 var48 = MainGameCanvas.enemyDamageHard;
                                  break;
                               case 3006:
                                  MainGameCanvas.sub_84e(3, false, 80, 0);
@@ -945,13 +945,13 @@ public final class GameEngine {
                         }
                      } else {
                         var27.aiState = 2;
-                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_177d[difficultyLevel];
+                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
                         var27.currentState = 0;
                      }
                      break;
                   case 4:
                      var27.aiState = 2;
-                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_177d[difficultyLevel];
+                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
                      var27.currentState = 0;
                      break;
                   case 5:
@@ -1749,7 +1749,7 @@ public final class GameEngine {
          var0 = 0;
       }
 
-      var_eba = true;
+      damageFlash = true;
       playerHealth -= var0;
       if (playerHealth <= 0) {
          playerHealth = 0;
@@ -2493,7 +2493,7 @@ public final class GameEngine {
       messageTimer = 0;
       var_e72 = 0;
       var_e96 = null;
-      var_eba = false;
+      damageFlash = false;
       screenShake = 0;
       var_f5f = 0;
       var_f88 = 0;
