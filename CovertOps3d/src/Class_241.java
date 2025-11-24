@@ -64,9 +64,9 @@ public final class Class_241 {
       }
    }
 
-   public final void sub_110(Class_71 var1, Class_30a var2) {
-      int var3 = var1.var_49;
-      int var4 = var1.var_ba;
+   public final void sub_110(Transform3D var1, Class_30a var2) {
+      int var3 = var1.x;
+      int var4 = var1.z;
       Object var10000;
       Object var5;
       if (!this.sub_ba(var3, var4)) {

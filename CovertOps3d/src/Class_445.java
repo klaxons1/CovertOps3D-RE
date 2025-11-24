@@ -1,7 +1,7 @@
 import java.util.Vector;
 
 public final class Class_445 {
-    public Class_71 var_c;
+    public Transform3D var_c;
     public int var_24;
     public int var_f7;
     private Vector var_146;
@@ -19,7 +19,7 @@ public final class Class_445 {
     public int var_41b;
     public int var_440;
 
-    public Class_445(Class_71 var1, int var2, int var3, int var4) {
+    public Class_445(Transform3D var1, int var2, int var3, int var4) {
         // super(); - в Java ME для классов Object вызов super() не обязателен
         this.var_c = var1;
         this.var_2f3 = new Point2D(0, 0);
@@ -93,7 +93,7 @@ public final class Class_445 {
     }
 
     public final void sub_57(Class_3e6 var1) {
-        var1.sub_e0(this.var_c.var_49, this.var_c.var_ba).sub_119(this);
+        var1.sub_e0(this.var_c.x, this.var_c.z).sub_119(this);
     }
 
     public final byte sub_a9() {

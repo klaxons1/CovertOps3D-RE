@@ -15,7 +15,7 @@ public final class Class_3e6 {
    private Vector var_2f6;
    public Class_30a[] var_32c;
    public Class_8e[] var_370;
-   public Class_71 var_383;
+   public Transform3D var_383;
    public Class_241[] var_3c0;
    public Class_110[] var_401;
    public Class_21c[] var_433;
@@ -133,9 +133,9 @@ public final class Class_3e6 {
       }
    }
 
-   public final boolean sub_1dd(Class_445 var1, Class_71 var2, Class_30a var3) {
-      this.var_cd.x = var2.var_49;
-      this.var_cd.y = var2.var_ba;
+   public final boolean sub_1dd(Class_445 var1, Transform3D var2, Class_30a var3) {
+      this.var_cd.x = var2.x;
+      this.var_cd.y = var2.z;
 
       int var4;
       for(var4 = 0; var4 < this.var_210.length; ++var4) {
@@ -153,11 +153,11 @@ public final class Class_3e6 {
       for(int var8 = 0; var8 < this.var_254.length; ++var8) {
          Class_445 var9;
          if ((var9 = this.var_254[var8]) != null && var9 != var1 && var9.var_2cf != -1) {
-            Class_71 var10;
-            int var11 = (var10 = var9.var_c).var_49 - 655360;
-            int var12 = var10.var_49 + 655360;
-            int var13 = var10.var_ba - 655360;
-            int var14 = var10.var_ba + 655360;
+            Transform3D var10;
+            int var11 = (var10 = var9.var_c).x - 655360;
+            int var12 = var10.x + 655360;
+            int var13 = var10.z - 655360;
+            int var14 = var10.z + 655360;
             if (var4 <= var12 && var15 >= var11 && var6 <= var14 && var7 >= var13) {
                switch(var9.var_24) {
                case 10:
@@ -174,15 +174,15 @@ public final class Class_3e6 {
          }
       }
 
-      var2.var_49 = this.var_cd.x;
-      var2.var_ba = this.var_cd.y;
+      var2.x = this.var_cd.x;
+      var2.z = this.var_cd.y;
       return true;
    }
 
    public final Class_1e1 sub_205(Class_1b6 var1, Class_30a var2) {
       Class_1e1 var5 = null;
-      this.var_cd.x = var1.var_49;
-      this.var_cd.y = var1.var_ba;
+      this.var_cd.x = var1.x;
+      this.var_cd.y = var1.z;
       int var6 = -1;
       Class_1e1 var7;
       if (this.var_f8 != -1 && ((var7 = this.var_210[this.var_f8]).sub_129() || sub_24b(var2, var7)) && this.sub_2d4(var7)) {
@@ -222,9 +222,9 @@ public final class Class_3e6 {
             case 3004:
             case 3005:
             case 3006:
-               Class_71 var10 = var9.var_c;
-               int var11 = this.var_cd.x - var10.var_49;
-               var12 = this.var_cd.y - var10.var_ba;
+               Transform3D var10 = var9.var_c;
+               int var11 = this.var_cd.x - var10.x;
+               var12 = this.var_cd.y - var10.z;
                var13 = var11 < 0 ? -var11 : var11;
                var14 = var12 < 0 ? -var12 : var12;
                if (var13 < var16 && var14 < var16) {
@@ -259,20 +259,20 @@ public final class Class_3e6 {
          }
       }
 
-      var1.var_49 = this.var_cd.x;
-      var1.var_ba = this.var_cd.y;
+      var1.x = this.var_cd.x;
+      var1.z = this.var_cd.y;
       this.var_f8 = var6;
       var16 = 1966080;
 
       int var15;
       int var18;
-      Class_71 var19;
+      Transform3D var19;
       int[] var20;
       for(var17 = 0; var17 < this.var_2f6.size(); ++var17) {
          var18 = (var9 = (Class_445)this.var_2f6.elementAt(var17)).var_24;
          var19 = var9.var_c;
-         var12 = var1.var_49 - var19.var_49;
-         var13 = var1.var_ba - var19.var_ba;
+         var12 = var1.x - var19.x;
+         var13 = var1.z - var19.z;
          var14 = var12 < 0 ? -var12 : var12;
          var15 = var13 < 0 ? -var13 : var13;
          if (var14 < var16 && var15 < var16) {
@@ -330,8 +330,8 @@ public final class Class_3e6 {
          if ((var9 = this.var_254[var17]) != null) {
             var18 = var9.var_24;
             var19 = var9.var_c;
-            var12 = var1.var_49 - var19.var_49;
-            var13 = var1.var_ba - var19.var_ba;
+            var12 = var1.x - var19.x;
+            var13 = var1.z - var19.z;
             var14 = var12 < 0 ? -var12 : var12;
             var15 = var13 < 0 ? -var13 : var13;
             if (var14 < var16 && var15 < var16) {
@@ -684,13 +684,13 @@ public final class Class_3e6 {
       return sub_365(var0, var1, var2, var3, var4 - var6, var5 - var6, var4 + var6, var5 - var6) || sub_365(var0, var1, var2, var3, var4 + var6, var5 - var6, var4 + var6, var5 + var6) || sub_365(var0, var1, var2, var3, var4 + var6, var5 + var6, var4 - var6, var5 + var6) || sub_365(var0, var1, var2, var3, var4 - var6, var5 + var6, var4 - var6, var5 - var6);
    }
 
-   public final boolean sub_3ce(Class_71 var1, Class_71 var2) {
+   public final boolean sub_3ce(Transform3D var1, Transform3D var2) {
       for(int var3 = 0; var3 < this.var_210.length; ++var3) {
          Class_1e1 var4;
          if ((var4 = this.var_210[var3]).sub_1d1() || sub_289(var4)) {
             Point2D var5 = this.var_138[var4.var_22 & '\uffff'];
             Point2D var6 = this.var_138[var4.var_5c & '\uffff'];
-            if (sub_365(var2.var_49, var2.var_ba, var1.var_49, var1.var_ba, var5.x, var5.y, var6.x, var6.y)) {
+            if (sub_365(var2.x, var2.z, var1.x, var1.z, var5.x, var5.y, var6.x, var6.y)) {
                return false;
             }
          }
@@ -699,13 +699,13 @@ public final class Class_3e6 {
       return true;
    }
 
-   public final void sub_3f2(Class_71 var1, Class_30a var2) {
-      int var3 = sub_547(var1.var_49, var1.var_ba, Class_29e.var_553.var_49, Class_29e.var_553.var_ba);
+   public final void sub_3f2(Transform3D var1, Class_30a var2) {
+      int var3 = sub_547(var1.x, var1.z, Class_29e.var_553.x, Class_29e.var_553.z);
       int var4 = MathUtils.fastSin(102943 - var3);
       int var5 = MathUtils.fastCos(102943 - var3);
-      int var7 = var1.var_49 + 20 * var5;
-      int var8 = var1.var_ba + 20 * var4;
-      Class_71 var9 = new Class_71(var7, var1.var_7a + (var2.var_82 + 40 << 16), var8, var3);
+      int var7 = var1.x + 20 * var5;
+      int var8 = var1.z + 20 * var4;
+      Transform3D var9 = new Transform3D(var7, var1.y + (var2.var_82 + 40 << 16), var8, var3);
       Class_445 var10;
       (var10 = new Class_445(var9, 0, 101, 0)).sub_ea((byte)0, (byte)-46);
       var10.sub_ea((byte)0, (byte)-47);
@@ -713,22 +713,22 @@ public final class Class_3e6 {
       this.var_2a8.addElement(var10);
    }
 
-   public final void sub_420(Class_71 var1, Class_30a var2) {
-      int var3 = sub_547(var1.var_49, var1.var_ba, Class_29e.var_553.var_49, Class_29e.var_553.var_ba);
+   public final void sub_420(Transform3D var1, Class_30a var2) {
+      int var3 = sub_547(var1.x, var1.z, Class_29e.var_553.x, Class_29e.var_553.z);
       int var4 = MathUtils.fastSin(102943 - var3);
       int var5 = MathUtils.fastCos(102943 - var3);
-      int var7 = var1.var_49 + 20 * var5;
-      int var8 = var1.var_ba + 20 * var4;
+      int var7 = var1.x + 20 * var5;
+      int var8 = var1.z + 20 * var4;
       var4 = MathUtils.fastSin(var3);
       var5 = MathUtils.fastCos(var3);
       int var9 = 10 * var5;
       int var10 = -10 * var4;
-      Class_71 var11 = new Class_71(var7 + var9, var1.var_7a + (var2.var_82 + 40 << 16), var8 + var10, var3);
+      Transform3D var11 = new Transform3D(var7 + var9, var1.y + (var2.var_82 + 40 << 16), var8 + var10, var3);
       Class_445 var12;
       (var12 = new Class_445(var11, 0, 102, 0)).sub_ea((byte)0, (byte)-71);
       var12.var_1ce = 0;
       this.var_2a8.addElement(var12);
-      var11 = new Class_71(var7 - var9, var1.var_7a + (var2.var_82 + 40 << 16), var8 - var10, var3);
+      var11 = new Transform3D(var7 - var9, var1.y + (var2.var_82 + 40 << 16), var8 - var10, var3);
       (var12 = new Class_445(var11, 0, 102, 0)).sub_ea((byte)0, (byte)-71);
       var12.var_1ce = 0;
       this.var_2a8.addElement(var12);
@@ -752,17 +752,17 @@ public final class Class_3e6 {
    }
 
    public final void sub_4ab() {
-      int var1 = Class_29e.var_553.var_d7;
+      int var1 = Class_29e.var_553.rotation;
       int var2 = 67108864;
       int var3 = MathUtils.fastSin(102943 - var1);
       int var4 = MathUtils.fastCos(102943 - var1);
       int var5 = Class_29e.var_d38 != 0 && Class_29e.var_d38 != 5 && Class_29e.var_d38 != 7 ? var2 : 1310720;
-      int var6 = Class_29e.var_553.var_49 + MathUtils.fixedPointMultiply(var5, var4);
-      int var7 = Class_29e.var_553.var_ba + MathUtils.fixedPointMultiply(var5, var3);
+      int var6 = Class_29e.var_553.x + MathUtils.fixedPointMultiply(var5, var4);
+      int var7 = Class_29e.var_553.z + MathUtils.fixedPointMultiply(var5, var3);
       if (Class_29e.var_d38 == 5) {
          Class_3aa.sub_84e(4, false, 100, 2);
-         Class_71 var15 = new Class_71(var6, Class_29e.var_f27 - 655360, var7, var1);
-         if (!this.sub_47e(Class_29e.var_553.var_49, Class_29e.var_553.var_ba, var15.var_49, var15.var_ba, var15.var_7a)) {
+         Transform3D var15 = new Transform3D(var6, Class_29e.var_f27 - 655360, var7, var1);
+         if (!this.sub_47e(Class_29e.var_553.x, Class_29e.var_553.z, var15.x, var15.z, var15.y)) {
             Class_445 var16;
             (var16 = new Class_445(var15, 0, 100, 0)).sub_ea((byte)0, (byte)-44);
             var16.sub_ea((byte)0, (byte)-45);
@@ -778,16 +778,16 @@ public final class Class_3e6 {
             var4 = MathUtils.fastCos(var1);
             int var14 = 10 * var4;
             var9 = -10 * var3;
-            Class_71 var17 = new Class_71(var6 - var14, Class_29e.var_f27 - 655360, var7 - var9, var1);
+            Transform3D var17 = new Transform3D(var6 - var14, Class_29e.var_f27 - 655360, var7 - var9, var1);
             Class_445 var18;
-            if (!this.sub_47e(Class_29e.var_553.var_49, Class_29e.var_553.var_ba, var17.var_49, var17.var_ba, var17.var_7a)) {
+            if (!this.sub_47e(Class_29e.var_553.x, Class_29e.var_553.z, var17.x, var17.z, var17.y)) {
                (var18 = new Class_445(var17, 0, 102, 0)).sub_ea((byte)0, (byte)-71);
                var18.var_1ce = 0;
                this.var_2a8.addElement(var18);
             }
 
-            var17 = new Class_71(var6 + var14, Class_29e.var_f27 - 655360, var7 + var9, var1);
-            if (!this.sub_47e(Class_29e.var_553.var_49, Class_29e.var_553.var_ba, var17.var_49, var17.var_ba, var17.var_7a)) {
+            var17 = new Transform3D(var6 + var14, Class_29e.var_f27 - 655360, var7 + var9, var1);
+            if (!this.sub_47e(Class_29e.var_553.x, Class_29e.var_553.z, var17.x, var17.z, var17.y)) {
                (var18 = new Class_445(var17, 0, 102, 0)).sub_ea((byte)0, (byte)-71);
                var18.var_1ce = 0;
                this.var_2a8.addElement(var18);
@@ -799,10 +799,10 @@ public final class Class_3e6 {
             for(var9 = 0; var9 < this.var_254.length; ++var9) {
                Class_445 var10;
                if ((var10 = this.var_254[var9]) != null && var10.var_2cf != -1) {
-                  Class_71 var11 = var10.var_c;
+                  Transform3D var11 = var10.var_c;
                   if (this.sub_3ce(Class_29e.var_553, var11)) {
                      int var12 = 327680;
-                     if (sub_37f(Class_29e.var_553.var_49, Class_29e.var_553.var_ba, var6, var7, var11.var_49, var11.var_ba, var12)) {
+                     if (sub_37f(Class_29e.var_553.x, Class_29e.var_553.z, var6, var7, var11.x, var11.z, var12)) {
                         int var13;
                         label85: {
                            byte var19;
@@ -929,7 +929,7 @@ public final class Class_3e6 {
          int var5;
          int var6;
          int var7;
-         Class_71 var15;
+         Transform3D var15;
          Class_3e6 var10000;
          if ((var2 = (Class_445)this.var_2a8.elementAt(var1)).var_24 == 103) {
             if (var2.var_f7 <= 0) {
@@ -944,8 +944,8 @@ public final class Class_3e6 {
             Class_3aa.sub_84e(4, false, 100, 2);
             int var3;
             if (this.sub_3ce(var2.var_c, Class_29e.var_553)) {
-               var3 = var2.var_c.var_49 - Class_29e.var_553.var_49;
-               var4 = var2.var_c.var_ba - Class_29e.var_553.var_ba;
+               var3 = var2.var_c.x - Class_29e.var_553.x;
+               var4 = var2.var_c.z - Class_29e.var_553.z;
                if ((var5 = Class_3aa.var_1113[Class_29e.var_c79] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var3, var4), Class_3aa.var_10c4[Class_29e.var_c79]) >> 16)) > 0) {
                   Class_3aa.sub_882(var5 * 10);
                   if (Class_29e.sub_59b(var5)) {
@@ -959,8 +959,8 @@ public final class Class_3e6 {
                if ((var16 = this.var_254[var3]) != null && var16.var_2cf != -1) {
                   Object var17 = null;
                   if (this.sub_3ce(var2.var_c, var16.var_c)) {
-                     var6 = var2.var_c.var_49 - var16.var_c.var_49;
-                     var7 = var2.var_c.var_ba - var16.var_c.var_ba;
+                     var6 = var2.var_c.x - var16.var_c.x;
+                     var7 = var2.var_c.z - var16.var_c.z;
                      int var8;
                      if ((var8 = Class_3aa.var_1113[Class_29e.var_c79] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var6, var7), Class_3aa.var_10c4[Class_29e.var_c79]) >> 16)) > 0) {
                         sub_4c6(var16, var8);
@@ -972,7 +972,7 @@ public final class Class_3e6 {
             Class_29e.var_ef9 = 16;
             if (Class_3aa.var_259 == 4) {
                var15 = var2.var_c;
-               if (this.sub_115(var15.var_49, var15.var_ba).sub_5c() == 666) {
+               if (this.sub_115(var15.x, var15.z).sub_5c() == 666) {
                   Class_3aa.var_295 = Class_3aa.var_259++;
                   Class_29e.var_117 = 0;
                   Class_29e.var_480 = 1;
@@ -981,14 +981,14 @@ public final class Class_3e6 {
 
             var10000 = this;
          } else {
-            var4 = (var15 = var2.var_c).var_49;
-            var5 = var15.var_ba;
-            var15.sub_ca(0, -1048576);
-            var6 = var15.var_49;
-            var7 = var15.var_ba;
+            var4 = (var15 = var2.var_c).x;
+            var5 = var15.z;
+            var15.moveRelative(0, -1048576);
+            var6 = var15.x;
+            var7 = var15.z;
             boolean var18 = false;
             int var9 = (var2.var_24 == 102 ? Class_3aa.var_104c : Class_3aa.var_1071)[Class_29e.var_c79];
-            if (sub_37f(var4, var5, var6, var7, Class_29e.var_553.var_49, Class_29e.var_553.var_ba, 655360)) {
+            if (sub_37f(var4, var5, var6, var7, Class_29e.var_553.x, Class_29e.var_553.z, 655360)) {
                if (var2.var_24 == 101) {
                   Class_3aa.sub_84e(4, false, 100, 2);
                }
@@ -1005,9 +1005,9 @@ public final class Class_3e6 {
             for(var10 = 0; var10 < this.var_254.length; ++var10) {
                Class_445 var11;
                if ((var11 = this.var_254[var10]) != null && var11.var_2cf != -1) {
-                  Class_71 var12 = var11.var_c;
+                  Transform3D var12 = var11.var_c;
                   int var13 = var2.var_24 == 102 ? 655360 : 327680;
-                  if (sub_37f(var4, var5, var6, var7, var12.var_49, var12.var_ba, var13)) {
+                  if (sub_37f(var4, var5, var6, var7, var12.x, var12.z, var13)) {
                      sub_4c6(var11, var9);
                      var18 = true;
                   }
@@ -1015,7 +1015,7 @@ public final class Class_3e6 {
             }
 
             if (!var18) {
-               var10 = var15.var_7a >> 16;
+               var10 = var15.y >> 16;
 
                for(int var19 = 0; var19 < this.var_210.length; ++var19) {
                   Class_1e1 var20;
@@ -1067,13 +1067,13 @@ public final class Class_3e6 {
    }
 
    public final boolean sub_57a() {
-      int var1 = Class_29e.var_553.var_d7;
+      int var1 = Class_29e.var_553.rotation;
       int var3 = MathUtils.fastSin(102943 - var1);
       int var4 = MathUtils.fastCos(102943 - var1);
       int var5 = 655360;
-      int var6 = Class_29e.var_553.var_49 + MathUtils.fixedPointMultiply(var5, var4);
-      int var7 = Class_29e.var_553.var_ba + MathUtils.fixedPointMultiply(var5, var3);
-      Class_71 var8 = new Class_71(var6, 0, var7, var1);
+      int var6 = Class_29e.var_553.x + MathUtils.fixedPointMultiply(var5, var4);
+      int var7 = Class_29e.var_553.z + MathUtils.fixedPointMultiply(var5, var3);
+      Transform3D var8 = new Transform3D(var6, 0, var7, var1);
       Class_445 var9;
       (var9 = new Class_445(var8, 0, 103, 100)).sub_ea((byte)0, (byte)-51);
       var9.var_1ce = 0;

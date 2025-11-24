@@ -1,4 +1,4 @@
-public final class Class_1b6 extends Class_71 {
+public final class Class_1b6 extends Transform3D {
    public int var_40;
    private int var_63;
    public int var_72;
@@ -18,11 +18,11 @@ public final class Class_1b6 extends Class_71 {
    }
 
    public final void sub_36() {
-      this.sub_58(this.var_40, this.var_63, this.var_72, this.var_b9);
+      this.applyMovement(this.var_40, this.var_63, this.var_72, this.var_b9);
    }
 
    public final void sub_4a() {
-      this.sub_58(this.var_40 >> 1, this.var_63 >> 1, this.var_72 >> 1, this.var_b9 >> 1);
+      this.applyMovement(this.var_40 >> 1, this.var_63 >> 1, this.var_72 >> 1, this.var_b9 >> 1);
    }
 
    public final void sub_79(int var1, int var2, int var3, int var4) {
@@ -53,8 +53,8 @@ public final class Class_1b6 extends Class_71 {
    }
 
    public final void sub_f9(int var1, int var2, int var3) {
-      int var4 = MathUtils.fastSin(super.var_d7);
-      int var5 = MathUtils.fastCos(super.var_d7);
+      int var4 = MathUtils.fastSin(super.rotation);
+      int var5 = MathUtils.fastCos(super.rotation);
       this.var_40 += MathUtils.fixedPointMultiply(var5, var1) - MathUtils.fixedPointMultiply(var4, var2);
       this.var_72 += MathUtils.fixedPointMultiply(-var4, var1) - MathUtils.fixedPointMultiply(var5, var2);
       this.var_b9 += var3;
