@@ -930,7 +930,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             this.sub_681(var6[var12], var1, 240 - this.sub_5d2(var6[var12]) - 3, 320 - this.var_550 - 3);
             this.sub_8c1();
             sub_922();
-            Object[] var23;
+            Object[] var23 = new Object[0];
             if (GameEngine.inputRun || GameEngine.inputFire) {
                GameEngine.inputRun = false;
                GameEngine.inputFire = false;
@@ -1141,10 +1141,10 @@ public class Class_3aa extends GameCanvas implements Runnable {
                      var8 = 0;
                   }
                } else {
-                  var6 = (String[])((String[])(var23 = (Object[])((Object[])var10.pop()))[0]);
-      //            var4 = (Integer)var23[1];
-       //           var7 = (Integer)var23[2];
-        //          var8 = (Integer)var23[3];
+                   var6 = (String[])((Object[])var10.pop())[0];
+                   var4 = ((Integer)((Object[])var23)[1]).intValue();
+                   var7 = ((Integer)((Object[])var23)[2]).intValue();
+                   var8 = ((Integer)((Object[])var23)[3]).intValue();
                   var5 = 0;
                }
             }
