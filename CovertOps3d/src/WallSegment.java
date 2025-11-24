@@ -15,8 +15,8 @@ public final class WallSegment {
       this.textureOffset = var5;
    }
 
-   public final void initializeWallSegment(Class_3e6 var1) {
-      this.wallDefinition = var1.var_210[this.wallDefinitionIndex & '\uffff'];
+   public final void initializeWallSegment(GameWorld var1) {
+      this.wallDefinition = var1.wallDefinitions[this.wallDefinitionIndex & '\uffff'];
       WallSegment var10000;
       WallSurface var10001;
       if (this.isFrontFacing) {

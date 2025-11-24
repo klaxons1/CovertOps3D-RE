@@ -29,11 +29,11 @@ public final class Class_1e1 {
       return this.var_1d8 & '\uffff';
    }
 
-   public final void sub_ca(Class_3e6 var1) {
+   public final void sub_ca(GameWorld var1) {
       if (this.var_a7 == -1) {
          throw new IllegalArgumentException();
       } else {
-         this.var_e5 = var1.var_370[this.var_a7 & '\uffff'];
+         this.var_e5 = var1.wallSurfaces[this.var_a7 & '\uffff'];
          Class_1e1 var10000;
          WallSurface var10001;
          if (this.var_ce == -1) {
@@ -41,12 +41,12 @@ public final class Class_1e1 {
             var10001 = null;
          } else {
             var10000 = this;
-            var10001 = var1.var_370[this.var_ce & '\uffff'];
+            var10001 = var1.wallSurfaces[this.var_ce & '\uffff'];
          }
 
          var10000.var_133 = var10001;
-         Point2D var2 = var1.var_138[this.var_22 & '\uffff'];
-         Point2D var3 = var1.var_138[this.var_5c & '\uffff'];
+         Point2D var2 = var1.vertices[this.var_22 & '\uffff'];
+         Point2D var3 = var1.vertices[this.var_5c & '\uffff'];
          int var4 = var2.y - var3.y;
          int var5 = var3.x - var2.x;
          int var6 = MathUtils.preciseHypot(var4, var5);

@@ -92,8 +92,8 @@ public final class GameObject {
         }
     }
 
-    public final void addToWorld(Class_3e6 var1) {
-        var1.sub_e0(this.transform.x, this.transform.z).addDynamicObject(this);
+    public final void addToWorld(GameWorld var1) {
+        var1.getSectorAtPoint(this.transform.x, this.transform.z).addDynamicObject(this);
     }
 
     public final byte getCurrentSprite1() {

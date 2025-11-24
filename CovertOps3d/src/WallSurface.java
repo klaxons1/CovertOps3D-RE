@@ -16,7 +16,7 @@ public final class WallSurface {
       this.textureOffsetY = var6;
    }
 
-   public final void resolveSectorLink(Class_3e6 var1) {
-      this.linkedSector = var1.var_32c[this.sectorLinkId & 255];
+   public final void resolveSectorLink(GameWorld var1) {
+      this.linkedSector = var1.sectors[this.sectorLinkId & 255];
    }
 }

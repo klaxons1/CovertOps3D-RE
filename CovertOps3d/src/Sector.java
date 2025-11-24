@@ -50,11 +50,11 @@ public final class Sector {
       this.dynamicObjects.addElement(var1);
    }
 
-   public final void initializeWalls(Class_3e6 var1) {
+   public final void initializeWalls(GameWorld var1) {
       this.walls = new WallSegment[this.wallCount & '\uffff'];
 
       for(int var2 = 0; var2 < this.walls.length; ++var2) {
-         this.walls[var2] = var1.var_433[(this.wallArrayOffset & '\uffff') + var2];
+         this.walls[var2] = var1.wallSegments[(this.wallArrayOffset & '\uffff') + var2];
       }
 
    }

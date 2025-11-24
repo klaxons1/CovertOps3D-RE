@@ -21,28 +21,28 @@ public final class BSPNode {
       this.visibleSectors = null;
    }
 
-   public final void initializeBSPNode(Class_3e6 var1) {
+   public final void initializeBSPNode(GameWorld var1) {
       BSPNode var10000;
       Object var10001;
       int var10002;
       if ((this.frontChildIndex & '耀') == 32768) {
          var10000 = this;
-         var10001 = var1.var_401;
+         var10001 = var1.bspSectors;
          var10002 = this.frontChildIndex - '耀';
       } else {
          var10000 = this;
-         var10001 = var1.var_3c0;
+         var10001 = var1.bspNodes;
          var10002 = this.frontChildIndex;
       }
 
       var10000.frontChild = ((Object[])var10001)[var10002];
       if ((this.backChildIndex & '耀') == 32768) {
          var10000 = this;
-         var10001 = var1.var_401;
+         var10001 = var1.bspSectors;
          var10002 = this.backChildIndex - '耀';
       } else {
          var10000 = this;
-         var10001 = var1.var_3c0;
+         var10001 = var1.bspNodes;
          var10002 = this.backChildIndex;
       }
 

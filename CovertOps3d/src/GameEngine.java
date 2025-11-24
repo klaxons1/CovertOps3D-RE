@@ -27,7 +27,7 @@ public final class GameEngine {
    public static boolean var_446;
    public static int var_480;
    public static int var_4c8 = 0;
-   public static Class_3e6 var_505 = null;
+   public static GameWorld var_505 = null;
    public static PhysicsBody player;
    public static Transform3D tempTransform;
    public static SectorData currentSector;
@@ -130,9 +130,9 @@ public final class GameEngine {
 
    public static void resetLevelState() {
       clearInputState();
-      var_505.sub_133();
-      player.copyFrom(var_505.var_383);
-      currentSector = var_505.sub_57().findSectorAtPoint(player.x, player.z);
+      var_505.initializeWorld();
+      player.copyFrom(var_505.worldOrigin);
+      currentSector = var_505.getRootBSPNode().findSectorAtPoint(player.x, player.z);
       var_b86.removeAllElements();
       var_bd3.removeAllElements();
       var_119a = 0;
@@ -420,10 +420,10 @@ public final class GameEngine {
 
    private static void renderWorld(int var0, int var1, int var2, int var3) {
       var_505.sub_4e6();
-      Point2D[] var4 = var_505.sub_b8(var0, var2, var3);
-      var_505.sub_178();
+      Point2D[] var4 = var_505.transformVertices(var0, var2, var3);
+      var_505.updateWorld();
       BSPNode.visibleSectorsCount = 0;
-      var_505.sub_57().traverseBSP(player, var_505.sub_115(var0, var2));
+      var_505.getRootBSPNode().traverseBSP(player, var_505.getSectorDataAtPoint(var0, var2));
       int var5 = var2 << 8;
       int var6 = var0 << 8;
       int var7 = var3 << 1;
@@ -470,7 +470,7 @@ public final class GameEngine {
    }
 
    public static int renderFrame(Graphics var0, int var1) {
-      currentSector = var_505.sub_57().findSectorAtPoint(player.x, player.z);
+      currentSector = var_505.getRootBSPNode().findSectorAtPoint(player.x, player.z);
       boolean var2 = false;
       int var3 = var1 - var_f88;
       var_f88 = var1;
@@ -482,7 +482,7 @@ public final class GameEngine {
          var5 = -var5;
       }
 
-      cameraHeight = (currentSector.floorHeight + Class_3e6.var_70 << 16) + var8 + var5;
+      cameraHeight = (currentSector.floorHeight + GameWorld.PLAYER_HEIGHT_OFFSET << 16) + var8 + var5;
       renderWorld(player.x, -cameraHeight, player.z, player.rotation);
       if (var_eba) {
          int var6 = 69120;
@@ -560,15 +560,15 @@ public final class GameEngine {
       Class_1e1 var1 = null;
       if (var0 > 262144) {
          player.applyDampedVelocity();
-         var1 = var_505.sub_205(player, currentSector);
+         var1 = var_505.handlePlayerMovement(player, currentSector);
          player.applyDampedVelocity();
-         Class_1e1 var2 = var_505.sub_205(player, currentSector);
+         Class_1e1 var2 = var_505.handlePlayerMovement(player, currentSector);
          if (var1 == null) {
             var1 = var2;
          }
       } else {
          player.applyVelocity();
-         var1 = var_505.sub_205(player, currentSector);
+         var1 = var_505.handlePlayerMovement(player, currentSector);
       }
 
       int var21;
@@ -594,9 +594,9 @@ public final class GameEngine {
          var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
          var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
          Point2D[] var8;
-         Point2D var9 = (var8 = var_505.var_138)[var_e96.var_22 & '\uffff'];
+         Point2D var9 = (var8 = var_505.vertices)[var_e96.var_22 & '\uffff'];
          Point2D var10 = var8[var_e96.var_5c & '\uffff'];
-         if (Class_3e6.sub_365(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
+         if (GameWorld.sub_365(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
             var10000 = var_e72 + 1;
          } else {
             var_e96 = null;
@@ -641,8 +641,8 @@ public final class GameEngine {
          var5 = 1310720;
          var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
          var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
-         Class_1e1[] var30 = var_505.var_210;
-         Point2D[] var32 = var_505.var_138;
+         Class_1e1[] var30 = var_505.wallDefinitions;
+         Point2D[] var32 = var_505.vertices;
 
          label389:
          for(var35 = 0; var35 < var30.length; ++var35) {
@@ -650,7 +650,7 @@ public final class GameEngine {
             if ((var12 = (var11 = var30[var35]).sub_5e()) == 1 || var12 == 11 || var12 == 26 || var12 == 28 || var12 == 51 || var12 == 62) {
                Point2D var13 = var32[var11.var_22 & '\uffff'];
                Point2D var14 = var32[var11.var_5c & '\uffff'];
-               if (Class_3e6.sub_365(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
+               if (GameWorld.sub_365(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
                   if ((Class_3aa.var_e8b & 1) == 0) {
                      Class_3aa.var_e8b = (byte)(Class_3aa.var_e8b | 1);
                   }
@@ -810,10 +810,10 @@ public final class GameEngine {
          var24.var_126 = 0;
       }
 
-      if (var_505.sub_50b()) {
+      if (var_505.updateProjectiles()) {
          return true;
       } else {
-         GameObject[] var26 = var_505.var_254;
+         GameObject[] var26 = var_505.staticObjects;
 
          for(var3 = 0; var3 < var26.length; ++var3) {
             GameObject var27;
@@ -822,7 +822,7 @@ public final class GameEngine {
                int var31;
                if (var27.aiState == 0) {
                   var28 = var27.transform;
-                  if (var_505.sub_115(var28.x, var28.z).isSectorVisible(currentSector)) {
+                  if (var_505.getSectorDataAtPoint(var28.x, var28.z).isSectorVisible(currentSector)) {
                      if ((var7 = var28.x - player.x) < 0) {
                         var7 = -var7;
                      }
@@ -831,7 +831,7 @@ public final class GameEngine {
                         var31 = -var31;
                      }
 
-                     if (var7 + var31 <= 67108864 && var_505.sub_3ce(player, var28)) {
+                     if (var7 + var31 <= 67108864 && var_505.checkLineOfSight(player, var28)) {
                         var27.aiState = 1;
                      }
                   }
@@ -893,8 +893,8 @@ public final class GameEngine {
                      break;
                   case 3:
                      var29 = var27.transform;
-                     var33 = var_505.sub_115(var29.x, var29.z);
-                     if (var_505.sub_3ce(player, var29)) {
+                     var33 = var_505.getSectorDataAtPoint(var29.x, var29.z);
+                     if (var_505.checkLineOfSight(player, var29)) {
                         var27.aiState = 4;
                         var27.stateTimer = 2;
                         if (var5 != 3002) {
@@ -903,10 +903,10 @@ public final class GameEngine {
 
                         if (var5 == 3001) {
                            Class_3aa.sub_84e(4, false, 100, 1);
-                           var_505.sub_3f2(var29, var33);
+                           var_505.shootProjectile(var29, var33);
                         } else if (var5 == 3002) {
                            Class_3aa.sub_84e(5, false, 80, 1);
-                           var_505.sub_420(var29, var33);
+                           var_505.shootSpreadWeapon(var29, var33);
                         } else {
                            label320: {
                               var31 = 0;
@@ -971,7 +971,7 @@ public final class GameEngine {
                      }
 
                      var46.currentState = var10001;
-                     var_505.sub_5cd(var27);
+                     var_505.spawnPickUp(var27);
                   }
                }
 
@@ -989,7 +989,7 @@ public final class GameEngine {
                   }
 
                   var29 = var27.transform;
-                  var33 = var_505.sub_115(var29.x, var29.z);
+                  var33 = var_505.getSectorDataAtPoint(var29.x, var29.z);
                   var31 = var29.x - player.x;
                   int var34 = var29.z - player.z;
                   int var36;
@@ -1029,7 +1029,7 @@ public final class GameEngine {
                      for(int var20 = 0; var20 < var40; ++var20) {
                         tempTransform.x = var29.x - var18;
                         tempTransform.z = var29.z - var19;
-                        if (!var_505.sub_1dd(var27, tempTransform, var33)) {
+                        if (!var_505.checkCollision(var27, tempTransform, var33)) {
                            break;
                         }
 
@@ -1088,7 +1088,7 @@ public final class GameEngine {
       (var6 = new ElevatorController()).var_126 = 0;
       var6.var_a0 = 32767;
       var6.var_f4 = -32768;
-      Class_1e1[] var7 = var_505.var_210;
+      Class_1e1[] var7 = var_505.wallDefinitions;
 
       for(int var3 = 0; var3 < var7.length; ++var3) {
          Class_1e1 var4;
@@ -1787,7 +1787,7 @@ public final class GameEngine {
       try {
          InputStream var3 = (new Object()).getClass().getResourceAsStream(var0);
          DataInputStream var4 = new DataInputStream(var3);
-         var_505 = new Class_3e6();
+         var_505 = new GameWorld();
          var4.readByte();
          Point2D[] var6 = new Point2D[sub_7c5(var4) / 4];
 
@@ -1795,7 +1795,7 @@ public final class GameEngine {
             var6[var7] = new Point2D(sub_775(var4) << 16, sub_775(var4) << 16);
          }
 
-         var_505.sub_9a(var6);
+         var_505.setVertices(var6);
          Class_1e1[] var25 = new Class_1e1[sub_7c5(var4) / 11];
 
          int var8;
@@ -1812,7 +1812,7 @@ public final class GameEngine {
             var25[var8] = new Class_1e1(var9, var10, var14, var15, var11, var12, var13);
          }
 
-         var_505.var_210 = var25;
+         var_505.wallDefinitions = var25;
          int var5 = sub_7c5(var4);
          if (var_117 == 0) {
             var_117 = 1;
@@ -1837,7 +1837,7 @@ public final class GameEngine {
             GameObject var10002;
             if (var14 >= 1 && var14 <= 4) {
                if (var_117 == var14) {
-                  var_505.var_383 = new Transform3D(var29 << 16, 0, var31 << 16, -var33 * 1144 + 102943);
+                  var_505.worldOrigin = new Transform3D(var29 << 16, 0, var31 << 16, -var33 * 1144 + 102943);
                }
 
                if (!var1) {
@@ -1861,7 +1861,7 @@ public final class GameEngine {
          }
 
          if (var1) {
-            var_505.var_254 = var26;
+            var_505.staticObjects = var26;
          }
 
          WallSurface[] var28 = new WallSurface[sub_7c5(var4) / 8];
@@ -1889,7 +1889,7 @@ public final class GameEngine {
             }
          }
 
-         var_505.var_370 = var28;
+         var_505.wallSurfaces = var28;
          SectorData[] var32 = new SectorData[sub_7c5(var4) / 12];
          short var42 = 0;
 
@@ -1898,7 +1898,7 @@ public final class GameEngine {
             short var18;
             short var44;
             if (var42 >= var32.length) {
-               var_505.var_32c = var32;
+               var_505.sectors = var32;
                BSPNode[] var34 = new BSPNode[sub_7c5(var4) / 12];
 
                short var41;
@@ -1913,7 +1913,7 @@ public final class GameEngine {
                   var34[var35] = new BSPNode(var14 << 16, var15 << 16, var41 << 16, var44 << 16, var46, var48);
                }
 
-               var_505.var_3c0 = var34;
+               var_505.bspNodes = var34;
                Sector[] var37 = new Sector[(var5 = sub_7c5(var4)) / 4];
 
                for(int var39 = 0; var39 < var37.length; ++var39) {
@@ -1922,7 +1922,7 @@ public final class GameEngine {
                   var37[var39] = new Sector(var15, var41);
                }
 
-               var_505.var_401 = var37;
+               var_505.bspSectors = var37;
                BSPNode.visibleSectorsList = new Sector[var5 / 4];
                WallSegment[] var40 = new WallSegment[sub_7c5(var4) / 9];
 
@@ -1936,9 +1936,9 @@ public final class GameEngine {
                   var40[var43] = new WallSegment(var41, var44, var18, var49, var20);
                }
 
-               var_505.var_433 = var40;
+               var_505.wallSegments = var40;
                sub_7c5(var4);
-               boolean[][] var45 = new boolean[var43 = var_505.var_32c.length][var43];
+               boolean[][] var45 = new boolean[var43 = var_505.sectors.length][var43];
                int var47 = 0;
                var48 = 0;
 
@@ -1956,7 +1956,7 @@ public final class GameEngine {
                }
 
                for(var48 = 0; var48 < var43; ++var48) {
-                  var_505.var_32c[var48].visitedFlags = var45[var48];
+                  var_505.sectors[var48].visitedFlags = var45[var48];
                }
 
                var4.close();
@@ -2247,7 +2247,7 @@ public final class GameEngine {
                      }
                   }
 
-                  SectorData[] var36 = var_505.var_32c;
+                  SectorData[] var36 = var_505.sectors;
                   int var37 = 0;
 
                   while(true) {
