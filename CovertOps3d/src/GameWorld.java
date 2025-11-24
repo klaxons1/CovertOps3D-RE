@@ -295,7 +295,7 @@ public final class GameWorld {
                GameEngine.levelComplete = true;
                GameEngine.var_1044 = 8;
                Class_3aa.var_295 = Class_3aa.var_259++;
-               GameEngine.var_117 = 0;
+               GameEngine.levelVariant = 0;
                GameEngine.var_480 = 1;
                break;
             case 2007:
@@ -483,7 +483,7 @@ public final class GameWorld {
                   }
 
                   Class_3aa.var_295 = Class_3aa.var_259++;
-                  GameEngine.var_117 = 0;
+                  GameEngine.levelVariant = 0;
                   GameEngine.var_480 = 1;
                }
 
@@ -974,7 +974,7 @@ public final class GameWorld {
                var15 = var2.transform;
                if (this.getSectorDataAtPoint(var15.x, var15.z).getSectorType() == 666) {
                   Class_3aa.var_295 = Class_3aa.var_259++;
-                  GameEngine.var_117 = 0;
+                  GameEngine.levelVariant = 0;
                   GameEngine.var_480 = 1;
                }
             }

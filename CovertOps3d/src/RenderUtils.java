@@ -119,7 +119,7 @@ public final class RenderUtils {
                break;
             }
 
-            var7 = GameEngine.var_505.sectors[var6.sectorId];
+            var7 = GameEngine.gameWorld.sectors[var6.sectorId];
             GameEngine.sub_430(var6.startX, var6.endX, var5, var7.floorTexture.pixelData, var7.floorTexture.colorPalettes, var7.lightLevel, var1, var2, var3, var7.floorOffsetX, var4);
             var10000 = var6.next;
          }
@@ -134,7 +134,7 @@ public final class RenderUtils {
                break;
             }
 
-            var7 = GameEngine.var_505.sectors[var6.sectorId];
+            var7 = GameEngine.gameWorld.sectors[var6.sectorId];
             GameEngine.sub_430(var6.startX, var6.endX, var5, var7.ceilingTexture.pixelData, var7.ceilingTexture.colorPalettes, var7.lightLevel, var1, var2, var3, var7.ceilingOffsetX, var4);
             var10000 = var6.next;
          }

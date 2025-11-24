@@ -7,27 +7,27 @@ import java.util.Vector;
 import javax.microedition.lcdui.Graphics;
 
 public final class GameEngine {
-   private static int var_37;
-   private static Sprite[] var_75;
-   private static Texture[] var_85;
-   private static Hashtable var_e1;
-   public static int var_117 = 0;
-   public static boolean var_161;
-   public static boolean var_1bf;
-   public static boolean var_1ed;
-   public static boolean var_1fa;
-   public static boolean var_223;
-   public static boolean var_280;
-   public static boolean var_2cd;
-   public static boolean var_2f7;
-   public static boolean var_344;
+   private static int resourceLoadState;
+   private static Sprite[] spriteTable;
+   private static Texture[] textureTable;
+   private static Hashtable paletteCache;
+   public static int levelVariant = 0;
+   public static boolean inputForward;
+   public static boolean inputBackward;
+   public static boolean inputLeft;
+   public static boolean inputRight;
+   public static boolean inputLookUp;
+   public static boolean inputLookDown;
+   public static boolean inputFire;
+   public static boolean inputStrafe;
+   public static boolean inputRun;
    public static boolean var_364;
    public static boolean var_3b8;
    public static boolean var_3e3;
    public static boolean var_446;
    public static int var_480;
    public static int var_4c8 = 0;
-   public static GameWorld var_505 = null;
+   public static GameWorld gameWorld = null;
    public static PhysicsBody player;
    public static Transform3D tempTransform;
    public static SectorData currentSector;
@@ -130,9 +130,9 @@ public final class GameEngine {
 
    public static void resetLevelState() {
       clearInputState();
-      var_505.initializeWorld();
-      player.copyFrom(var_505.worldOrigin);
-      currentSector = var_505.getRootBSPNode().findSectorAtPoint(player.x, player.z);
+      gameWorld.initializeWorld();
+      player.copyFrom(gameWorld.worldOrigin);
+      currentSector = gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
       var_b86.removeAllElements();
       var_bd3.removeAllElements();
       var_119a = 0;
@@ -152,7 +152,7 @@ public final class GameEngine {
          return null;
       } else {
          Sprite var1;
-         return (var1 = var_75[var0]) != null && var1.pixelData != null ? var1 : null;
+         return (var1 = spriteTable[var0]) != null && var1.pixelData != null ? var1 : null;
       }
    }
 
@@ -161,7 +161,7 @@ public final class GameEngine {
          return var_894;
       } else {
          Texture var1;
-         return (var1 = var_85[var0 + 128]) != null && var1.width > 0 ? var1 : var_894;
+         return (var1 = textureTable[var0 + 128]) != null && var1.width > 0 ? var1 : var_894;
       }
    }
 
@@ -367,7 +367,7 @@ public final class GameEngine {
                Texture var19;
                if (var15 != 0) {
                   var10000 = var11;
-                  var19 = var_85[var15 + 128];
+                  var19 = textureTable[var15 + 128];
                } else {
                   var10000 = var11;
                   var19 = null;
@@ -376,7 +376,7 @@ public final class GameEngine {
                var10000.texture1 = var19;
                if (var16 != 0) {
                   var10000 = var11;
-                  var19 = var_85[var16 + 128];
+                  var19 = textureTable[var16 + 128];
                } else {
                   var10000 = var11;
                   var19 = null;
@@ -419,11 +419,11 @@ public final class GameEngine {
    }
 
    private static void renderWorld(int var0, int var1, int var2, int var3) {
-      var_505.sub_4e6();
-      Point2D[] var4 = var_505.transformVertices(var0, var2, var3);
-      var_505.updateWorld();
+      gameWorld.sub_4e6();
+      Point2D[] var4 = gameWorld.transformVertices(var0, var2, var3);
+      gameWorld.updateWorld();
       BSPNode.visibleSectorsCount = 0;
-      var_505.getRootBSPNode().traverseBSP(player, var_505.getSectorDataAtPoint(var0, var2));
+      gameWorld.getRootBSPNode().traverseBSP(player, gameWorld.getSectorDataAtPoint(var0, var2));
       int var5 = var2 << 8;
       int var6 = var0 << 8;
       int var7 = var3 << 1;
@@ -470,7 +470,7 @@ public final class GameEngine {
    }
 
    public static int renderFrame(Graphics var0, int var1) {
-      currentSector = var_505.getRootBSPNode().findSectorAtPoint(player.x, player.z);
+      currentSector = gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
       boolean var2 = false;
       int var3 = var1 - var_f88;
       var_f88 = var1;
@@ -510,7 +510,7 @@ public final class GameEngine {
             }
          default:
             Class_3aa.var_295 = Class_3aa.var_259++;
-            var_117 = 0;
+            levelVariant = 0;
             var_480 = 1;
             break;
          case 4:
@@ -532,27 +532,27 @@ public final class GameEngine {
          --messageTimer;
       }
 
-      if (var_161) {
+      if (inputForward) {
          player.applyHorizontalForce(0, -196608);
       }
 
-      if (var_1ed) {
+      if (inputLeft) {
          player.applyHorizontalForce(-196608, 0);
       }
 
-      if (var_1bf) {
+      if (inputBackward) {
          player.applyHorizontalForce(0, 131072);
       }
 
-      if (var_1fa) {
+      if (inputRight) {
          player.applyHorizontalForce(196608, 0);
       }
 
-      if (var_223) {
+      if (inputLookUp) {
          player.applyForce(0, 0, -4500);
       }
 
-      if (var_280) {
+      if (inputLookDown) {
          player.applyForce(0, 0, 4500);
       }
 
@@ -560,15 +560,15 @@ public final class GameEngine {
       WallDefinition var1 = null;
       if (var0 > 262144) {
          player.applyDampedVelocity();
-         var1 = var_505.handlePlayerMovement(player, currentSector);
+         var1 = gameWorld.handlePlayerMovement(player, currentSector);
          player.applyDampedVelocity();
-         WallDefinition var2 = var_505.handlePlayerMovement(player, currentSector);
+         WallDefinition var2 = gameWorld.handlePlayerMovement(player, currentSector);
          if (var1 == null) {
             var1 = var2;
          }
       } else {
          player.applyVelocity();
-         var1 = var_505.handlePlayerMovement(player, currentSector);
+         var1 = gameWorld.handlePlayerMovement(player, currentSector);
       }
 
       int var21;
@@ -594,7 +594,7 @@ public final class GameEngine {
          var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
          var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
          Point2D[] var8;
-         Point2D var9 = (var8 = var_505.vertices)[var_e96.startVertexId & '\uffff'];
+         Point2D var9 = (var8 = gameWorld.vertices)[var_e96.startVertexId & '\uffff'];
          Point2D var10 = var8[var_e96.endVertexId & '\uffff'];
          if (GameWorld.sub_365(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
             var10000 = var_e72 + 1;
@@ -641,8 +641,8 @@ public final class GameEngine {
          var5 = 1310720;
          var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
          var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
-         WallDefinition[] var30 = var_505.wallDefinitions;
-         Point2D[] var32 = var_505.vertices;
+         WallDefinition[] var30 = gameWorld.wallDefinitions;
+         Point2D[] var32 = gameWorld.vertices;
 
          label389:
          for(var35 = 0; var35 < var30.length; ++var35) {
@@ -670,7 +670,7 @@ public final class GameEngine {
                      }
 
                      Class_3aa.var_295 = Class_3aa.var_259++;
-                     var_117 = var11.getSpecialType();
+                     levelVariant = var11.getSpecialType();
                      var42 = 1;
                      break;
                   case 26:
@@ -693,7 +693,7 @@ public final class GameEngine {
                      break label389;
                   case 51:
                      Class_3aa.var_295 = Class_3aa.var_259--;
-                     var_117 = var11.getSpecialType();
+                     levelVariant = var11.getSpecialType();
                      var42 = -1;
                      break;
                   case 62:
@@ -810,10 +810,10 @@ public final class GameEngine {
          var24.elevatorState = 0;
       }
 
-      if (var_505.updateProjectiles()) {
+      if (gameWorld.updateProjectiles()) {
          return true;
       } else {
-         GameObject[] var26 = var_505.staticObjects;
+         GameObject[] var26 = gameWorld.staticObjects;
 
          for(var3 = 0; var3 < var26.length; ++var3) {
             GameObject var27;
@@ -822,7 +822,7 @@ public final class GameEngine {
                int var31;
                if (var27.aiState == 0) {
                   var28 = var27.transform;
-                  if (var_505.getSectorDataAtPoint(var28.x, var28.z).isSectorVisible(currentSector)) {
+                  if (gameWorld.getSectorDataAtPoint(var28.x, var28.z).isSectorVisible(currentSector)) {
                      if ((var7 = var28.x - player.x) < 0) {
                         var7 = -var7;
                      }
@@ -831,7 +831,7 @@ public final class GameEngine {
                         var31 = -var31;
                      }
 
-                     if (var7 + var31 <= 67108864 && var_505.checkLineOfSight(player, var28)) {
+                     if (var7 + var31 <= 67108864 && gameWorld.checkLineOfSight(player, var28)) {
                         var27.aiState = 1;
                      }
                   }
@@ -893,8 +893,8 @@ public final class GameEngine {
                      break;
                   case 3:
                      var29 = var27.transform;
-                     var33 = var_505.getSectorDataAtPoint(var29.x, var29.z);
-                     if (var_505.checkLineOfSight(player, var29)) {
+                     var33 = gameWorld.getSectorDataAtPoint(var29.x, var29.z);
+                     if (gameWorld.checkLineOfSight(player, var29)) {
                         var27.aiState = 4;
                         var27.stateTimer = 2;
                         if (var5 != 3002) {
@@ -903,10 +903,10 @@ public final class GameEngine {
 
                         if (var5 == 3001) {
                            Class_3aa.sub_84e(4, false, 100, 1);
-                           var_505.shootProjectile(var29, var33);
+                           gameWorld.shootProjectile(var29, var33);
                         } else if (var5 == 3002) {
                            Class_3aa.sub_84e(5, false, 80, 1);
-                           var_505.shootSpreadWeapon(var29, var33);
+                           gameWorld.shootSpreadWeapon(var29, var33);
                         } else {
                            label320: {
                               var31 = 0;
@@ -971,7 +971,7 @@ public final class GameEngine {
                      }
 
                      var46.currentState = var10001;
-                     var_505.spawnPickUp(var27);
+                     gameWorld.spawnPickUp(var27);
                   }
                }
 
@@ -989,7 +989,7 @@ public final class GameEngine {
                   }
 
                   var29 = var27.transform;
-                  var33 = var_505.getSectorDataAtPoint(var29.x, var29.z);
+                  var33 = gameWorld.getSectorDataAtPoint(var29.x, var29.z);
                   var31 = var29.x - player.x;
                   int var34 = var29.z - player.z;
                   int var36;
@@ -1029,7 +1029,7 @@ public final class GameEngine {
                      for(int var20 = 0; var20 < var40; ++var20) {
                         tempTransform.x = var29.x - var18;
                         tempTransform.z = var29.z - var19;
-                        if (!var_505.checkCollision(var27, tempTransform, var33)) {
+                        if (!gameWorld.checkCollision(var27, tempTransform, var33)) {
                            break;
                         }
 
@@ -1088,7 +1088,7 @@ public final class GameEngine {
       (var6 = new ElevatorController()).elevatorState = 0;
       var6.minHeight = 32767;
       var6.maxHeight = -32768;
-      WallDefinition[] var7 = var_505.wallDefinitions;
+      WallDefinition[] var7 = gameWorld.wallDefinitions;
 
       for(int var3 = 0; var3 < var7.length; ++var3) {
          WallDefinition var4;
@@ -1110,17 +1110,17 @@ public final class GameEngine {
    }
 
    private static void clearInputState() {
-      var_161 = false;
-      var_1ed = false;
-      var_1bf = false;
-      var_1fa = false;
-      var_161 = false;
-      var_223 = false;
-      var_1bf = false;
-      var_280 = false;
-      var_2cd = false;
-      var_2f7 = false;
-      var_344 = false;
+      inputForward = false;
+      inputLeft = false;
+      inputBackward = false;
+      inputRight = false;
+      inputForward = false;
+      inputLookUp = false;
+      inputBackward = false;
+      inputLookDown = false;
+      inputFire = false;
+      inputStrafe = false;
+      inputRun = false;
       var_364 = false;
       var_3e3 = false;
       var_446 = false;
@@ -1760,25 +1760,25 @@ public final class GameEngine {
    }
 
    private static void sub_5f4() {
-      var_75 = new Sprite[128];
-      var_85 = new Texture[256];
-      var_e1 = new Hashtable();
+      spriteTable = new Sprite[128];
+      textureTable = new Texture[256];
+      paletteCache = new Hashtable();
    }
 
    private static void sub_60e() {
-      var_505 = null;
-      var_37 = 0;
+      gameWorld = null;
+      resourceLoadState = 0;
 
       int var0;
       for(var0 = 0; var0 < 128; ++var0) {
-         var_75[var0] = null;
+         spriteTable[var0] = null;
       }
 
       for(var0 = 0; var0 < 256; ++var0) {
-         var_85[var0] = null;
+         textureTable[var0] = null;
       }
 
-      var_e1.clear();
+      paletteCache.clear();
    }
 
    public static boolean loadMapData(String var0, boolean var1) {
@@ -1787,7 +1787,7 @@ public final class GameEngine {
       try {
          InputStream var3 = (new Object()).getClass().getResourceAsStream(var0);
          DataInputStream var4 = new DataInputStream(var3);
-         var_505 = new GameWorld();
+         gameWorld = new GameWorld();
          var4.readByte();
          Point2D[] var6 = new Point2D[sub_7c5(var4) / 4];
 
@@ -1795,7 +1795,7 @@ public final class GameEngine {
             var6[var7] = new Point2D(sub_775(var4) << 16, sub_775(var4) << 16);
          }
 
-         var_505.setVertices(var6);
+         gameWorld.setVertices(var6);
          WallDefinition[] var25 = new WallDefinition[sub_7c5(var4) / 11];
 
          int var8;
@@ -1812,10 +1812,10 @@ public final class GameEngine {
             var25[var8] = new WallDefinition(var9, var10, var14, var15, var11, var12, var13);
          }
 
-         var_505.wallDefinitions = var25;
+         gameWorld.wallDefinitions = var25;
          int var5 = sub_7c5(var4);
-         if (var_117 == 0) {
-            var_117 = 1;
+         if (levelVariant == 0) {
+            levelVariant = 1;
          }
 
          var8 = var5 / 10;
@@ -1836,8 +1836,8 @@ public final class GameEngine {
             int var10001;
             GameObject var10002;
             if (var14 >= 1 && var14 <= 4) {
-               if (var_117 == var14) {
-                  var_505.worldOrigin = new Transform3D(var29 << 16, 0, var31 << 16, -var33 * 1144 + 102943);
+               if (levelVariant == var14) {
+                  gameWorld.worldOrigin = new Transform3D(var29 << 16, 0, var31 << 16, -var33 * 1144 + 102943);
                }
 
                if (!var1) {
@@ -1861,7 +1861,7 @@ public final class GameEngine {
          }
 
          if (var1) {
-            var_505.staticObjects = var26;
+            gameWorld.staticObjects = var26;
          }
 
          WallSurface[] var28 = new WallSurface[sub_7c5(var4) / 8];
@@ -1889,7 +1889,7 @@ public final class GameEngine {
             }
          }
 
-         var_505.wallSurfaces = var28;
+         gameWorld.wallSurfaces = var28;
          SectorData[] var32 = new SectorData[sub_7c5(var4) / 12];
          short var42 = 0;
 
@@ -1898,7 +1898,7 @@ public final class GameEngine {
             short var18;
             short var44;
             if (var42 >= var32.length) {
-               var_505.sectors = var32;
+               gameWorld.sectors = var32;
                BSPNode[] var34 = new BSPNode[sub_7c5(var4) / 12];
 
                short var41;
@@ -1913,7 +1913,7 @@ public final class GameEngine {
                   var34[var35] = new BSPNode(var14 << 16, var15 << 16, var41 << 16, var44 << 16, var46, var48);
                }
 
-               var_505.bspNodes = var34;
+               gameWorld.bspNodes = var34;
                Sector[] var37 = new Sector[(var5 = sub_7c5(var4)) / 4];
 
                for(int var39 = 0; var39 < var37.length; ++var39) {
@@ -1922,7 +1922,7 @@ public final class GameEngine {
                   var37[var39] = new Sector(var15, var41);
                }
 
-               var_505.bspSectors = var37;
+               gameWorld.bspSectors = var37;
                BSPNode.visibleSectorsList = new Sector[var5 / 4];
                WallSegment[] var40 = new WallSegment[sub_7c5(var4) / 9];
 
@@ -1936,9 +1936,9 @@ public final class GameEngine {
                   var40[var43] = new WallSegment(var41, var44, var18, var49, var20);
                }
 
-               var_505.wallSegments = var40;
+               gameWorld.wallSegments = var40;
                sub_7c5(var4);
-               boolean[][] var45 = new boolean[var43 = var_505.sectors.length][var43];
+               boolean[][] var45 = new boolean[var43 = gameWorld.sectors.length][var43];
                int var47 = 0;
                var48 = 0;
 
@@ -1956,7 +1956,7 @@ public final class GameEngine {
                }
 
                for(var48 = 0; var48 < var43; ++var48) {
-                  var_505.sectors[var48].visitedFlags = var45[var48];
+                  gameWorld.sectors[var48].visitedFlags = var45[var48];
                }
 
                var4.close();
@@ -1992,7 +1992,7 @@ public final class GameEngine {
          var0.substring(0, var24 + 1);
       }
 
-      var_37 = 1;
+      resourceLoadState = 1;
       return true;
    }
 
@@ -2061,9 +2061,9 @@ public final class GameEngine {
    }
 
    public static boolean sub_691(String var0, int var1, String var2, int var3) {
-      if (var_37 < 1) {
+      if (resourceLoadState < 1) {
          throw new IllegalStateException();
-      } else if (var_37 > 1) {
+      } else if (resourceLoadState > 1) {
          throw new IllegalStateException();
       } else {
          try {
@@ -2130,7 +2130,7 @@ public final class GameEngine {
                               var48.setPixelData(var27, var26);
                            }
 
-                           var_85[var15 + 128] = var48;
+                           textureTable[var15 + 128] = var48;
                            var5.put(new Byte(var15), new Integer(var4 + var43));
                         } else {
                            sub_7e1(var8, var47);
@@ -2149,7 +2149,7 @@ public final class GameEngine {
                            }
 
                            var42 = Texture.createColorPalettes(var41);
-                           var_e1.put(Integer.toString(var4 + var16), var42);
+                           paletteCache.put(Integer.toString(var4 + var16), var42);
                         }
                      }
 
@@ -2159,12 +2159,12 @@ public final class GameEngine {
 
                   for(var6 = 0; var6 < 128; ++var6) {
                      Sprite var30;
-                     if ((var30 = var_75[var6]) != null) {
+                     if ((var30 = spriteTable[var6]) != null) {
                         if (var30.pixelData == null) {
                            throw new IllegalStateException();
                         }
 
-                        var30.colorPalettes = (int[][])((int[][])var_e1.get(((Integer)((Integer)var5.get(new Byte(var30.spriteId)))).toString()));
+                        var30.colorPalettes = (int[][])((int[][]) paletteCache.get(((Integer)((Integer)var5.get(new Byte(var30.spriteId)))).toString()));
                      }
                   }
 
@@ -2172,21 +2172,21 @@ public final class GameEngine {
                   byte[][] var32 = (byte[][])null;
                   byte[][] var33 = (byte[][])null;
                   Texture var34;
-                  if ((var34 = var_85[163]) != null) {
+                  if ((var34 = textureTable[163]) != null) {
                      var31 = var34.pixelData;
                   }
 
-                  if ((var34 = var_85[174]) != null) {
+                  if ((var34 = textureTable[174]) != null) {
                      var32 = var34.pixelData;
                   }
 
-                  if ((var34 = var_85[177]) != null) {
+                  if ((var34 = textureTable[177]) != null) {
                      var33 = var34.pixelData;
                   }
 
                   for(int var35 = 0; var35 < 256; ++var35) {
                      Texture var11;
-                     if ((var11 = var_85[var35]) != null) {
+                     if ((var11 = textureTable[var35]) != null) {
                         byte var38;
                         label150: {
                            byte var10000;
@@ -2242,12 +2242,12 @@ public final class GameEngine {
                         }
 
                         if (var11.width != 0) {
-                           var11.colorPalettes = (int[][])((int[][])var_e1.get(((Integer)((Integer)var5.get(new Byte(var38)))).toString()));
+                           var11.colorPalettes = (int[][])((int[][]) paletteCache.get(((Integer)((Integer)var5.get(new Byte(var38)))).toString()));
                         }
                      }
                   }
 
-                  SectorData[] var36 = var_505.sectors;
+                  SectorData[] var36 = gameWorld.sectors;
                   int var37 = 0;
 
                   while(true) {
@@ -2294,7 +2294,7 @@ public final class GameEngine {
                      byte[] var22 = new byte[var12 * var13];
                      var8.readFully(var21, 0, var20);
                      sub_912(var21, 0, var22, 0, var12 * var13, var18);
-                     var_75[var15] = new Sprite(var15, var22);
+                     spriteTable[var15] = new Sprite(var15, var22);
                      var5.put(new Byte(var15), new Integer(var4 + var17));
                   } else if (sub_8bc(var15)) {
                      Texture var46 = new Texture(var15, var12, var13, 0, 0);
@@ -2311,7 +2311,7 @@ public final class GameEngine {
                         var46.setPixelData(var25, var24);
                      }
 
-                     var_85[var15 + 128] = var46;
+                     textureTable[var15 + 128] = var46;
                      var5.put(new Byte(var15), new Integer(var4 + var17));
                   } else {
                      sub_7e1(var8, var20);
@@ -2330,7 +2330,7 @@ public final class GameEngine {
                      }
 
                      var42 = Texture.createColorPalettes(var41);
-                     var_e1.put(Integer.toString(var4 + var16), var42);
+                     paletteCache.put(Integer.toString(var4 + var16), var42);
                   }
                }
 
@@ -2344,7 +2344,7 @@ public final class GameEngine {
             return false;
          }
 
-         var_37 = 2;
+         resourceLoadState = 2;
          return true;
       }
    }
@@ -2376,7 +2376,7 @@ public final class GameEngine {
 
    public static void sub_80f(byte var0) {
       if (!sub_8bc(var0)) {
-         var_85[var0 + 128] = new Texture(var0, 0, 0, 0, 0);
+         textureTable[var0 + 128] = new Texture(var0, 0, 0, 0, 0);
       }
 
    }
@@ -2384,7 +2384,7 @@ public final class GameEngine {
    private static void sub_855(byte var0) {
       if (var0 != 51) {
          if (!sub_887(var0)) {
-            var_75[var0] = new Sprite(var0);
+            spriteTable[var0] = new Sprite(var0);
          }
 
       }
@@ -2392,7 +2392,7 @@ public final class GameEngine {
 
    private static boolean sub_887(int var0) {
       if (var0 >= 0 && var0 < 128) {
-         return var_75[var0] != null;
+         return spriteTable[var0] != null;
       } else {
          return false;
       }
@@ -2401,7 +2401,7 @@ public final class GameEngine {
    private static boolean sub_8bc(int var0) {
       var0 += 128;
       if (var0 >= 0 && var0 < 256) {
-         return var_85[var0] != null;
+         return textureTable[var0] != null;
       } else {
          return false;
       }
@@ -2500,6 +2500,6 @@ public final class GameEngine {
       levelComplete = true;
       var_1044 = 1;
       Class_3aa.var_e8b = 0;
-      var_117 = 0;
+      levelVariant = 0;
    }
 }

@@ -209,20 +209,20 @@ public class Class_3aa extends GameCanvas implements Runnable {
    public void keyPressed(int var1) {
       switch(this.sub_14(var1)) {
       case 1:
-         GameEngine.var_161 = true;
+         GameEngine.inputForward = true;
          return;
       case 2:
-         GameEngine.var_1bf = true;
+         GameEngine.inputBackward = true;
          return;
       case 3:
-         GameEngine.var_223 = true;
+         GameEngine.inputLookUp = true;
          return;
       case 4:
-         GameEngine.var_280 = true;
+         GameEngine.inputLookDown = true;
          return;
       case 5:
-         GameEngine.var_2cd = true;
-         GameEngine.var_2f7 = false;
+         GameEngine.inputFire = true;
+         GameEngine.inputStrafe = false;
          return;
       case 6:
       case 7:
@@ -241,14 +241,14 @@ public class Class_3aa extends GameCanvas implements Runnable {
             GameEngine.var_3b8 = true;
             return;
          case 53:
-            GameEngine.var_2cd = true;
-            GameEngine.var_2f7 = false;
+            GameEngine.inputFire = true;
+            GameEngine.inputStrafe = false;
             return;
          case 55:
-            GameEngine.var_1ed = true;
+            GameEngine.inputLeft = true;
             return;
          case 57:
-            GameEngine.var_1fa = true;
+            GameEngine.inputRight = true;
          case 50:
          case 52:
          case 54:
@@ -257,7 +257,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             return;
          }
       case 11:
-         GameEngine.var_344 = true;
+         GameEngine.inputRun = true;
          return;
       case 12:
          GameEngine.var_364 = true;
@@ -267,27 +267,27 @@ public class Class_3aa extends GameCanvas implements Runnable {
    public void keyReleased(int var1) {
       switch(this.sub_14(var1)) {
       case 1:
-         GameEngine.var_161 = false;
+         GameEngine.inputForward = false;
          return;
       case 2:
-         GameEngine.var_1bf = false;
+         GameEngine.inputBackward = false;
          return;
       case 3:
-         GameEngine.var_223 = false;
+         GameEngine.inputLookUp = false;
          return;
       case 4:
-         GameEngine.var_280 = false;
+         GameEngine.inputLookDown = false;
          return;
       case 5:
-         GameEngine.var_2f7 = true;
+         GameEngine.inputStrafe = true;
          return;
       default:
          switch(var1) {
          case 55:
-            GameEngine.var_1ed = false;
+            GameEngine.inputLeft = false;
             return;
          case 57:
-            GameEngine.var_1fa = false;
+            GameEngine.inputRight = false;
          default:
          }
       }
@@ -332,7 +332,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
          if (var_ef8) {
             var1.setClip(0, 0, 240, 288);
-            GameEngine.var_505.drawDebugInfo(var1);
+            GameEngine.gameWorld.drawDebugInfo(var1);
             var1.setClip(0, 0, 240, 320);
          }
 
@@ -414,7 +414,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
          while(this.var_50) {
             try {
-               if ((GameEngine.var_344 || GameEngine.var_364 || this.var_b0) && (var2 = this.sub_230(var1, false)) != 32) {
+               if ((GameEngine.inputRun || GameEngine.var_364 || this.var_b0) && (var2 = this.sub_230(var1, false)) != 32) {
                   break;
                }
 
@@ -859,11 +859,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
 
    private int sub_230(Graphics var1, boolean var2) {
       try {
-         GameEngine.var_344 = false;
+         GameEngine.inputRun = false;
          GameEngine.var_364 = false;
-         GameEngine.var_2cd = false;
-         GameEngine.var_161 = false;
-         GameEngine.var_1bf = false;
+         GameEngine.inputFire = false;
+         GameEngine.inputForward = false;
+         GameEngine.inputBackward = false;
          Image var3 = Image.createImage("/bkg.png");
          int var4 = 0;
          int var5 = 0;
@@ -931,9 +931,9 @@ public class Class_3aa extends GameCanvas implements Runnable {
             this.sub_8c1();
             sub_922();
             Object[] var23;
-            if (GameEngine.var_344 || GameEngine.var_2cd) {
-               GameEngine.var_344 = false;
-               GameEngine.var_2cd = false;
+            if (GameEngine.inputRun || GameEngine.inputFire) {
+               GameEngine.inputRun = false;
+               GameEngine.inputFire = false;
                switch(var4) {
                case 0:
                case 33:
@@ -1149,7 +1149,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
             }
 
-            if (GameEngine.var_161) {
+            if (GameEngine.inputForward) {
                var16 = var4 & 15;
                --var16;
                if (var16 < var7) {
@@ -1159,10 +1159,10 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
 
                var4 = var4 & -16 | var16;
-               GameEngine.var_161 = false;
+               GameEngine.inputForward = false;
             }
 
-            if (GameEngine.var_1bf) {
+            if (GameEngine.inputBackward) {
                var16 = var4 & 15;
                ++var16;
                if (var16 > var8) {
@@ -1172,7 +1172,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
 
                var4 = var4 & -16 | var16;
-               GameEngine.var_1bf = false;
+               GameEngine.inputBackward = false;
             }
          }
       } catch (Exception var19) {
@@ -1185,11 +1185,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
    }
 
    private void sub_24b(Graphics var1, Image var2, String var3, String[] var4, boolean var5) {
-      GameEngine.var_344 = false;
+      GameEngine.inputRun = false;
       GameEngine.var_364 = false;
-      GameEngine.var_2cd = false;
-      GameEngine.var_161 = false;
-      GameEngine.var_1bf = false;
+      GameEngine.inputFire = false;
+      GameEngine.inputForward = false;
+      GameEngine.inputBackward = false;
 
       try {
          String var6 = var_1e5.getAppProperty("MIDlet-Version");
@@ -1273,11 +1273,11 @@ public class Class_3aa extends GameCanvas implements Runnable {
       } catch (OutOfMemoryError var20) {
       }
 
-      GameEngine.var_344 = false;
+      GameEngine.inputRun = false;
       GameEngine.var_364 = false;
-      GameEngine.var_2cd = false;
-      GameEngine.var_161 = false;
-      GameEngine.var_1bf = false;
+      GameEngine.inputFire = false;
+      GameEngine.inputForward = false;
+      GameEngine.inputBackward = false;
       this.var_a63 = null;
       var1.setClip(0, 0, 240, 320);
    }
@@ -1434,7 +1434,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
       this.var_d88 += var13[var11];
       this.var_d9b += var15[var11];
       byte var14 = 0;
-      if (GameEngine.var_223) {
+      if (GameEngine.inputLookUp) {
          if (this.var_d2a == 3) {
             --this.var_be4;
          }
@@ -1442,7 +1442,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          var14 = 3;
       }
 
-      if (GameEngine.var_280) {
+      if (GameEngine.inputLookDown) {
          if (this.var_d2a == 4) {
             ++this.var_be4;
          }
@@ -1450,7 +1450,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          var14 = 4;
       }
 
-      if (GameEngine.var_161) {
+      if (GameEngine.inputForward) {
          if (this.var_d2a == 1) {
             --this.var_c1f;
          }
@@ -1458,7 +1458,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          var14 = 1;
       }
 
-      if (GameEngine.var_1bf) {
+      if (GameEngine.inputBackward) {
          if (this.var_d2a == 2) {
             ++this.var_c1f;
          }
@@ -1574,7 +1574,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             }
 
             int var34;
-            if ((GameEngine.var_344 || GameEngine.var_364 || this.var_b0) && (var34 = this.sub_230(var1, false)) != 32) {
+            if ((GameEngine.inputRun || GameEngine.var_364 || this.var_b0) && (var34 = this.sub_230(var1, false)) != 32) {
                return var34;
             }
 
@@ -1799,7 +1799,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                GameEngine.screenBuffer[var47] = var64[var7[var47] & 255];
             }
 
-            if (GameEngine.var_2cd) {
+            if (GameEngine.inputFire) {
                var47 = this.var_d88 + 32 - 1;
                var48 = this.var_d9b + 32 - 1;
                var49 = 16777215;
@@ -1828,7 +1828,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                }
 
                GameEngine.screenBuffer[240 * var48 + var47] = var49;
-               GameEngine.var_2cd = false;
+               GameEngine.inputFire = false;
             }
 
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 288, false);
@@ -2064,12 +2064,12 @@ public class Class_3aa extends GameCanvas implements Runnable {
             --GameEngine.var_4c8;
          }
 
-         if (GameEngine.var_2cd && !GameEngine.levelComplete) {
+         if (GameEngine.inputFire && !GameEngine.levelComplete) {
             int var6;
             switch(GameEngine.currentWeapon) {
             case 0:
                if (GameEngine.var_4c8 < -var_111e[GameEngine.difficultyLevel]) {
-                  GameEngine.var_505.fireWeapon();
+                  GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
                   GameEngine.var_4c8 = 1;
@@ -2078,7 +2078,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             case 1:
                if (GameEngine.var_4c8 < -var_1128[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  GameEngine.var_505.fireWeapon();
+                  GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
                   GameEngine.var_4c8 = 1;
@@ -2087,7 +2087,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             case 2:
                if (GameEngine.var_4c8 < -var_1147[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  GameEngine.var_505.fireWeapon();
+                  GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
                   GameEngine.var_4c8 = 1;
@@ -2098,7 +2098,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   if (this.var_933 == 0) {
                      if (GameEngine.ammoCounts[1] > 0) {
                         var6 = GameEngine.ammoCounts[1]--;
-                        GameEngine.var_505.fireWeapon();
+                        GameEngine.gameWorld.fireWeapon();
                         this.var_933 = 1;
                         var_98c = 1;
                         GameEngine.var_4c8 = 1;
@@ -2114,7 +2114,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   if (this.var_933 == 0) {
                      if (GameEngine.ammoCounts[1] > 0) {
                         var6 = GameEngine.ammoCounts[1]--;
-                        GameEngine.var_505.fireWeapon();
+                        GameEngine.gameWorld.fireWeapon();
                         this.var_933 = 1;
                         var_98c = 1;
                         GameEngine.var_4c8 = 1;
@@ -2128,7 +2128,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             case 5:
                if (GameEngine.var_4c8 <= -1 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  GameEngine.var_505.fireWeapon();
+                  GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
                   GameEngine.var_4c8 = 2;
@@ -2139,7 +2139,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   if ((var_259 == 4 || var_259 == 7 || var_259 == 8) && (var_259 != 4 || GameEngine.currentSector.getSectorType() != 666) && GameEngine.ammoCounts[6] == 1) {
                      GameEngine.messageText = "i'd better use it|to finish my mission";
                      GameEngine.messageTimer = 50;
-                  } else if (GameEngine.var_505.throwGrenade()) {
+                  } else if (GameEngine.gameWorld.throwGrenade()) {
                      var6 = GameEngine.ammoCounts[6]--;
                      GameEngine.var_4c8 = 0;
                      GameEngine.var_1044 = 8;
@@ -2151,7 +2151,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
             case 7:
                if (GameEngine.var_4c8 < -var_11f1[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  GameEngine.var_505.fireWeapon();
+                  GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
                   GameEngine.var_4c8 = 1;
@@ -2171,8 +2171,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
             }
          }
 
-         if (GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 || GameEngine.var_2f7) {
-            GameEngine.var_2cd = false;
+         if (GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 || GameEngine.inputStrafe) {
+            GameEngine.inputFire = false;
          }
 
          return false;
@@ -2215,7 +2215,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          sub_57c();
          if (var_295 < var_259) {
             if (var_295 > -1) {
-               this.var_ab7 = GameEngine.var_505.staticObjects;
+               this.var_ab7 = GameEngine.gameWorld.staticObjects;
             }
 
             if (!GameEngine.loadMapData("/level_" + var_1ff[var_259], this.var_ae7 == null)) {
@@ -2223,20 +2223,20 @@ public class Class_3aa extends GameCanvas implements Runnable {
             }
 
             if (this.var_ae7 != null) {
-               GameEngine.var_505.staticObjects = this.var_ae7;
+               GameEngine.gameWorld.staticObjects = this.var_ae7;
                this.var_ae7 = null;
             } else {
                GameEngine.var_d98[0] = false;
                GameEngine.var_d98[1] = false;
             }
          } else {
-            this.var_ae7 = GameEngine.var_505.staticObjects;
+            this.var_ae7 = GameEngine.gameWorld.staticObjects;
             if (!GameEngine.loadMapData("/level_" + var_1ff[var_259], this.var_ab7 == null)) {
                CovertOps3D.sub_24();
             }
 
             if (this.var_ab7 != null) {
-               GameEngine.var_505.staticObjects = this.var_ab7;
+               GameEngine.gameWorld.staticObjects = this.var_ab7;
                this.var_ab7 = null;
             }
          }
@@ -2260,7 +2260,7 @@ public class Class_3aa extends GameCanvas implements Runnable {
          byte[] var14 = new byte[]{-10};
          byte[] var15 = new byte[]{-4, -6, -11, -13, 0, 0};
          byte[] var16 = new byte[]{-5, -7, -12, -14, -15, -8};
-         GameObject[] var17 = GameEngine.var_505.staticObjects;
+         GameObject[] var17 = GameEngine.gameWorld.staticObjects;
 
          for(int var18 = 0; var18 < var17.length; ++var18) {
             GameObject var19;
@@ -2600,26 +2600,26 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   }
                }
 
-               if (GameEngine.var_344) {
-                  GameEngine.var_344 = false;
+               if (GameEngine.inputRun) {
+                  GameEngine.inputRun = false;
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("pause"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
                   this.sub_681("resume", var1, 3, 320 - this.var_550 - 3);
                   this.sub_8c1();
 
-                  while(!GameEngine.var_344 && !GameEngine.var_364 && !this.var_b0 && !GameEngine.var_2cd) {
+                  while(!GameEngine.inputRun && !GameEngine.var_364 && !this.var_b0 && !GameEngine.inputFire) {
                      sub_922();
                   }
                }
 
-               if (GameEngine.var_344) {
+               if (GameEngine.inputRun) {
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("resume"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
                   this.sub_681("pause", var1, 3, 320 - this.var_550 - 3);
                   this.sub_8c1();
-                  GameEngine.var_344 = false;
+                  GameEngine.inputRun = false;
                }
 
                if (GameEngine.var_364 || this.var_b0) {
-                  GameEngine.var_344 = false;
+                  GameEngine.inputRun = false;
                   GameEngine.var_364 = false;
                   if ((var37 = this.sub_230(var1, false)) != 32) {
                      this.var_a63 = null;
@@ -2696,8 +2696,8 @@ public class Class_3aa extends GameCanvas implements Runnable {
                   this.sub_8c1();
                }
 
-               if (GameEngine.var_2cd) {
-                  GameEngine.var_2cd = false;
+               if (GameEngine.inputFire) {
+                  GameEngine.inputFire = false;
                   this.var_a63 = null;
                   return -1;
                }
