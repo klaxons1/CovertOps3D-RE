@@ -12,8 +12,8 @@ public final class Class_445 {
     public int var_2cf;
     public Point2D var_2f3;
     public int var_319;
-    public Class_318 var_363;
-    public Class_318 var_399;
+    public Texture var_363;
+    public Texture var_399;
     public int var_3e0;
     public int var_404;
     public int var_41b;
@@ -130,12 +130,12 @@ public final class Class_445 {
     }
 
     public final void sub_194() {
-        this.var_3e0 = MathUtils.fixedPointDivide(this.var_363.var_11 << 16, this.var_2f3.y) * 120 - 131072 >> 18;
-        this.var_404 = MathUtils.fixedPointDivide(this.var_363.var_6f << 16, this.var_2f3.y) * 120 - 131072 >> 18;
+        this.var_3e0 = MathUtils.fixedPointDivide(this.var_363.width << 16, this.var_2f3.y) * 120 - 131072 >> 18;
+        this.var_404 = MathUtils.fixedPointDivide(this.var_363.height << 16, this.var_2f3.y) * 120 - 131072 >> 18;
     }
 
     public final void sub_1ee() {
-        this.var_41b = MathUtils.fixedPointDivide(this.var_399.var_11 << 16, this.var_2f3.y) * 120 + 65536 >> 17;
-        this.var_440 = MathUtils.fixedPointDivide(this.var_399.var_6f << 16, this.var_2f3.y) * 120 + 65536 >> 17;
+        this.var_41b = MathUtils.fixedPointDivide(this.var_399.width << 16, this.var_2f3.y) * 120 + 65536 >> 17;
+        this.var_440 = MathUtils.fixedPointDivide(this.var_399.height << 16, this.var_2f3.y) * 120 + 65536 >> 17;
     }
 }

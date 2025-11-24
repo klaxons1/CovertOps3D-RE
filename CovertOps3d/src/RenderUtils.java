@@ -1,8 +1,8 @@
-public final class Class_b0 {
+public final class RenderUtils {
    private Class_282[] var_4d = new Class_282[288];
    private Class_282 var_95 = null;
 
-   public Class_b0() {
+   public RenderUtils() {
       this.sub_4e();
    }
 

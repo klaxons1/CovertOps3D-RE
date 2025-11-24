@@ -7,8 +7,8 @@ public final class Class_30a {
    private short var_114;
    private short var_168;
    public boolean[] var_1dd;
-   public Class_358 var_214;
-   public Class_358 var_262;
+   public Sprite var_214;
+   public Sprite var_262;
    public int var_282;
    public int var_2bf;
    public int var_2f0;
