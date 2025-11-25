@@ -1141,10 +1141,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      var8 = 0;
                   }
                } else {
-                   var6 = (String[])((Object[])var10.pop())[0];
-                   var4 = ((Integer)((Object[])var23)[1]).intValue();
-                   var7 = ((Integer)((Object[])var23)[2]).intValue();
-                   var8 = ((Integer)((Object[])var23)[3]).intValue();
+                   Object[] popped = (Object[])var10.pop();
+                   var6 = (String[])popped[0];
+                   var4 = ((Integer)popped[1]).intValue();
+                   var7 = ((Integer)popped[2]).intValue();
+                   var8 = ((Integer)popped[3]).intValue();
                   var5 = 0;
                }
             }
