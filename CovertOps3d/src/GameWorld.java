@@ -848,11 +848,11 @@ public final class GameWorld {
 
             if (!var8) {
                if (GameEngine.currentWeapon == 1 || GameEngine.currentWeapon == 2) {
-                  MainGameCanvas.playSound((GameEngine.var_ea3.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
+                  MainGameCanvas.playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                }
 
                if (GameEngine.currentWeapon == 3 || GameEngine.currentWeapon == 4) {
-                  MainGameCanvas.playSound((GameEngine.var_ea3.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
+                  MainGameCanvas.playSound((GameEngine.random.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
                }
             }
 

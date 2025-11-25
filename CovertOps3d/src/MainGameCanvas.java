@@ -1301,10 +1301,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
          if (this.var_cfa < 20) {
             if (var9 > 0) {
-               var10 = GameEngine.var_ea3.nextInt() & 1;
-               var11 = var4[(GameEngine.var_ea3.nextInt() & 7) % var9];
+               var10 = GameEngine.random.nextInt() & 1;
+               var11 = var4[(GameEngine.random.nextInt() & 7) % var9];
                var2[var11] = var10;
-               int var12 = GameEngine.var_ea3.nextInt() & Integer.MAX_VALUE;
+               int var12 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
                var3[var11] = var12 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
                var5[var11] = var6[var11];
                if (var6[var11] > var7[var11]) {
@@ -1403,7 +1403,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   case 5:
                   case 6:
                      var1[var9] = 3;
-                     var11 = GameEngine.var_ea3.nextInt() & Integer.MAX_VALUE;
+                     var11 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
                      var10000 = var3;
                      var10001 = var9;
                      var16 = var11 % var_191e[GameEngine.difficultyLevel] + var_1910[GameEngine.difficultyLevel];
@@ -1711,7 +1711,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   sub_2c3(var24[var44], var48, var49, var45, var46, var36 > 0);
                   if (var26[var44] == 4) {
                      var26[var44] = (var28[var44] & 1) == 1 ? 1 : 5;
-                     var50 = GameEngine.var_ea3.nextInt() & Integer.MAX_VALUE;
+                     var50 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
                      var27[var44] = var50 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
                   }
                }
@@ -1751,7 +1751,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      sub_2c3(var24[var44], var48, var49, var45, var46, var36 > 0);
                      if (var26[var44] == 4) {
                         var26[var44] = (var28[var44] & 1) == 1 ? 1 : 5;
-                        var50 = GameEngine.var_ea3.nextInt() & Integer.MAX_VALUE;
+                        var50 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
                         var27[var44] = var50 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
                      }
                   }
@@ -1824,7 +1824,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
 
                if (!var65) {
-                  playSound((GameEngine.var_ea3.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
+                  playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                }
 
                GameEngine.screenBuffer[240 * var48 + var47] = var49;
@@ -2060,88 +2060,88 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
          }
 
-         if (GameEngine.var_4c8 > -32768) {
-            --GameEngine.var_4c8;
+         if (GameEngine.weaponCooldownTimer > -32768) {
+            --GameEngine.weaponCooldownTimer;
          }
 
          if (GameEngine.inputFire && !GameEngine.levelComplete) {
             int var6;
             switch(GameEngine.currentWeapon) {
             case 0:
-               if (GameEngine.var_4c8 < -var_111e[GameEngine.difficultyLevel]) {
+               if (GameEngine.weaponCooldownTimer < -var_111e[GameEngine.difficultyLevel]) {
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
-                  GameEngine.var_4c8 = 1;
+                  GameEngine.weaponCooldownTimer = 1;
                }
                break;
             case 1:
-               if (GameEngine.var_4c8 < -var_1128[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+               if (GameEngine.weaponCooldownTimer < -var_1128[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
-                  GameEngine.var_4c8 = 1;
+                  GameEngine.weaponCooldownTimer = 1;
                }
                break;
             case 2:
-               if (GameEngine.var_4c8 < -var_1147[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+               if (GameEngine.weaponCooldownTimer < -var_1147[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
-                  GameEngine.var_4c8 = 1;
+                  GameEngine.weaponCooldownTimer = 1;
                }
                break;
             case 3:
-               if (GameEngine.var_4c8 <= 0) {
+               if (GameEngine.weaponCooldownTimer <= 0) {
                   if (this.var_933 == 0) {
                      if (GameEngine.ammoCounts[1] > 0) {
                         var6 = GameEngine.ammoCounts[1]--;
                         GameEngine.gameWorld.fireWeapon();
                         this.var_933 = 1;
                         var_98c = 1;
-                        GameEngine.var_4c8 = 1;
+                        GameEngine.weaponCooldownTimer = 1;
                      }
                   } else {
                      this.var_933 = 0;
-                     GameEngine.var_4c8 = var_119b[GameEngine.difficultyLevel];
+                     GameEngine.weaponCooldownTimer = var_119b[GameEngine.difficultyLevel];
                   }
                }
                break;
             case 4:
-               if (GameEngine.var_4c8 <= 0) {
+               if (GameEngine.weaponCooldownTimer <= 0) {
                   if (this.var_933 == 0) {
                      if (GameEngine.ammoCounts[1] > 0) {
                         var6 = GameEngine.ammoCounts[1]--;
                         GameEngine.gameWorld.fireWeapon();
                         this.var_933 = 1;
                         var_98c = 1;
-                        GameEngine.var_4c8 = 1;
+                        GameEngine.weaponCooldownTimer = 1;
                      }
                   } else {
                      this.var_933 = 0;
-                     GameEngine.var_4c8 = var_11e0[GameEngine.difficultyLevel];
+                     GameEngine.weaponCooldownTimer = var_11e0[GameEngine.difficultyLevel];
                   }
                }
                break;
             case 5:
-               if (GameEngine.var_4c8 <= -1 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+               if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
-                  GameEngine.var_4c8 = 2;
+                  GameEngine.weaponCooldownTimer = 2;
                }
                break;
             case 6:
-               if (GameEngine.var_4c8 <= -1 && GameEngine.ammoCounts[6] > 0) {
+               if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[6] > 0) {
                   if ((var_259 == 4 || var_259 == 7 || var_259 == 8) && (var_259 != 4 || GameEngine.currentSector.getSectorType() != 666) && GameEngine.ammoCounts[6] == 1) {
                      GameEngine.messageText = "i'd better use it|to finish my mission";
                      GameEngine.messageTimer = 50;
                   } else if (GameEngine.gameWorld.throwGrenade()) {
                      var6 = GameEngine.ammoCounts[6]--;
-                     GameEngine.var_4c8 = 0;
+                     GameEngine.weaponCooldownTimer = 0;
                      GameEngine.var_1044 = 8;
                      GameEngine.levelComplete = true;
                      GameEngine.var_d46 = GameEngine.sub_577(6);
@@ -2149,15 +2149,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
                break;
             case 7:
-               if (GameEngine.var_4c8 < -var_11f1[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+               if (GameEngine.weaponCooldownTimer < -var_11f1[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
                   var_98c = 1;
-                  GameEngine.var_4c8 = 1;
+                  GameEngine.weaponCooldownTimer = 1;
                }
             }
-         } else if (GameEngine.var_4c8 <= 0) {
+         } else if (GameEngine.weaponCooldownTimer <= 0) {
             if (GameEngine.currentWeapon == 5) {
                if (this.var_933 == 1) {
                   this.var_933 = 2;

@@ -26,7 +26,7 @@ public final class GameEngine {
    public static boolean var_3e3;
    public static boolean var_446;
    public static int var_480;
-   public static int var_4c8 = 0;
+   public static int weaponCooldownTimer = 0;
    public static GameWorld gameWorld = null;
    public static PhysicsBody player;
    public static Transform3D tempTransform;
@@ -68,7 +68,7 @@ public final class GameEngine {
    public static int messageTimer = 0;
    public static int var_e72 = 0;
    public static WallDefinition var_e96 = null;
-   public static Random var_ea3 = new Random();
+   public static Random random = new Random();
    public static boolean damageFlash = false;
    public static byte screenShake = 0;
    public static int cameraHeight;
@@ -873,18 +873,18 @@ public final class GameEngine {
                   switch(var27.aiState) {
                   case 1:
                      var27.aiState = 2;
-                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                     var27.stateTimer = (random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
                      var27.currentState = 0;
                      break;
                   case 2:
-                     if (((var6 = var_ea3.nextInt() & Integer.MAX_VALUE) & 1) == 0) {
+                     if (((var6 = random.nextInt() & Integer.MAX_VALUE) & 1) == 0) {
                         var27.aiState = 3;
                         var27.stateTimer = var6 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
                         var46 = var27;
                         var10001 = 2;
                      } else {
                         var27.aiState = 1;
-                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_1851[difficultyLevel];
+                        var27.stateTimer = (random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_1851[difficultyLevel];
                         var46 = var27;
                         var10001 = 0;
                      }
@@ -945,17 +945,17 @@ public final class GameEngine {
                         }
                      } else {
                         var27.aiState = 2;
-                        var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                        var27.stateTimer = (random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
                         var27.currentState = 0;
                      }
                      break;
                   case 4:
                      var27.aiState = 2;
-                     var27.stateTimer = (var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                     var27.stateTimer = (random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
                      var27.currentState = 0;
                      break;
                   case 5:
-                     var6 = var_ea3.nextInt() & Integer.MAX_VALUE;
+                     var6 = random.nextInt() & Integer.MAX_VALUE;
                      var27.aiState = 3;
                      var27.stateTimer = var6 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
                      var27.currentState = 2;
@@ -997,9 +997,9 @@ public final class GameEngine {
                      var36 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var31, var35), var27.getMovementSpeed());
                      var12 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var34, var35), var27.getMovementSpeed());
                      int var37;
-                     if ((var_ea3.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_1ad2[difficultyLevel] == 0) {
+                     if ((random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_1ad2[difficultyLevel] == 0) {
                         int var47;
-                        if ((var_ea3.nextInt() & 1) == 0) {
+                        if ((random.nextInt() & 1) == 0) {
                            var37 = var36;
                            var36 += -var12;
                            var10000 = var12;
@@ -1037,7 +1037,7 @@ public final class GameEngine {
                         var29.z = tempTransform.z;
                      }
                   } else {
-                     var36 = var_ea3.nextInt() & Integer.MAX_VALUE;
+                     var36 = random.nextInt() & Integer.MAX_VALUE;
                      var27.aiState = 3;
                      var27.stateTimer = var36 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
                      var27.currentState = 2;
@@ -1126,7 +1126,7 @@ public final class GameEngine {
       var_446 = false;
       var_3b8 = false;
       var_480 = 0;
-      var_4c8 = 0;
+      weaponCooldownTimer = 0;
    }
 
    private static void sub_3f5(Texture var0) {
