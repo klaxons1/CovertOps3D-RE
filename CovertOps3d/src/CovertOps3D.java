@@ -2,38 +2,38 @@ import javax.microedition.lcdui.Display;
 import javax.microedition.midlet.MIDlet;
 
 public class CovertOps3D extends MIDlet {
-   public static Display var_ee = null;
-   public static MainGameCanvas var_108 = null;
-   private static CovertOps3D var_149 = null;
+   public static Display display = null;
+   public static MainGameCanvas mainGameCanvas = null;
+   private static CovertOps3D instance = null;
 
    public void startApp() {
-      if (var_108 != null) {
-         var_108.sub_32d();
+      if (mainGameCanvas != null) {
+         mainGameCanvas.sub_32d();
       } else {
-         var_ee = Display.getDisplay(this);
-         var_108 = new MainGameCanvas();
-         var_108.sub_71();
-         var_ee.setCurrent(var_108);
+         display = Display.getDisplay(this);
+         mainGameCanvas = new MainGameCanvas();
+         mainGameCanvas.sub_71();
+         display.setCurrent(mainGameCanvas);
          MainGameCanvas.var_1e5 = this;
-         var_149 = this;
+         instance = this;
       }
    }
 
    public void pauseApp() {
-      var_108.sub_308();
+      mainGameCanvas.sub_308();
    }
 
    public void destroyApp(boolean var1) {
-      var_108.sub_35e();
+      mainGameCanvas.sub_35e();
 
-      while(!var_108.var_16f) {
+      while(!mainGameCanvas.var_16f) {
          Thread.yield();
       }
 
       this.notifyDestroyed();
    }
 
-   public static void sub_24() {
-       var_149.destroyApp(true);
+   public static void exitApplication() {
+       instance.destroyApp(true);
    }
 }

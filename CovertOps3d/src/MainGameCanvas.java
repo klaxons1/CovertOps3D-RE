@@ -29,7 +29,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private static final String[] var_44c = new String[]{"Covert Ops 3D", "", "Developed by:", "Micazook Mobile Ltd.", "", "Executive producers:", "Marcin Kochanowski", "Wojciech Charysz", "Michael Fotoohi", "", "Senior developer:", "Tomasz Mroczek", "", "Level design:", "Kamil Bachminski", "", "Texture artists:", "Kamil Bachminski", "Patryk Piescinski", "", "Character design:", "Lukasz 'Slizgi' Sliwinski", "Kamil Bachminski", "", "Music:", "Slawomir Opalinski", "", "Sound effects:", "Kamil Bachminski", "", "", "Publisher:", "Micazook Ltd.", "", "www.micazook.com", "", "for support email", "support@micazook.com", "", "(c) 2006 Micazook Ltd.", "Trademarks belong to", "their respective owners.", "", "All rights reserved!"};
    private static final String[][] var_496 = new String[][]{{"RMy name is captain Thomas Reed. My mission, Covert Operations in service of the US army. I began my career in Spain and since then I have participated in many secret missions against the enemy. As an Allied secret agent my job is to infiltrate and sabotage behind the enemy lines. This mission is a typical one, dangerous with my name written on it!! Our spy planes have revealed photographs of what seems to be of an immense constructions project taking place around the Weissberg Mountain in the German Alps. It seems that the Germans are digging a network of reinforcements and underground bunkers on a previously unparalleled scale. My mission is to hide aboard a transportation supply train until it gets to Weissberg and to meet with our undercover agent on location there. With her help, I need to get the documents that reveals the purpose of this enterprise which incidentally the HQ nicknamed Fort Weissberg. Not sure how yet but I need to devise a way to sabotage the railway system and other important installations on site. I need some luck today and lots of it!!"}, {"ACaptain Reed I presume?", "RWho are you!?", "AAnna Sierck, MI5. I was told to meet you here in Weissberg.", "RSo why now, why in the train? If the Germans find us here, my mission is over!", "AThere has been a change of plans. Don't worry. We are safe, at least until the train stops.", "RWhat's happening, has something gone wrong?", "ANo don't worry, HQ's idea, just some last minute changes to keep the Germans guessing.", "RI knew it.", "AEver since our last failed attempt the trains are heavily searched. You'll have to leave at the last hidden station in the forest and walk to the fort by foot.", "RLast, failed attempt?? How many times have you tried so far?", "ARight now you don't need to know that. Ah and one more thing. The forts gates are not as heavily guarded as the train yard, but nevertheless you can expect a lot of resistance there. I know of a sniper rifle stored somewhere at the station. Find it and use it against the gate guards."}, {"AI see you found this rifle, good. You'll have to shoot the guards before entering Fort Weissberg.", "RAnd you?", "AI'll meet you inside. Maybe I'll be able to get a uniform for you.", "RThanks.", "AReed?", "RYes?", "AGood luck."}, {"AGlad you made it.", "RPiece of cake.", "AUnfortunately I have some bad news. There's gossip of some sort of a secret weapon undergoing tests here. I don't know if it's true, but the guard outpost's has been heavily reinforced. Uniform will not do you any good - they are checking everyone's id cards now practically on every corridor.", "RWhat do I do then?", "AYou can get deeper into the fortress through the unfinished tunnels. But you'll need explosives, as some of the passages are systematically being sealed for security reasons. I'm sure there's dynamite somewhere here. Get it and then find a wall that looks like it shouldn't be there...", "RWhat? Can't you be a little bit more precise?", "AUnfortunately our plans backfired and we couldn't get you any uniforms. Sorry bad luck old chap.", "RAll right, but this my life on the line here."}, {"AYou did it! Now all you need to do is to find the documents. I suppose they are locked somewhere in this level, perhaps you'll need to search for keys.", "RAnd what about you?", "AThere is some commotion in the base, I'll try and see what's going on. We will meet here after we're done.", "RSee you then."}, {"RI've got these papers. Can we finally blow this place up? It's giving me the creeps.", "AI'm sorry, but there's been a slight change of plans again.", "RGreat. I was longing to hear it. What's happening now?", "AHave you ever heard of Clint Miller?", "RDoctor Clint Miller? The Nobel prize winner?", "AYes That's him. A few weeks ago he disappeared from his house in Boston. He's here now, arrived today. The Germans have kidnapped him.", "RWhat? Why?", "AFrom what I know he was conducting some sort of research on the possible military uses of sound waves back in the US.", "RYou mean...", "AOuch, sonic weapons. Germans are doing similar experiments but with no success, so far at least.", "RHe must have cracked it if the German's risked kidnapping him in the states.", "AThat's what I'm afraid of. We have to get him out of here and fast.", "RWhere do they keep him.", "AOn this very level. That's where you come in. Once again you'll need to use your sniper rifle and get rid of the guards.", "RYou lead the way."}, {"RWhat now?", "AThese are the labs and prison's. Miller will be somewhere here. Be careful, I know we are past the outpost, but there can be some more soldiers wandering around.", "RDon't worry and wait here. I'll find him in no time."}, {"ADoctor Miller? We're here to help you!", "MHelp?", "RYeah, to get you out of this prison and out of this country.", "MAh, prison. Yes, yes. What's your plan?", "RAnna?", "AUmm...", "MYou have came to rescue me without any plans??", "AWe didn't know you were going to be here.", "MMy goodness! Listen to me then: the only way to get out of here safely is by taking the train back out of here. They don't seem to care about guarding out bound trains from here.", "RHow do you know?", "MObservation young man, observation. There is no science without it.", "AOK lets make a move quickly.", "MPerhaps your big friend could find some explosives if we want to make sure no one comes after us?", "AGood idea, we were about to destroy this place anyway. Go, Reed, we'll meet at the train yard.", "RSure?", "AGo, go. We can't stick around here forever."}, {"RAnna! What happened?!", "AI... I should have known that...", "RWhy oh why... don't talk too much.", "AMiller... He wasn't kidnapped... at all...", "RWhat? What are you saying?", "AIt was a trap... I don't know how to tell you but Miller is one of them. He came to Germany on his own accord?", "RMiller is a Nazi?", "AYes, he lured me... into this deceitful trap...", "RHe'll pay for that!", "ANo! You have to finish your mission. Set the dynamite... lets get the hell out of here...", "RNo, I won't leave it like that. Just... Anna?", "A...", "RHe'll pay. He'll pay good."}, {"RSo, Fort Weissberg ended up being the biggest firework I've ever seen. Soon I will board this train and head for Switzerland. I will cross the Alps by foot and, play hide and seek with German soldiers before I get there, but that's another story. Works of Clint Miller lie buried deep in the heart of the Weissberg mountain, and of course the Nazis will never finish their sonic super weapon. Miller's ties to Third Reich were never be revealed and his mysterious disappearance is still a base for numerous theories and speculations. And I? I remain on service."}};
    private int var_4db;
-   private int var_509;
+   private int fontColumn;
    private int var_550;
    private int var_59b;
    private int[] var_5fa;
@@ -133,7 +133,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       super(false);
       System.currentTimeMillis();
       this.var_4db = 18;
-      this.var_509 = 26;
+      this.fontColumn = 26;
       this.var_550 = 23;
       this.var_59b = 4;
       this.var_5fa = new int[]{1, 11, 22, 31, 42, 52, 62, 70, 82, 91, 101, 112, 120, 130, 142, 151, 161, 171, 2, 12, 20, 31, 40, 51, 61, 72, 80, 90, 100, 110, 120, 130, 142, 151, 160, 170, 1, 12, 21, 31, 41, 51, 61, 71, 81, 91, 100, 110, 120, 130, 140, 150, 160, 170};
@@ -383,7 +383,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             if (var2 == 4) {
                this.var_16f = true;
-               CovertOps3D.sub_24();
+               CovertOps3D.exitApplication();
                return;
             }
 
@@ -2212,14 +2212,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    private void sub_3de() {
       try {
-         sub_57c();
+         freeMemory();
          if (var_295 < var_259) {
             if (var_295 > -1) {
                this.var_ab7 = GameEngine.gameWorld.staticObjects;
             }
 
             if (!GameEngine.loadMapData("/level_" + levelNames[var_259], this.var_ae7 == null)) {
-               CovertOps3D.sub_24();
+               CovertOps3D.exitApplication();
             }
 
             if (this.var_ae7 != null) {
@@ -2232,7 +2232,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          } else {
             this.var_ae7 = GameEngine.gameWorld.staticObjects;
             if (!GameEngine.loadMapData("/level_" + levelNames[var_259], this.var_ab7 == null)) {
-               CovertOps3D.sub_24();
+               CovertOps3D.exitApplication();
             }
 
             if (this.var_ab7 != null) {
@@ -2241,7 +2241,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
          }
 
-         sub_57c();
+         freeMemory();
          GameEngine.resetLevelState();
          boolean var1 = false;
          GameEngine.preloadTexture((byte)25);
@@ -2406,13 +2406,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             GameEngine.preloadTexture((byte)-72);
          }
 
-         sub_57c();
+         freeMemory();
          if (!GameEngine.loadGameAssets("/tx", 4, "/sp", 4)) {
-            CovertOps3D.sub_24();
+            CovertOps3D.exitApplication();
          }
 
          GameEngine.handleWeaponChange((byte)25);
-         sub_57c();
+         freeMemory();
       } catch (Exception var20) {
       } catch (OutOfMemoryError var21) {
       }
@@ -2567,7 +2567,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   }
                } else {
                   int[] var55;
-                  int var56 = (var55 = this.sub_647(var34))[1] * this.var_509 + var55[0];
+                  int var56 = (var55 = this.getFontCoordinates(var34))[1] * this.fontColumn + var55[0];
                   var37 = this.var_6a8[var56];
                   var38 = this.var_691[var56];
                   var39 = var55[1] * this.var_6d3;
@@ -2676,7 +2676,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                  var60 = this.var_75f;
                               } else {
                                  int[] var48;
-                                 int var49 = (var48 = this.sub_647(var47))[1] * this.var_509 + var48[0];
+                                 int var49 = (var48 = this.getFontCoordinates(var47))[1] * this.fontColumn + var48[0];
                                  int var50 = this.var_6a8[var49];
                                  int var51 = this.var_691[var49];
                                  int var52 = var48[1] * this.var_6d3;
@@ -2742,7 +2742,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                var10001 = this.var_75f;
             } else {
                int[] var17;
-               int var18 = (var17 = this.sub_647(var16))[1] * this.var_509 + var17[0];
+               int var18 = (var17 = this.getFontCoordinates(var16))[1] * this.fontColumn + var17[0];
                int var19 = this.var_6a8[var18];
                int var20 = this.var_691[var18];
                int var21 = var17[1] * this.var_6d3;
@@ -2775,7 +2775,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       this.sub_681(var5, var2, var3 - var6, var4);
    }
 
-   public static void sub_57c() {
+   public static void freeMemory() {
       System.gc();
    }
 
@@ -2814,8 +2814,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var10000 = var2;
             var10001 = this.var_75f;
          } else {
-            int[] var5 = this.sub_647(var4);
-            int var6 = this.var_6a8[var5[1] * this.var_509 + var5[0]];
+            int[] var5 = this.getFontCoordinates(var4);
+            int var6 = this.var_6a8[var5[1] * this.fontColumn + var5[0]];
             var10000 = var2;
             var10001 = var6 + 1;
          }
@@ -2898,31 +2898,31 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       return var2;
    }
 
-   private int[] sub_647(char var1) {
-      int[] var2 = new int[]{this.var_509 - 1, 2};
+   private int[] getFontCoordinates(char character) {
+      int[] coords = new int[]{this.fontColumn - 1, 2};
       int[] var10000;
       byte var10001;
       byte var10002;
-      if (var1 >= 'A' && var1 <= 'Z') {
-         var2[0] = var1 - 65;
-         var10000 = var2;
+      if (character >= 'A' && character <= 'Z') {
+         coords[0] = character - 65;
+         var10000 = coords;
          var10001 = 1;
          var10002 = 0;
-      } else if (var1 >= 'a' && var1 <= 'z') {
-         var2[0] = var1 - 97;
-         var10000 = var2;
+      } else if (character >= 'a' && character <= 'z') {
+         coords[0] = character - 97;
+         var10000 = coords;
          var10001 = 1;
          var10002 = 1;
-      } else if (var1 >= '0' && var1 <= '9') {
-         var2[0] = var1 - 48;
-         var10000 = var2;
+      } else if (character >= '0' && character <= '9') {
+         coords[0] = character - 48;
+         var10000 = coords;
          var10001 = 1;
          var10002 = 2;
       } else {
-         var2[1] = 2;
-         switch(var1) {
+         coords[1] = 2;
+         switch(character) {
          case '!':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 12;
             break;
@@ -2949,56 +2949,56 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          case '=':
          case '>':
          default:
-            return var2;
+            return coords;
          case '\'':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 18;
             break;
          case ',':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 11;
             break;
          case '-':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 17;
             break;
          case '.':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 10;
             break;
          case '/':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 16;
             break;
          case ':':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 14;
             break;
          case ';':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 15;
             break;
          case '?':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 13;
             break;
          case '@':
-            var10000 = var2;
+            var10000 = coords;
             var10001 = 0;
             var10002 = 19;
          }
       }
 
       var10000[var10001] = var10002;
-      return var2;
+      return coords;
    }
 
    private void sub_681(String var1, Graphics var2, int var3, int var4) {
@@ -3037,7 +3037,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var10001 = this.var_75f;
          } else {
             int[] var7;
-            int var8 = (var7 = this.sub_647(var6))[1] * this.var_509 + var7[0];
+            int var8 = (var7 = this.getFontCoordinates(var6))[1] * this.fontColumn + var7[0];
             int var9 = this.var_6a8[var8];
             int var10 = this.var_691[var8];
             int var11 = var7[1] * this.var_6d3;
@@ -3213,7 +3213,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public static void sub_882(int var0) {
       if (var_e38 != 0) {
          try {
-            CovertOps3D.var_ee.vibrate(var0);
+            CovertOps3D.display.vibrate(var0);
          } catch (Exception var1) {
          } catch (OutOfMemoryError var2) {
          }

@@ -86,7 +86,7 @@ public final class GameEngine {
    public static int var_119a;
 
    public static void initializeEngine() {
-      MainGameCanvas.sub_57c();
+      MainGameCanvas.freeMemory();
       initResourceArrays();
       player = new PhysicsBody(0, 1572864, 0, 65536);
       tempTransform = new Transform3D(0, 0, 0, 0);
@@ -125,7 +125,7 @@ public final class GameEngine {
       var_1103 = MathUtils.fixedPointMultiply(MathUtils.fixedPointDivide(65536, 15794176), 102943);
       var_1142 = MathUtils.fixedPointDivide(65536, 18874368);
       var_1171 = MathUtils.fixedPointDivide(65536, 411775);
-      MainGameCanvas.sub_57c();
+      MainGameCanvas.freeMemory();
    }
 
    public static void resetLevelState() {
