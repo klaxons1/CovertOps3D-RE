@@ -18,7 +18,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public static int var_295 = -1;
    public static int var_2a5;
    public static AudioManager audioManager;
-   private String[] var_2d7;
+   private String[] SETTINGS_MENU_ITEMS;
    private String[] var_313;
    private static final String[] var_341 = new String[]{"new game", "settings", "help", "about", "quit"};
    private static final String[] var_3a3 = new String[]{"resume", "new game", "settings", "help", "about", "quit"};
@@ -66,7 +66,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private int var_d88;
    private int var_d9b;
    public static byte soundEnabled = 1;
-   public static byte var_de2 = 1;
+   public static byte musicEnabled = 1;
    public static byte vibrationEnabled = 1;
    public static byte var_e8b = 0;
    public static byte[][] saveData;
@@ -260,7 +260,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          GameEngine.inputRun = true;
          return;
       case 12:
-         GameEngine.var_364 = true;
+         GameEngine.inputBack = true;
       }
    }
 
@@ -369,7 +369,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       sub_700();
       sub_81a();
       this.var_1ae = true;
-      int var2 = this.sub_230(var1, true);
+      int var2 = this.showMenuScreen(var1, true);
 
       label182:
       while(true) {
@@ -414,7 +414,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
          while(this.var_50) {
             try {
-               if ((GameEngine.inputRun || GameEngine.var_364 || this.var_b0) && (var2 = this.sub_230(var1, false)) != 32) {
+               if ((GameEngine.inputRun || GameEngine.inputBack || this.var_b0) && (var2 = this.showMenuScreen(var1, false)) != 32) {
                   break;
                }
 
@@ -427,7 +427,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         var_259 = 0;
                         sub_786(8);
                         if ((var2 = this.sub_44e(var1, 9)) == -1) {
-                           var2 = this.sub_230(var1, true);
+                           var2 = this.showMenuScreen(var1, true);
                         }
                         continue label182;
                      case 1:
@@ -461,7 +461,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                            if ((var2 = this.sub_29e(var1, 0)) == -2) {
                               this.sub_180(var1);
-                              var2 = this.sub_230(var1, true);
+                              var2 = this.showMenuScreen(var1, true);
                               continue label182;
                            }
 
@@ -493,7 +493,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                            if ((var2 = this.sub_29e(var1, 1)) == -2) {
                               this.sub_180(var1);
-                              var2 = this.sub_230(var1, true);
+                              var2 = this.showMenuScreen(var1, true);
                               continue label182;
                            }
 
@@ -550,7 +550,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      this.sub_47(var1);
                      this.flushScreemBuffer();
                      this.sub_180(var1);
-                     var2 = this.sub_230(var1, true);
+                     var2 = this.showMenuScreen(var1, true);
                      continue label182;
                   }
 
@@ -857,10 +857,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    }
 
-   private int sub_230(Graphics var1, boolean var2) {
+   private int showMenuScreen(Graphics var1, boolean var2) {
       try {
          GameEngine.inputRun = false;
-         GameEngine.var_364 = false;
+         GameEngine.inputBack = false;
          GameEngine.inputFire = false;
          GameEngine.inputForward = false;
          GameEngine.inputBackward = false;
@@ -876,7 +876,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var7 = 0;
          int var8 = var6.length - 2;
          this.sub_1e3(var1, var3);
-         if (var_de2 == 1 && !this.var_b0) {
+         if (musicEnabled == 1 && !this.var_b0) {
             playSound(0, true, 80, 2);
          }
 
@@ -925,7 +925,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                var1.fillTriangle(117, var16, 123, var16, 120, var16 + 3);
             }
 
-            String var22 = var6 == this.var_2d7 ? "change" : (var6 == var_421 ? "yes" : "select");
+            String var22 = var6 == this.SETTINGS_MENU_ITEMS ? "change" : (var6 == var_421 ? "yes" : "select");
             this.sub_681(var22, var1, 3, 320 - this.var_550 - 3);
             this.sub_681(var6[var12], var1, 240 - this.sub_5d2(var6[var12]) - 3, 320 - this.var_550 - 3);
             this.flushScreemBuffer();
@@ -949,22 +949,22 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   break;
                case 1:
                case 34:
-                  this.var_2d7 = new String[6];
-                  this.var_2d7[0] = "settings";
-                  this.var_2d7[1] = "";
-                  this.var_2d7[2] = "sound: " + (soundEnabled == 1 ? "on" : "off");
-                  this.var_2d7[3] = "music: " + (var_de2 == 1 ? "on" : "off");
-                  this.var_2d7[4] = "vibration: " + (vibrationEnabled == 1 ? "on" : "off");
-                  this.var_2d7[5] = "back";
+                  this.SETTINGS_MENU_ITEMS = new String[6];
+                  this.SETTINGS_MENU_ITEMS[0] = "settings";
+                  this.SETTINGS_MENU_ITEMS[1] = "";
+                  this.SETTINGS_MENU_ITEMS[2] = "sound: " + (soundEnabled == 1 ? "on" : "off");
+                  this.SETTINGS_MENU_ITEMS[3] = "music: " + (musicEnabled == 1 ? "on" : "off");
+                  this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (vibrationEnabled == 1 ? "on" : "off");
+                  this.SETTINGS_MENU_ITEMS[5] = "back";
                   (var23 = new Object[4])[0] = var6;
                   var23[1] = new Integer(var4);
                   var23[2] = new Integer(var7);
                   var23[3] = new Integer(var8);
                   var10.push(var23);
-                  var6 = this.var_2d7;
+                  var6 = this.SETTINGS_MENU_ITEMS;
                   var4 = 50;
                   var7 = 2;
-                  var8 = this.var_2d7.length - 2;
+                  var8 = this.SETTINGS_MENU_ITEMS.length - 2;
                   break;
                case 2:
                case 35:
@@ -1074,8 +1074,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   break;
                case 50:
                   soundEnabled = (byte)(soundEnabled ^ 1);
-                  this.var_2d7[2] = "sound: " + (soundEnabled == 1 ? "on" : "off");
-                  if (var_de2 != 1) {
+                  this.SETTINGS_MENU_ITEMS[2] = "sound: " + (soundEnabled == 1 ? "on" : "off");
+                  if (musicEnabled != 1) {
                      if (soundEnabled == 1) {
                         playSound(1, false, 80, 0);
                      } else {
@@ -1086,9 +1086,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   sub_830();
                   break;
                case 51:
-                  var_de2 = (byte)(var_de2 ^ 1);
-                  this.var_2d7[3] = "music: " + (var_de2 == 1 ? "on" : "off");
-                  if (var_de2 == 1) {
+                  musicEnabled = (byte)(musicEnabled ^ 1);
+                  this.SETTINGS_MENU_ITEMS[3] = "music: " + (musicEnabled == 1 ? "on" : "off");
+                  if (musicEnabled == 1) {
                      stopCurrentSound();
                      playSound(0, true, 80, 2);
                   } else {
@@ -1099,7 +1099,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   break;
                case 52:
                   vibrationEnabled = (byte)(vibrationEnabled ^ 1);
-                  this.var_2d7[4] = "vibration: " + (vibrationEnabled == 1 ? "on" : "off");
+                  this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (vibrationEnabled == 1 ? "on" : "off");
                   if (vibrationEnabled == 1) {
                      vibrateDevice(100);
                   }
@@ -1126,8 +1126,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
             }
 
-            if (GameEngine.var_364) {
-               GameEngine.var_364 = false;
+            if (GameEngine.inputBack) {
+               GameEngine.inputBack = false;
                if (var6[var6.length - 1] != "back" && var6[var6.length - 1] != "no") {
                   if (var6[var6.length - 1] == "quit") {
                      (var23 = new Object[4])[0] = var6;
@@ -1186,7 +1186,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    private void sub_24b(Graphics var1, Image var2, String var3, String[] var4, boolean var5) {
       GameEngine.inputRun = false;
-      GameEngine.var_364 = false;
+      GameEngine.inputBack = false;
       GameEngine.inputFire = false;
       GameEngine.inputForward = false;
       GameEngine.inputBackward = false;
@@ -1254,9 +1254,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             var7 = var5;
             yieldToOtherThreads();
-         } while(!GameEngine.var_364);
+         } while(!GameEngine.inputBack);
 
-         GameEngine.var_364 = false;
+         GameEngine.inputBack = false;
          var1.setClip(0, 0, 240, 320);
 
          for(int var22 = 8; var22 >= 1; --var22) {
@@ -1274,7 +1274,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
 
       GameEngine.inputRun = false;
-      GameEngine.var_364 = false;
+      GameEngine.inputBack = false;
       GameEngine.inputFire = false;
       GameEngine.inputForward = false;
       GameEngine.inputBackward = false;
@@ -1574,7 +1574,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             int var34;
-            if ((GameEngine.inputRun || GameEngine.var_364 || this.var_b0) && (var34 = this.sub_230(var1, false)) != 32) {
+            if ((GameEngine.inputRun || GameEngine.inputBack || this.var_b0) && (var34 = this.showMenuScreen(var1, false)) != 32) {
                return var34;
             }
 
@@ -1926,7 +1926,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    public final void sub_32d() {
       if (this.var_b0) {
-         if (audioManager != null && var_de2 == 1 && this.var_1ae) {
+         if (audioManager != null && musicEnabled == 1 && this.var_1ae) {
             playSound(0, true, 80, 2);
          }
 
@@ -2606,7 +2606,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   this.sub_681("resume", var1, 3, 320 - this.var_550 - 3);
                   this.flushScreemBuffer();
 
-                  while(!GameEngine.inputRun && !GameEngine.var_364 && !this.var_b0 && !GameEngine.inputFire) {
+                  while(!GameEngine.inputRun && !GameEngine.inputBack && !this.var_b0 && !GameEngine.inputFire) {
                      yieldToOtherThreads();
                   }
                }
@@ -2618,10 +2618,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   GameEngine.inputRun = false;
                }
 
-               if (GameEngine.var_364 || this.var_b0) {
+               if (GameEngine.inputBack || this.var_b0) {
                   GameEngine.inputRun = false;
-                  GameEngine.var_364 = false;
-                  if ((var37 = this.sub_230(var1, false)) != 32) {
+                  GameEngine.inputBack = false;
+                  if ((var37 = this.showMenuScreen(var1, false)) != 32) {
                      this.var_a63 = null;
                      return var37;
                   }
@@ -3165,7 +3165,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          if (var0.getNumRecords() > 0) {
             byte[] var5;
             soundEnabled = (var5 = var0.getRecord(1))[0];
-            var_de2 = var5[1];
+            musicEnabled = var5[1];
             vibrationEnabled = var5[2];
             var_e8b = var5[3];
          }
@@ -3182,7 +3182,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var1 = (var0 = RecordStore.openRecordStore("settings", true)).getNumRecords();
          byte[] var2;
          (var2 = new byte[16])[0] = soundEnabled;
-         var2[1] = var_de2;
+         var2[1] = musicEnabled;
          var2[2] = vibrationEnabled;
          var2[3] = var_e8b;
          if (var1 > 0) {

@@ -21,7 +21,7 @@ public final class GameEngine {
    public static boolean inputFire;
    public static boolean inputStrafe;
    public static boolean inputRun;
-   public static boolean var_364;
+   public static boolean inputBack;
    public static boolean var_3b8;
    public static boolean var_3e3;
    public static boolean var_446;
@@ -1121,7 +1121,7 @@ public final class GameEngine {
       inputFire = false;
       inputStrafe = false;
       inputRun = false;
-      var_364 = false;
+      inputBack = false;
       var_3e3 = false;
       var_446 = false;
       var_3b8 = false;
