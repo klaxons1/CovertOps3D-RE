@@ -40,7 +40,7 @@ public final class GameEngine {
    private static int var_7ba;
    private static int var_817;
    public static int[] screenBuffer;
-   private static Texture var_894;
+   private static Texture defaultErrorTexture;
    private static Texture var_8f4;
    private static short[] depthBuffer;
    private static int var_958;
@@ -87,7 +87,7 @@ public final class GameEngine {
 
    public static void initializeEngine() {
       MainGameCanvas.sub_57c();
-      sub_5f4();
+      initResourceArrays();
       player = new PhysicsBody(0, 1572864, 0, 65536);
       tempTransform = new Transform3D(0, 0, 0, 0);
       floorClipHistory = new Vector();
@@ -97,14 +97,14 @@ public final class GameEngine {
       var_118d = new GameObject[64];
       var_119a = 0;
       BSPNode.visibleSectorsCount = 0;
-      var_894 = new Texture((byte)0, 8, 8, 0, 0, new int[]{16777215, 16711680});
+      defaultErrorTexture = new Texture((byte)0, 8, 8, 0, 0, new int[]{16777215, 16711680});
       byte[] var0 = new byte[]{17, 17, 17, 17, 17, 17, 17, 17};
       byte[] var1 = new byte[]{17, 16, 16, 16, 16, 17, 16, 17};
       byte[] var2 = new byte[]{17, 1, 1, 1, 1, 17, 1, 17};
-      var_894.setPixelData(0, var0);
-      var_894.setPixelData(2, var1);
-      var_894.setPixelData(4, var2);
-      var_894.setPixelData(6, var0);
+      defaultErrorTexture.setPixelData(0, var0);
+      defaultErrorTexture.setPixelData(2, var1);
+      defaultErrorTexture.setPixelData(4, var2);
+      defaultErrorTexture.setPixelData(6, var0);
       screenBuffer = new int[69120];
       depthBuffer = new short[288];
       var_a80 = new RenderUtils();
@@ -158,10 +158,10 @@ public final class GameEngine {
 
    private static Texture sub_f6(byte var0) {
       if (var0 == 0) {
-         return var_894;
+         return defaultErrorTexture;
       } else {
          Texture var1;
-         return (var1 = textureTable[var0 + 128]) != null && var1.width > 0 ? var1 : var_894;
+         return (var1 = textureTable[var0 + 128]) != null && var1.width > 0 ? var1 : defaultErrorTexture;
       }
    }
 
@@ -283,11 +283,11 @@ public final class GameEngine {
          Texture var29 = sub_f6(var2.upperTextureId);
          Texture var30 = sub_f6(var2.lowerTextureId);
          if (var10.floorTextureId == 51) {
-            var29 = var_894;
+            var29 = defaultErrorTexture;
          }
 
          if (var10.ceilingTextureId == 51) {
-            var30 = var_894;
+            var30 = defaultErrorTexture;
          }
 
          int var31 = var2.textureOffsetY & '\uffff';
@@ -406,12 +406,12 @@ public final class GameEngine {
          if ((var11 = var_118d[var10]).projectToScreen()) {
             if (var11.texture2 != null) {
                var11.calculateSpriteSize2();
-               sub_410(var11.texture2, var8.getLightLevel(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth2, var11.spriteHeight2);
+               drawSprite(var11.texture2, var8.getLightLevel(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth2, var11.spriteHeight2);
             }
 
             if (var11.texture1 != null) {
                var11.calculateSpriteSize1();
-               sub_410(var11.texture1, var8.getLightLevel(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth1, var11.spriteHeight1);
+               drawSprite(var11.texture1, var8.getLightLevel(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth1, var11.spriteHeight1);
             }
          }
       }
@@ -1133,7 +1133,7 @@ public final class GameEngine {
       var_8f4 = var0;
    }
 
-   private static void sub_410(Texture var0, int var1, int var2, int var3, int var4, int var5, int var6) {
+   private static void drawSprite(Texture var0, int var1, int var2, int var3, int var4, int var5, int var6) {
       int var10000;
       label68: {
          if (var0.horizontalOffset > 0) {
@@ -1302,7 +1302,7 @@ public final class GameEngine {
                         sub_4be(var42, var52, var61, var24);
                      }
 
-                     if (var62 <= var28[var52] || var1 == var_894) {
+                     if (var62 <= var28[var52] || var1 == defaultErrorTexture) {
                         break label105;
                      }
 
@@ -1337,7 +1337,7 @@ public final class GameEngine {
                      sub_477(var42, var52, var64 + 1, var25);
                   }
 
-                  if (var63 < var29[var52] && var2 != var_894) {
+                  if (var63 < var29[var52] && var2 != defaultErrorTexture) {
                      var29[var52] = (short)var63;
                   }
                }
@@ -1759,13 +1759,13 @@ public final class GameEngine {
       }
    }
 
-   private static void sub_5f4() {
+   private static void initResourceArrays() {
       spriteTable = new Sprite[128];
       textureTable = new Texture[256];
       paletteCache = new Hashtable();
    }
 
-   private static void sub_60e() {
+   private static void unloadAllResources() {
       gameWorld = null;
       resourceLoadState = 0;
 
@@ -1782,7 +1782,7 @@ public final class GameEngine {
    }
 
    public static boolean loadMapData(String var0, boolean var1) {
-      sub_60e();
+      unloadAllResources();
 
       try {
          InputStream var3 = (new Object()).getClass().getResourceAsStream(var0);
@@ -1871,21 +1871,21 @@ public final class GameEngine {
          for(int var30 = 0; var30 < var28.length; ++var30) {
             var31 = readShortLE(var4);
             var33 = readShortLE(var4);
-            byte var36 = sub_65b(var4.readByte());
-            var38 = sub_65b(var4.readByte());
-            var16 = sub_65b(var4.readByte());
+            byte var36 = remapLegacyTextureId(var4.readByte());
+            var38 = remapLegacyTextureId(var4.readByte());
+            var16 = remapLegacyTextureId(var4.readByte());
             byte var17 = var4.readByte();
             var28[var30] = new WallSurface(var36, var16, var38, var17, var31, var33);
             if (var36 != 0) {
-               sub_80f(var36);
+               preloadTexture(var36);
             }
 
             if (var38 != 0) {
-               sub_80f(var38);
+               preloadTexture(var38);
             }
 
             if (var16 != 0) {
-               sub_80f(var16);
+               preloadTexture(var16);
             }
          }
 
@@ -1965,18 +1965,18 @@ public final class GameEngine {
 
             var33 = readShortLE(var4);
             var14 = readShortLE(var4);
-            var38 = sub_65b(var4.readByte());
-            var16 = sub_65b(var4.readByte());
+            var38 = remapLegacyTextureId(var4.readByte());
+            var16 = remapLegacyTextureId(var4.readByte());
             var44 = readShortLE(var4);
             var18 = readShortLE(var4);
             short var19 = readShortLE(var4);
             var32[var31] = new SectorData(var31, var33, var14, var38, var16, (short)(var44 >> 4 & 15), var18, var19);
             if (var38 != 0) {
-               sub_855(var38);
+               preloadSprite(var38);
             }
 
             if (var16 != 0) {
-               sub_855(var16);
+               preloadSprite(var16);
             }
 
             var42 = (short)(var31 + 1);
@@ -1996,7 +1996,7 @@ public final class GameEngine {
       return true;
    }
 
-   private static byte sub_65b(byte var0) {
+   private static byte remapLegacyTextureId(byte var0) {
       byte var10000;
       switch(var0) {
       case 6:
@@ -2056,11 +2056,11 @@ public final class GameEngine {
          var10000 = 49;
       }
 
-      sub_80f(var10000);
+      preloadTexture(var10000);
       return var0;
    }
 
-   public static boolean sub_691(String var0, int var1, String var2, int var3) {
+   public static boolean loadGameAssets(String var0, int var1, String var2, int var3) {
       if (resourceLoadState < 1) {
          throw new IllegalStateException();
       } else if (resourceLoadState > 1) {
@@ -2115,7 +2115,7 @@ public final class GameEngine {
                            ++var47;
                         }
 
-                        if (sub_8bc(var15)) {
+                        if (isTextureRegistered(var15)) {
                            Texture var48 = new Texture(var15, var12, var13, var17, var18);
                            byte[] var49 = new byte[var47];
                            var8.readFully(var49, 0, var47);
@@ -2285,7 +2285,7 @@ public final class GameEngine {
                      ++var20;
                   }
 
-                  if (sub_887(var15)) {
+                  if (isSpriteRegistered(var15)) {
                      if (var12 != 64 || var12 != 64) {
                         throw new IllegalStateException();
                      }
@@ -2296,7 +2296,7 @@ public final class GameEngine {
                      decompressSprite(var21, 0, var22, 0, var12 * var13, var18);
                      spriteTable[var15] = new Sprite(var15, var22);
                      var5.put(new Byte(var15), new Integer(var4 + var17));
-                  } else if (sub_8bc(var15)) {
+                  } else if (isTextureRegistered(var15)) {
                      Texture var46 = new Texture(var15, var12, var13, 0, 0);
                      byte[] var23 = new byte[var20];
                      var8.readFully(var23, 0, var20);
@@ -2374,23 +2374,23 @@ public final class GameEngine {
 
    }
 
-   public static void sub_80f(byte var0) {
-      if (!sub_8bc(var0)) {
+   public static void preloadTexture(byte var0) {
+      if (!isTextureRegistered(var0)) {
          textureTable[var0 + 128] = new Texture(var0, 0, 0, 0, 0);
       }
 
    }
 
-   private static void sub_855(byte var0) {
+   private static void preloadSprite(byte var0) {
       if (var0 != 51) {
-         if (!sub_887(var0)) {
+         if (!isSpriteRegistered(var0)) {
             spriteTable[var0] = new Sprite(var0);
          }
 
       }
    }
 
-   private static boolean sub_887(int var0) {
+   private static boolean isSpriteRegistered(int var0) {
       if (var0 >= 0 && var0 < 128) {
          return spriteTable[var0] != null;
       } else {
@@ -2398,7 +2398,7 @@ public final class GameEngine {
       }
    }
 
-   private static boolean sub_8bc(int var0) {
+   private static boolean isTextureRegistered(int var0) {
       var0 += 128;
       if (var0 >= 0 && var0 < 256) {
          return textureTable[var0] != null;

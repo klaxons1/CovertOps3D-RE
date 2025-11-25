@@ -2185,11 +2185,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          byte var5 = var2[var3];
          var0.addSpriteFrame(var4, var5);
          if (var4 != 0) {
-            GameEngine.sub_80f(var4);
+            GameEngine.preloadTexture(var4);
          }
 
          if (var5 != 0) {
-            GameEngine.sub_80f(var5);
+            GameEngine.preloadTexture(var5);
          }
       }
 
@@ -2244,7 +2244,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          sub_57c();
          GameEngine.resetLevelState();
          boolean var1 = false;
-         GameEngine.sub_80f((byte)25);
+         GameEngine.preloadTexture((byte)25);
          byte[] var2 = new byte[]{-23, -25, -28, -30, -32, 0, 0};
          byte[] var3 = new byte[]{-24, -26, -29, -31, -33, -34, -27};
          byte[] var4 = new byte[]{-35, -36, -38, -39, -40, 0, 0};
@@ -2391,23 +2391,23 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var10000 = -48;
                }
 
-               GameEngine.sub_80f(var10000);
+               GameEngine.preloadTexture(var10000);
             }
          }
 
-         GameEngine.sub_80f((byte)-44);
-         GameEngine.sub_80f((byte)-45);
-         GameEngine.sub_80f((byte)-46);
-         GameEngine.sub_80f((byte)-47);
-         GameEngine.sub_80f((byte)-71);
-         GameEngine.sub_80f((byte)-51);
-         GameEngine.sub_80f((byte)-43);
+         GameEngine.preloadTexture((byte)-44);
+         GameEngine.preloadTexture((byte)-45);
+         GameEngine.preloadTexture((byte)-46);
+         GameEngine.preloadTexture((byte)-47);
+         GameEngine.preloadTexture((byte)-71);
+         GameEngine.preloadTexture((byte)-51);
+         GameEngine.preloadTexture((byte)-43);
          if (var_259 == 10) {
-            GameEngine.sub_80f((byte)-72);
+            GameEngine.preloadTexture((byte)-72);
          }
 
          sub_57c();
-         if (!GameEngine.sub_691("/tx", 4, "/sp", 4)) {
+         if (!GameEngine.loadGameAssets("/tx", 4, "/sp", 4)) {
             CovertOps3D.sub_24();
          }
 
