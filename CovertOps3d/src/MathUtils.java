@@ -17,7 +17,7 @@ public final class MathUtils {
 
         for(int angleIndex = 0; angleIndex < 1609; ++angleIndex) {
             // Convert index to angle in fixed-point and compute sine
-            int angle = (angleIndex << 16) + '耀';  // '耀' character used as fixed-point constant
+            int angle = (angleIndex << 16) + 32768;
             sinTable[angleIndex] = normalizeAngle(fixedPointMultiply(angle, 102943) / 1609);
         }
 
@@ -26,7 +26,7 @@ public final class MathUtils {
 
         for(int tableIndex = 0; tableIndex < 1024; ++tableIndex) {
             // Compute values for fast inverse square root approximation
-            int value = (tableIndex << 16) + '耀';  // Fixed-point input value
+            int value = (tableIndex << 16) + 32768;  
             invSqrtTable[tableIndex] = fixedPointDivide(65536, normalizeAngle(fastAtan(value / 1024)));
         }
     }
