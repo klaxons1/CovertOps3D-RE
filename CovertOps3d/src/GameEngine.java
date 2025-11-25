@@ -419,7 +419,7 @@ public final class GameEngine {
    }
 
    private static void renderWorld(int var0, int var1, int var2, int var3) {
-      gameWorld.sub_4e6();
+      gameWorld.toggleProjectileSprites();
       Point2D[] var4 = gameWorld.transformVertices(var0, var2, var3);
       gameWorld.updateWorld();
       BSPNode.visibleSectorsCount = 0;
@@ -596,7 +596,7 @@ public final class GameEngine {
          Point2D[] var8;
          Point2D var9 = (var8 = gameWorld.vertices)[var_e96.startVertexId & '\uffff'];
          Point2D var10 = var8[var_e96.endVertexId & '\uffff'];
-         if (GameWorld.sub_365(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
+         if (GameWorld.doLineSegmentsIntersect(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
             var10000 = var_e72 + 1;
          } else {
             var_e96 = null;
@@ -650,7 +650,7 @@ public final class GameEngine {
             if ((var12 = (var11 = var30[var35]).getWallType()) == 1 || var12 == 11 || var12 == 26 || var12 == 28 || var12 == 51 || var12 == 62) {
                Point2D var13 = var32[var11.startVertexId & '\uffff'];
                Point2D var14 = var32[var11.endVertexId & '\uffff'];
-               if (GameWorld.sub_365(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
+               if (GameWorld.doLineSegmentsIntersect(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
                   if ((MainGameCanvas.var_e8b & 1) == 0) {
                      MainGameCanvas.var_e8b = (byte)(MainGameCanvas.var_e8b | 1);
                   }

@@ -332,7 +332,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
          if (mapEnabled) {
             var1.setClip(0, 0, 240, 288);
-            GameEngine.gameWorld.drawDebugInfo(var1);
+            GameEngine.gameWorld.drawMapOnScreen(var1);
             var1.setClip(0, 0, 240, 320);
          }
 
