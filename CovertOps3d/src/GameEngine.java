@@ -77,7 +77,7 @@ public final class GameEngine {
    private static int var_f88 = 0;
    public static boolean levelComplete = false;
    public static int var_1044 = 0;
-   public static boolean var_10a4 = false;
+   public static boolean gunFireLighting = false;
    public static int var_10bb;
    public static int var_1103;
    public static int var_1142;
@@ -429,7 +429,7 @@ public final class GameEngine {
       int var7 = var3 << 1;
       int var8 = MathUtils.fastSin(var3);
       int var9 = MathUtils.fastCos(var3);
-      var_10a4 = MainGameCanvas.var_98c == 1 && currentWeapon != 0;
+      gunFireLighting = MainGameCanvas.var_98c == 1 && currentWeapon != 0;
       var_a80.resetRenderer();
       Sector.resetClipArrays();
 
@@ -902,10 +902,10 @@ public final class GameEngine {
                         }
 
                         if (var5 == 3001) {
-                           MainGameCanvas.sub_84e(4, false, 100, 1);
+                           MainGameCanvas.playSound(4, false, 100, 1);
                            gameWorld.shootProjectile(var29, var33);
                         } else if (var5 == 3002) {
-                           MainGameCanvas.sub_84e(5, false, 80, 1);
+                           MainGameCanvas.playSound(5, false, 80, 1);
                            gameWorld.shootSpreadWeapon(var29, var33);
                         } else {
                            label320: {
@@ -913,19 +913,19 @@ public final class GameEngine {
                               int[] var48;
                               switch(var5) {
                               case 3003:
-                                 MainGameCanvas.sub_84e(2, false, 80, 0);
+                                 MainGameCanvas.playSound(2, false, 80, 0);
                                  var48 = MainGameCanvas.enemyDamageEasy;
                                  break;
                               case 3004:
-                                 MainGameCanvas.sub_84e(2, false, 80, 0);
+                                 MainGameCanvas.playSound(2, false, 80, 0);
                                  var48 = MainGameCanvas.enemyDamageNormal;
                                  break;
                               case 3005:
-                                 MainGameCanvas.sub_84e(2, false, 80, 0);
+                                 MainGameCanvas.playSound(2, false, 80, 0);
                                  var48 = MainGameCanvas.enemyDamageHard;
                                  break;
                               case 3006:
-                                 MainGameCanvas.sub_84e(3, false, 80, 0);
+                                 MainGameCanvas.playSound(3, false, 80, 0);
                                  var48 = MainGameCanvas.var_12d2;
                                  break;
                               default:
@@ -936,7 +936,7 @@ public final class GameEngine {
                            }
 
                            if (var31 > 0) {
-                              MainGameCanvas.sub_882(var31 * 10);
+                              MainGameCanvas.vibrateDevice(var31 * 10);
                            }
 
                            if (applyDamage(var31)) {
@@ -1047,7 +1047,7 @@ public final class GameEngine {
          }
 
          if (currentSector.getSectorType() == 555) {
-            MainGameCanvas.sub_882(10);
+            MainGameCanvas.vibrateDevice(10);
             if (applyDamage(1)) {
                return true;
             }
@@ -1186,7 +1186,7 @@ public final class GameEngine {
             var14 = (var13 = (var8 - 0) * var12) >>> 16;
             var16 = var4 >> 22;
             byte var21;
-            if ((var16 = var_10a4 && var16 < 3 ? var1 + (4 >> var16) : var1 - var16) < 0) {
+            if ((var16 = gunFireLighting && var16 < 3 ? var1 + (4 >> var16) : var1 - var16) < 0) {
                var21 = 0;
             } else {
                if (var16 <= 15) {
@@ -1263,7 +1263,7 @@ public final class GameEngine {
                   var59 = (int)(var55 / (var57 >> 16));
                   var60 = (int)((long)var8 - var48 * (long)var59 >> 22);
                   byte var10000;
-                  if ((var60 = var_10a4 && var60 < 3 ? var45 + (4 >> var60) : var45 - var60) < 0) {
+                  if ((var60 = gunFireLighting && var60 < 3 ? var45 + (4 >> var60) : var45 - var60) < 0) {
                      var10000 = 0;
                   } else {
                      if (var60 <= 15) {
@@ -1384,7 +1384,7 @@ public final class GameEngine {
          int var13 = (var12 = var2 - 144) < 0 ? -var_acc[-var12] : var_acc[var12];
          var15 = (var14 = var9 * var13 >> 8) >> 14;
          byte var10000;
-         if ((var15 = var_10a4 && var15 < 3 ? var5 + (4 >> var15) : var5 - var15) < 0) {
+         if ((var15 = gunFireLighting && var15 < 3 ? var5 + (4 >> var15) : var5 - var15) < 0) {
             var10000 = 0;
          } else {
             if (var15 <= 15) {

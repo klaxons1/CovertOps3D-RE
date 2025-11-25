@@ -51,7 +51,7 @@ public final class AudioManager {
          Player var5;
          if (this.currentSoundIndex > -1 && (var5 = (var4 = (SoundPlayer)this.soundPlayers.elementAt(this.currentSoundIndex)).player) != null) {
             SoundPlayer var6;
-            SoundPlayer.sub_3e(var6 = (SoundPlayer)this.soundPlayers.elementAt(var1), var3);
+            SoundPlayer.setSoundId(var6 = (SoundPlayer)this.soundPlayers.elementAt(var1), var3);
             if (var5.getState() == 400) {
                if (var4.soundId > var6.soundId) {
                   return;

@@ -17,7 +17,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public static int var_259 = 0;
    public static int var_295 = -1;
    public static int var_2a5;
-   public static AudioManager var_2cb;
+   public static AudioManager audioManager;
    private String[] var_2d7;
    private String[] var_313;
    private static final String[] var_341 = new String[]{"new game", "settings", "help", "about", "quit"};
@@ -65,9 +65,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private int var_d2a;
    private int var_d88;
    private int var_d9b;
-   public static byte var_dad = 1;
+   public static byte soundEnabled = 1;
    public static byte var_de2 = 1;
-   public static byte var_e38 = 1;
+   public static byte vibrationEnabled = 1;
    public static byte var_e8b = 0;
    public static byte[][] saveData;
    public static boolean mapEnabled = false;
@@ -351,17 +351,17 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public void run() {
-      var_2cb = new AudioManager();
-      var_2cb.loadSound("/0.mid");
-      var_2cb.loadSound("/1.amr");
-      var_2cb.loadSound("/2.amr");
-      var_2cb.loadSound("/3.amr");
-      var_2cb.loadSound("/4.amr");
-      var_2cb.loadSound("/5.amr");
-      var_2cb.loadSound("/6.amr");
-      var_2cb.loadSound("/7.amr");
-      var_2cb.loadSound("/8.amr");
-      var_2cb.loadSound("/9.amr");
+      audioManager = new AudioManager();
+      audioManager.loadSound("/0.mid");
+      audioManager.loadSound("/1.amr");
+      audioManager.loadSound("/2.amr");
+      audioManager.loadSound("/3.amr");
+      audioManager.loadSound("/4.amr");
+      audioManager.loadSound("/5.amr");
+      audioManager.loadSound("/6.amr");
+      audioManager.loadSound("/7.amr");
+      audioManager.loadSound("/8.amr");
+      audioManager.loadSound("/9.amr");
       Graphics var1;
       (var1 = this.getGraphics()).setClip(0, 0, 240, 320);
       this.sub_175(var1);
@@ -548,7 +548,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   if (this.sub_393()) {
                      GameEngine.damageFlash = false;
                      this.sub_47(var1);
-                     this.sub_8c1();
+                     this.flushScreemBuffer();
                      this.sub_180(var1);
                      var2 = this.sub_230(var1, true);
                      continue label182;
@@ -562,8 +562,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   this.sub_2e3(var1, GameEngine.messageText);
                }
 
-               this.sub_8c1();
-               sub_922();
+               this.flushScreemBuffer();
+               yieldToOtherThreads();
             } catch (Exception var5) {
             } catch (OutOfMemoryError var6) {
             }
@@ -706,7 +706,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var7 = (320 - var2.getHeight()) / 2;
          var1.setColor(16777215);
          var1.drawRect(0, 0, 240, 320);
-         this.sub_8c1();
+         this.flushScreemBuffer();
          long var8 = System.currentTimeMillis();
 
          while(true) {
@@ -732,8 +732,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   sub_159(var5, 0, var4);
                   var1.drawImage(var3, 0, 0, 20);
                   var1.drawRGB(var5, 0, var3.getWidth(), 0, 0, var3.getWidth(), var3.getHeight(), true);
-                  this.sub_8c1();
-                  sub_922();
+                  this.flushScreemBuffer();
+                  yieldToOtherThreads();
                }
             }
 
@@ -741,8 +741,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             sub_159(var5, 0, var4);
             var1.drawImage(var2, var6, var7, 20);
             var1.drawRGB(var5, 0, var2.getWidth(), var6, var7, var2.getWidth(), var2.getHeight(), true);
-            this.sub_8c1();
-            sub_922();
+            this.flushScreemBuffer();
+            yieldToOtherThreads();
          }
       } catch (Exception var12) {
       } catch (OutOfMemoryError var13) {
@@ -758,7 +758,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
          String var3 = "mission failed|game over";
          this.sub_2e3(var1, "mission failed|game over");
-         this.sub_8c1();
+         this.flushScreemBuffer();
          sub_4ef(2000);
          long var4 = System.currentTimeMillis();
 
@@ -780,8 +780,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.sub_2e3(var1, var3);
-            this.sub_8c1();
-            sub_922();
+            this.flushScreemBuffer();
+            yieldToOtherThreads();
          }
       } catch (Exception var8) {
          return;
@@ -852,7 +852,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             ++var8;
          }
 
-         this.sub_8c1();
+         this.flushScreemBuffer();
       } while(var4 <= 320);
 
    }
@@ -877,7 +877,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var8 = var6.length - 2;
          this.sub_1e3(var1, var3);
          if (var_de2 == 1 && !this.var_b0) {
-            sub_84e(0, true, 80, 2);
+            playSound(0, true, 80, 2);
          }
 
          Stack var10 = new Stack();
@@ -928,8 +928,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             String var22 = var6 == this.var_2d7 ? "change" : (var6 == var_421 ? "yes" : "select");
             this.sub_681(var22, var1, 3, 320 - this.var_550 - 3);
             this.sub_681(var6[var12], var1, 240 - this.sub_5d2(var6[var12]) - 3, 320 - this.var_550 - 3);
-            this.sub_8c1();
-            sub_922();
+            this.flushScreemBuffer();
+            yieldToOtherThreads();
             Object[] var23 = new Object[0];
             if (GameEngine.inputRun || GameEngine.inputFire) {
                GameEngine.inputRun = false;
@@ -952,9 +952,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   this.var_2d7 = new String[6];
                   this.var_2d7[0] = "settings";
                   this.var_2d7[1] = "";
-                  this.var_2d7[2] = "sound: " + (var_dad == 1 ? "on" : "off");
+                  this.var_2d7[2] = "sound: " + (soundEnabled == 1 ? "on" : "off");
                   this.var_2d7[3] = "music: " + (var_de2 == 1 ? "on" : "off");
-                  this.var_2d7[4] = "vibration: " + (var_e38 == 1 ? "on" : "off");
+                  this.var_2d7[4] = "vibration: " + (vibrationEnabled == 1 ? "on" : "off");
                   this.var_2d7[5] = "back";
                   (var23 = new Object[4])[0] = var6;
                   var23[1] = new Integer(var4);
@@ -1032,7 +1032,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                case 78:
                case 79:
                default:
-                  sub_85b();
+                  stopCurrentSound();
                   return var4;
                case 18:
                case 19:
@@ -1073,13 +1073,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var4 = 66;
                   break;
                case 50:
-                  var_dad = (byte)(var_dad ^ 1);
-                  this.var_2d7[2] = "sound: " + (var_dad == 1 ? "on" : "off");
+                  soundEnabled = (byte)(soundEnabled ^ 1);
+                  this.var_2d7[2] = "sound: " + (soundEnabled == 1 ? "on" : "off");
                   if (var_de2 != 1) {
-                     if (var_dad == 1) {
-                        sub_84e(1, false, 80, 0);
+                     if (soundEnabled == 1) {
+                        playSound(1, false, 80, 0);
                      } else {
-                        sub_85b();
+                        stopCurrentSound();
                      }
                   }
 
@@ -1089,19 +1089,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var_de2 = (byte)(var_de2 ^ 1);
                   this.var_2d7[3] = "music: " + (var_de2 == 1 ? "on" : "off");
                   if (var_de2 == 1) {
-                     sub_85b();
-                     sub_84e(0, true, 80, 2);
+                     stopCurrentSound();
+                     playSound(0, true, 80, 2);
                   } else {
-                     sub_85b();
+                     stopCurrentSound();
                   }
 
                   sub_830();
                   break;
                case 52:
-                  var_e38 = (byte)(var_e38 ^ 1);
-                  this.var_2d7[4] = "vibration: " + (var_e38 == 1 ? "on" : "off");
-                  if (var_e38 == 1) {
-                     sub_882(100);
+                  vibrationEnabled = (byte)(vibrationEnabled ^ 1);
+                  this.var_2d7[4] = "vibration: " + (vibrationEnabled == 1 ? "on" : "off");
+                  if (vibrationEnabled == 1) {
+                     vibrateDevice(100);
                   }
 
                   sub_830();
@@ -1116,12 +1116,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                case 73:
                case 74:
                   if (!this.var_313[var4 - 64].equals("unavailable")) {
-                     sub_85b();
+                     stopCurrentSound();
                      return var4;
                   }
                   break;
                case 80:
-                  sub_85b();
+                  stopCurrentSound();
                   return 4;
                }
             }
@@ -1176,10 +1176,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
          }
       } catch (Exception var19) {
-         sub_85b();
+         stopCurrentSound();
          return 4;
       } catch (OutOfMemoryError var20) {
-         sub_85b();
+         stopCurrentSound();
          return 4;
       }
    }
@@ -1203,8 +1203,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawImage(var2, 0, 0, 20);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-            this.sub_8c1();
-            sub_922();
+            this.flushScreemBuffer();
+            yieldToOtherThreads();
             sub_4ef(50);
          }
 
@@ -1249,11 +1249,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var14 += this.var_6d3 + 2;
                }
 
-               this.sub_8c1();
+               this.flushScreemBuffer();
             }
 
             var7 = var5;
-            sub_922();
+            yieldToOtherThreads();
          } while(!GameEngine.var_364);
 
          GameEngine.var_364 = false;
@@ -1265,8 +1265,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawImage(var2, 0, 0, 20);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-            this.sub_8c1();
-            sub_922();
+            this.flushScreemBuffer();
+            yieldToOtherThreads();
             sub_4ef(50);
          }
       } catch (Exception var19) {
@@ -1625,8 +1625,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var10002 = 60;
                }
 
-               sub_84e(var10000, var10001, var10002, 0);
-               sub_882(var36 * 10);
+               playSound(var10000, var10001, var10002, 0);
+               vibrateDevice(var36 * 10);
                if (GameEngine.applyDamage(var36)) {
                   var21 = true;
                } else {
@@ -1815,7 +1815,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      int var57 = var47 - var52;
                      int var58 = var48 - var53;
                      if (var65 = var2 == 0 && var54 == 0 ? true : var24[var51][var55 * var58 + var57] != 16711935) {
-                        sub_84e(7, false, 100, 1);
+                        playSound(7, false, 100, 1);
                         var26[var51] = 0;
                         var49 = 16711680;
                         break;
@@ -1824,7 +1824,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
 
                if (!var65) {
-                  sub_84e((GameEngine.var_ea3.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
+                  playSound((GameEngine.var_ea3.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                }
 
                GameEngine.screenBuffer[240 * var48 + var47] = var49;
@@ -1836,12 +1836,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawImage(this.statusBarImage, 0, 288, 0);
             this.sub_547(GameEngine.playerHealth, var1, 58, 294);
             this.sub_547(GameEngine.playerArmor, var1, 138, 294);
-            this.sub_8c1();
+            this.flushScreemBuffer();
             if (var21) {
                return -2;
             }
 
-            sub_922();
+            yieldToOtherThreads();
          }
       } catch (Exception var59) {
       } catch (OutOfMemoryError var60) {
@@ -1917,8 +1917,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public final void sub_308() {
       if (!this.var_b0) {
          this.var_b0 = true;
-         if (var_2cb != null) {
-            var_2cb.stopCurrentSound();
+         if (audioManager != null) {
+            audioManager.stopCurrentSound();
          }
 
       }
@@ -1926,8 +1926,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    public final void sub_32d() {
       if (this.var_b0) {
-         if (var_2cb != null && var_de2 == 1 && this.var_1ae) {
-            sub_84e(0, true, 80, 2);
+         if (audioManager != null && var_de2 == 1 && this.var_1ae) {
+            playSound(0, true, 80, 2);
          }
 
          this.var_b0 = false;
@@ -2427,7 +2427,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
       var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
       this.sub_681(var2, var1, var3, var4);
-      this.sub_8c1();
+      this.flushScreemBuffer();
    }
 
    private int sub_44e(Graphics var1, int var2) {
@@ -2587,7 +2587,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var31 += var37 + 1;
                }
 
-               this.sub_8c1();
+               this.flushScreemBuffer();
                sub_4ef(var34 == ',' ? 300 : (var34 != '.' && var34 != '?' && var34 != '!' ? 50 : 400));
                long var57 = System.currentTimeMillis();
 
@@ -2604,17 +2604,17 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   GameEngine.inputRun = false;
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("pause"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
                   this.sub_681("resume", var1, 3, 320 - this.var_550 - 3);
-                  this.sub_8c1();
+                  this.flushScreemBuffer();
 
                   while(!GameEngine.inputRun && !GameEngine.var_364 && !this.var_b0 && !GameEngine.inputFire) {
-                     sub_922();
+                     yieldToOtherThreads();
                   }
                }
 
                if (GameEngine.inputRun) {
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("resume"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
                   this.sub_681("pause", var1, 3, 320 - this.var_550 - 3);
-                  this.sub_8c1();
+                  this.flushScreemBuffer();
                   GameEngine.inputRun = false;
                }
 
@@ -2693,7 +2693,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      }
                   }
 
-                  this.sub_8c1();
+                  this.flushScreemBuffer();
                }
 
                if (GameEngine.inputFire) {
@@ -2702,7 +2702,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   return -1;
                }
 
-               sub_922();
+               yieldToOtherThreads();
             }
 
             var18[var28] = 0;
@@ -2764,7 +2764,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       long var1 = System.currentTimeMillis();
 
       do {
-         sub_922();
+         yieldToOtherThreads();
       } while(System.currentTimeMillis() - var1 < (long)var0);
 
    }
@@ -3164,9 +3164,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          Object var1 = null;
          if (var0.getNumRecords() > 0) {
             byte[] var5;
-            var_dad = (var5 = var0.getRecord(1))[0];
+            soundEnabled = (var5 = var0.getRecord(1))[0];
             var_de2 = var5[1];
-            var_e38 = var5[2];
+            vibrationEnabled = var5[2];
             var_e8b = var5[3];
          }
 
@@ -3181,9 +3181,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          RecordStore var0;
          int var1 = (var0 = RecordStore.openRecordStore("settings", true)).getNumRecords();
          byte[] var2;
-         (var2 = new byte[16])[0] = var_dad;
+         (var2 = new byte[16])[0] = soundEnabled;
          var2[1] = var_de2;
-         var2[2] = var_e38;
+         var2[2] = vibrationEnabled;
          var2[3] = var_e8b;
          if (var1 > 0) {
             var0.setRecord(1, var2, 0, 16);
@@ -3197,21 +3197,21 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   public static void sub_84e(int var0, boolean var1, int var2, int var3) {
+   public static void playSound(int var0, boolean var1, int var2, int var3) {
       boolean var4;
-      if (!(var4 = var0 > 0) || var_dad != 0) {
+      if (!(var4 = var0 > 0) || soundEnabled != 0) {
          int var5 = var1 ? -1 : 1;
-         var_2cb.setVolume(var2);
-         var_2cb.playSound(var0, var5, var3);
+         audioManager.setVolume(var2);
+         audioManager.playSound(var0, var5, var3);
       }
    }
 
-   public static void sub_85b() {
-      var_2cb.stopCurrentSound();
+   public static void stopCurrentSound() {
+      audioManager.stopCurrentSound();
    }
 
-   public static void sub_882(int var0) {
-      if (var_e38 != 0) {
+   public static void vibrateDevice(int var0) {
+      if (vibrationEnabled != 0) {
          try {
             CovertOps3D.display.vibrate(var0);
          } catch (Exception var1) {
@@ -3220,11 +3220,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   private void sub_8c1() {
+   private void flushScreemBuffer() {
       this.flushGraphics();
    }
 
-   private static void sub_922() {
+   private static void yieldToOtherThreads() {
       Thread.yield();
    }
 }

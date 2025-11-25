@@ -9,7 +9,7 @@ public final class SoundPlayer {
       this.soundId = var3;
    }
 
-   public static int sub_3e(SoundPlayer var0, int var1) {
+   public static int setSoundId(SoundPlayer var0, int var1) {
       return var0.soundId = var1;
    }
 }
