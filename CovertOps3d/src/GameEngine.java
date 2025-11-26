@@ -75,7 +75,7 @@ public final class GameEngine {
    private static int enemyAggroDistance = MathUtils.fixedPointMultiply(1310720, 92682);
    private static int cameraBobTimer = 0;
    private static int lastGameLogicTime = 0;
-   public static boolean levelComplete = false;
+   public static boolean weaponSwitchAnimationActive = false;
    public static int weaponAnimationState = 0;
    public static boolean gunFireLighting = false;
    public static int skyboxScaleX;
@@ -2497,7 +2497,7 @@ public final class GameEngine {
       screenShake = 0;
       cameraBobTimer = 0;
       lastGameLogicTime = 0;
-      levelComplete = true;
+      weaponSwitchAnimationActive = true;
       weaponAnimationState = 1;
       MainGameCanvas.gameProgressFlags = 0;
       levelVariant = 0;

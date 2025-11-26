@@ -283,7 +283,7 @@ public final class GameWorld {
                var20[5] += MainGameCanvas.var_1616[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
                GameEngine.pendingWeaponSwitch = 5;
-               GameEngine.levelComplete = true;
+               GameEngine.weaponSwitchAnimationActive = true;
                GameEngine.weaponAnimationState = 8;
                break;
             case 2006:
@@ -292,7 +292,7 @@ public final class GameWorld {
                var20[7] += MainGameCanvas.var_1677[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
                GameEngine.pendingWeaponSwitch = 7;
-               GameEngine.levelComplete = true;
+               GameEngine.weaponSwitchAnimationActive = true;
                GameEngine.weaponAnimationState = 8;
                MainGameCanvas.var_295 = MainGameCanvas.var_259++;
                GameEngine.levelVariant = 0;
@@ -357,7 +357,7 @@ public final class GameWorld {
                      var20[1] += MainGameCanvas.var_157a[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.pendingWeaponSwitch = 1;
-                     GameEngine.levelComplete = true;
+                     GameEngine.weaponSwitchAnimationActive = true;
                      GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2002:
@@ -371,7 +371,7 @@ public final class GameWorld {
                      var20[2] += MainGameCanvas.var_1592[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.pendingWeaponSwitch = 2;
-                     GameEngine.levelComplete = true;
+                     GameEngine.weaponSwitchAnimationActive = true;
                      GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2003:
@@ -380,7 +380,7 @@ public final class GameWorld {
                      var20[1] += MainGameCanvas.var_15c4[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.pendingWeaponSwitch = 3;
-                     GameEngine.levelComplete = true;
+                     GameEngine.weaponSwitchAnimationActive = true;
                      GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2004:
@@ -389,7 +389,7 @@ public final class GameWorld {
                      var20[5] += MainGameCanvas.var_1616[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.pendingWeaponSwitch = 5;
-                     GameEngine.levelComplete = true;
+                     GameEngine.weaponSwitchAnimationActive = true;
                      GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2005:
@@ -398,7 +398,7 @@ public final class GameWorld {
                      var20[6] += MainGameCanvas.var_1630[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.pendingWeaponSwitch = 6;
-                     GameEngine.levelComplete = true;
+                     GameEngine.weaponSwitchAnimationActive = true;
                      GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2006:
@@ -407,7 +407,7 @@ public final class GameWorld {
                      var20[7] += MainGameCanvas.var_1677[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.pendingWeaponSwitch = 7;
-                     GameEngine.levelComplete = true;
+                     GameEngine.weaponSwitchAnimationActive = true;
                      GameEngine.weaponAnimationState = 8;
                      break;
                   case 2007:
@@ -470,7 +470,7 @@ public final class GameWorld {
                      var20[1] += MainGameCanvas.var_15d0[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
                      GameEngine.pendingWeaponSwitch = 4;
-                     GameEngine.levelComplete = true;
+                     GameEngine.weaponSwitchAnimationActive = true;
                      GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2047:

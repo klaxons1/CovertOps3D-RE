@@ -298,7 +298,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var2 = GameEngine.renderFrame(var1, this.frameCounter) >> 15;
          int var3 = this.weaponSprites[weaponSpriteFrame].getHeight();
          int var4;
-         if (GameEngine.levelComplete) {
+         if (GameEngine.weaponSwitchAnimationActive) {
             if ((var4 = GameEngine.weaponAnimationState) < 0) {
                var4 = -var4;
             }
@@ -1951,7 +1951,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       if (GameEngine.updateGameLogic()) {
          return true;
       } else {
-         if (!GameEngine.levelComplete) {
+         if (!GameEngine.weaponSwitchAnimationActive) {
             GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
             if (GameEngine.var_3b8) {
                GameEngine.var_3b8 = false;
@@ -1960,15 +1960,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(GameEngine.pendingWeaponSwitch);
             if (GameEngine.pendingWeaponSwitch != GameEngine.currentWeapon) {
-               GameEngine.levelComplete = true;
+               GameEngine.weaponSwitchAnimationActive = true;
                GameEngine.weaponAnimationState = 8;
             }
          }
 
-         if (GameEngine.levelComplete) {
+         if (GameEngine.weaponSwitchAnimationActive) {
             --GameEngine.weaponAnimationState;
             if (GameEngine.weaponAnimationState == -8) {
-               GameEngine.levelComplete = false;
+               GameEngine.weaponSwitchAnimationActive = false;
             }
 
             if (GameEngine.weaponAnimationState == 0) {
@@ -2065,7 +2065,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             --GameEngine.weaponCooldownTimer;
          }
 
-         if (GameEngine.inputFire && !GameEngine.levelComplete) {
+         if (GameEngine.inputFire && !GameEngine.weaponSwitchAnimationActive) {
             int var6;
             switch(GameEngine.currentWeapon) {
             case 0:
@@ -2144,7 +2144,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      var6 = GameEngine.ammoCounts[6]--;
                      GameEngine.weaponCooldownTimer = 0;
                      GameEngine.weaponAnimationState = 8;
-                     GameEngine.levelComplete = true;
+                     GameEngine.weaponSwitchAnimationActive = true;
                      GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(6);
                   }
                }
@@ -2164,7 +2164,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   this.var_933 = 2;
                   weaponSpriteFrame = 2;
                   GameEngine.weaponAnimationState = 8;
-                  GameEngine.levelComplete = true;
+                  GameEngine.weaponSwitchAnimationActive = true;
                   GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(5);
                }
             } else {
