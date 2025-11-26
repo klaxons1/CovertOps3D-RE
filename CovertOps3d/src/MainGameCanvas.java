@@ -8,8 +8,8 @@ import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException;
 
 public class MainGameCanvas extends GameCanvas implements Runnable {
-   public boolean var_50 = false;
-   public boolean var_b0 = false;
+   public boolean isGameRunning = false;
+   public boolean isGamePaused = false;
    public boolean var_16f = true;
    public boolean var_1ae = false;
    public static CovertOps3D var_1e5 = null;
@@ -19,7 +19,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public static int var_2a5;
    public static AudioManager audioManager;
    private String[] SETTINGS_MENU_ITEMS;
-   private String[] var_313;
+   private String[] chapterMenuItems;
    private static final String[] var_341 = new String[]{"new game", "settings", "help", "about", "quit"};
    private static final String[] var_3a3 = new String[]{"resume", "new game", "settings", "help", "about", "quit"};
    private static final String[] var_3ad = new String[]{"difficulty", "", "easy", "normal", "hard", "back"};
@@ -41,12 +41,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private long var_790;
    private long var_7de;
    private long var_842;
-   private int var_863;
+   private int frameCounter;
    private Image statusBarImage;
-   private Image[] var_8ba;
-   private boolean var_8fd;
+   private Image[] weaponSprites;
+   private boolean isWeaponCentered;
    private int var_933;
-   public static int var_98c = 0;
+   public static int weaponSpriteFrame = 0;
    private Image crosshairImage;
    private Image fontImage;
    private Image var_a63;
@@ -145,9 +145,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       this.var_790 = 0L;
       this.var_7de = 0L;
       this.var_842 = 0L;
-      this.var_863 = 0;
-      this.var_8ba = new Image[3];
-      this.var_8fd = true;
+      this.frameCounter = 0;
+      this.weaponSprites = new Image[3];
+      this.isWeaponCentered = true;
       this.var_933 = 0;
       this.var_ab7 = null;
       this.var_ae7 = null;
@@ -232,7 +232,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       default:
          switch(var1) {
          case 48:
-            GameEngine.var_446 = true;
+            GameEngine.toggleMapInput = true;
             return;
          case 49:
             GameEngine.var_3e3 = true;
@@ -295,11 +295,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    private void sub_47(Graphics var1) {
       try {
-         int var2 = GameEngine.renderFrame(var1, this.var_863) >> 15;
-         int var3 = this.var_8ba[var_98c].getHeight();
+         int var2 = GameEngine.renderFrame(var1, this.frameCounter) >> 15;
+         int var3 = this.weaponSprites[weaponSpriteFrame].getHeight();
          int var4;
          if (GameEngine.levelComplete) {
-            if ((var4 = GameEngine.var_1044) < 0) {
+            if ((var4 = GameEngine.weaponAnimationState) < 0) {
                var4 = -var4;
             }
 
@@ -309,18 +309,18 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          Graphics var10000;
          Image var10001;
          int var10002;
-         if (this.var_8fd) {
+         if (this.isWeaponCentered) {
             var10000 = var1;
-            var10001 = this.var_8ba[var_98c];
-            var10002 = (240 - this.var_8ba[var_98c].getWidth()) / 2;
+            var10001 = this.weaponSprites[weaponSpriteFrame];
+            var10002 = (240 - this.weaponSprites[weaponSpriteFrame].getWidth()) / 2;
          } else {
             var10000 = var1;
-            var10001 = this.var_8ba[var_98c];
-            var10002 = 240 - this.var_8ba[var_98c].getWidth();
+            var10001 = this.weaponSprites[weaponSpriteFrame];
+            var10002 = 240 - this.weaponSprites[weaponSpriteFrame].getWidth();
          }
 
          var10000.drawImage(var10001, var10002, 288 - var3 - var2 + 3, 0);
-         var_98c = this.var_933;
+         weaponSpriteFrame = this.var_933;
          var1.drawImage(this.statusBarImage, 0, 288, 0);
          this.sub_547(GameEngine.playerHealth, var1, 58, 294);
          this.sub_547(GameEngine.playerArmor, var1, 138, 294);
@@ -345,7 +345,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    public final void sub_71() {
       Thread var1 = new Thread(this);
-      this.var_50 = true;
+      this.isGameRunning = true;
       this.var_16f = false;
       var1.start();
    }
@@ -366,8 +366,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       (var1 = this.getGraphics()).setClip(0, 0, 240, 320);
       this.sub_175(var1);
       this.sub_3d0();
-      sub_700();
-      sub_81a();
+      loadSaveData();
+      loadSettingsFromRMS();
       this.var_1ae = true;
       int var2 = this.showMenuScreen(var1, true);
 
@@ -375,11 +375,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       while(true) {
          while(true) {
             do {
-               if (!this.var_50) {
+               if (!this.isGameRunning) {
                   this.var_16f = true;
                   return;
                }
-            } while(this.var_b0);
+            } while(this.isGamePaused);
 
             if (var2 == 4) {
                this.var_16f = true;
@@ -396,7 +396,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
 
                this.sub_415(var1);
-               this.sub_3de();
+               this.loadLevelResources();
                break;
             }
 
@@ -404,28 +404,28 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int var4 = var2 - 67;
             var_259 = var3[var4];
             var_295 = -1;
-            sub_746(var4);
-            GameEngine.var_480 = 1;
+            loadGameState(var4);
+            GameEngine.levelTransitionState = 1;
             break;
          }
 
          this.var_7de = 0L;
          this.var_842 = 0L;
 
-         while(this.var_50) {
+         while(this.isGameRunning) {
             try {
-               if ((GameEngine.inputRun || GameEngine.inputBack || this.var_b0) && (var2 = this.showMenuScreen(var1, false)) != 32) {
+               if ((GameEngine.inputRun || GameEngine.inputBack || this.isGamePaused) && (var2 = this.showMenuScreen(var1, false)) != 32) {
                   break;
                }
 
                label170: {
                   MainGameCanvas var10000;
-                  if (GameEngine.var_480 == 1) {
+                  if (GameEngine.levelTransitionState == 1) {
                      switch(var_259) {
                      case 0:
                      case 13:
                         var_259 = 0;
-                        sub_786(8);
+                        saveGameState(8);
                         if ((var2 = this.sub_44e(var1, 9)) == -1) {
                            var2 = this.showMenuScreen(var1, true);
                         }
@@ -446,7 +446,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      default:
                         break;
                      case 2:
-                        sub_786(0);
+                        saveGameState(0);
                         if ((var2 = this.sub_44e(var1, 1)) != -1) {
                            continue label182;
                         }
@@ -454,7 +454,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      case 4:
                      case 20:
                         if (var_259 == 4) {
-                           sub_786(1);
+                           saveGameState(1);
                            if ((var2 = this.sub_44e(var1, 2)) != -1) {
                               continue label182;
                            }
@@ -472,13 +472,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                            var_259 = 4;
                         }
 
-                        sub_786(2);
+                        saveGameState(2);
                         if ((var2 = this.sub_44e(var1, 3)) != -1) {
                            continue label182;
                         }
                         break;
                      case 5:
-                        sub_786(3);
+                        saveGameState(3);
                         if ((var2 = this.sub_44e(var1, 4)) != -1) {
                            continue label182;
                         }
@@ -486,7 +486,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      case 6:
                      case 22:
                         if (var_259 == 6) {
-                           sub_786(4);
+                           saveGameState(4);
                            if ((var2 = this.sub_44e(var1, 5)) != -1) {
                               continue label182;
                            }
@@ -504,19 +504,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                            var_259 = 6;
                         }
 
-                        sub_786(5);
+                        saveGameState(5);
                         if ((var2 = this.sub_44e(var1, 6)) != -1) {
                            continue label182;
                         }
                         break;
                      case 7:
-                        sub_786(6);
+                        saveGameState(6);
                         if ((var2 = this.sub_44e(var1, 7)) != -1) {
                            continue label182;
                         }
                         break;
                      case 9:
-                        sub_786(7);
+                        saveGameState(7);
                         if ((var2 = this.sub_44e(var1, 8)) != -1) {
                            continue label182;
                         }
@@ -524,7 +524,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                      var10000 = this;
                   } else {
-                     if (GameEngine.var_480 != -1) {
+                     if (GameEngine.levelTransitionState != -1) {
                         break label170;
                      }
 
@@ -532,7 +532,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   }
 
                   var10000.sub_415(var1);
-                  this.sub_3de();
+                  this.loadLevelResources();
                }
 
                long var7 = System.currentTimeMillis();
@@ -544,7 +544,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
 
                while(this.var_7de >= 80L) {
-                  ++this.var_863;
+                  ++this.frameCounter;
                   if (this.sub_393()) {
                      GameEngine.damageFlash = false;
                      this.sub_47(var1);
@@ -876,7 +876,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var7 = 0;
          int var8 = var6.length - 2;
          this.sub_1e3(var1, var3);
-         if (musicEnabled == 1 && !this.var_b0) {
+         if (musicEnabled == 1 && !this.isGamePaused) {
             playSound(0, true, 80, 2);
          }
 
@@ -1037,31 +1037,31 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                case 18:
                case 19:
                case 20:
-                  this.var_313 = new String[var_3de.length];
-                  this.var_313[0] = var_3de[0];
-                  this.var_313[1] = var_3de[1];
-                  this.var_313[2] = var_3de[2];
-                  this.var_313[this.var_313.length - 1] = var_3de[this.var_313.length - 1];
+                  this.chapterMenuItems = new String[var_3de.length];
+                  this.chapterMenuItems[0] = var_3de[0];
+                  this.chapterMenuItems[1] = var_3de[1];
+                  this.chapterMenuItems[2] = var_3de[2];
+                  this.chapterMenuItems[this.chapterMenuItems.length - 1] = var_3de[this.chapterMenuItems.length - 1];
                   (var23 = new Object[4])[0] = var6;
                   var23[1] = new Integer(var4);
                   var23[2] = new Integer(var7);
                   var23[3] = new Integer(var8);
                   var10.push(var23);
                   GameEngine.difficultyLevel = var4 - 18;
-                  sub_700();
+                  loadSaveData();
                   var7 = 2;
-                  var8 = this.var_313.length - 2;
+                  var8 = this.chapterMenuItems.length - 2;
 
                   for(var17 = 3; var17 <= var8; ++var17) {
                      String[] var10000;
                      int var10001;
                      String var10002;
                      if (saveData[var17 - 3] != null) {
-                        var10000 = this.var_313;
+                        var10000 = this.chapterMenuItems;
                         var10001 = var17;
                         var10002 = var_3de[var17];
                      } else {
-                        var10000 = this.var_313;
+                        var10000 = this.chapterMenuItems;
                         var10001 = var17;
                         var10002 = "unavailable";
                      }
@@ -1069,7 +1069,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      var10000[var10001] = var10002;
                   }
 
-                  var6 = this.var_313;
+                  var6 = this.chapterMenuItems;
                   var4 = 66;
                   break;
                case 50:
@@ -1083,7 +1083,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      }
                   }
 
-                  sub_830();
+                  saveSettingsToRMS();
                   break;
                case 51:
                   musicEnabled = (byte)(musicEnabled ^ 1);
@@ -1095,7 +1095,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      stopCurrentSound();
                   }
 
-                  sub_830();
+                  saveSettingsToRMS();
                   break;
                case 52:
                   vibrationEnabled = (byte)(vibrationEnabled ^ 1);
@@ -1104,7 +1104,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      vibrateDevice(100);
                   }
 
-                  sub_830();
+                  saveSettingsToRMS();
                   break;
                case 66:
                case 67:
@@ -1115,7 +1115,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                case 72:
                case 73:
                case 74:
-                  if (!this.var_313[var4 - 64].equals("unavailable")) {
+                  if (!this.chapterMenuItems[var4 - 64].equals("unavailable")) {
                      stopCurrentSound();
                      return var4;
                   }
@@ -1567,15 +1567,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int[] var32 = new int[8];
          this.var_7de = 0L;
          this.var_842 = 0L;
-         GameEngine.var_480 = 2;
+         GameEngine.levelTransitionState = 2;
 
-         while(this.var_50) {
-            if (GameEngine.var_480 == 1) {
+         while(this.isGameRunning) {
+            if (GameEngine.levelTransitionState == 1) {
                return -1;
             }
 
             int var34;
-            if ((GameEngine.inputRun || GameEngine.inputBack || this.var_b0) && (var34 = this.showMenuScreen(var1, false)) != 32) {
+            if ((GameEngine.inputRun || GameEngine.inputBack || this.isGamePaused) && (var34 = this.showMenuScreen(var1, false)) != 32) {
                return var34;
             }
 
@@ -1588,7 +1588,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             while(this.var_7de >= (long)40) {
-               ++this.var_863;
+               ++this.frameCounter;
                if (!this.sub_255(var26, var25, var27, var32, var28, var14[var2], var15[var2], var17[var2])) {
                   return -1;
                }
@@ -1916,8 +1916,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public final void sub_308() {
-      if (!this.var_b0) {
-         this.var_b0 = true;
+      if (!this.isGamePaused) {
+         this.isGamePaused = true;
          if (audioManager != null) {
             audioManager.stopCurrentSound();
          }
@@ -1926,12 +1926,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public final void sub_32d() {
-      if (this.var_b0) {
+      if (this.isGamePaused) {
          if (audioManager != null && musicEnabled == 1 && this.var_1ae) {
             playSound(0, true, 80, 2);
          }
 
-         this.var_b0 = false;
+         this.isGamePaused = false;
       }
    }
 
@@ -1944,7 +1944,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public final void sub_35e() {
-      this.var_50 = false;
+      this.isGameRunning = false;
    }
 
    public final boolean sub_393() {
@@ -1952,27 +1952,27 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          return true;
       } else {
          if (!GameEngine.levelComplete) {
-            GameEngine.var_d46 = GameEngine.currentWeapon;
+            GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
             if (GameEngine.var_3b8) {
                GameEngine.var_3b8 = false;
-               GameEngine.var_d46 = GameEngine.sub_558(GameEngine.var_d46);
+               GameEngine.pendingWeaponSwitch = GameEngine.sub_558(GameEngine.pendingWeaponSwitch);
             }
 
-            GameEngine.var_d46 = GameEngine.sub_577(GameEngine.var_d46);
-            if (GameEngine.var_d46 != GameEngine.currentWeapon) {
+            GameEngine.pendingWeaponSwitch = GameEngine.sub_577(GameEngine.pendingWeaponSwitch);
+            if (GameEngine.pendingWeaponSwitch != GameEngine.currentWeapon) {
                GameEngine.levelComplete = true;
-               GameEngine.var_1044 = 8;
+               GameEngine.weaponAnimationState = 8;
             }
          }
 
          if (GameEngine.levelComplete) {
-            --GameEngine.var_1044;
-            if (GameEngine.var_1044 == -8) {
+            --GameEngine.weaponAnimationState;
+            if (GameEngine.weaponAnimationState == -8) {
                GameEngine.levelComplete = false;
             }
 
-            if (GameEngine.var_1044 == 0) {
-               GameEngine.currentWeapon = GameEngine.var_d46;
+            if (GameEngine.weaponAnimationState == 0) {
+               GameEngine.currentWeapon = GameEngine.pendingWeaponSwitch;
 
                try {
                   label190: {
@@ -1986,54 +1986,54 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                            String var10002;
                            switch(GameEngine.currentWeapon) {
                            case 0:
-                              this.var_8ba[0] = Image.createImage("/fist_a.png");
-                              var10000 = this.var_8ba;
+                              this.weaponSprites[0] = Image.createImage("/fist_a.png");
+                              var10000 = this.weaponSprites;
                               var10001 = 1;
                               var10002 = "/fist_b.png";
                               break;
                            case 1:
-                              this.var_8ba[0] = Image.createImage("/luger_a.png");
-                              var10000 = this.var_8ba;
+                              this.weaponSprites[0] = Image.createImage("/luger_a.png");
+                              var10000 = this.weaponSprites;
                               var10001 = 1;
                               var10002 = "/luger_b.png";
                               break;
                            case 2:
-                              this.var_8ba[0] = Image.createImage("/mauser_a.png");
-                              this.var_8ba[1] = Image.createImage("/mauser_b.png");
-                              this.var_8ba[2] = null;
+                              this.weaponSprites[0] = Image.createImage("/mauser_a.png");
+                              this.weaponSprites[1] = Image.createImage("/mauser_b.png");
+                              this.weaponSprites[2] = null;
                               var3 = this;
                               var4 = false;
                               break label162;
                            case 3:
-                              this.var_8ba[0] = Image.createImage("/m40_a.png");
-                              this.var_8ba[1] = Image.createImage("/m40_b.png");
-                              this.var_8ba[2] = null;
+                              this.weaponSprites[0] = Image.createImage("/m40_a.png");
+                              this.weaponSprites[1] = Image.createImage("/m40_b.png");
+                              this.weaponSprites[2] = null;
                               var3 = this;
                               var4 = false;
                               break label162;
                            case 4:
-                              this.var_8ba[0] = Image.createImage("/sten_a.png");
-                              this.var_8ba[1] = Image.createImage("/sten_b.png");
-                              this.var_8ba[2] = null;
+                              this.weaponSprites[0] = Image.createImage("/sten_a.png");
+                              this.weaponSprites[1] = Image.createImage("/sten_b.png");
+                              this.weaponSprites[2] = null;
                               var3 = this;
                               var4 = false;
                               break label162;
                            case 5:
-                              this.var_8ba[0] = Image.createImage("/panzerfaust_a.png");
-                              this.var_8ba[1] = Image.createImage("/panzerfaust_b.png");
-                              this.var_8ba[2] = Image.createImage("/panzerfaust_c.png");
+                              this.weaponSprites[0] = Image.createImage("/panzerfaust_a.png");
+                              this.weaponSprites[1] = Image.createImage("/panzerfaust_b.png");
+                              this.weaponSprites[2] = Image.createImage("/panzerfaust_c.png");
                               var3 = this;
                               var4 = false;
                               break label162;
                            case 6:
-                              this.var_8ba[0] = Image.createImage("/dynamite.png");
-                              var10000 = this.var_8ba;
+                              this.weaponSprites[0] = Image.createImage("/dynamite.png");
+                              var10000 = this.weaponSprites;
                               var10001 = 1;
                               var5 = null;
                               break label161;
                            case 7:
-                              this.var_8ba[0] = Image.createImage("/sonic_a.png");
-                              var10000 = this.var_8ba;
+                              this.weaponSprites[0] = Image.createImage("/sonic_a.png");
+                              var10000 = this.weaponSprites;
                               var10001 = 1;
                               var10002 = "/sonic_b.png";
                               break;
@@ -2045,16 +2045,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
 
                         var10000[var10001] = var5;
-                        this.var_8ba[2] = null;
+                        this.weaponSprites[2] = null;
                         var3 = this;
                         var4 = true;
                      }
 
-                     var3.var_8fd = var4;
+                     var3.isWeaponCentered = var4;
                   }
 
                   this.var_933 = 0;
-                  var_98c = 0;
+                  weaponSpriteFrame = 0;
                } catch (Exception var1) {
                } catch (OutOfMemoryError var2) {
                }
@@ -2072,7 +2072,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                if (GameEngine.weaponCooldownTimer < -var_111e[GameEngine.difficultyLevel]) {
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
-                  var_98c = 1;
+                  weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
                }
                break;
@@ -2081,7 +2081,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
-                  var_98c = 1;
+                  weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
                }
                break;
@@ -2090,7 +2090,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
-                  var_98c = 1;
+                  weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
                }
                break;
@@ -2101,7 +2101,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         var6 = GameEngine.ammoCounts[1]--;
                         GameEngine.gameWorld.fireWeapon();
                         this.var_933 = 1;
-                        var_98c = 1;
+                        weaponSpriteFrame = 1;
                         GameEngine.weaponCooldownTimer = 1;
                      }
                   } else {
@@ -2117,7 +2117,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         var6 = GameEngine.ammoCounts[1]--;
                         GameEngine.gameWorld.fireWeapon();
                         this.var_933 = 1;
-                        var_98c = 1;
+                        weaponSpriteFrame = 1;
                         GameEngine.weaponCooldownTimer = 1;
                      }
                   } else {
@@ -2131,7 +2131,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
-                  var_98c = 1;
+                  weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 2;
                }
                break;
@@ -2143,9 +2143,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   } else if (GameEngine.gameWorld.throwGrenade()) {
                      var6 = GameEngine.ammoCounts[6]--;
                      GameEngine.weaponCooldownTimer = 0;
-                     GameEngine.var_1044 = 8;
+                     GameEngine.weaponAnimationState = 8;
                      GameEngine.levelComplete = true;
-                     GameEngine.var_d46 = GameEngine.sub_577(6);
+                     GameEngine.pendingWeaponSwitch = GameEngine.sub_577(6);
                   }
                }
                break;
@@ -2154,7 +2154,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
                   this.var_933 = 1;
-                  var_98c = 1;
+                  weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
                }
             }
@@ -2162,10 +2162,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             if (GameEngine.currentWeapon == 5) {
                if (this.var_933 == 1) {
                   this.var_933 = 2;
-                  var_98c = 2;
-                  GameEngine.var_1044 = 8;
+                  weaponSpriteFrame = 2;
+                  GameEngine.weaponAnimationState = 8;
                   GameEngine.levelComplete = true;
-                  GameEngine.var_d46 = GameEngine.sub_577(5);
+                  GameEngine.pendingWeaponSwitch = GameEngine.sub_577(5);
                }
             } else {
                this.var_933 = 0;
@@ -2199,9 +2199,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private void sub_3d0() {
       try {
          this.statusBarImage = Image.createImage("/bar.png");
-         this.var_8ba[0] = Image.createImage("/fist_a.png");
-         this.var_8ba[1] = Image.createImage("/fist_b.png");
-         this.var_8ba[2] = null;
+         this.weaponSprites[0] = Image.createImage("/fist_a.png");
+         this.weaponSprites[1] = Image.createImage("/fist_b.png");
+         this.weaponSprites[2] = null;
          this.crosshairImage = Image.createImage("/aim.png");
          this.fontImage = Image.createImage("/font.png");
          MathUtils.initializeMathTables();
@@ -2211,7 +2211,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   private void sub_3de() {
+   private void loadLevelResources() {
       try {
          freeMemory();
          if (var_295 < var_259) {
@@ -2227,8 +2227,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                GameEngine.gameWorld.staticObjects = this.var_ae7;
                this.var_ae7 = null;
             } else {
-               GameEngine.var_d98[0] = false;
-               GameEngine.var_d98[1] = false;
+               GameEngine.keysCollected[0] = false;
+               GameEngine.keysCollected[1] = false;
             }
          } else {
             this.var_ae7 = GameEngine.gameWorld.staticObjects;
@@ -2607,7 +2607,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   this.sub_681("resume", var1, 3, 320 - this.var_550 - 3);
                   this.flushScreemBuffer();
 
-                  while(!GameEngine.inputRun && !GameEngine.inputBack && !this.var_b0 && !GameEngine.inputFire) {
+                  while(!GameEngine.inputRun && !GameEngine.inputBack && !this.isGamePaused && !GameEngine.inputFire) {
                      yieldToOtherThreads();
                   }
                }
@@ -2619,7 +2619,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   GameEngine.inputRun = false;
                }
 
-               if (GameEngine.inputBack || this.var_b0) {
+               if (GameEngine.inputBack || this.isGamePaused) {
                   GameEngine.inputRun = false;
                   GameEngine.inputBack = false;
                   if ((var37 = this.showMenuScreen(var1, false)) != 32) {
@@ -3052,7 +3052,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    }
 
-   public static void sub_700() {
+   public static void loadSaveData() {
       try {
          String var0;
          label33: {
@@ -3091,7 +3091,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   public static void sub_746(int var0) {
+   public static void loadGameState(int var0) {
       GameEngine.playerHealth = saveData[var0][0];
       GameEngine.playerArmor = saveData[var0][1];
 
@@ -3101,10 +3101,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
 
       GameEngine.currentWeapon = saveData[var0][29];
-      GameEngine.var_d46 = GameEngine.currentWeapon;
+      GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
    }
 
-   public static void sub_786(int var0) {
+   public static void saveGameState(int var0) {
       saveData[var0] = new byte[30];
       saveData[var0][0] = (byte) GameEngine.playerHealth;
       saveData[var0][1] = (byte) GameEngine.playerArmor;
@@ -3116,10 +3116,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
 
       saveData[var0][29] = (byte) GameEngine.currentWeapon;
-      sub_7c1();
+      writeSaveData();
    }
 
-   public static void sub_7c1() {
+   public static void writeSaveData() {
       try {
          String var0;
          label39: {
@@ -3159,7 +3159,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   public static void sub_81a() {
+   public static void loadSettingsFromRMS() {
       try {
          RecordStore var0 = RecordStore.openRecordStore("settings", true);
          Object var1 = null;
@@ -3177,7 +3177,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   public static void sub_830() {
+   public static void saveSettingsToRMS() {
       try {
          RecordStore var0;
          int var1 = (var0 = RecordStore.openRecordStore("settings", true)).getNumRecords();

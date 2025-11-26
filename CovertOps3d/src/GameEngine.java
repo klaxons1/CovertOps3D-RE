@@ -24,24 +24,24 @@ public final class GameEngine {
    public static boolean inputBack;
    public static boolean var_3b8;
    public static boolean var_3e3;
-   public static boolean var_446;
-   public static int var_480;
+   public static boolean toggleMapInput;
+   public static int levelTransitionState;
    public static int weaponCooldownTimer = 0;
    public static GameWorld gameWorld = null;
    public static PhysicsBody player;
    public static Transform3D tempTransform;
    public static SectorData currentSector;
-   private static Point2D var_5f8 = new Point2D(0, 0);
-   private static Point2D var_654 = new Point2D(0, 0);
-   private static int var_6a4;
-   private static int var_6f4;
-   private static int var_723;
-   private static int var_771;
-   private static int var_7ba;
-   private static int var_817;
+   private static Point2D clippedWallStart = new Point2D(0, 0);
+   private static Point2D clippedWallEnd = new Point2D(0, 0);
+   private static int projectedCeilingStart;
+   private static int projectedFloorStart;
+   private static int projectedCeilingEnd;
+   private static int projectedFloorEnd;
+   private static int clippedTextureStartU;
+   private static int clippedTextureEndU;
    public static int[] screenBuffer;
    private static Texture defaultErrorTexture;
-   private static Texture var_8f4;
+   private static Texture skyboxTexture;
    private static short[] depthBuffer;
    private static int var_958;
    private static int var_9b4;
@@ -50,8 +50,8 @@ public final class GameEngine {
    private static int var_a27;
    private static int var_a34;
    private static RenderUtils var_a80;
-   private static int[] var_ab4;
-   private static int[] var_acc;
+   private static int[] angleCorrectionTable;
+   private static int[] reciprocalTable;
    public static Vector floorClipHistory;
    public static Vector ceilingClipHistory;
    public static Vector var_b86;
@@ -62,8 +62,8 @@ public final class GameEngine {
    public static boolean[] weaponsAvailable = new boolean[]{true, false, false, false, false, false, true, false, false};
    public static int[] ammoCounts = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
    public static int currentWeapon = 0;
-   public static int var_d46 = 0;
-   public static boolean[] var_d98 = new boolean[]{false, false};
+   public static int pendingWeaponSwitch = 0;
+   public static boolean[] keysCollected = new boolean[]{false, false};
    public static String messageText = "";
    public static int messageTimer = 0;
    public static int var_e72 = 0;
@@ -72,11 +72,11 @@ public final class GameEngine {
    public static boolean damageFlash = false;
    public static byte screenShake = 0;
    public static int cameraHeight;
-   private static int var_f32 = MathUtils.fixedPointMultiply(1310720, 92682);
+   private static int enemyAggroDistance = MathUtils.fixedPointMultiply(1310720, 92682);
    private static int var_f5f = 0;
    private static int var_f88 = 0;
    public static boolean levelComplete = false;
-   public static int var_1044 = 0;
+   public static int weaponAnimationState = 0;
    public static boolean gunFireLighting = false;
    public static int var_10bb;
    public static int var_1103;
@@ -108,17 +108,17 @@ public final class GameEngine {
       screenBuffer = new int[69120];
       depthBuffer = new short[288];
       var_a80 = new RenderUtils();
-      var_ab4 = new int[240];
+      angleCorrectionTable = new int[240];
 
       for(int var3 = 0; var3 < 240; ++var3) {
-         var_ab4[var3] = MathUtils.fixedPointDivide(var3 - 120 << 16, 7864320) >> 2;
+         angleCorrectionTable[var3] = MathUtils.fixedPointDivide(var3 - 120 << 16, 7864320) >> 2;
       }
 
-      var_acc = new int[289];
-      var_acc[0] = 0;
+      reciprocalTable = new int[289];
+      reciprocalTable[0] = 0;
 
       for(int var4 = 1; var4 < 289; ++var4) {
-         var_acc[var4] = 65536 / var4;
+         reciprocalTable[var4] = 65536 / var4;
       }
 
       var_10bb = MathUtils.fixedPointDivide(65536, 17301600);
@@ -144,10 +144,10 @@ public final class GameEngine {
    }
 
    public static void handleWeaponChange(byte var0) {
-      sub_3f5(sub_f6(var0));
+      setSkyboxTexture(getTexture(var0));
    }
 
-   private static Sprite sub_cb(byte var0) {
+   private static Sprite getSprite(byte var0) {
       if (var0 == 51) {
          return null;
       } else {
@@ -156,7 +156,7 @@ public final class GameEngine {
       }
    }
 
-   private static Texture sub_f6(byte var0) {
+   private static Texture getTexture(byte var0) {
       if (var0 == 0) {
          return defaultErrorTexture;
       } else {
@@ -165,65 +165,65 @@ public final class GameEngine {
       }
    }
 
-   private static boolean sub_102(Point2D var0, Point2D var1, int var2, int var3, int var4) {
+   private static boolean clipAndProjectWallSegment(Point2D var0, Point2D var1, int var2, int var3, int var4) {
       if (var0.y <= 327680 && var1.y <= 327680) {
          return false;
       } else {
          int var5;
          int var6 = (var5 = var4 << 16) + MathUtils.fastHypot(var0.x - var1.x, var0.y - var1.y);
-         var_7ba = var5;
-         var_817 = var6;
-         var_5f8.x = var0.x;
-         var_5f8.y = var0.y;
-         var_654.x = var1.x;
-         var_654.y = var1.y;
+         clippedTextureStartU = var5;
+         clippedTextureEndU = var6;
+         clippedWallStart.x = var0.x;
+         clippedWallStart.y = var0.y;
+         clippedWallEnd.x = var1.x;
+         clippedWallEnd.y = var1.y;
          int var7;
          if (var1.y < 327680) {
             var7 = MathUtils.fixedPointDivide(var0.y - 327680, var0.y - var1.y);
-            var_654.y = 327680;
+            clippedWallEnd.y = 327680;
             if (var7 == Integer.MAX_VALUE) {
-               var_654.x = var1.x > var0.x ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-               var_817 = var6 > var5 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+               clippedWallEnd.x = var1.x > var0.x ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+               clippedTextureEndU = var6 > var5 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
             } else if (var7 == Integer.MIN_VALUE) {
-               var_654.x = var1.x > var0.x ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-               var_817 = var6 > var5 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+               clippedWallEnd.x = var1.x > var0.x ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+               clippedTextureEndU = var6 > var5 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
             } else {
-               var_654.x = (int)((long)(var1.x - var0.x) * (long)var7 >> 16) + var0.x;
-               var_817 = (int)((long)(var6 - var5) * (long)var7 >> 16) + var5;
+               clippedWallEnd.x = (int)((long)(var1.x - var0.x) * (long)var7 >> 16) + var0.x;
+               clippedTextureEndU = (int)((long)(var6 - var5) * (long)var7 >> 16) + var5;
             }
          }
 
          if (var0.y < 327680) {
             var7 = MathUtils.fixedPointDivide(var1.y - 327680, var1.y - var0.y);
-            var_5f8.y = 327680;
+            clippedWallStart.y = 327680;
             if (var7 == Integer.MAX_VALUE) {
-               var_5f8.x = var0.x > var1.x ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-               var_7ba = var5 > var6 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+               clippedWallStart.x = var0.x > var1.x ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+               clippedTextureStartU = var5 > var6 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
             } else if (var7 == Integer.MIN_VALUE) {
-               var_5f8.x = var0.x > var1.x ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-               var_7ba = var5 > var6 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+               clippedWallStart.x = var0.x > var1.x ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+               clippedTextureStartU = var5 > var6 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
             } else {
-               var_5f8.x = (int)((long)(var0.x - var1.x) * (long)var7 >> 16) + var1.x;
-               var_7ba = (int)((long)(var5 - var6) * (long)var7 >> 16) + var6;
+               clippedWallStart.x = (int)((long)(var0.x - var1.x) * (long)var7 >> 16) + var1.x;
+               clippedTextureStartU = (int)((long)(var5 - var6) * (long)var7 >> 16) + var6;
             }
          }
 
-         long var11 = 33776997205278720L / (long)var_5f8.y >> 16;
-         long var9 = 33776997205278720L / (long)var_654.y >> 16;
-         var_5f8.x = (int)((long)var_5f8.x * var11 >> 16);
-         if (var_5f8.x > 7864320) {
+         long var11 = 33776997205278720L / (long) clippedWallStart.y >> 16;
+         long var9 = 33776997205278720L / (long) clippedWallEnd.y >> 16;
+         clippedWallStart.x = (int)((long) clippedWallStart.x * var11 >> 16);
+         if (clippedWallStart.x > 7864320) {
             return false;
          } else {
-            var_654.x = (int)((long)var_654.x * var9 >> 16);
-            if (var_654.x < -7864320) {
+            clippedWallEnd.x = (int)((long) clippedWallEnd.x * var9 >> 16);
+            if (clippedWallEnd.x < -7864320) {
                return false;
-            } else if (var_654.x < var_5f8.x) {
+            } else if (clippedWallEnd.x < clippedWallStart.x) {
                return false;
             } else {
-               var_6a4 = (int)((long)var2 * var11 >> 16);
-               var_6f4 = (int)((long)var3 * var11 >> 16);
-               var_723 = (int)((long)var2 * var9 >> 16);
-               var_771 = (int)((long)var3 * var9 >> 16);
+                projectedCeilingStart = (int)((long)var2 * var11 >> 16);
+                projectedFloorStart = (int)((long)var3 * var11 >> 16);
+                projectedCeilingEnd = (int)((long)var2 * var9 >> 16);
+                projectedFloorEnd = (int)((long)var3 * var9 >> 16);
                return true;
             }
          }
@@ -234,17 +234,17 @@ public final class GameEngine {
       SectorData var8 = var2.linkedSector;
       int var9 = -var5 + (-var8.ceilingHeight << 16);
       int var10 = -var5 + (-var8.floorHeight << 16);
-      if (sub_102(var3[var0.startVertexIndex & '\uffff'], var3[var0.endVertexIndex & '\uffff'], var9, var10, var0.textureOffset & '\uffff')) {
-         Point2D var11 = var_5f8;
-         Point2D var12 = var_654;
+      if (clipAndProjectWallSegment(var3[var0.startVertexIndex & '\uffff'], var3[var0.endVertexIndex & '\uffff'], var9, var10, var0.textureOffset & '\uffff')) {
+         Point2D var11 = clippedWallStart;
+         Point2D var12 = clippedWallEnd;
          int var13 = var11.x + 7864320 >> 16;
-         int var14 = var_6a4 + 9437184 >> 16;
+         int var14 = projectedCeilingStart + 9437184 >> 16;
          int var15 = var12.x + 7864320 >> 16;
-         int var16 = var_723 + 9437184 >> 16;
-         int var17 = var_6f4 + 9437184 >> 16;
-         int var18 = var_771 + 9437184 >> 16;
+         int var16 = projectedCeilingEnd + 9437184 >> 16;
+         int var17 = projectedFloorStart + 9437184 >> 16;
+         int var18 = projectedFloorEnd + 9437184 >> 16;
          int var19 = var8.ceilingHeight - var8.floorHeight;
-         Texture var20 = sub_f6(var2.mainTextureId);
+         Texture var20 = getTexture(var2.mainTextureId);
          int var21 = var2.textureOffsetY & '\uffff';
          int var22 = var20.height - var19 + var21;
          if (!var1.isSecret()) {
@@ -253,7 +253,7 @@ public final class GameEngine {
 
          var1.markAsRendered();
          int var23 = (var2.textureOffsetX & '\uffff') << 16;
-         drawWallColumn(var8, var20, var20, var13, var14, var17, var17, var17, var11.y, var15, var16, var18, var18, var18, var12.y, var_7ba + var23, var_817 - var_7ba, var22, var19, var22, var19, -var4, -var6, var7, var9, var10);
+         drawWallColumn(var8, var20, var20, var13, var14, var17, var17, var17, var11.y, var15, var16, var18, var18, var18, var12.y, clippedTextureStartU + var23, clippedTextureEndU - clippedTextureStartU, var22, var19, var22, var19, -var4, -var6, var7, var9, var10);
       }
 
    }
@@ -265,23 +265,23 @@ public final class GameEngine {
       int var12 = -var6 + (-var9.floorHeight << 16);
       int var13 = -var6 + (-var10.ceilingHeight << 16);
       int var14 = -var6 + (-var10.floorHeight << 16);
-      if (sub_102(var4[var0.startVertexIndex & '\uffff'], var4[var0.endVertexIndex & '\uffff'], var11, var12, var0.textureOffset & '\uffff')) {
-         Point2D var15 = var_5f8;
-         Point2D var16 = var_654;
+      if (clipAndProjectWallSegment(var4[var0.startVertexIndex & '\uffff'], var4[var0.endVertexIndex & '\uffff'], var11, var12, var0.textureOffset & '\uffff')) {
+         Point2D var15 = clippedWallStart;
+         Point2D var16 = clippedWallEnd;
          int var17 = var15.x + 7864320 >> 16;
-         int var18 = var_6a4 + 9437184 >> 16;
-         int var19 = var_6f4 + 9437184 >> 16;
+         int var18 = projectedCeilingStart + 9437184 >> 16;
+         int var19 = projectedFloorStart + 9437184 >> 16;
          int var20 = var16.x + 7864320 >> 16;
-         int var21 = var_723 + 9437184 >> 16;
-         int var22 = var_771 + 9437184 >> 16;
+         int var21 = projectedCeilingEnd + 9437184 >> 16;
+         int var22 = projectedFloorEnd + 9437184 >> 16;
          int var23 = MathUtils.fixedPointDivide(var13, var15.y) * 120 + 9437184 >> 16;
          int var24 = MathUtils.fixedPointDivide(var14, var15.y) * 120 + 9437184 >> 16;
          int var25 = MathUtils.fixedPointDivide(var13, var16.y) * 120 + 9437184 >> 16;
          int var26 = MathUtils.fixedPointDivide(var14, var16.y) * 120 + 9437184 >> 16;
          int var27 = var9.ceilingHeight - var10.ceilingHeight;
          int var28 = var10.floorHeight - var9.floorHeight;
-         Texture var29 = sub_f6(var2.upperTextureId);
-         Texture var30 = sub_f6(var2.lowerTextureId);
+         Texture var29 = getTexture(var2.upperTextureId);
+         Texture var30 = getTexture(var2.lowerTextureId);
          if (var10.floorTextureId == 51) {
             var29 = defaultErrorTexture;
          }
@@ -303,7 +303,7 @@ public final class GameEngine {
 
          var1.markAsRendered();
          int var34 = (var2.textureOffsetX & '\uffff') << 16;
-         drawWallColumn(var9, var29, var30, var17, var18, var23, var24, var19, var15.y, var20, var21, var25, var26, var22, var16.y, var_7ba + var34, var_817 - var_7ba, var32, var27, var33, var28, -var5, -var7, var8, var11, var12);
+         drawWallColumn(var9, var29, var30, var17, var18, var23, var24, var19, var15.y, var20, var21, var25, var26, var22, var16.y, clippedTextureStartU + var34, clippedTextureEndU - clippedTextureStartU, var32, var27, var33, var28, -var5, -var7, var8, var11, var12);
       }
 
    }
@@ -429,7 +429,7 @@ public final class GameEngine {
       int var7 = var3 << 1;
       int var8 = MathUtils.fastSin(var3);
       int var9 = MathUtils.fastCos(var3);
-      gunFireLighting = MainGameCanvas.var_98c == 1 && currentWeapon != 0;
+      gunFireLighting = MainGameCanvas.weaponSpriteFrame == 1 && currentWeapon != 0;
       var_a80.resetRenderer();
       Sector.resetClipArrays();
 
@@ -511,7 +511,7 @@ public final class GameEngine {
          default:
             MainGameCanvas.var_295 = MainGameCanvas.var_259++;
             levelVariant = 0;
-            var_480 = 1;
+            levelTransitionState = 1;
             break;
          case 4:
             messageText = "i think that's the wall|she mentioned";
@@ -612,9 +612,9 @@ public final class GameEngine {
          var_e72 = 0;
       }
 
-      if (var_446) {
+      if (toggleMapInput) {
          MainGameCanvas.mapEnabled = !MainGameCanvas.mapEnabled;
-         var_446 = false;
+         toggleMapInput = false;
       }
 
       int var12;
@@ -674,20 +674,20 @@ public final class GameEngine {
                      var42 = 1;
                      break;
                   case 26:
-                     if (var_d98[0]) {
+                     if (keysCollected[0]) {
                         (var38 = getDoorController(var11.backSurface.linkedSector)).doorState = 1;
                         var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
                      } else {
-                        messageText = var_d98[1] ? "oops, i need another key..." : "oh, i need a key...";
+                        messageText = keysCollected[1] ? "oops, i need another key..." : "oh, i need a key...";
                         messageTimer = 50;
                      }
                      break label389;
                   case 28:
-                     if (var_d98[1]) {
+                     if (keysCollected[1]) {
                         (var38 = getDoorController(var11.backSurface.linkedSector)).doorState = 1;
                         var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
                      } else {
-                        messageText = var_d98[0] ? "oops, i need another key..." : "oh, i need a key...";
+                        messageText = keysCollected[0] ? "oops, i need another key..." : "oh, i need a key...";
                         messageTimer = 50;
                      }
                      break label389;
@@ -714,7 +714,7 @@ public final class GameEngine {
                      break label389;
                   }
 
-                  var_480 = var42;
+                  levelTransitionState = var42;
                   break;
                }
             }
@@ -993,7 +993,7 @@ public final class GameEngine {
                   var31 = var29.x - player.x;
                   int var34 = var29.z - player.z;
                   int var36;
-                  if ((var35 = MathUtils.fastHypot(var31, var34)) > var_f32) {
+                  if ((var35 = MathUtils.fastHypot(var31, var34)) > enemyAggroDistance) {
                      var36 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var31, var35), var27.getMovementSpeed());
                      var12 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var34, var35), var27.getMovementSpeed());
                      int var37;
@@ -1123,14 +1123,14 @@ public final class GameEngine {
       inputRun = false;
       inputBack = false;
       var_3e3 = false;
-      var_446 = false;
+      toggleMapInput = false;
       var_3b8 = false;
-      var_480 = 0;
+      levelTransitionState = 0;
       weaponCooldownTimer = 0;
    }
 
-   private static void sub_3f5(Texture var0) {
-      var_8f4 = var0;
+   private static void setSkyboxTexture(Texture var0) {
+      skyboxTexture = var0;
    }
 
    private static void drawSprite(Texture var0, int var1, int var2, int var3, int var4, int var5, int var6) {
@@ -1381,7 +1381,7 @@ public final class GameEngine {
       label31: {
          var11 = var2 * 240;
          int var12;
-         int var13 = (var12 = var2 - 144) < 0 ? -var_acc[-var12] : var_acc[var12];
+         int var13 = (var12 = var2 - 144) < 0 ? -reciprocalTable[-var12] : reciprocalTable[var12];
          var15 = (var14 = var9 * var13 >> 8) >> 14;
          byte var10000;
          if ((var15 = gunFireLighting && var15 < 3 ? var5 + (4 >> var15) : var5 - var15) < 0) {
@@ -1398,11 +1398,11 @@ public final class GameEngine {
       }
 
       int[] var16 = var4[var15];
-      int var17 = var_ab4[var0];
-      int var18 = var_ab4[var1];
+      int var17 = angleCorrectionTable[var0];
+      int var18 = angleCorrectionTable[var1];
       int var19 = (var6 + (var7 * var17 >> 14)) * var14 - var8 >> 6;
       int var20 = (var7 - (var6 * var17 >> 14)) * var14 - var10;
-      int var21 = (var18 - var17) * var_acc[var1 - var0 + 1] >> 16;
+      int var21 = (var18 - var17) * reciprocalTable[var1 - var0 + 1] >> 16;
       int var22 = (var7 * var21 >> 14) * var14 >> 6;
       int var23 = (-var6 * var21 >> 14) * var14;
       var0 += var11;
@@ -1553,7 +1553,7 @@ public final class GameEngine {
          if (var11 >= 0 && var10 < 288 && var5 > var4 && var6 <= var0.length) {
             int var12 = var10 * 240 + var3;
             int var13 = var11 * 240 + var3;
-            int var14 = (var14 = var5 - var4) > 288 ? (var7 << 16) / var14 : var7 * var_acc[var14];
+            int var14 = (var14 = var5 - var4) > 288 ? (var7 << 16) / var14 : var7 * reciprocalTable[var14];
             int var15 = (var10 - var4) * var14 + (var6 << 16);
             int var16 = var0.length;
             int[] var17 = screenBuffer;
@@ -1599,7 +1599,7 @@ public final class GameEngine {
 
          int var13 = var11 * 240 + var3;
          int var14 = var12 * 240 + var3;
-         int var15 = (var15 = var5 - var4) > 288 ? (var7 - 1 << 16) / var15 : (var7 - 1) * var_acc[var15];
+         int var15 = (var15 = var5 - var4) > 288 ? (var7 - 1 << 16) / var15 : (var7 - 1) * reciprocalTable[var15];
          int var16 = var8 - 1;
          int var17 = (var11 - var4) * var15 + ((var6 & var16) << 16);
          int[] var18 = screenBuffer;
@@ -1668,8 +1668,8 @@ public final class GameEngine {
       int var10 = MathUtils.fixedPointMultiply(var0 - 120, var_10bb);
       int var11 = MathUtils.fastSin(var8);
       int var13 = MathUtils.fixedPointMultiply(MathUtils.fixedPointMultiply(102943, var11 + MathUtils.fixedPointMultiply(var9, var10)) + var3, var_1171) >> 8;
-      byte[] var14 = var_8f4.getPixelRowFast(var13);
-      int[] var15 = var_8f4.colorPalettes[8];
+      byte[] var14 = skyboxTexture.getPixelRowFast(var13);
+      int[] var15 = skyboxTexture.colorPalettes[8];
       int var16 = var6 * 240 + var0;
       int var17 = var7 * 240 + var0;
       int var18;
@@ -2256,8 +2256,8 @@ public final class GameEngine {
                      }
 
                      SectorData var39 = null;
-                     (var39 = var36[var37]).floorTexture = sub_cb(var39.floorTextureId);
-                     var39.ceilingTexture = sub_cb(var39.ceilingTextureId);
+                     (var39 = var36[var37]).floorTexture = getSprite(var39.floorTextureId);
+                     var39.ceilingTexture = getSprite(var39.ceilingTextureId);
                      ++var37;
                   }
                }
@@ -2488,7 +2488,7 @@ public final class GameEngine {
       weaponsAvailable[0] = true;
       weaponsAvailable[6] = true;
       currentWeapon = 0;
-      var_d46 = 0;
+      pendingWeaponSwitch = 0;
       messageText = "";
       messageTimer = 0;
       var_e72 = 0;
@@ -2498,7 +2498,7 @@ public final class GameEngine {
       var_f5f = 0;
       var_f88 = 0;
       levelComplete = true;
-      var_1044 = 1;
+      weaponAnimationState = 1;
       MainGameCanvas.var_e8b = 0;
       levelVariant = 0;
    }

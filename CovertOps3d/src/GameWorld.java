@@ -282,21 +282,21 @@ public final class GameWorld {
                var20 = GameEngine.ammoCounts;
                var20[5] += MainGameCanvas.var_1616[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
-               GameEngine.var_d46 = 5;
+               GameEngine.pendingWeaponSwitch = 5;
                GameEngine.levelComplete = true;
-               GameEngine.var_1044 = 8;
+               GameEngine.weaponAnimationState = 8;
                break;
             case 2006:
                GameEngine.weaponsAvailable[7] = true;
                var20 = GameEngine.ammoCounts;
                var20[7] += MainGameCanvas.var_1677[GameEngine.difficultyLevel];
                this.pickupItems.removeElementAt(var17--);
-               GameEngine.var_d46 = 7;
+               GameEngine.pendingWeaponSwitch = 7;
                GameEngine.levelComplete = true;
-               GameEngine.var_1044 = 8;
+               GameEngine.weaponAnimationState = 8;
                MainGameCanvas.var_295 = MainGameCanvas.var_259++;
                GameEngine.levelVariant = 0;
-               GameEngine.var_480 = 1;
+               GameEngine.levelTransitionState = 1;
                break;
             case 2007:
                var20 = GameEngine.ammoCounts;
@@ -338,11 +338,11 @@ public final class GameWorld {
                label173: {
                   switch(var18) {
                   case 5:
-                     GameEngine.var_d98[0] = true;
+                     GameEngine.keysCollected[0] = true;
                      this.staticObjects[var17] = null;
                      break label173;
                   case 13:
-                     GameEngine.var_d98[1] = true;
+                     GameEngine.keysCollected[1] = true;
                      this.staticObjects[var17] = null;
                      break label173;
                   case 82:
@@ -356,9 +356,9 @@ public final class GameWorld {
                      var20 = GameEngine.ammoCounts;
                      var20[1] += MainGameCanvas.var_157a[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
-                     GameEngine.var_d46 = 1;
+                     GameEngine.pendingWeaponSwitch = 1;
                      GameEngine.levelComplete = true;
-                     GameEngine.var_1044 = 8;
+                     GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2002:
                      if (MainGameCanvas.var_259 == 3) {
@@ -370,45 +370,45 @@ public final class GameWorld {
                      var20 = GameEngine.ammoCounts;
                      var20[2] += MainGameCanvas.var_1592[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
-                     GameEngine.var_d46 = 2;
+                     GameEngine.pendingWeaponSwitch = 2;
                      GameEngine.levelComplete = true;
-                     GameEngine.var_1044 = 8;
+                     GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2003:
                      GameEngine.weaponsAvailable[3] = true;
                      var20 = GameEngine.ammoCounts;
                      var20[1] += MainGameCanvas.var_15c4[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
-                     GameEngine.var_d46 = 3;
+                     GameEngine.pendingWeaponSwitch = 3;
                      GameEngine.levelComplete = true;
-                     GameEngine.var_1044 = 8;
+                     GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2004:
                      GameEngine.weaponsAvailable[5] = true;
                      var20 = GameEngine.ammoCounts;
                      var20[5] += MainGameCanvas.var_1616[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
-                     GameEngine.var_d46 = 5;
+                     GameEngine.pendingWeaponSwitch = 5;
                      GameEngine.levelComplete = true;
-                     GameEngine.var_1044 = 8;
+                     GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2005:
                      GameEngine.weaponsAvailable[6] = true;
                      var20 = GameEngine.ammoCounts;
                      var20[6] += MainGameCanvas.var_1630[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
-                     GameEngine.var_d46 = 6;
+                     GameEngine.pendingWeaponSwitch = 6;
                      GameEngine.levelComplete = true;
-                     GameEngine.var_1044 = 8;
+                     GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2006:
                      GameEngine.weaponsAvailable[7] = true;
                      var20 = GameEngine.ammoCounts;
                      var20[7] += MainGameCanvas.var_1677[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
-                     GameEngine.var_d46 = 7;
+                     GameEngine.pendingWeaponSwitch = 7;
                      GameEngine.levelComplete = true;
-                     GameEngine.var_1044 = 8;
+                     GameEngine.weaponAnimationState = 8;
                      break;
                   case 2007:
                      var20 = GameEngine.ammoCounts;
@@ -469,9 +469,9 @@ public final class GameWorld {
                      var20 = GameEngine.ammoCounts;
                      var20[1] += MainGameCanvas.var_15d0[GameEngine.difficultyLevel];
                      this.staticObjects[var17] = null;
-                     GameEngine.var_d46 = 4;
+                     GameEngine.pendingWeaponSwitch = 4;
                      GameEngine.levelComplete = true;
-                     GameEngine.var_1044 = 8;
+                     GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2047:
                      var20 = GameEngine.ammoCounts;
@@ -484,7 +484,7 @@ public final class GameWorld {
 
                   MainGameCanvas.var_295 = MainGameCanvas.var_259++;
                   GameEngine.levelVariant = 0;
-                  GameEngine.var_480 = 1;
+                  GameEngine.levelTransitionState = 1;
                }
 
                MainGameCanvas.playSound(1, false, 80, 0);
@@ -975,7 +975,7 @@ public final class GameWorld {
                if (this.getSectorDataAtPoint(var15.x, var15.z).getSectorType() == 666) {
                   MainGameCanvas.var_295 = MainGameCanvas.var_259++;
                   GameEngine.levelVariant = 0;
-                  GameEngine.var_480 = 1;
+                  GameEngine.levelTransitionState = 1;
                }
             }
 
