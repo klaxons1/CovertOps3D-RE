@@ -20,7 +20,7 @@ public final class GameObject {
     public int spriteHeight2;
 
     public GameObject(Transform3D var1, int var2, int var3, int var4) {
-        // super(); - в Java ME для классов Object вызов super() не обязателен
+
         this.transform = var1;
         this.screenPos = new Point2D(0, 0);
         this.objectType = var3;
@@ -69,7 +69,7 @@ public final class GameObject {
                 this.aiState = 0;
                 break;
             default:
-                // ничего не делаем
+
         }
     }
 
