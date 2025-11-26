@@ -54,8 +54,8 @@ public final class GameEngine {
    private static int[] reciprocalTable;
    public static Vector floorClipHistory;
    public static Vector ceilingClipHistory;
-   public static Vector var_b86;
-   public static Vector var_bd3;
+   public static Vector doorControllers;
+   public static Vector elevatorControllers;
    public static int playerHealth = 100;
    public static int playerArmor = 0;
    public static int difficultyLevel = 1;
@@ -78,10 +78,10 @@ public final class GameEngine {
    public static boolean levelComplete = false;
    public static int weaponAnimationState = 0;
    public static boolean gunFireLighting = false;
-   public static int var_10bb;
-   public static int var_1103;
-   public static int var_1142;
-   public static int var_1171;
+   public static int skyboxScaleX;
+   public static int skyboxAngleFactor;
+   public static int skyboxScaleY;
+   public static int skyboxOffsetFactor;
    public static GameObject[] visibleGameObjects;
    public static int visibleObjectsCount;
 
@@ -92,8 +92,8 @@ public final class GameEngine {
       tempTransform = new Transform3D(0, 0, 0, 0);
       floorClipHistory = new Vector();
       ceilingClipHistory = new Vector();
-      var_b86 = new Vector();
-      var_bd3 = new Vector();
+      doorControllers = new Vector();
+      elevatorControllers = new Vector();
       visibleGameObjects = new GameObject[64];
       visibleObjectsCount = 0;
       BSPNode.visibleSectorsCount = 0;
@@ -121,10 +121,10 @@ public final class GameEngine {
          reciprocalTable[var4] = 65536 / var4;
       }
 
-      var_10bb = MathUtils.fixedPointDivide(65536, 17301600);
-      var_1103 = MathUtils.fixedPointMultiply(MathUtils.fixedPointDivide(65536, 15794176), 102943);
-      var_1142 = MathUtils.fixedPointDivide(65536, 18874368);
-      var_1171 = MathUtils.fixedPointDivide(65536, 411775);
+      skyboxScaleX = MathUtils.fixedPointDivide(65536, 17301600);
+      skyboxAngleFactor = MathUtils.fixedPointMultiply(MathUtils.fixedPointDivide(65536, 15794176), 102943);
+      skyboxScaleY = MathUtils.fixedPointDivide(65536, 18874368);
+      skyboxOffsetFactor = MathUtils.fixedPointDivide(65536, 411775);
       MainGameCanvas.freeMemory();
    }
 
@@ -133,8 +133,8 @@ public final class GameEngine {
       gameWorld.initializeWorld();
       player.copyFrom(gameWorld.worldOrigin);
       currentSector = gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
-      var_b86.removeAllElements();
-      var_bd3.removeAllElements();
+      doorControllers.removeAllElements();
+      elevatorControllers.removeAllElements();
       visibleObjectsCount = 0;
       BSPNode.visibleSectorsCount = 0;
       messageText = "";
@@ -724,9 +724,9 @@ public final class GameEngine {
       }
 
       SectorData var43;
-      for(var21 = 0; var21 < var_b86.size(); ++var21) {
+      for(var21 = 0; var21 < doorControllers.size(); ++var21) {
          DoorController var23;
-         if ((var23 = (DoorController)var_b86.elementAt(var21)).controlledSector == currentSector && var23.doorState == 2) {
+         if ((var23 = (DoorController) doorControllers.elementAt(var21)).controlledSector == currentSector && var23.doorState == 2) {
             var23.doorState = 1;
          }
 
@@ -769,11 +769,11 @@ public final class GameEngine {
          var44.doorState = var10001;
       }
 
-      for(var21 = 0; var21 < var_bd3.size(); ++var21) {
+      for(var21 = 0; var21 < elevatorControllers.size(); ++var21) {
          ElevatorController var24;
          short var25;
          short var45;
-         switch((var24 = (ElevatorController)var_bd3.elementAt(var21)).elevatorState) {
+         switch((var24 = (ElevatorController) elevatorControllers.elementAt(var21)).elevatorState) {
          case 0:
          default:
             continue;
@@ -1063,23 +1063,23 @@ public final class GameEngine {
    }
 
    private static DoorController getDoorController(SectorData var0) {
-      for(int var1 = 0; var1 < var_b86.size(); ++var1) {
+      for(int var1 = 0; var1 < doorControllers.size(); ++var1) {
          DoorController var2;
-         if ((var2 = (DoorController)var_b86.elementAt(var1)).controlledSector == var0) {
+         if ((var2 = (DoorController) doorControllers.elementAt(var1)).controlledSector == var0) {
             return var2;
          }
       }
 
       DoorController var3;
       (var3 = new DoorController()).controlledSector = var0;
-      var_b86.addElement(var3);
+      doorControllers.addElement(var3);
       return var3;
    }
 
    private static ElevatorController getElevatorController(SectorData var0) {
-      for(int var1 = 0; var1 < var_bd3.size(); ++var1) {
+      for(int var1 = 0; var1 < elevatorControllers.size(); ++var1) {
          ElevatorController var2;
-         if ((var2 = (ElevatorController)var_bd3.elementAt(var1)).controlledSector == var0) {
+         if ((var2 = (ElevatorController) elevatorControllers.elementAt(var1)).controlledSector == var0) {
             return var2;
          }
       }
@@ -1105,7 +1105,7 @@ public final class GameEngine {
       }
 
       var6.controlledSector = var0;
-      var_bd3.addElement(var6);
+      elevatorControllers.addElement(var6);
       return var6;
    }
 
@@ -1664,16 +1664,16 @@ public final class GameEngine {
       }
 
       int var8;
-      int var9 = MathUtils.fastCos(var8 = MathUtils.fixedPointMultiply(var0 - 120 << 16, var_1103));
-      int var10 = MathUtils.fixedPointMultiply(var0 - 120, var_10bb);
+      int var9 = MathUtils.fastCos(var8 = MathUtils.fixedPointMultiply(var0 - 120 << 16, skyboxAngleFactor));
+      int var10 = MathUtils.fixedPointMultiply(var0 - 120, skyboxScaleX);
       int var11 = MathUtils.fastSin(var8);
-      int var13 = MathUtils.fixedPointMultiply(MathUtils.fixedPointMultiply(102943, var11 + MathUtils.fixedPointMultiply(var9, var10)) + var3, var_1171) >> 8;
+      int var13 = MathUtils.fixedPointMultiply(MathUtils.fixedPointMultiply(102943, var11 + MathUtils.fixedPointMultiply(var9, var10)) + var3, skyboxOffsetFactor) >> 8;
       byte[] var14 = skyboxTexture.getPixelRowFast(var13);
       int[] var15 = skyboxTexture.colorPalettes[8];
       int var16 = var6 * 240 + var0;
       int var17 = var7 * 240 + var0;
       int var18;
-      int var19 = -(var18 = MathUtils.fixedPointMultiply(var9 * 200, var_1142)) * (144 - var6) + 6553600;
+      int var19 = -(var18 = MathUtils.fixedPointMultiply(var9 * 200, skyboxScaleY)) * (144 - var6) + 6553600;
       int[] var20 = screenBuffer;
       int var21;
       if ((var13 & 1) == 0) {
