@@ -68,7 +68,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public static byte soundEnabled = 1;
    public static byte musicEnabled = 1;
    public static byte vibrationEnabled = 1;
-   public static byte var_e8b = 0;
+   public static byte gameProgressFlags = 0;
    public static byte[][] saveData;
    public static boolean mapEnabled = false;
    public static final int[] var_f4a = new int[]{5, 5, 5};
@@ -387,7 +387,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                return;
             }
 
-            GameEngine.sub_95f();
+            GameEngine.resetPlayerProgress();
             if (var2 == 66) {
                var_259 = 0;
                var_295 = -1;
@@ -1955,10 +1955,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
             if (GameEngine.var_3b8) {
                GameEngine.var_3b8 = false;
-               GameEngine.pendingWeaponSwitch = GameEngine.sub_558(GameEngine.pendingWeaponSwitch);
+               GameEngine.pendingWeaponSwitch = GameEngine.cycleWeaponForward(GameEngine.pendingWeaponSwitch);
             }
 
-            GameEngine.pendingWeaponSwitch = GameEngine.sub_577(GameEngine.pendingWeaponSwitch);
+            GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(GameEngine.pendingWeaponSwitch);
             if (GameEngine.pendingWeaponSwitch != GameEngine.currentWeapon) {
                GameEngine.levelComplete = true;
                GameEngine.weaponAnimationState = 8;
@@ -2145,7 +2145,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      GameEngine.weaponCooldownTimer = 0;
                      GameEngine.weaponAnimationState = 8;
                      GameEngine.levelComplete = true;
-                     GameEngine.pendingWeaponSwitch = GameEngine.sub_577(6);
+                     GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(6);
                   }
                }
                break;
@@ -2165,7 +2165,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   weaponSpriteFrame = 2;
                   GameEngine.weaponAnimationState = 8;
                   GameEngine.levelComplete = true;
-                  GameEngine.pendingWeaponSwitch = GameEngine.sub_577(5);
+                  GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(5);
                }
             } else {
                this.var_933 = 0;
@@ -3168,7 +3168,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             soundEnabled = (var5 = var0.getRecord(1))[0];
             musicEnabled = var5[1];
             vibrationEnabled = var5[2];
-            var_e8b = var5[3];
+            gameProgressFlags = var5[3];
          }
 
          var0.closeRecordStore();
@@ -3185,7 +3185,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          (var2 = new byte[16])[0] = soundEnabled;
          var2[1] = musicEnabled;
          var2[2] = vibrationEnabled;
-         var2[3] = var_e8b;
+         var2[3] = gameProgressFlags;
          if (var1 > 0) {
             var0.setRecord(1, var2, 0, 16);
          } else {

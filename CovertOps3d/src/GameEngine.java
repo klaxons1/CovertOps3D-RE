@@ -66,15 +66,15 @@ public final class GameEngine {
    public static boolean[] keysCollected = new boolean[]{false, false};
    public static String messageText = "";
    public static int messageTimer = 0;
-   public static int var_e72 = 0;
-   public static WallDefinition var_e96 = null;
+   public static int interactionTimer = 0;
+   public static WallDefinition activeInteractable = null;
    public static Random random = new Random();
    public static boolean damageFlash = false;
    public static byte screenShake = 0;
    public static int cameraHeight;
    private static int enemyAggroDistance = MathUtils.fixedPointMultiply(1310720, 92682);
-   private static int var_f5f = 0;
-   private static int var_f88 = 0;
+   private static int cameraBobTimer = 0;
+   private static int lastGameLogicTime = 0;
    public static boolean levelComplete = false;
    public static int weaponAnimationState = 0;
    public static boolean gunFireLighting = false;
@@ -139,8 +139,8 @@ public final class GameEngine {
       BSPNode.visibleSectorsCount = 0;
       messageText = "";
       messageTimer = 0;
-      var_e72 = 0;
-      var_e96 = null;
+      interactionTimer = 0;
+      activeInteractable = null;
    }
 
    public static void handleWeaponChange(byte var0) {
@@ -472,11 +472,11 @@ public final class GameEngine {
    public static int renderFrame(Graphics var0, int var1) {
       currentSector = gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
       boolean var2 = false;
-      int var3 = var1 - var_f88;
-      var_f88 = var1;
+      int var3 = var1 - lastGameLogicTime;
+      lastGameLogicTime = var1;
       int var4 = MathUtils.fastHypot(player.velocityX, player.velocityY);
-      var_f5f += var3 * var4 >> 2;
-      int var8 = MathUtils.fastSin(var_f5f);
+      cameraBobTimer += var3 * var4 >> 2;
+      int var8 = MathUtils.fastSin(cameraBobTimer);
       int var5 = screenShake << 15;
       if ((screenShake & 1) > 0) {
          var5 = -var5;
@@ -519,7 +519,7 @@ public final class GameEngine {
          }
       }
 
-      if ((MainGameCanvas.var_e8b & 1) == 0 && MainGameCanvas.var_259 == 0 && currentSector.sectorId == 31) {
+      if ((MainGameCanvas.gameProgressFlags & 1) == 0 && MainGameCanvas.var_259 == 0 && currentSector.sectorId == 31) {
          messageText = "press 1 to open the door";
          messageTimer = 30;
       }
@@ -574,10 +574,10 @@ public final class GameEngine {
       int var21;
       if (!var_3e3) {
          if (var1 != null) {
-            var_e96 = (var21 = var1.getWallType()) != 1 && var21 != 11 && var21 != 26 && var21 != 28 && var21 != 51 && var21 != 62 ? null : var1;
+            activeInteractable = (var21 = var1.getWallType()) != 1 && var21 != 11 && var21 != 26 && var21 != 28 && var21 != 51 && var21 != 62 ? null : var1;
          }
       } else {
-         var_e96 = null;
+         activeInteractable = null;
       }
 
       int var3;
@@ -586,7 +586,7 @@ public final class GameEngine {
       int var6;
       int var7;
       int var10000;
-      if (var_e96 != null) {
+      if (activeInteractable != null) {
          var21 = player.rotation;
          var3 = MathUtils.fastSin(102943 - var21);
          var4 = MathUtils.fastCos(102943 - var21);
@@ -594,22 +594,22 @@ public final class GameEngine {
          var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
          var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
          Point2D[] var8;
-         Point2D var9 = (var8 = gameWorld.vertices)[var_e96.startVertexId & '\uffff'];
-         Point2D var10 = var8[var_e96.endVertexId & '\uffff'];
+         Point2D var9 = (var8 = gameWorld.vertices)[activeInteractable.startVertexId & '\uffff'];
+         Point2D var10 = var8[activeInteractable.endVertexId & '\uffff'];
          if (GameWorld.doLineSegmentsIntersect(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
-            var10000 = var_e72 + 1;
+            var10000 = interactionTimer + 1;
          } else {
-            var_e96 = null;
+            activeInteractable = null;
             var10000 = 0;
          }
 
-         var_e72 = var10000;
-         if (var_e72 >= 50) {
-            messageText = var_e96.getWallType() == 62 ? "press 1 to move the lift" : "press 1 to open the door";
+         interactionTimer = var10000;
+         if (interactionTimer >= 50) {
+            messageText = activeInteractable.getWallType() == 62 ? "press 1 to move the lift" : "press 1 to open the door";
             messageTimer = 10;
          }
       } else {
-         var_e72 = 0;
+         interactionTimer = 0;
       }
 
       if (toggleMapInput) {
@@ -651,8 +651,8 @@ public final class GameEngine {
                Point2D var13 = var32[var11.startVertexId & '\uffff'];
                Point2D var14 = var32[var11.endVertexId & '\uffff'];
                if (GameWorld.doLineSegmentsIntersect(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
-                  if ((MainGameCanvas.var_e8b & 1) == 0) {
-                     MainGameCanvas.var_e8b = (byte)(MainGameCanvas.var_e8b | 1);
+                  if ((MainGameCanvas.gameProgressFlags & 1) == 0) {
+                     MainGameCanvas.gameProgressFlags = (byte)(MainGameCanvas.gameProgressFlags | 1);
                   }
 
                   DoorController var38;
@@ -1203,7 +1203,7 @@ public final class GameEngine {
          int var18 = var3 + var6;
 
          for(int var19 = var8; var19 <= var9; ++var19) {
-            sub_4e2(var0.getPixelRow(var14), var14 & 1, var17, var19 + var2, var3, var18, 0, var11);
+            drawSpriteColumn(var0.getPixelRow(var14), var14 & 1, var17, var19 + var2, var3, var18, 0, var11);
             var14 = (var13 += var12) >>> 16;
          }
 
@@ -1282,14 +1282,14 @@ public final class GameEngine {
                int var64 = var41 >> 16;
                int var65 = (int)((long)var59 * (long)var16 >> 16) + var15 >> 16;
                if (var39 >= var41 && var44 != null) {
-                  sub_477(var42, var52, var64 + 1, var25);
+                  updateCeilingSpan(var42, var52, var64 + 1, var25);
                   if (var64 < var29[var52]) {
                      var29[var52] = (short)var64;
                   }
                }
 
                if (var43 == null) {
-                  sub_523(var52, 0, var61, var23);
+                  drawSkyboxColumn(var52, 0, var61, var23);
                }
 
                label105: {
@@ -1297,9 +1297,9 @@ public final class GameEngine {
                   int var10002;
                   short[] var66;
                   if (var35 < var37) {
-                     sub_50e(var1.getPixelRowFast(var65), var65 & 1, var1.colorPalettes[var60], var52, var61, var62, var17, var18, var30);
+                     drawWallTextureColumn(var1.getPixelRowFast(var65), var65 & 1, var1.colorPalettes[var60], var52, var61, var62, var17, var18, var30);
                      if (var43 != null) {
-                        sub_4be(var42, var52, var61, var24);
+                        updateFloorSpan(var42, var52, var61, var24);
                      }
 
                      if (var62 <= var28[var52] || var1 == defaultErrorTexture) {
@@ -1314,7 +1314,7 @@ public final class GameEngine {
                         break label105;
                      }
 
-                     sub_4be(var42, var52, var61, var24);
+                     updateFloorSpan(var42, var52, var61, var24);
                      if (var61 <= var28[var52]) {
                         break label105;
                      }
@@ -1328,13 +1328,13 @@ public final class GameEngine {
                }
 
                if (var44 == null) {
-                  sub_523(var52, var64 + 1, 287, var23);
+                  drawSkyboxColumn(var52, var64 + 1, 287, var23);
                }
 
                if (var39 < var41) {
-                  sub_50e(var2.getPixelRowFast(var65), var65 & 1, var2.colorPalettes[var60], var52, var63, var64, var19, var20, var31);
+                  drawWallTextureColumn(var2.getPixelRowFast(var65), var65 & 1, var2.colorPalettes[var60], var52, var63, var64, var19, var20, var31);
                   if (var44 != null) {
-                     sub_477(var42, var52, var64 + 1, var25);
+                     updateCeilingSpan(var42, var52, var64 + 1, var25);
                   }
 
                   if (var63 < var29[var52] && var2 != defaultErrorTexture) {
@@ -1374,7 +1374,7 @@ public final class GameEngine {
       }
    }
 
-   public static void sub_430(int var0, int var1, int var2, byte[] var3, int[][] var4, int var5, int var6, int var7, int var8, int var9, int var10) {
+   public static void drawFlatSurface(int var0, int var1, int var2, byte[] var3, int[][] var4, int var5, int var6, int var7, int var8, int var9, int var10) {
       int var11;
       int var14;
       int var15;
@@ -1417,7 +1417,7 @@ public final class GameEngine {
 
    }
 
-   private static void sub_477(short var0, int var1, int var2, int var3) {
+   private static void updateCeilingSpan(short var0, int var1, int var2, int var3) {
       short var4 = Sector.floorClip[var1];
       short var5 = Sector.ceilingClip[var1];
       if (var2 <= var5 && var2 > 144 && var3 > 0) {
@@ -1473,7 +1473,7 @@ public final class GameEngine {
       }
    }
 
-   private static void sub_4be(short var0, int var1, int var2, int var3) {
+   private static void updateFloorSpan(short var0, int var1, int var2, int var3) {
       short var4 = Sector.floorClip[var1];
       short var5 = Sector.ceilingClip[var1];
       if (var2 >= var4 && var2 < 144 && var3 < 0) {
@@ -1528,7 +1528,7 @@ public final class GameEngine {
       }
    }
 
-   private static void sub_4e2(byte[] var0, int var1, int[] var2, int var3, int var4, int var5, int var6, int var7) {
+   private static void drawSpriteColumn(byte[] var0, int var1, int[] var2, int var3, int var4, int var5, int var6, int var7) {
       short var8 = Sector.floorClip[var3];
       short var9 = Sector.ceilingClip[var3];
       if (var4 <= var9 && var5 >= var8) {
@@ -1583,7 +1583,7 @@ public final class GameEngine {
       }
    }
 
-   private static void sub_50e(byte[] var0, int var1, int[] var2, int var3, int var4, int var5, int var6, int var7, int var8) {
+   private static void drawWallTextureColumn(byte[] var0, int var1, int[] var2, int var3, int var4, int var5, int var6, int var7, int var8) {
       short var9 = Sector.floorClip[var3];
       short var10 = Sector.ceilingClip[var3];
       if (var5 >= var9 && var4 <= var10) {
@@ -1650,7 +1650,7 @@ public final class GameEngine {
       }
    }
 
-   private static void sub_523(int var0, int var1, int var2, int var3) {
+   private static void drawSkyboxColumn(int var0, int var1, int var2, int var3) {
       short var4 = Sector.floorClip[var0];
       short var5 = Sector.ceilingClip[var0];
       int var6 = var1;
@@ -1691,7 +1691,7 @@ public final class GameEngine {
       }
    }
 
-   public static int sub_558(int var0) {
+   public static int cycleWeaponForward(int var0) {
       ++var0;
       int var1 = var0;
       if (var0 > 7) {
@@ -1711,7 +1711,7 @@ public final class GameEngine {
       return var0;
    }
 
-   public static int sub_577(int var0) {
+   public static int findNextAvailableWeapon(int var0) {
       if (var0 == 0) {
          return var0;
       } else {
@@ -2476,7 +2476,7 @@ public final class GameEngine {
 
    }
 
-   public static void sub_95f() {
+   public static void resetPlayerProgress() {
       playerHealth = 100;
       playerArmor = 0;
 
@@ -2491,15 +2491,15 @@ public final class GameEngine {
       pendingWeaponSwitch = 0;
       messageText = "";
       messageTimer = 0;
-      var_e72 = 0;
-      var_e96 = null;
+      interactionTimer = 0;
+      activeInteractable = null;
       damageFlash = false;
       screenShake = 0;
-      var_f5f = 0;
-      var_f88 = 0;
+      cameraBobTimer = 0;
+      lastGameLogicTime = 0;
       levelComplete = true;
       weaponAnimationState = 1;
-      MainGameCanvas.var_e8b = 0;
+      MainGameCanvas.gameProgressFlags = 0;
       levelVariant = 0;
    }
 }
