@@ -228,7 +228,7 @@ public final class GameWorld {
                var13 = var11 < 0 ? -var11 : var11;
                var14 = var12 < 0 ? -var12 : var12;
                if (var13 < var16 && var14 < var16) {
-                  if (var9.objectType == 10 && MainGameCanvas.var_259 == 4) {
+                  if (var9.objectType == 10 && MainGameCanvas.currentLevelId == 4) {
                      GameEngine.messageText = GameEngine.ammoCounts[6] > 0 ? "find the wall i told you|and blow it up!" : "go, get the dynamite!";
                      GameEngine.messageTimer = 30;
                   }
@@ -294,7 +294,7 @@ public final class GameWorld {
                GameEngine.pendingWeaponSwitch = 7;
                GameEngine.weaponSwitchAnimationActive = true;
                GameEngine.weaponAnimationState = 8;
-               MainGameCanvas.var_295 = MainGameCanvas.var_259++;
+               MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
                GameEngine.levelVariant = 0;
                GameEngine.levelTransitionState = 1;
                break;
@@ -361,7 +361,7 @@ public final class GameWorld {
                      GameEngine.weaponAnimationState = 8;
                      break label173;
                   case 2002:
-                     if (MainGameCanvas.var_259 == 3) {
+                     if (MainGameCanvas.currentLevelId == 3) {
                         GameEngine.messageText = "to change weapon press 3";
                         GameEngine.messageTimer = 30;
                      }
@@ -482,7 +482,7 @@ public final class GameWorld {
                      continue;
                   }
 
-                  MainGameCanvas.var_295 = MainGameCanvas.var_259++;
+                  MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
                   GameEngine.levelVariant = 0;
                   GameEngine.levelTransitionState = 1;
                }
@@ -970,10 +970,10 @@ public final class GameWorld {
             }
 
             GameEngine.screenShake = 16;
-            if (MainGameCanvas.var_259 == 4) {
+            if (MainGameCanvas.currentLevelId == 4) {
                var15 = var2.transform;
                if (this.getSectorDataAtPoint(var15.x, var15.z).getSectorType() == 666) {
-                  MainGameCanvas.var_295 = MainGameCanvas.var_259++;
+                  MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
                   GameEngine.levelVariant = 0;
                   GameEngine.levelTransitionState = 1;
                }

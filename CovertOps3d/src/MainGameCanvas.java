@@ -14,8 +14,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public boolean var_1ae = false;
    public static CovertOps3D mainMidlet = null;
    private static final String[] levelNames = new String[]{"01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"};
-   public static int var_259 = 0;
-   public static int var_295 = -1;
+   public static int currentLevelId = 0;
+   public static int previousLevelId = -1;
    public static int var_2a5;
    public static AudioManager audioManager;
    private String[] SETTINGS_MENU_ITEMS;
@@ -389,8 +389,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             GameEngine.resetPlayerProgress();
             if (var2 == 66) {
-               var_259 = 0;
-               var_295 = -1;
+               currentLevelId = 0;
+               previousLevelId = -1;
                if ((var2 = this.drawDialogOverlay(var1, 0)) != -1) {
                   continue;
                }
@@ -402,8 +402,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             int[] var3 = new int[]{2, 4, 20, 5, 6, 22, 7, 9};
             int var4 = var2 - 67;
-            var_259 = var3[var4];
-            var_295 = -1;
+            currentLevelId = var3[var4];
+            previousLevelId = -1;
             loadGameState(var4);
             GameEngine.levelTransitionState = 1;
             break;
@@ -421,10 +421,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                label170: {
                   MainGameCanvas var10000;
                   if (GameEngine.levelTransitionState == 1) {
-                     switch(var_259) {
+                     switch(currentLevelId) {
                      case 0:
                      case 13:
-                        var_259 = 0;
+                        currentLevelId = 0;
                         saveGameState(8);
                         if ((var2 = this.drawDialogOverlay(var1, 9)) == -1) {
                            var2 = this.showMenuScreen(var1, true);
@@ -453,7 +453,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         break;
                      case 4:
                      case 20:
-                        if (var_259 == 4) {
+                        if (currentLevelId == 4) {
                            saveGameState(1);
                            if ((var2 = this.drawDialogOverlay(var1, 2)) != -1) {
                               continue label182;
@@ -469,7 +469,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                               continue label182;
                            }
                         } else {
-                           var_259 = 4;
+                           currentLevelId = 4;
                         }
 
                         saveGameState(2);
@@ -485,7 +485,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         break;
                      case 6:
                      case 22:
-                        if (var_259 == 6) {
+                        if (currentLevelId == 6) {
                            saveGameState(4);
                            if ((var2 = this.drawDialogOverlay(var1, 5)) != -1) {
                               continue label182;
@@ -501,7 +501,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                               continue label182;
                            }
                         } else {
-                           var_259 = 6;
+                           currentLevelId = 6;
                         }
 
                         saveGameState(5);
@@ -2137,7 +2137,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                break;
             case 6:
                if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[6] > 0) {
-                  if ((var_259 == 4 || var_259 == 7 || var_259 == 8) && (var_259 != 4 || GameEngine.currentSector.getSectorType() != 666) && GameEngine.ammoCounts[6] == 1) {
+                  if ((currentLevelId == 4 || currentLevelId == 7 || currentLevelId == 8) && (currentLevelId != 4 || GameEngine.currentSector.getSectorType() != 666) && GameEngine.ammoCounts[6] == 1) {
                      GameEngine.messageText = "i'd better use it|to finish my mission";
                      GameEngine.messageTimer = 50;
                   } else if (GameEngine.gameWorld.throwGrenade()) {
@@ -2214,12 +2214,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private void loadLevelResources() {
       try {
          freeMemory();
-         if (var_295 < var_259) {
-            if (var_295 > -1) {
+         if (previousLevelId < currentLevelId) {
+            if (previousLevelId > -1) {
                this.var_ab7 = GameEngine.gameWorld.staticObjects;
             }
 
-            if (!GameEngine.loadMapData("/level_" + levelNames[var_259], this.var_ae7 == null)) {
+            if (!GameEngine.loadMapData("/level_" + levelNames[currentLevelId], this.var_ae7 == null)) {
                CovertOps3D.exitApplication();
             }
 
@@ -2232,7 +2232,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
          } else {
             this.var_ae7 = GameEngine.gameWorld.staticObjects;
-            if (!GameEngine.loadMapData("/level_" + levelNames[var_259], this.var_ab7 == null)) {
+            if (!GameEngine.loadMapData("/level_" + levelNames[currentLevelId], this.var_ab7 == null)) {
                CovertOps3D.exitApplication();
             }
 
@@ -2278,7 +2278,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         break label166;
                      case 10:
                         sub_3bc(var19, var9, var10);
-                        if (levelNames[var_259] == "06c") {
+                        if (levelNames[currentLevelId] == "06c") {
                            var19.currentState = 1;
                         }
                         continue;
@@ -2403,7 +2403,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          GameEngine.preloadTexture((byte)-71);
          GameEngine.preloadTexture((byte)-51);
          GameEngine.preloadTexture((byte)-43);
-         if (var_259 == 10) {
+         if (currentLevelId == 10) {
             GameEngine.preloadTexture((byte)-72);
          }
 

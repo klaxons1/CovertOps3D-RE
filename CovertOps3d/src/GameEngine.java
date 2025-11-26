@@ -501,7 +501,7 @@ public final class GameEngine {
 
       var0.drawRGB(screenBuffer, 0, 240, 0, 0, 240, 288, false);
       if (currentSector.getSectorType() == 666) {
-         switch(MainGameCanvas.var_259) {
+         switch(MainGameCanvas.currentLevelId) {
          case 3:
             if (!weaponsAvailable[8]) {
                messageText = "get the sniper rifle!";
@@ -509,7 +509,7 @@ public final class GameEngine {
                break;
             }
          default:
-            MainGameCanvas.var_295 = MainGameCanvas.var_259++;
+            MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
             levelVariant = 0;
             levelTransitionState = 1;
             break;
@@ -519,7 +519,7 @@ public final class GameEngine {
          }
       }
 
-      if ((MainGameCanvas.gameProgressFlags & 1) == 0 && MainGameCanvas.var_259 == 0 && currentSector.sectorId == 31) {
+      if ((MainGameCanvas.gameProgressFlags & 1) == 0 && MainGameCanvas.currentLevelId == 0 && currentSector.sectorId == 31) {
          messageText = "press 1 to open the door";
          messageTimer = 30;
       }
@@ -663,13 +663,13 @@ public final class GameEngine {
                      var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
                      break label389;
                   case 11:
-                     if (MainGameCanvas.var_259 == 7 && ammoCounts[6] == 0) {
+                     if (MainGameCanvas.currentLevelId == 7 && ammoCounts[6] == 0) {
                         messageText = "we'll need some dynamite|maybe i should look for some";
                         messageTimer = 50;
                         break label389;
                      }
 
-                     MainGameCanvas.var_295 = MainGameCanvas.var_259++;
+                     MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
                      levelVariant = var11.getSpecialType();
                      var42 = 1;
                      break;
@@ -692,7 +692,7 @@ public final class GameEngine {
                      }
                      break label389;
                   case 51:
-                     MainGameCanvas.var_295 = MainGameCanvas.var_259--;
+                     MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId--;
                      levelVariant = var11.getSpecialType();
                      var42 = -1;
                      break;
