@@ -230,7 +230,7 @@ public final class GameEngine {
       }
    }
 
-   private static void sub_14e(WallSegment var0, WallDefinition var1, WallSurface var2, Point2D[] var3, int var4, int var5, int var6, int var7) {
+   private static void renderSolidWallSegment(WallSegment var0, WallDefinition var1, WallSurface var2, Point2D[] var3, int var4, int var5, int var6, int var7) {
       SectorData var8 = var2.linkedSector;
       int var9 = -var5 + (-var8.ceilingHeight << 16);
       int var10 = -var5 + (-var8.floorHeight << 16);
@@ -258,7 +258,7 @@ public final class GameEngine {
 
    }
 
-   private static void sub_17a(WallSegment var0, WallDefinition var1, WallSurface var2, WallSurface var3, Point2D[] var4, int var5, int var6, int var7, int var8) {
+   private static void renderPortalWallSegment(WallSegment var0, WallDefinition var1, WallSurface var2, WallSurface var3, Point2D[] var4, int var5, int var6, int var7, int var8) {
       SectorData var9 = var2.linkedSector;
       SectorData var10 = var3.linkedSector;
       int var11 = -var6 + (-var9.ceilingHeight << 16);
@@ -314,12 +314,12 @@ public final class GameEngine {
       WallSurface var8;
       if ((var8 = var6.backSurface) != null) {
          if (var0.isFrontFacing) {
-            sub_17a(var0, var6, var7, var8, var1, var2, var3, var4, var5);
+            renderPortalWallSegment(var0, var6, var7, var8, var1, var2, var3, var4, var5);
          } else {
-            sub_17a(var0, var6, var8, var7, var1, var2, var3, var4, var5);
+            renderPortalWallSegment(var0, var6, var8, var7, var1, var2, var3, var4, var5);
          }
       } else if (var0.isFrontFacing) {
-         sub_14e(var0, var6, var7, var1, var2, var3, var4, var5);
+         renderSolidWallSegment(var0, var6, var7, var1, var2, var3, var4, var5);
       } else {
          throw new IllegalStateException();
       }
