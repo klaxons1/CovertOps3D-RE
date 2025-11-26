@@ -49,7 +49,7 @@ public final class GameEngine {
    private static int var_9fa;
    private static int var_a27;
    private static int var_a34;
-   private static RenderUtils var_a80;
+   private static RenderUtils renderUtils;
    private static int[] angleCorrectionTable;
    private static int[] reciprocalTable;
    public static Vector floorClipHistory;
@@ -82,8 +82,8 @@ public final class GameEngine {
    public static int var_1103;
    public static int var_1142;
    public static int var_1171;
-   public static GameObject[] var_118d;
-   public static int var_119a;
+   public static GameObject[] visibleGameObjects;
+   public static int visibleObjectsCount;
 
    public static void initializeEngine() {
       MainGameCanvas.freeMemory();
@@ -94,8 +94,8 @@ public final class GameEngine {
       ceilingClipHistory = new Vector();
       var_b86 = new Vector();
       var_bd3 = new Vector();
-      var_118d = new GameObject[64];
-      var_119a = 0;
+      visibleGameObjects = new GameObject[64];
+      visibleObjectsCount = 0;
       BSPNode.visibleSectorsCount = 0;
       defaultErrorTexture = new Texture((byte)0, 8, 8, 0, 0, new int[]{16777215, 16711680});
       byte[] var0 = new byte[]{17, 17, 17, 17, 17, 17, 17, 17};
@@ -107,7 +107,7 @@ public final class GameEngine {
       defaultErrorTexture.setPixelData(6, var0);
       screenBuffer = new int[69120];
       depthBuffer = new short[288];
-      var_a80 = new RenderUtils();
+      renderUtils = new RenderUtils();
       angleCorrectionTable = new int[240];
 
       for(int var3 = 0; var3 < 240; ++var3) {
@@ -135,7 +135,7 @@ public final class GameEngine {
       currentSector = gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
       var_b86.removeAllElements();
       var_bd3.removeAllElements();
-      var_119a = 0;
+      visibleObjectsCount = 0;
       BSPNode.visibleSectorsCount = 0;
       messageText = "";
       messageTimer = 0;
@@ -328,7 +328,7 @@ public final class GameEngine {
    private static void renderDynamicObjects(Sector var0, int var1, int var2, int var3, long var4, long var6) {
       SectorData var8 = var0.getSectorData();
       Vector var9 = var0.dynamicObjects;
-      var_119a = 0;
+      visibleObjectsCount = 0;
 
       int var10;
       GameObject var11;
@@ -383,27 +383,27 @@ public final class GameEngine {
                }
 
                var10000.texture2 = var19;
-               var_118d[var_119a++] = var11;
-               if (var_119a >= 64) {
+               visibleGameObjects[visibleObjectsCount++] = var11;
+               if (visibleObjectsCount >= 64) {
                   break;
                }
             }
          }
       }
 
-      for(var10 = 1; var10 < var_119a; ++var10) {
-         var11 = var_118d[var10];
+      for(var10 = 1; var10 < visibleObjectsCount; ++var10) {
+         var11 = visibleGameObjects[var10];
 
          int var17;
-         for(var17 = var10; var17 > 0 && var_118d[var17 - 1].compareDepth(var11); --var17) {
-            var_118d[var17] = var_118d[var17 - 1];
+         for(var17 = var10; var17 > 0 && visibleGameObjects[var17 - 1].compareDepth(var11); --var17) {
+            visibleGameObjects[var17] = visibleGameObjects[var17 - 1];
          }
 
-         var_118d[var17] = var11;
+         visibleGameObjects[var17] = var11;
       }
 
-      for(var10 = 0; var10 < var_119a; ++var10) {
-         if ((var11 = var_118d[var10]).projectToScreen()) {
+      for(var10 = 0; var10 < visibleObjectsCount; ++var10) {
+         if ((var11 = visibleGameObjects[var10]).projectToScreen()) {
             if (var11.texture2 != null) {
                var11.calculateSpriteSize2();
                drawSprite(var11.texture2, var8.getLightLevel(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth2, var11.spriteHeight2);
@@ -430,7 +430,7 @@ public final class GameEngine {
       int var8 = MathUtils.fastSin(var3);
       int var9 = MathUtils.fastCos(var3);
       gunFireLighting = MainGameCanvas.weaponSpriteFrame == 1 && currentWeapon != 0;
-      var_a80.resetRenderer();
+      renderUtils.resetRenderer();
       Sector.resetClipArrays();
 
       int var10;
@@ -458,7 +458,7 @@ public final class GameEngine {
          }
       }
 
-      var_a80.renderAllSpans(var8, var9, -var6, -var5);
+      renderUtils.renderAllSpans(var8, var9, -var6, -var5);
 
       for(var10 = BSPNode.visibleSectorsCount - 1; var10 >= 0; --var10) {
          var11 = BSPNode.visibleSectorsList[var10];
@@ -1359,7 +1359,7 @@ public final class GameEngine {
             var67 = (short)var_a34;
 
             for(var68 = var_9e4; var68 <= var_9fa; ++var68) {
-               var_a80.addRenderSpan(depthBuffer[var68], var67, var42, var68);
+               renderUtils.addRenderSpan(depthBuffer[var68], var67, var42, var68);
             }
          }
 
@@ -1367,7 +1367,7 @@ public final class GameEngine {
             var67 = (short)var_a27;
 
             for(var68 = var_958; var68 <= var_9b4; ++var68) {
-               var_a80.addRenderSpan(depthBuffer[var68], var67, var42, var68);
+               renderUtils.addRenderSpan(depthBuffer[var68], var67, var42, var68);
             }
          }
 
@@ -1447,18 +1447,18 @@ public final class GameEngine {
             }
 
             for(var14 = var_9e4; var14 <= var13; ++var14) {
-               var_a80.addRenderSpan(depthBuffer[var14], var9, var0, var14);
+               renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
 
             for(var14 = var12; var14 <= var_9fa; ++var14) {
-               var_a80.addRenderSpan(depthBuffer[var14], var9, var0, var14);
+               renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
          } else {
             if (var_9e4 >= 0) {
                var9 = (short)var_a34;
 
                for(var10 = var_9e4; var10 <= var_9fa; ++var10) {
-                  var_a80.addRenderSpan(depthBuffer[var10], var9, var0, var10);
+                  renderUtils.addRenderSpan(depthBuffer[var10], var9, var0, var10);
                }
             }
 
@@ -1502,18 +1502,18 @@ public final class GameEngine {
             }
 
             for(var14 = var_958; var14 <= var13; ++var14) {
-               var_a80.addRenderSpan(depthBuffer[var14], var9, var0, var14);
+               renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
 
             for(var14 = var12; var14 <= var_9b4; ++var14) {
-               var_a80.addRenderSpan(depthBuffer[var14], var9, var0, var14);
+               renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
          } else {
             if (var_958 >= 0) {
                var9 = (short)var_a27;
 
                for(var10 = var_958; var10 <= var_9b4; ++var10) {
-                  var_a80.addRenderSpan(depthBuffer[var10], var9, var0, var10);
+                  renderUtils.addRenderSpan(depthBuffer[var10], var9, var0, var10);
                }
             }
 

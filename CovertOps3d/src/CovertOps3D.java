@@ -8,23 +8,23 @@ public class CovertOps3D extends MIDlet {
 
    public void startApp() {
       if (mainGameCanvas != null) {
-         mainGameCanvas.sub_32d();
+         mainGameCanvas.resumeGame();
       } else {
          display = Display.getDisplay(this);
          mainGameCanvas = new MainGameCanvas();
          mainGameCanvas.sub_71();
          display.setCurrent(mainGameCanvas);
-         MainGameCanvas.var_1e5 = this;
+         MainGameCanvas.mainMidlet = this;
          instance = this;
       }
    }
 
    public void pauseApp() {
-      mainGameCanvas.sub_308();
+      mainGameCanvas.stopGame();
    }
 
    public void destroyApp(boolean var1) {
-      mainGameCanvas.sub_35e();
+      mainGameCanvas.stopGameLoop();
 
       while(!mainGameCanvas.var_16f) {
          Thread.yield();

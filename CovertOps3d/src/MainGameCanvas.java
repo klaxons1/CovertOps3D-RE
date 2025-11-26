@@ -12,7 +12,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public boolean isGamePaused = false;
    public boolean var_16f = true;
    public boolean var_1ae = false;
-   public static CovertOps3D var_1e5 = null;
+   public static CovertOps3D mainMidlet = null;
    private static final String[] levelNames = new String[]{"01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"};
    public static int var_259 = 0;
    public static int var_295 = -1;
@@ -27,7 +27,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private static final String[] var_421 = new String[]{"are you sure?", "", "no"};
    private static final String[] var_43e = new String[]{"Controls:", "", "2/up - walk forward", "8/down - step backwards", "4/left - turn left", "6/right - turn right", "7 - strafe left", "9 - strafe right", "5/action - fire", "1 - open door/move lift", "3 - select weapon", "0 - toggle map"};
    private static final String[] var_44c = new String[]{"Covert Ops 3D", "", "Developed by:", "Micazook Mobile Ltd.", "", "Executive producers:", "Marcin Kochanowski", "Wojciech Charysz", "Michael Fotoohi", "", "Senior developer:", "Tomasz Mroczek", "", "Level design:", "Kamil Bachminski", "", "Texture artists:", "Kamil Bachminski", "Patryk Piescinski", "", "Character design:", "Lukasz 'Slizgi' Sliwinski", "Kamil Bachminski", "", "Music:", "Slawomir Opalinski", "", "Sound effects:", "Kamil Bachminski", "", "", "Publisher:", "Micazook Ltd.", "", "www.micazook.com", "", "for support email", "support@micazook.com", "", "(c) 2006 Micazook Ltd.", "Trademarks belong to", "their respective owners.", "", "All rights reserved!"};
-   private static final String[][] var_496 = new String[][]{{"RMy name is captain Thomas Reed. My mission, Covert Operations in service of the US army. I began my career in Spain and since then I have participated in many secret missions against the enemy. As an Allied secret agent my job is to infiltrate and sabotage behind the enemy lines. This mission is a typical one, dangerous with my name written on it!! Our spy planes have revealed photographs of what seems to be of an immense constructions project taking place around the Weissberg Mountain in the German Alps. It seems that the Germans are digging a network of reinforcements and underground bunkers on a previously unparalleled scale. My mission is to hide aboard a transportation supply train until it gets to Weissberg and to meet with our undercover agent on location there. With her help, I need to get the documents that reveals the purpose of this enterprise which incidentally the HQ nicknamed Fort Weissberg. Not sure how yet but I need to devise a way to sabotage the railway system and other important installations on site. I need some luck today and lots of it!!"}, {"ACaptain Reed I presume?", "RWho are you!?", "AAnna Sierck, MI5. I was told to meet you here in Weissberg.", "RSo why now, why in the train? If the Germans find us here, my mission is over!", "AThere has been a change of plans. Don't worry. We are safe, at least until the train stops.", "RWhat's happening, has something gone wrong?", "ANo don't worry, HQ's idea, just some last minute changes to keep the Germans guessing.", "RI knew it.", "AEver since our last failed attempt the trains are heavily searched. You'll have to leave at the last hidden station in the forest and walk to the fort by foot.", "RLast, failed attempt?? How many times have you tried so far?", "ARight now you don't need to know that. Ah and one more thing. The forts gates are not as heavily guarded as the train yard, but nevertheless you can expect a lot of resistance there. I know of a sniper rifle stored somewhere at the station. Find it and use it against the gate guards."}, {"AI see you found this rifle, good. You'll have to shoot the guards before entering Fort Weissberg.", "RAnd you?", "AI'll meet you inside. Maybe I'll be able to get a uniform for you.", "RThanks.", "AReed?", "RYes?", "AGood luck."}, {"AGlad you made it.", "RPiece of cake.", "AUnfortunately I have some bad news. There's gossip of some sort of a secret weapon undergoing tests here. I don't know if it's true, but the guard outpost's has been heavily reinforced. Uniform will not do you any good - they are checking everyone's id cards now practically on every corridor.", "RWhat do I do then?", "AYou can get deeper into the fortress through the unfinished tunnels. But you'll need explosives, as some of the passages are systematically being sealed for security reasons. I'm sure there's dynamite somewhere here. Get it and then find a wall that looks like it shouldn't be there...", "RWhat? Can't you be a little bit more precise?", "AUnfortunately our plans backfired and we couldn't get you any uniforms. Sorry bad luck old chap.", "RAll right, but this my life on the line here."}, {"AYou did it! Now all you need to do is to find the documents. I suppose they are locked somewhere in this level, perhaps you'll need to search for keys.", "RAnd what about you?", "AThere is some commotion in the base, I'll try and see what's going on. We will meet here after we're done.", "RSee you then."}, {"RI've got these papers. Can we finally blow this place up? It's giving me the creeps.", "AI'm sorry, but there's been a slight change of plans again.", "RGreat. I was longing to hear it. What's happening now?", "AHave you ever heard of Clint Miller?", "RDoctor Clint Miller? The Nobel prize winner?", "AYes That's him. A few weeks ago he disappeared from his house in Boston. He's here now, arrived today. The Germans have kidnapped him.", "RWhat? Why?", "AFrom what I know he was conducting some sort of research on the possible military uses of sound waves back in the US.", "RYou mean...", "AOuch, sonic weapons. Germans are doing similar experiments but with no success, so far at least.", "RHe must have cracked it if the German's risked kidnapping him in the states.", "AThat's what I'm afraid of. We have to get him out of here and fast.", "RWhere do they keep him.", "AOn this very level. That's where you come in. Once again you'll need to use your sniper rifle and get rid of the guards.", "RYou lead the way."}, {"RWhat now?", "AThese are the labs and prison's. Miller will be somewhere here. Be careful, I know we are past the outpost, but there can be some more soldiers wandering around.", "RDon't worry and wait here. I'll find him in no time."}, {"ADoctor Miller? We're here to help you!", "MHelp?", "RYeah, to get you out of this prison and out of this country.", "MAh, prison. Yes, yes. What's your plan?", "RAnna?", "AUmm...", "MYou have came to rescue me without any plans??", "AWe didn't know you were going to be here.", "MMy goodness! Listen to me then: the only way to get out of here safely is by taking the train back out of here. They don't seem to care about guarding out bound trains from here.", "RHow do you know?", "MObservation young man, observation. There is no science without it.", "AOK lets make a move quickly.", "MPerhaps your big friend could find some explosives if we want to make sure no one comes after us?", "AGood idea, we were about to destroy this place anyway. Go, Reed, we'll meet at the train yard.", "RSure?", "AGo, go. We can't stick around here forever."}, {"RAnna! What happened?!", "AI... I should have known that...", "RWhy oh why... don't talk too much.", "AMiller... He wasn't kidnapped... at all...", "RWhat? What are you saying?", "AIt was a trap... I don't know how to tell you but Miller is one of them. He came to Germany on his own accord?", "RMiller is a Nazi?", "AYes, he lured me... into this deceitful trap...", "RHe'll pay for that!", "ANo! You have to finish your mission. Set the dynamite... lets get the hell out of here...", "RNo, I won't leave it like that. Just... Anna?", "A...", "RHe'll pay. He'll pay good."}, {"RSo, Fort Weissberg ended up being the biggest firework I've ever seen. Soon I will board this train and head for Switzerland. I will cross the Alps by foot and, play hide and seek with German soldiers before I get there, but that's another story. Works of Clint Miller lie buried deep in the heart of the Weissberg mountain, and of course the Nazis will never finish their sonic super weapon. Miller's ties to Third Reich were never be revealed and his mysterious disappearance is still a base for numerous theories and speculations. And I? I remain on service."}};
+   private static final String[][] storyText = new String[][]{{"RMy name is captain Thomas Reed. My mission, Covert Operations in service of the US army. I began my career in Spain and since then I have participated in many secret missions against the enemy. As an Allied secret agent my job is to infiltrate and sabotage behind the enemy lines. This mission is a typical one, dangerous with my name written on it!! Our spy planes have revealed photographs of what seems to be of an immense constructions project taking place around the Weissberg Mountain in the German Alps. It seems that the Germans are digging a network of reinforcements and underground bunkers on a previously unparalleled scale. My mission is to hide aboard a transportation supply train until it gets to Weissberg and to meet with our undercover agent on location there. With her help, I need to get the documents that reveals the purpose of this enterprise which incidentally the HQ nicknamed Fort Weissberg. Not sure how yet but I need to devise a way to sabotage the railway system and other important installations on site. I need some luck today and lots of it!!"}, {"ACaptain Reed I presume?", "RWho are you!?", "AAnna Sierck, MI5. I was told to meet you here in Weissberg.", "RSo why now, why in the train? If the Germans find us here, my mission is over!", "AThere has been a change of plans. Don't worry. We are safe, at least until the train stops.", "RWhat's happening, has something gone wrong?", "ANo don't worry, HQ's idea, just some last minute changes to keep the Germans guessing.", "RI knew it.", "AEver since our last failed attempt the trains are heavily searched. You'll have to leave at the last hidden station in the forest and walk to the fort by foot.", "RLast, failed attempt?? How many times have you tried so far?", "ARight now you don't need to know that. Ah and one more thing. The forts gates are not as heavily guarded as the train yard, but nevertheless you can expect a lot of resistance there. I know of a sniper rifle stored somewhere at the station. Find it and use it against the gate guards."}, {"AI see you found this rifle, good. You'll have to shoot the guards before entering Fort Weissberg.", "RAnd you?", "AI'll meet you inside. Maybe I'll be able to get a uniform for you.", "RThanks.", "AReed?", "RYes?", "AGood luck."}, {"AGlad you made it.", "RPiece of cake.", "AUnfortunately I have some bad news. There's gossip of some sort of a secret weapon undergoing tests here. I don't know if it's true, but the guard outpost's has been heavily reinforced. Uniform will not do you any good - they are checking everyone's id cards now practically on every corridor.", "RWhat do I do then?", "AYou can get deeper into the fortress through the unfinished tunnels. But you'll need explosives, as some of the passages are systematically being sealed for security reasons. I'm sure there's dynamite somewhere here. Get it and then find a wall that looks like it shouldn't be there...", "RWhat? Can't you be a little bit more precise?", "AUnfortunately our plans backfired and we couldn't get you any uniforms. Sorry bad luck old chap.", "RAll right, but this my life on the line here."}, {"AYou did it! Now all you need to do is to find the documents. I suppose they are locked somewhere in this level, perhaps you'll need to search for keys.", "RAnd what about you?", "AThere is some commotion in the base, I'll try and see what's going on. We will meet here after we're done.", "RSee you then."}, {"RI've got these papers. Can we finally blow this place up? It's giving me the creeps.", "AI'm sorry, but there's been a slight change of plans again.", "RGreat. I was longing to hear it. What's happening now?", "AHave you ever heard of Clint Miller?", "RDoctor Clint Miller? The Nobel prize winner?", "AYes That's him. A few weeks ago he disappeared from his house in Boston. He's here now, arrived today. The Germans have kidnapped him.", "RWhat? Why?", "AFrom what I know he was conducting some sort of research on the possible military uses of sound waves back in the US.", "RYou mean...", "AOuch, sonic weapons. Germans are doing similar experiments but with no success, so far at least.", "RHe must have cracked it if the German's risked kidnapping him in the states.", "AThat's what I'm afraid of. We have to get him out of here and fast.", "RWhere do they keep him.", "AOn this very level. That's where you come in. Once again you'll need to use your sniper rifle and get rid of the guards.", "RYou lead the way."}, {"RWhat now?", "AThese are the labs and prison's. Miller will be somewhere here. Be careful, I know we are past the outpost, but there can be some more soldiers wandering around.", "RDon't worry and wait here. I'll find him in no time."}, {"ADoctor Miller? We're here to help you!", "MHelp?", "RYeah, to get you out of this prison and out of this country.", "MAh, prison. Yes, yes. What's your plan?", "RAnna?", "AUmm...", "MYou have came to rescue me without any plans??", "AWe didn't know you were going to be here.", "MMy goodness! Listen to me then: the only way to get out of here safely is by taking the train back out of here. They don't seem to care about guarding out bound trains from here.", "RHow do you know?", "MObservation young man, observation. There is no science without it.", "AOK lets make a move quickly.", "MPerhaps your big friend could find some explosives if we want to make sure no one comes after us?", "AGood idea, we were about to destroy this place anyway. Go, Reed, we'll meet at the train yard.", "RSure?", "AGo, go. We can't stick around here forever."}, {"RAnna! What happened?!", "AI... I should have known that...", "RWhy oh why... don't talk too much.", "AMiller... He wasn't kidnapped... at all...", "RWhat? What are you saying?", "AIt was a trap... I don't know how to tell you but Miller is one of them. He came to Germany on his own accord?", "RMiller is a Nazi?", "AYes, he lured me... into this deceitful trap...", "RHe'll pay for that!", "ANo! You have to finish your mission. Set the dynamite... lets get the hell out of here...", "RNo, I won't leave it like that. Just... Anna?", "A...", "RHe'll pay. He'll pay good."}, {"RSo, Fort Weissberg ended up being the biggest firework I've ever seen. Soon I will board this train and head for Switzerland. I will cross the Alps by foot and, play hide and seek with German soldiers before I get there, but that's another story. Works of Clint Miller lie buried deep in the heart of the Weissberg mountain, and of course the Nazis will never finish their sonic super weapon. Miller's ties to Third Reich were never be revealed and his mysterious disappearance is still a base for numerous theories and speculations. And I? I remain on service."}};
    private int var_4db;
    private int fontColumn;
    private int var_550;
@@ -391,7 +391,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             if (var2 == 66) {
                var_259 = 0;
                var_295 = -1;
-               if ((var2 = this.sub_44e(var1, 0)) != -1) {
+               if ((var2 = this.drawDialogOverlay(var1, 0)) != -1) {
                   continue;
                }
 
@@ -426,7 +426,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      case 13:
                         var_259 = 0;
                         saveGameState(8);
-                        if ((var2 = this.sub_44e(var1, 9)) == -1) {
+                        if ((var2 = this.drawDialogOverlay(var1, 9)) == -1) {
                            var2 = this.showMenuScreen(var1, true);
                         }
                         continue label182;
@@ -447,7 +447,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         break;
                      case 2:
                         saveGameState(0);
-                        if ((var2 = this.sub_44e(var1, 1)) != -1) {
+                        if ((var2 = this.drawDialogOverlay(var1, 1)) != -1) {
                            continue label182;
                         }
                         break;
@@ -455,7 +455,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      case 20:
                         if (var_259 == 4) {
                            saveGameState(1);
-                           if ((var2 = this.sub_44e(var1, 2)) != -1) {
+                           if ((var2 = this.drawDialogOverlay(var1, 2)) != -1) {
                               continue label182;
                            }
 
@@ -473,13 +473,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
 
                         saveGameState(2);
-                        if ((var2 = this.sub_44e(var1, 3)) != -1) {
+                        if ((var2 = this.drawDialogOverlay(var1, 3)) != -1) {
                            continue label182;
                         }
                         break;
                      case 5:
                         saveGameState(3);
-                        if ((var2 = this.sub_44e(var1, 4)) != -1) {
+                        if ((var2 = this.drawDialogOverlay(var1, 4)) != -1) {
                            continue label182;
                         }
                         break;
@@ -487,7 +487,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      case 22:
                         if (var_259 == 6) {
                            saveGameState(4);
-                           if ((var2 = this.sub_44e(var1, 5)) != -1) {
+                           if ((var2 = this.drawDialogOverlay(var1, 5)) != -1) {
                               continue label182;
                            }
 
@@ -505,19 +505,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
 
                         saveGameState(5);
-                        if ((var2 = this.sub_44e(var1, 6)) != -1) {
+                        if ((var2 = this.drawDialogOverlay(var1, 6)) != -1) {
                            continue label182;
                         }
                         break;
                      case 7:
                         saveGameState(6);
-                        if ((var2 = this.sub_44e(var1, 7)) != -1) {
+                        if ((var2 = this.drawDialogOverlay(var1, 7)) != -1) {
                            continue label182;
                         }
                         break;
                      case 9:
                         saveGameState(7);
-                        if ((var2 = this.sub_44e(var1, 8)) != -1) {
+                        if ((var2 = this.drawDialogOverlay(var1, 8)) != -1) {
                            continue label182;
                         }
                      }
@@ -545,7 +545,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                while(this.var_7de >= 80L) {
                   ++this.frameCounter;
-                  if (this.sub_393()) {
+                  if (this.gameLoopTick()) {
                      GameEngine.damageFlash = false;
                      this.sub_47(var1);
                      this.flushScreemBuffer();
@@ -759,7 +759,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          String var3 = "mission failed|game over";
          this.sub_2e3(var1, "mission failed|game over");
          this.flushScreemBuffer();
-         sub_4ef(2000);
+         delay(2000);
          long var4 = System.currentTimeMillis();
 
          while(true) {
@@ -1193,7 +1193,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       GameEngine.inputBackward = false;
 
       try {
-         String var6 = var_1e5.getAppProperty("MIDlet-Version");
+         String var6 = mainMidlet.getAppProperty("MIDlet-Version");
          this.var_a63 = Image.createImage("/font_cut.png");
          boolean var7 = true;
          int var8 = 320 - this.var_550;
@@ -1206,7 +1206,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.flushScreemBuffer();
             yieldToOtherThreads();
-            sub_4ef(50);
+            delay(50);
          }
 
          long var21 = System.currentTimeMillis();
@@ -1232,7 +1232,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   }
 
                   if ((var17 = var18 * 50 - var17) > 0) {
-                     sub_4ef(var17);
+                     delay(var17);
                   }
 
                   var21 = var15;
@@ -1268,7 +1268,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.flushScreemBuffer();
             yieldToOtherThreads();
-            sub_4ef(50);
+            delay(50);
          }
       } catch (Exception var19) {
       } catch (OutOfMemoryError var20) {
@@ -1709,7 +1709,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      var66[var67] = var68[var26[var44] - 1];
                   }
 
-                  sub_2c3(var24[var44], var48, var49, var45, var46, var36 > 0);
+                  copyToScreenBuffer(var24[var44], var48, var49, var45, var46, var36 > 0);
                   if (var26[var44] == 4) {
                      var26[var44] = (var28[var44] & 1) == 1 ? 1 : 5;
                      var50 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
@@ -1749,7 +1749,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      }
 
                      var66[var67] = var68[var26[var44] - 1];
-                     sub_2c3(var24[var44], var48, var49, var45, var46, var36 > 0);
+                     copyToScreenBuffer(var24[var44], var48, var49, var45, var46, var36 > 0);
                      if (var26[var44] == 4) {
                         var26[var44] = (var28[var44] & 1) == 1 ? 1 : 5;
                         var50 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
@@ -1851,7 +1851,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       return -1;
    }
 
-   private static void sub_2c3(int[] var0, int var1, int var2, int var3, int var4, boolean var5) {
+   private static void copyToScreenBuffer(int[] var0, int var1, int var2, int var3, int var4, boolean var5) {
       int var6 = 240 * var4 + var3;
       int var7 = 0;
       int var8;
@@ -1915,7 +1915,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    }
 
-   public final void sub_308() {
+   public final void stopGame() {
       if (!this.isGamePaused) {
          this.isGamePaused = true;
          if (audioManager != null) {
@@ -1925,7 +1925,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   public final void sub_32d() {
+   public final void resumeGame() {
       if (this.isGamePaused) {
          if (audioManager != null && musicEnabled == 1 && this.var_1ae) {
             playSound(0, true, 80, 2);
@@ -1936,18 +1936,18 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public void showNotify() {
-      this.sub_32d();
+      this.resumeGame();
    }
 
    public void hideNotify() {
-      this.sub_308();
+      this.stopGame();
    }
 
-   public final void sub_35e() {
+   public final void stopGameLoop() {
       this.isGameRunning = false;
    }
 
-   public final boolean sub_393() {
+   public final boolean gameLoopTick() {
       if (GameEngine.updateGameLogic()) {
          return true;
       } else {
@@ -2431,7 +2431,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       this.flushScreemBuffer();
    }
 
-   private int sub_44e(Graphics var1, int var2) {
+   private int drawDialogOverlay(Graphics var1, int var2) {
       try {
          boolean var3 = false;
          int var4 = this.var_550 + 6;
@@ -2484,13 +2484,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          long[] var22 = new long[]{0L, 0L, 0L};
          boolean[] var23 = new boolean[]{false, false, false};
 
-         for(int var24 = 0; var24 < var_496[var2].length; ++var24) {
+         for(int var24 = 0; var24 < storyText[var2].length; ++var24) {
             String var25;
             int var26;
             int var27;
             byte var28;
             label165: {
-               var25 = var_496[var2][var24];
+               var25 = storyText[var2][var24];
                var26 = var7.getWidth() + 4;
                var27 = 2;
                var28 = 0;
@@ -2518,7 +2518,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int var32 = var27;
             var18[var28] = 0;
             var17[var28] = var25;
-            sub_4ef(500);
+            delay(500);
             if (var23[var28]) {
                var23[var28] = false;
                var1.drawRegion(var5, var20[var28], var19[var28], var10, var21[var28] - var19[var28], 0, var20[var28], var19[var28], 20);
@@ -2589,7 +2589,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
 
                this.flushScreemBuffer();
-               sub_4ef(var34 == ',' ? 300 : (var34 != '.' && var34 != '?' && var34 != '!' ? 50 : 400));
+               delay(var34 == ',' ? 300 : (var34 != '.' && var34 != '?' && var34 != '!' ? 50 : 400));
                long var57 = System.currentTimeMillis();
 
                for(var37 = 0; var37 < 3; ++var37) {
@@ -2712,10 +2712,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var19[var28] = var27;
             var21[var28] = var30;
             var22[var28] = System.currentTimeMillis() + 5000L;
-            sub_4ef(500);
+            delay(500);
          }
 
-         sub_4ef(5000);
+         delay(5000);
          this.var_a63 = null;
       } catch (Exception var53) {
       } catch (OutOfMemoryError var54) {
@@ -2761,7 +2761,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       var4[var4.length - 1] = var5;
    }
 
-   public static void sub_4ef(int var0) {
+   public static void delay(int var0) {
       long var1 = System.currentTimeMillis();
 
       do {
