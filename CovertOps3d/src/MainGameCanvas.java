@@ -29,7 +29,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private static final String[] ABOUT_MENU_TEXT = new String[]{"Covert Ops 3D", "", "Developed by:", "Micazook Mobile Ltd.", "", "Executive producers:", "Marcin Kochanowski", "Wojciech Charysz", "Michael Fotoohi", "", "Senior developer:", "Tomasz Mroczek", "", "Level design:", "Kamil Bachminski", "", "Texture artists:", "Kamil Bachminski", "Patryk Piescinski", "", "Character design:", "Lukasz 'Slizgi' Sliwinski", "Kamil Bachminski", "", "Music:", "Slawomir Opalinski", "", "Sound effects:", "Kamil Bachminski", "", "", "Publisher:", "Micazook Ltd.", "", "www.micazook.com", "", "for support email", "support@micazook.com", "", "(c) 2006 Micazook Ltd.", "Trademarks belong to", "their respective owners.", "", "All rights reserved!"};
    private static final String[][] storyText = new String[][]{{"RMy name is captain Thomas Reed. My mission, Covert Operations in service of the US army. I began my career in Spain and since then I have participated in many secret missions against the enemy. As an Allied secret agent my job is to infiltrate and sabotage behind the enemy lines. This mission is a typical one, dangerous with my name written on it!! Our spy planes have revealed photographs of what seems to be of an immense constructions project taking place around the Weissberg Mountain in the German Alps. It seems that the Germans are digging a network of reinforcements and underground bunkers on a previously unparalleled scale. My mission is to hide aboard a transportation supply train until it gets to Weissberg and to meet with our undercover agent on location there. With her help, I need to get the documents that reveals the purpose of this enterprise which incidentally the HQ nicknamed Fort Weissberg. Not sure how yet but I need to devise a way to sabotage the railway system and other important installations on site. I need some luck today and lots of it!!"}, {"ACaptain Reed I presume?", "RWho are you!?", "AAnna Sierck, MI5. I was told to meet you here in Weissberg.", "RSo why now, why in the train? If the Germans find us here, my mission is over!", "AThere has been a change of plans. Don't worry. We are safe, at least until the train stops.", "RWhat's happening, has something gone wrong?", "ANo don't worry, HQ's idea, just some last minute changes to keep the Germans guessing.", "RI knew it.", "AEver since our last failed attempt the trains are heavily searched. You'll have to leave at the last hidden station in the forest and walk to the fort by foot.", "RLast, failed attempt?? How many times have you tried so far?", "ARight now you don't need to know that. Ah and one more thing. The forts gates are not as heavily guarded as the train yard, but nevertheless you can expect a lot of resistance there. I know of a sniper rifle stored somewhere at the station. Find it and use it against the gate guards."}, {"AI see you found this rifle, good. You'll have to shoot the guards before entering Fort Weissberg.", "RAnd you?", "AI'll meet you inside. Maybe I'll be able to get a uniform for you.", "RThanks.", "AReed?", "RYes?", "AGood luck."}, {"AGlad you made it.", "RPiece of cake.", "AUnfortunately I have some bad news. There's gossip of some sort of a secret weapon undergoing tests here. I don't know if it's true, but the guard outpost's has been heavily reinforced. Uniform will not do you any good - they are checking everyone's id cards now practically on every corridor.", "RWhat do I do then?", "AYou can get deeper into the fortress through the unfinished tunnels. But you'll need explosives, as some of the passages are systematically being sealed for security reasons. I'm sure there's dynamite somewhere here. Get it and then find a wall that looks like it shouldn't be there...", "RWhat? Can't you be a little bit more precise?", "AUnfortunately our plans backfired and we couldn't get you any uniforms. Sorry bad luck old chap.", "RAll right, but this my life on the line here."}, {"AYou did it! Now all you need to do is to find the documents. I suppose they are locked somewhere in this level, perhaps you'll need to search for keys.", "RAnd what about you?", "AThere is some commotion in the base, I'll try and see what's going on. We will meet here after we're done.", "RSee you then."}, {"RI've got these papers. Can we finally blow this place up? It's giving me the creeps.", "AI'm sorry, but there's been a slight change of plans again.", "RGreat. I was longing to hear it. What's happening now?", "AHave you ever heard of Clint Miller?", "RDoctor Clint Miller? The Nobel prize winner?", "AYes That's him. A few weeks ago he disappeared from his house in Boston. He's here now, arrived today. The Germans have kidnapped him.", "RWhat? Why?", "AFrom what I know he was conducting some sort of research on the possible military uses of sound waves back in the US.", "RYou mean...", "AOuch, sonic weapons. Germans are doing similar experiments but with no success, so far at least.", "RHe must have cracked it if the German's risked kidnapping him in the states.", "AThat's what I'm afraid of. We have to get him out of here and fast.", "RWhere do they keep him.", "AOn this very level. That's where you come in. Once again you'll need to use your sniper rifle and get rid of the guards.", "RYou lead the way."}, {"RWhat now?", "AThese are the labs and prison's. Miller will be somewhere here. Be careful, I know we are past the outpost, but there can be some more soldiers wandering around.", "RDon't worry and wait here. I'll find him in no time."}, {"ADoctor Miller? We're here to help you!", "MHelp?", "RYeah, to get you out of this prison and out of this country.", "MAh, prison. Yes, yes. What's your plan?", "RAnna?", "AUmm...", "MYou have came to rescue me without any plans??", "AWe didn't know you were going to be here.", "MMy goodness! Listen to me then: the only way to get out of here safely is by taking the train back out of here. They don't seem to care about guarding out bound trains from here.", "RHow do you know?", "MObservation young man, observation. There is no science without it.", "AOK lets make a move quickly.", "MPerhaps your big friend could find some explosives if we want to make sure no one comes after us?", "AGood idea, we were about to destroy this place anyway. Go, Reed, we'll meet at the train yard.", "RSure?", "AGo, go. We can't stick around here forever."}, {"RAnna! What happened?!", "AI... I should have known that...", "RWhy oh why... don't talk too much.", "AMiller... He wasn't kidnapped... at all...", "RWhat? What are you saying?", "AIt was a trap... I don't know how to tell you but Miller is one of them. He came to Germany on his own accord?", "RMiller is a Nazi?", "AYes, he lured me... into this deceitful trap...", "RHe'll pay for that!", "ANo! You have to finish your mission. Set the dynamite... lets get the hell out of here...", "RNo, I won't leave it like that. Just... Anna?", "A...", "RHe'll pay. He'll pay good."}, {"RSo, Fort Weissberg ended up being the biggest firework I've ever seen. Soon I will board this train and head for Switzerland. I will cross the Alps by foot and, play hide and seek with German soldiers before I get there, but that's another story. Works of Clint Miller lie buried deep in the heart of the Weissberg mountain, and of course the Nazis will never finish their sonic super weapon. Miller's ties to Third Reich were never be revealed and his mysterious disappearance is still a base for numerous theories and speculations. And I? I remain on service."}};
    private int var_4db;
-   private int fontColumn;
+   private int smallFontCharsPerRow;
    private int var_550;
    private int var_59b;
    private int[] var_5fa;
@@ -45,7 +45,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private Image statusBarImage;
    private Image[] weaponSprites;
    private boolean isWeaponCentered;
-   private int var_933;
+   private int weaponAnimationState;
    public static int weaponSpriteFrame = 0;
    private Image crosshairImage;
    private Image fontImage;
@@ -60,8 +60,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private int var_c1f;
    private int var_c2f;
    private int enemyUpdateCounter;
-   private int var_cda;
-   private int var_cfa;
+   private int enemySpawnTimer;
+   private int activeEnemyCount;
    private int var_d2a;
    private int var_d88;
    private int var_d9b;
@@ -133,7 +133,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       super(false);
       System.currentTimeMillis();
       this.var_4db = 18;
-      this.fontColumn = 26;
+      this.smallFontCharsPerRow = 26;
       this.var_550 = 23;
       this.var_59b = 4;
       this.var_5fa = new int[]{1, 11, 22, 31, 42, 52, 62, 70, 82, 91, 101, 112, 120, 130, 142, 151, 161, 171, 2, 12, 20, 31, 40, 51, 61, 72, 80, 90, 100, 110, 120, 130, 142, 151, 160, 170, 1, 12, 21, 31, 41, 51, 61, 71, 81, 91, 100, 110, 120, 130, 140, 150, 160, 170};
@@ -148,7 +148,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       this.frameCounter = 0;
       this.weaponSprites = new Image[3];
       this.isWeaponCentered = true;
-      this.var_933 = 0;
+      this.weaponAnimationState = 0;
       this.var_ab7 = null;
       this.var_ae7 = null;
       this.var_b23 = null;
@@ -159,8 +159,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       this.var_c1f = 0;
       this.var_c2f = 0;
       this.enemyUpdateCounter = 0;
-      this.var_cda = 0;
-      this.var_cfa = 0;
+      this.enemySpawnTimer = 0;
+      this.activeEnemyCount = 0;
       this.var_d2a = 0;
       this.var_d88 = 0;
       this.var_d9b = 0;
@@ -320,7 +320,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          }
 
          var10000.drawImage(var10001, var10002, 288 - var3 - var2 + 3, 0);
-         weaponSpriteFrame = this.var_933;
+         weaponSpriteFrame = this.weaponAnimationState;
          var1.drawImage(this.statusBarImage, 0, 288, 0);
          this.sub_547(GameEngine.playerHealth, var1, 58, 294);
          this.sub_547(GameEngine.playerArmor, var1, 138, 294);
@@ -395,7 +395,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   continue;
                }
 
-               this.sub_415(var1);
+               this.drawPleaseWait(var1);
                this.loadLevelResources();
                break;
             }
@@ -459,7 +459,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                               continue label182;
                            }
 
-                           if ((var2 = this.sub_29e(var1, 0)) == -2) {
+                           if ((var2 = this.runMiniGameSniper(var1, 0)) == -2) {
                               this.sub_180(var1);
                               var2 = this.showMenuScreen(var1, true);
                               continue label182;
@@ -491,7 +491,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                               continue label182;
                            }
 
-                           if ((var2 = this.sub_29e(var1, 1)) == -2) {
+                           if ((var2 = this.runMiniGameSniper(var1, 1)) == -2) {
                               this.sub_180(var1);
                               var2 = this.showMenuScreen(var1, true);
                               continue label182;
@@ -531,7 +531,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      var10000 = this;
                   }
 
-                  var10000.sub_415(var1);
+                  var10000.drawPleaseWait(var1);
                   this.loadLevelResources();
                }
 
@@ -915,7 +915,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var1.fillRoundRect((240 - var18) / 2, var14, var18, this.var_550, 10, 10);
                }
 
-               this.sub_681(var11, var1, var17, var14);
+               this.drawLargeString(var11, var1, var17, var14);
                var14 += this.var_550;
             }
 
@@ -926,8 +926,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             String var22 = var6 == this.SETTINGS_MENU_ITEMS ? "change" : (var6 == CONFIRMATION_MENU_ITEMS ? "yes" : "select");
-            this.sub_681(var22, var1, 3, 320 - this.var_550 - 3);
-            this.sub_681(var6[var12], var1, 240 - this.sub_5d2(var6[var12]) - 3, 320 - this.var_550 - 3);
+            this.drawLargeString(var22, var1, 3, 320 - this.var_550 - 3);
+            this.drawLargeString(var6[var12], var1, 240 - this.sub_5d2(var6[var12]) - 3, 320 - this.var_550 - 3);
             this.flushScreenBuffer();
             yieldToOtherThreads();
             Object[] var23 = new Object[0];
@@ -1218,8 +1218,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
                var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
                String var11 = "back";
-               this.sub_681(var11, var1, 240 - this.sub_5d2(var11) - 3, 320 - this.var_550 - 3);
-               this.sub_681(var3, var1, (240 - this.sub_5d2(var3)) / 2, 3);
+               this.drawLargeString(var11, var1, 240 - this.sub_5d2(var11) - 3, 320 - this.var_550 - 3);
+               this.drawLargeString(var3, var1, (240 - this.sub_5d2(var3)) / 2, 3);
                var1.setClip(0, this.var_550 + 6, 240, 320 - 2 * this.var_550 - 12);
                int var14;
                if (var5) {
@@ -1246,7 +1246,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      var16 = var16 + " " + var6;
                   }
 
-                  this.sub_6d2(var16, var1, (240 - this.sub_5ef(var16)) / 2, var14);
+                  this.drawSmallString(var16, var1, (240 - this.sub_5ef(var16)) / 2, var14);
                   var14 += this.var_6d3 + 2;
                }
 
@@ -1290,8 +1290,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       int[] var10000;
       int var10001;
       byte var10002;
-      if (this.var_cda >= 200) {
-         this.var_cda = 0;
+      if (this.enemySpawnTimer >= 200) {
+         this.enemySpawnTimer = 0;
          var9 = 0;
 
          for(var10 = 0; var10 < 8; ++var10) {
@@ -1300,7 +1300,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
          }
 
-         if (this.var_cfa < 20) {
+         if (this.activeEnemyCount < 20) {
             if (var9 > 0) {
                var10 = GameEngine.random.nextInt() & 1;
                var11 = var4[(GameEngine.random.nextInt() & 7) % var9];
@@ -1319,14 +1319,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
 
                var10000[var10001] = var10002;
-               ++this.var_cfa;
+               ++this.activeEnemyCount;
             }
          } else if (var9 == 8) {
             return false;
          }
       }
 
-      ++this.var_cda;
+      ++this.enemySpawnTimer;
       ++this.enemyUpdateCounter;
 
       for(var9 = 0; var9 < 8; ++var9) {
@@ -1511,7 +1511,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       return true;
    }
 
-   private int sub_29e(Graphics var1, int var2) {
+   private int runMiniGameSniper(Graphics var1, int var2) {
       try {
          boolean var3 = false;
          int var5;
@@ -1522,9 +1522,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int[][] var11 = new int[6][];
          int[][] var12 = new int[6][];
          int[][] var13 = new int[6][];
-         this.var_cda = 0;
+         this.enemySpawnTimer = 0;
          this.enemyUpdateCounter = 0;
-         this.var_cfa = 0;
+         this.activeEnemyCount = 0;
          int[][] var14 = new int[][]{{84, 147, 197, 132, 147, 155, 77, 155}, {63, 177, 89, 149, 104, 132, 84, 146}};
          int[][] var15 = new int[][]{{147, 84, 164, 147, 132, 160, 155, 77}, {75, 162, 149, 89, 132, 104, 90, 152}};
          int[][] var16 = new int[][]{{145, 145, 102, 84, 84, 144, 151, 151}, {108, 105, 111, 111, 160, 160, 152, 152}};
@@ -1909,7 +1909,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
          String var8 = var2.substring(var3, var4 + 1);
          int var6 = (240 - this.sub_5d2(var8)) / 2;
-         this.sub_681(var8, var1, var6, var7);
+         this.drawLargeString(var8, var1, var6, var7);
          var7 += this.var_550;
       } while((var3 = var4 + 2) < var2.length());
 
@@ -2053,7 +2053,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      var3.isWeaponCentered = var4;
                   }
 
-                  this.var_933 = 0;
+                  this.weaponAnimationState = 0;
                   weaponSpriteFrame = 0;
                } catch (Exception var1) {
                } catch (OutOfMemoryError var2) {
@@ -2071,7 +2071,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             case 0:
                if (GameEngine.weaponCooldownTimer < -var_111e[GameEngine.difficultyLevel]) {
                   GameEngine.gameWorld.fireWeapon();
-                  this.var_933 = 1;
+                  this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
                }
@@ -2080,7 +2080,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                if (GameEngine.weaponCooldownTimer < -var_1128[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
-                  this.var_933 = 1;
+                  this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
                }
@@ -2089,39 +2089,39 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                if (GameEngine.weaponCooldownTimer < -var_1147[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
-                  this.var_933 = 1;
+                  this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
                }
                break;
             case 3:
                if (GameEngine.weaponCooldownTimer <= 0) {
-                  if (this.var_933 == 0) {
+                  if (this.weaponAnimationState == 0) {
                      if (GameEngine.ammoCounts[1] > 0) {
                         var6 = GameEngine.ammoCounts[1]--;
                         GameEngine.gameWorld.fireWeapon();
-                        this.var_933 = 1;
+                        this.weaponAnimationState = 1;
                         weaponSpriteFrame = 1;
                         GameEngine.weaponCooldownTimer = 1;
                      }
                   } else {
-                     this.var_933 = 0;
+                     this.weaponAnimationState = 0;
                      GameEngine.weaponCooldownTimer = var_119b[GameEngine.difficultyLevel];
                   }
                }
                break;
             case 4:
                if (GameEngine.weaponCooldownTimer <= 0) {
-                  if (this.var_933 == 0) {
+                  if (this.weaponAnimationState == 0) {
                      if (GameEngine.ammoCounts[1] > 0) {
                         var6 = GameEngine.ammoCounts[1]--;
                         GameEngine.gameWorld.fireWeapon();
-                        this.var_933 = 1;
+                        this.weaponAnimationState = 1;
                         weaponSpriteFrame = 1;
                         GameEngine.weaponCooldownTimer = 1;
                      }
                   } else {
-                     this.var_933 = 0;
+                     this.weaponAnimationState = 0;
                      GameEngine.weaponCooldownTimer = var_11e0[GameEngine.difficultyLevel];
                   }
                }
@@ -2130,7 +2130,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
-                  this.var_933 = 1;
+                  this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 2;
                }
@@ -2153,22 +2153,22 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                if (GameEngine.weaponCooldownTimer < -var_11f1[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                   GameEngine.gameWorld.fireWeapon();
-                  this.var_933 = 1;
+                  this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
                }
             }
          } else if (GameEngine.weaponCooldownTimer <= 0) {
             if (GameEngine.currentWeapon == 5) {
-               if (this.var_933 == 1) {
-                  this.var_933 = 2;
+               if (this.weaponAnimationState == 1) {
+                  this.weaponAnimationState = 2;
                   weaponSpriteFrame = 2;
                   GameEngine.weaponAnimationState = 8;
                   GameEngine.weaponSwitchAnimationActive = true;
                   GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(5);
                }
             } else {
-               this.var_933 = 0;
+               this.weaponAnimationState = 0;
             }
          }
 
@@ -2419,7 +2419,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   private void sub_415(Graphics var1) {
+   private void drawPleaseWait(Graphics var1) {
       String var2 = "please wait...";
       int var3 = (240 - this.sub_5d2(var2)) / 2;
       int var4 = 160 - this.var_550 / 2;
@@ -2427,7 +2427,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       sub_159(GameEngine.screenBuffer, 0, 38400);
       var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
       var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-      this.sub_681(var2, var1, var3, var4);
+      this.drawLargeString(var2, var1, var3, var4);
       this.flushScreenBuffer();
    }
 
@@ -2475,8 +2475,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
          var15[0] = new int[var14];
          this.sub_1e3(var1, var5);
-         this.sub_681("back", var1, 240 - this.sub_5d2("back") - 3, 320 - this.var_550 - 3);
-         this.sub_681("pause", var1, 3, 320 - this.var_550 - 3);
+         this.drawLargeString("back", var1, 240 - this.sub_5d2("back") - 3, 320 - this.var_550 - 3);
+         this.drawLargeString("pause", var1, 3, 320 - this.var_550 - 3);
          int[] var18 = new int[]{0, 0, 0};
          int[] var19 = new int[]{0, 0, 0};
          int[] var20 = new int[]{0, 0, 0};
@@ -2568,7 +2568,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   }
                } else {
                   int[] var55;
-                  int var56 = (var55 = this.getFontCoordinates(var34))[1] * this.fontColumn + var55[0];
+                  int var56 = (var55 = this.getFontCoordinates(var34))[1] * this.smallFontCharsPerRow + var55[0];
                   var37 = this.var_6a8[var56];
                   var38 = this.var_691[var56];
                   var39 = var55[1] * this.var_6d3;
@@ -2604,7 +2604,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                if (GameEngine.inputRun) {
                   GameEngine.inputRun = false;
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("pause"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
-                  this.sub_681("resume", var1, 3, 320 - this.var_550 - 3);
+                  this.drawLargeString("resume", var1, 3, 320 - this.var_550 - 3);
                   this.flushScreenBuffer();
 
                   while(!GameEngine.inputRun && !GameEngine.inputBack && !this.isGamePaused && !GameEngine.inputFire) {
@@ -2614,7 +2614,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                if (GameEngine.inputRun) {
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("resume"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
-                  this.sub_681("pause", var1, 3, 320 - this.var_550 - 3);
+                  this.drawLargeString("pause", var1, 3, 320 - this.var_550 - 3);
                   this.flushScreenBuffer();
                   GameEngine.inputRun = false;
                }
@@ -2628,8 +2628,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   }
 
                   var1.drawImage(var5, 0, 0, 20);
-                  this.sub_681("back", var1, 240 - this.sub_5d2("back") - 3, 320 - this.var_550 - 3);
-                  this.sub_681("pause", var1, 3, 320 - this.var_550 - 3);
+                  this.drawLargeString("back", var1, 240 - this.sub_5d2("back") - 3, 320 - this.var_550 - 3);
+                  this.drawLargeString("pause", var1, 3, 320 - this.var_550 - 3);
 
                   for(var38 = 0; var38 < 3; ++var38) {
                      var39 = var38 == var28 ? var33 : (var17[var38] != null ? var17[var38].length() : 0);
@@ -2677,7 +2677,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                  var60 = this.var_75f;
                               } else {
                                  int[] var48;
-                                 int var49 = (var48 = this.getFontCoordinates(var47))[1] * this.fontColumn + var48[0];
+                                 int var49 = (var48 = this.getFontCoordinates(var47))[1] * this.smallFontCharsPerRow + var48[0];
                                  int var50 = this.var_6a8[var49];
                                  int var51 = this.var_691[var49];
                                  int var52 = var48[1] * this.var_6d3;
@@ -2743,7 +2743,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                var10001 = this.var_75f;
             } else {
                int[] var17;
-               int var18 = (var17 = this.getFontCoordinates(var16))[1] * this.fontColumn + var17[0];
+               int var18 = (var17 = this.getFontCoordinates(var16))[1] * this.smallFontCharsPerRow + var17[0];
                int var19 = this.var_6a8[var18];
                int var20 = this.var_691[var18];
                int var21 = var17[1] * this.var_6d3;
@@ -2773,7 +2773,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private void sub_547(int var1, Graphics var2, int var3, int var4) {
       String var5 = Integer.toString(var1);
       int var6 = this.sub_5d2(var5) / 2;
-      this.sub_681(var5, var2, var3 - var6, var4);
+      this.drawLargeString(var5, var2, var3 - var6, var4);
    }
 
    public static void freeMemory() {
@@ -2816,7 +2816,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var10001 = this.var_75f;
          } else {
             int[] var5 = this.getFontCoordinates(var4);
-            int var6 = this.var_6a8[var5[1] * this.fontColumn + var5[0]];
+            int var6 = this.var_6a8[var5[1] * this.smallFontCharsPerRow + var5[0]];
             var10000 = var2;
             var10001 = var6 + 1;
          }
@@ -2900,7 +2900,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    private int[] getFontCoordinates(char character) {
-      int[] coords = new int[]{this.fontColumn - 1, 2};
+      int[] coords = new int[]{this.smallFontCharsPerRow - 1, 2};
       int[] var10000;
       byte var10001;
       byte var10002;
@@ -3002,7 +3002,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       return coords;
    }
 
-   private void sub_681(String var1, Graphics var2, int var3, int var4) {
+   private void drawLargeString(String var1, Graphics var2, int var3, int var4) {
       var1 = var1.toLowerCase();
 
       for(int var5 = 0; var5 < var1.length(); ++var5) {
@@ -3028,7 +3028,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    }
 
-   private void sub_6d2(String var1, Graphics var2, int var3, int var4) {
+   private void drawSmallString(String var1, Graphics var2, int var3, int var4) {
       for(int var5 = 0; var5 < var1.length(); ++var5) {
          char var6;
          int var10000;
@@ -3038,7 +3038,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var10001 = this.var_75f;
          } else {
             int[] var7;
-            int var8 = (var7 = this.getFontCoordinates(var6))[1] * this.fontColumn + var7[0];
+            int var8 = (var7 = this.getFontCoordinates(var6))[1] * this.smallFontCharsPerRow + var7[0];
             int var9 = this.var_6a8[var8];
             int var10 = this.var_691[var8];
             int var11 = var7[1] * this.var_6d3;
