@@ -352,16 +352,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    public void run() {
       audioManager = new AudioManager();
-      audioManager.loadSound("/0.mid");
-      audioManager.loadSound("/1.amr");
-      audioManager.loadSound("/2.amr");
-      audioManager.loadSound("/3.amr");
-      audioManager.loadSound("/4.amr");
-      audioManager.loadSound("/5.amr");
-      audioManager.loadSound("/6.amr");
-      audioManager.loadSound("/7.amr");
-      audioManager.loadSound("/8.amr");
-      audioManager.loadSound("/9.amr");
+      audioManager.loadSound("/gamedata/sound/0.mid");
+      audioManager.loadSound("/gamedata/sound/1.amr");
+      audioManager.loadSound("/gamedata/sound/2.amr");
+      audioManager.loadSound("/gamedata/sound/3.amr");
+      audioManager.loadSound("/gamedata/sound/4.amr");
+      audioManager.loadSound("/gamedata/sound/5.amr");
+      audioManager.loadSound("/gamedata/sound/6.amr");
+      audioManager.loadSound("/gamedata/sound/7.amr");
+      audioManager.loadSound("/gamedata/sound/8.amr");
+      audioManager.loadSound("/gamedata/sound/9.amr");
       Graphics var1;
       (var1 = this.getGraphics()).setClip(0, 0, 240, 320);
       this.sub_175(var1);
@@ -621,7 +621,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    private void sub_10f(int var1, int var2, int var3, byte[] var4, byte[] var5, byte[] var6) {
       try {
-         String var8 = "/" + (var1 == 0 ? "ss1" : "ss2");
+         String var8 = "/" + (var1 == 0 ? "gamedata/sniperminigame/ss1" : "gamedata/sniperminigame/ss2");
          InputStream var9 = (new Object()).getClass().getResourceAsStream(var8);
          DataInputStream var10;
          (var10 = new DataInputStream(var9)).skipBytes(1);
@@ -657,7 +657,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             var10.close();
-            var9 = (new Object()).getClass().getResourceAsStream("/sight");
+            var9 = (new Object()).getClass().getResourceAsStream("/gamedata/sniperminigame/sight");
             (var10 = new DataInputStream(var9)).skipBytes(8);
             var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
@@ -698,8 +698,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    private void sub_175(Graphics var1) {
       try {
-         Image var2 = Image.createImage("/logo.png");
-         Image var3 = Image.createImage("/splash.png");
+         Image var2 = Image.createImage("/gamedata/sprites/logo.png");
+         Image var3 = Image.createImage("/gamedata/sprites/splash.png");
          int var4;
          int[] var5 = new int[var4 = var2.getWidth() * var2.getHeight()];
          int var6 = (240 - var2.getWidth()) / 2;
@@ -751,7 +751,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    private void sub_180(Graphics var1) {
       try {
-         Image var2 = Image.createImage("/splash.png");
+         Image var2 = Image.createImage("/gamedata/sprites/splash.png");
          GameEngine.screenBuffer[0] = -2130771968;
          sub_159(GameEngine.screenBuffer, 0, 38400);
          var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
@@ -864,7 +864,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          GameEngine.inputFire = false;
          GameEngine.inputForward = false;
          GameEngine.inputBackward = false;
-         Image var3 = Image.createImage("/bkg.png");
+         Image var3 = Image.createImage("/gamedata/sprites/bkg.png");
          int var4 = 0;
          int var5 = 0;
          String[] var6 = mainMenuItems;
@@ -1194,7 +1194,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
       try {
          String var6 = mainMidlet.getAppProperty("MIDlet-Version");
-         this.var_a63 = Image.createImage("/font_cut.png");
+         this.var_a63 = Image.createImage("/gamedata/sprites/font_cut.png");
          boolean var7 = true;
          int var8 = 320 - this.var_550;
 
@@ -1558,7 +1558,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var13[var29] = sub_d3("/ss30" + Integer.toString(var31), var30);
          }
 
-         Image var61 = Image.createImage("/sight.png");
+         Image var61 = Image.createImage("/gamedata/sniperminigame/sight.png");
          this.sub_10f(var2, 240, 288, var7, var8, var9);
          this.var_be4 = 0;
          this.var_c1f = 0;
@@ -1986,56 +1986,56 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                            String var10002;
                            switch(GameEngine.currentWeapon) {
                            case 0:
-                              this.weaponSprites[0] = Image.createImage("/fist_a.png");
+                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/fist_a.png");
                               var10000 = this.weaponSprites;
                               var10001 = 1;
-                              var10002 = "/fist_b.png";
+                              var10002 = "/gamedata/sprites/fist_b.png";
                               break;
                            case 1:
-                              this.weaponSprites[0] = Image.createImage("/luger_a.png");
+                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/luger_a.png");
                               var10000 = this.weaponSprites;
                               var10001 = 1;
-                              var10002 = "/luger_b.png";
+                              var10002 = "/gamedata/sprites/luger_b.png";
                               break;
                            case 2:
-                              this.weaponSprites[0] = Image.createImage("/mauser_a.png");
-                              this.weaponSprites[1] = Image.createImage("/mauser_b.png");
+                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/mauser_a.png");
+                              this.weaponSprites[1] = Image.createImage("/gamedata/sprites/mauser_b.png");
                               this.weaponSprites[2] = null;
                               var3 = this;
                               var4 = false;
                               break label162;
                            case 3:
-                              this.weaponSprites[0] = Image.createImage("/m40_a.png");
-                              this.weaponSprites[1] = Image.createImage("/m40_b.png");
+                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/m40_a.png");
+                              this.weaponSprites[1] = Image.createImage("/gamedata/sprites/m40_b.png");
                               this.weaponSprites[2] = null;
                               var3 = this;
                               var4 = false;
                               break label162;
                            case 4:
-                              this.weaponSprites[0] = Image.createImage("/sten_a.png");
-                              this.weaponSprites[1] = Image.createImage("/sten_b.png");
+                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/sten_a.png");
+                              this.weaponSprites[1] = Image.createImage("/gamedata/sprites/sten_b.png");
                               this.weaponSprites[2] = null;
                               var3 = this;
                               var4 = false;
                               break label162;
                            case 5:
-                              this.weaponSprites[0] = Image.createImage("/panzerfaust_a.png");
-                              this.weaponSprites[1] = Image.createImage("/panzerfaust_b.png");
-                              this.weaponSprites[2] = Image.createImage("/panzerfaust_c.png");
+                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/panzerfaust_a.png");
+                              this.weaponSprites[1] = Image.createImage("/gamedata/sprites/panzerfaust_b.png");
+                              this.weaponSprites[2] = Image.createImage("/gamedata/sprites/panzerfaust_c.png");
                               var3 = this;
                               var4 = false;
                               break label162;
                            case 6:
-                              this.weaponSprites[0] = Image.createImage("/dynamite.png");
+                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/dynamite.png");
                               var10000 = this.weaponSprites;
                               var10001 = 1;
                               var5 = null;
                               break label161;
                            case 7:
-                              this.weaponSprites[0] = Image.createImage("/sonic_a.png");
+                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/sonic_a.png");
                               var10000 = this.weaponSprites;
                               var10001 = 1;
-                              var10002 = "/sonic_b.png";
+                              var10002 = "/gamedata/sprites/sonic_b.png";
                               break;
                            default:
                               break label190;
@@ -2198,12 +2198,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    private void initializeGameResources() {
       try {
-         this.statusBarImage = Image.createImage("/bar.png");
-         this.weaponSprites[0] = Image.createImage("/fist_a.png");
-         this.weaponSprites[1] = Image.createImage("/fist_b.png");
+         this.statusBarImage = Image.createImage("/gamedata/sprites/bar.png");
+         this.weaponSprites[0] = Image.createImage("/gamedata/sprites/fist_a.png");
+         this.weaponSprites[1] = Image.createImage("/gamedata/sprites/fist_b.png");
          this.weaponSprites[2] = null;
-         this.crosshairImage = Image.createImage("/aim.png");
-         this.fontImage = Image.createImage("/font.png");
+         this.crosshairImage = Image.createImage("/gamedata/sprites/aim.png");
+         this.fontImage = Image.createImage("/gamedata/sprites/font.png");
          MathUtils.initializeMathTables();
          GameEngine.initializeEngine();
       } catch (Exception var1) {
@@ -2436,11 +2436,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          boolean var3 = false;
          int var4 = this.var_550 + 6;
          Image var5 = Image.createImage(240, 320);
-         Image var6 = Image.createImage("/bkg_cut.png");
-         Image var7 = Image.createImage("/player.png");
-         Image var8 = var2 != 0 && var2 != 9 ? Image.createImage(var2 == 8 ? "/ag_hurt.png" : "/ag.png") : null;
-         Image var9 = var2 == 7 ? Image.createImage("/doctor.png") : null;
-         this.var_a63 = Image.createImage("/font_cut.png");
+         Image var6 = Image.createImage("/gamedata/sprites/bkg_cut.png");
+         Image var7 = Image.createImage("/gamedata/sprites/player.png");
+         Image var8 = var2 != 0 && var2 != 9 ? Image.createImage(var2 == 8 ? "/gamedata/sprites/ag_hurt.png" : "/gamedata/sprites/ag.png") : null;
+         Image var9 = var2 == 7 ? Image.createImage("/gamedata/sprites/doctor.png") : null;
+         this.var_a63 = Image.createImage("/gamedata/sprites/font_cut.png");
          int var10 = 240 - var7.getWidth() - 6;
          Graphics var11;
          (var11 = var5.getGraphics()).setColor(16711680);
