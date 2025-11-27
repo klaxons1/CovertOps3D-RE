@@ -1552,10 +1552,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          for(var29 = 0; var29 < 6; ++var29) {
             boolean var30 = var29 > 3;
             var31 = var29 > 3 ? var29 - 3 : var29 + 1;
-            var10[var29] = sub_d3("/ot8" + Integer.toString(var31), var30);
-            var11[var29] = sub_d3("/ot18" + Integer.toString(var31), var30);
-            var12[var29] = sub_d3("/ot30" + Integer.toString(var31), var30);
-            var13[var29] = sub_d3("/ss30" + Integer.toString(var31), var30);
+            var10[var29] = sub_d3("/gamedata/sniperminigame/ot8" + Integer.toString(var31), var30);
+            var11[var29] = sub_d3("/gamedata/sniperminigame/ot18" + Integer.toString(var31), var30);
+            var12[var29] = sub_d3("/gamedata/sniperminigame/ot30" + Integer.toString(var31), var30);
+            var13[var29] = sub_d3("/gamedata/sniperminigame/ss30" + Integer.toString(var31), var30);
          }
 
          Image var61 = Image.createImage("/gamedata/sniperminigame/sight.png");
@@ -2219,7 +2219,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                this.var_ab7 = GameEngine.gameWorld.staticObjects;
             }
 
-            if (!GameEngine.loadMapData("/level_" + levelNames[currentLevelId], this.var_ae7 == null)) {
+            if (!GameEngine.loadMapData("/gamedata/levels/level_" + levelNames[currentLevelId], this.var_ae7 == null)) {
                CovertOps3D.exitApplication();
             }
 
@@ -2408,7 +2408,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          }
 
          freeMemory();
-         if (!GameEngine.loadGameAssets("/tx", 4, "/sp", 4)) {
+         if (!GameEngine.loadGameAssets("/gamedata/textures/tx", 4, "/gamedata/textures/sp", 4)) {
             CovertOps3D.exitApplication();
          }
 
