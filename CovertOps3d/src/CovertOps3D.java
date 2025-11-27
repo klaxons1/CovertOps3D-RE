@@ -12,7 +12,7 @@ public class CovertOps3D extends MIDlet {
       } else {
          display = Display.getDisplay(this);
          mainGameCanvas = new MainGameCanvas();
-         mainGameCanvas.sub_71();
+         mainGameCanvas.startGameThread();
          display.setCurrent(mainGameCanvas);
          MainGameCanvas.mainMidlet = this;
          instance = this;
@@ -26,7 +26,7 @@ public class CovertOps3D extends MIDlet {
    public void destroyApp(boolean var1) {
       mainGameCanvas.stopGameLoop();
 
-      while(!mainGameCanvas.var_16f) {
+      while(!mainGameCanvas.isGameInitialized) {
          Thread.yield();
       }
 

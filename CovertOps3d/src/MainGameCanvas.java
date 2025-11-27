@@ -10,23 +10,23 @@ import javax.microedition.rms.RecordStoreException;
 public class MainGameCanvas extends GameCanvas implements Runnable {
    public boolean isGameRunning = false;
    public boolean isGamePaused = false;
-   public boolean var_16f = true;
-   public boolean var_1ae = false;
+   public boolean isGameInitialized = true;
+   public boolean areResourcesLoaded = false;
    public static CovertOps3D mainMidlet = null;
    private static final String[] levelNames = new String[]{"01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"};
    public static int currentLevelId = 0;
    public static int previousLevelId = -1;
-   public static int var_2a5;
+   public static int keyMappingOffset;
    public static AudioManager audioManager;
    private String[] SETTINGS_MENU_ITEMS;
    private String[] chapterMenuItems;
-   private static final String[] var_341 = new String[]{"new game", "settings", "help", "about", "quit"};
-   private static final String[] var_3a3 = new String[]{"resume", "new game", "settings", "help", "about", "quit"};
-   private static final String[] var_3ad = new String[]{"difficulty", "", "easy", "normal", "hard", "back"};
-   private static final String[] var_3de = new String[]{"chapter", "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "back"};
-   private static final String[] var_421 = new String[]{"are you sure?", "", "no"};
-   private static final String[] var_43e = new String[]{"Controls:", "", "2/up - walk forward", "8/down - step backwards", "4/left - turn left", "6/right - turn right", "7 - strafe left", "9 - strafe right", "5/action - fire", "1 - open door/move lift", "3 - select weapon", "0 - toggle map"};
-   private static final String[] var_44c = new String[]{"Covert Ops 3D", "", "Developed by:", "Micazook Mobile Ltd.", "", "Executive producers:", "Marcin Kochanowski", "Wojciech Charysz", "Michael Fotoohi", "", "Senior developer:", "Tomasz Mroczek", "", "Level design:", "Kamil Bachminski", "", "Texture artists:", "Kamil Bachminski", "Patryk Piescinski", "", "Character design:", "Lukasz 'Slizgi' Sliwinski", "Kamil Bachminski", "", "Music:", "Slawomir Opalinski", "", "Sound effects:", "Kamil Bachminski", "", "", "Publisher:", "Micazook Ltd.", "", "www.micazook.com", "", "for support email", "support@micazook.com", "", "(c) 2006 Micazook Ltd.", "Trademarks belong to", "their respective owners.", "", "All rights reserved!"};
+   private static final String[] mainMenuItems = new String[]{"new game", "settings", "help", "about", "quit"};
+   private static final String[] pauseMenuItems = new String[]{"resume", "new game", "settings", "help", "about", "quit"};
+   private static final String[] difficultyMenuItems = new String[]{"difficulty", "", "easy", "normal", "hard", "back"};
+   private static final String[] CHAPTER_MENU_DATA = new String[]{"chapter", "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "back"};
+   private static final String[] CONFIRMATION_MENU_ITEMS = new String[]{"are you sure?", "", "no"};
+   private static final String[] HELP_MENU_ITEMS = new String[]{"Controls:", "", "2/up - walk forward", "8/down - step backwards", "4/left - turn left", "6/right - turn right", "7 - strafe left", "9 - strafe right", "5/action - fire", "1 - open door/move lift", "3 - select weapon", "0 - toggle map"};
+   private static final String[] ABOUT_MENU_TEXT = new String[]{"Covert Ops 3D", "", "Developed by:", "Micazook Mobile Ltd.", "", "Executive producers:", "Marcin Kochanowski", "Wojciech Charysz", "Michael Fotoohi", "", "Senior developer:", "Tomasz Mroczek", "", "Level design:", "Kamil Bachminski", "", "Texture artists:", "Kamil Bachminski", "Patryk Piescinski", "", "Character design:", "Lukasz 'Slizgi' Sliwinski", "Kamil Bachminski", "", "Music:", "Slawomir Opalinski", "", "Sound effects:", "Kamil Bachminski", "", "", "Publisher:", "Micazook Ltd.", "", "www.micazook.com", "", "for support email", "support@micazook.com", "", "(c) 2006 Micazook Ltd.", "Trademarks belong to", "their respective owners.", "", "All rights reserved!"};
    private static final String[][] storyText = new String[][]{{"RMy name is captain Thomas Reed. My mission, Covert Operations in service of the US army. I began my career in Spain and since then I have participated in many secret missions against the enemy. As an Allied secret agent my job is to infiltrate and sabotage behind the enemy lines. This mission is a typical one, dangerous with my name written on it!! Our spy planes have revealed photographs of what seems to be of an immense constructions project taking place around the Weissberg Mountain in the German Alps. It seems that the Germans are digging a network of reinforcements and underground bunkers on a previously unparalleled scale. My mission is to hide aboard a transportation supply train until it gets to Weissberg and to meet with our undercover agent on location there. With her help, I need to get the documents that reveals the purpose of this enterprise which incidentally the HQ nicknamed Fort Weissberg. Not sure how yet but I need to devise a way to sabotage the railway system and other important installations on site. I need some luck today and lots of it!!"}, {"ACaptain Reed I presume?", "RWho are you!?", "AAnna Sierck, MI5. I was told to meet you here in Weissberg.", "RSo why now, why in the train? If the Germans find us here, my mission is over!", "AThere has been a change of plans. Don't worry. We are safe, at least until the train stops.", "RWhat's happening, has something gone wrong?", "ANo don't worry, HQ's idea, just some last minute changes to keep the Germans guessing.", "RI knew it.", "AEver since our last failed attempt the trains are heavily searched. You'll have to leave at the last hidden station in the forest and walk to the fort by foot.", "RLast, failed attempt?? How many times have you tried so far?", "ARight now you don't need to know that. Ah and one more thing. The forts gates are not as heavily guarded as the train yard, but nevertheless you can expect a lot of resistance there. I know of a sniper rifle stored somewhere at the station. Find it and use it against the gate guards."}, {"AI see you found this rifle, good. You'll have to shoot the guards before entering Fort Weissberg.", "RAnd you?", "AI'll meet you inside. Maybe I'll be able to get a uniform for you.", "RThanks.", "AReed?", "RYes?", "AGood luck."}, {"AGlad you made it.", "RPiece of cake.", "AUnfortunately I have some bad news. There's gossip of some sort of a secret weapon undergoing tests here. I don't know if it's true, but the guard outpost's has been heavily reinforced. Uniform will not do you any good - they are checking everyone's id cards now practically on every corridor.", "RWhat do I do then?", "AYou can get deeper into the fortress through the unfinished tunnels. But you'll need explosives, as some of the passages are systematically being sealed for security reasons. I'm sure there's dynamite somewhere here. Get it and then find a wall that looks like it shouldn't be there...", "RWhat? Can't you be a little bit more precise?", "AUnfortunately our plans backfired and we couldn't get you any uniforms. Sorry bad luck old chap.", "RAll right, but this my life on the line here."}, {"AYou did it! Now all you need to do is to find the documents. I suppose they are locked somewhere in this level, perhaps you'll need to search for keys.", "RAnd what about you?", "AThere is some commotion in the base, I'll try and see what's going on. We will meet here after we're done.", "RSee you then."}, {"RI've got these papers. Can we finally blow this place up? It's giving me the creeps.", "AI'm sorry, but there's been a slight change of plans again.", "RGreat. I was longing to hear it. What's happening now?", "AHave you ever heard of Clint Miller?", "RDoctor Clint Miller? The Nobel prize winner?", "AYes That's him. A few weeks ago he disappeared from his house in Boston. He's here now, arrived today. The Germans have kidnapped him.", "RWhat? Why?", "AFrom what I know he was conducting some sort of research on the possible military uses of sound waves back in the US.", "RYou mean...", "AOuch, sonic weapons. Germans are doing similar experiments but with no success, so far at least.", "RHe must have cracked it if the German's risked kidnapping him in the states.", "AThat's what I'm afraid of. We have to get him out of here and fast.", "RWhere do they keep him.", "AOn this very level. That's where you come in. Once again you'll need to use your sniper rifle and get rid of the guards.", "RYou lead the way."}, {"RWhat now?", "AThese are the labs and prison's. Miller will be somewhere here. Be careful, I know we are past the outpost, but there can be some more soldiers wandering around.", "RDon't worry and wait here. I'll find him in no time."}, {"ADoctor Miller? We're here to help you!", "MHelp?", "RYeah, to get you out of this prison and out of this country.", "MAh, prison. Yes, yes. What's your plan?", "RAnna?", "AUmm...", "MYou have came to rescue me without any plans??", "AWe didn't know you were going to be here.", "MMy goodness! Listen to me then: the only way to get out of here safely is by taking the train back out of here. They don't seem to care about guarding out bound trains from here.", "RHow do you know?", "MObservation young man, observation. There is no science without it.", "AOK lets make a move quickly.", "MPerhaps your big friend could find some explosives if we want to make sure no one comes after us?", "AGood idea, we were about to destroy this place anyway. Go, Reed, we'll meet at the train yard.", "RSure?", "AGo, go. We can't stick around here forever."}, {"RAnna! What happened?!", "AI... I should have known that...", "RWhy oh why... don't talk too much.", "AMiller... He wasn't kidnapped... at all...", "RWhat? What are you saying?", "AIt was a trap... I don't know how to tell you but Miller is one of them. He came to Germany on his own accord?", "RMiller is a Nazi?", "AYes, he lured me... into this deceitful trap...", "RHe'll pay for that!", "ANo! You have to finish your mission. Set the dynamite... lets get the hell out of here...", "RNo, I won't leave it like that. Just... Anna?", "A...", "RHe'll pay. He'll pay good."}, {"RSo, Fort Weissberg ended up being the biggest firework I've ever seen. Soon I will board this train and head for Switzerland. I will cross the Alps by foot and, play hide and seek with German soldiers before I get there, but that's another story. Works of Clint Miller lie buried deep in the heart of the Weissberg mountain, and of course the Nazis will never finish their sonic super weapon. Miller's ties to Third Reich were never be revealed and his mysterious disappearance is still a base for numerous theories and speculations. And I? I remain on service."}};
    private int var_4db;
    private int fontColumn;
@@ -38,9 +38,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private int[] var_6a8;
    private int var_6d3;
    private int var_75f;
-   private long var_790;
-   private long var_7de;
-   private long var_842;
+   private long frameDeltaTime;
+   private long accumulatedTime;
+   private long lastFrameTime;
    private int frameCounter;
    private Image statusBarImage;
    private Image[] weaponSprites;
@@ -59,7 +59,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private int var_be4;
    private int var_c1f;
    private int var_c2f;
-   private int var_ccf;
+   private int enemyUpdateCounter;
    private int var_cda;
    private int var_cfa;
    private int var_d2a;
@@ -142,9 +142,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       this.var_6a8 = new int[]{6, 5, 6, 6, 5, 5, 6, 6, 3, 3, 5, 4, 5, 6, 6, 5, 6, 5, 5, 5, 6, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 1, 2, 5, 2, 7, 5, 5, 5, 5, 3, 5, 2, 5, 5, 5, 4, 5, 3, 4, 3, 4, 4, 5, 4, 4, 4, 4, 4, 1, 2, 1, 4, 1, 2, 4, 3, 2, 7, 0, 0, 0, 0, 0, 0};
       this.var_6d3 = 10;
       this.var_75f = 3;
-      this.var_790 = 0L;
-      this.var_7de = 0L;
-      this.var_842 = 0L;
+      this.frameDeltaTime = 0L;
+      this.accumulatedTime = 0L;
+      this.lastFrameTime = 0L;
       this.frameCounter = 0;
       this.weaponSprites = new Image[3];
       this.isWeaponCentered = true;
@@ -158,13 +158,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       this.var_be4 = 0;
       this.var_c1f = 0;
       this.var_c2f = 0;
-      this.var_ccf = 0;
+      this.enemyUpdateCounter = 0;
       this.var_cda = 0;
       this.var_cfa = 0;
       this.var_d2a = 0;
       this.var_d88 = 0;
       this.var_d9b = 0;
-      var_2a5 = Math.abs(this.getKeyCode(8)) == 53 ? 5 : Math.abs(this.getKeyCode(8));
+      keyMappingOffset = Math.abs(this.getKeyCode(8)) == 53 ? 5 : Math.abs(this.getKeyCode(8));
       this.setFullScreenMode(true);
    }
 
@@ -172,7 +172,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    private int sub_14(int var1) {
-      switch((var1 < 0 ? -var1 : var1) - var_2a5) {
+      switch((var1 < 0 ? -var1 : var1) - keyMappingOffset) {
       case 1:
          return 11;
       case 2:
@@ -343,10 +343,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   public final void sub_71() {
+   public final void startGameThread() {
       Thread var1 = new Thread(this);
       this.isGameRunning = true;
-      this.var_16f = false;
+      this.isGameInitialized = false;
       var1.start();
    }
 
@@ -365,10 +365,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       Graphics var1;
       (var1 = this.getGraphics()).setClip(0, 0, 240, 320);
       this.sub_175(var1);
-      this.sub_3d0();
+      this.initializeGameResources();
       loadSaveData();
       loadSettingsFromRMS();
-      this.var_1ae = true;
+      this.areResourcesLoaded = true;
       int var2 = this.showMenuScreen(var1, true);
 
       label182:
@@ -376,13 +376,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          while(true) {
             do {
                if (!this.isGameRunning) {
-                  this.var_16f = true;
+                  this.isGameInitialized = true;
                   return;
                }
             } while(this.isGamePaused);
 
             if (var2 == 4) {
-               this.var_16f = true;
+               this.isGameInitialized = true;
                CovertOps3D.exitApplication();
                return;
             }
@@ -409,8 +409,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             break;
          }
 
-         this.var_7de = 0L;
-         this.var_842 = 0L;
+         this.accumulatedTime = 0L;
+         this.lastFrameTime = 0L;
 
          while(this.isGameRunning) {
             try {
@@ -536,25 +536,25 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
 
                long var7 = System.currentTimeMillis();
-               this.var_790 = var7 - this.var_842;
-               this.var_842 = var7;
-               this.var_7de += this.var_790;
-               if (this.var_7de > 600L) {
-                  this.var_7de = 600L;
+               this.frameDeltaTime = var7 - this.lastFrameTime;
+               this.lastFrameTime = var7;
+               this.accumulatedTime += this.frameDeltaTime;
+               if (this.accumulatedTime > 600L) {
+                  this.accumulatedTime = 600L;
                }
 
-               while(this.var_7de >= 80L) {
+               while(this.accumulatedTime >= 80L) {
                   ++this.frameCounter;
                   if (this.gameLoopTick()) {
                      GameEngine.damageFlash = false;
                      this.sub_47(var1);
-                     this.flushScreemBuffer();
+                     this.flushScreenBuffer();
                      this.sub_180(var1);
                      var2 = this.showMenuScreen(var1, true);
                      continue label182;
                   }
 
-                  this.var_7de -= 80L;
+                  this.accumulatedTime -= 80L;
                }
 
                this.sub_47(var1);
@@ -562,7 +562,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   this.sub_2e3(var1, GameEngine.messageText);
                }
 
-               this.flushScreemBuffer();
+               this.flushScreenBuffer();
                yieldToOtherThreads();
             } catch (Exception var5) {
             } catch (OutOfMemoryError var6) {
@@ -706,7 +706,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var7 = (320 - var2.getHeight()) / 2;
          var1.setColor(16777215);
          var1.drawRect(0, 0, 240, 320);
-         this.flushScreemBuffer();
+         this.flushScreenBuffer();
          long var8 = System.currentTimeMillis();
 
          while(true) {
@@ -732,7 +732,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   sub_159(var5, 0, var4);
                   var1.drawImage(var3, 0, 0, 20);
                   var1.drawRGB(var5, 0, var3.getWidth(), 0, 0, var3.getWidth(), var3.getHeight(), true);
-                  this.flushScreemBuffer();
+                  this.flushScreenBuffer();
                   yieldToOtherThreads();
                }
             }
@@ -741,7 +741,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             sub_159(var5, 0, var4);
             var1.drawImage(var2, var6, var7, 20);
             var1.drawRGB(var5, 0, var2.getWidth(), var6, var7, var2.getWidth(), var2.getHeight(), true);
-            this.flushScreemBuffer();
+            this.flushScreenBuffer();
             yieldToOtherThreads();
          }
       } catch (Exception var12) {
@@ -758,7 +758,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
          String var3 = "mission failed|game over";
          this.sub_2e3(var1, "mission failed|game over");
-         this.flushScreemBuffer();
+         this.flushScreenBuffer();
          delay(2000);
          long var4 = System.currentTimeMillis();
 
@@ -780,7 +780,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.sub_2e3(var1, var3);
-            this.flushScreemBuffer();
+            this.flushScreenBuffer();
             yieldToOtherThreads();
          }
       } catch (Exception var8) {
@@ -791,22 +791,22 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    private void sub_1e3(Graphics var1, Image var2) {
-      this.var_7de = 0L;
-      this.var_842 = System.currentTimeMillis();
+      this.accumulatedTime = 0L;
+      this.lastFrameTime = System.currentTimeMillis();
       int var4 = 0;
 
       do {
          long var5 = System.currentTimeMillis();
-         this.var_790 = var5 - this.var_842;
-         this.var_842 = var5;
-         this.var_7de += this.var_790;
-         if (this.var_7de > 600L) {
-            this.var_7de = 600L;
+         this.frameDeltaTime = var5 - this.lastFrameTime;
+         this.lastFrameTime = var5;
+         this.accumulatedTime += this.frameDeltaTime;
+         if (this.accumulatedTime > 600L) {
+            this.accumulatedTime = 600L;
          }
 
-         while(this.var_7de >= (long)6) {
+         while(this.accumulatedTime >= (long)6) {
             ++var4;
-            this.var_7de -= (long)6;
+            this.accumulatedTime -= (long)6;
          }
 
          int var7 = var4;
@@ -852,7 +852,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             ++var8;
          }
 
-         this.flushScreemBuffer();
+         this.flushScreenBuffer();
       } while(var4 <= 320);
 
    }
@@ -867,10 +867,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          Image var3 = Image.createImage("/bkg.png");
          int var4 = 0;
          int var5 = 0;
-         String[] var6 = var_341;
+         String[] var6 = mainMenuItems;
          if (!var2) {
             var4 = 32;
-            var6 = var_3a3;
+            var6 = pauseMenuItems;
          }
 
          int var7 = 0;
@@ -925,10 +925,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                var1.fillTriangle(117, var16, 123, var16, 120, var16 + 3);
             }
 
-            String var22 = var6 == this.SETTINGS_MENU_ITEMS ? "change" : (var6 == var_421 ? "yes" : "select");
+            String var22 = var6 == this.SETTINGS_MENU_ITEMS ? "change" : (var6 == CONFIRMATION_MENU_ITEMS ? "yes" : "select");
             this.sub_681(var22, var1, 3, 320 - this.var_550 - 3);
             this.sub_681(var6[var12], var1, 240 - this.sub_5d2(var6[var12]) - 3, 320 - this.var_550 - 3);
-            this.flushScreemBuffer();
+            this.flushScreenBuffer();
             yieldToOtherThreads();
             Object[] var23 = new Object[0];
             if (GameEngine.inputRun || GameEngine.inputFire) {
@@ -942,7 +942,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var23[2] = new Integer(var7);
                   var23[3] = new Integer(var8);
                   var10.push(var23);
-                  var6 = var_3ad;
+                  var6 = difficultyMenuItems;
                   var4 = 18 + GameEngine.difficultyLevel;
                   var7 = 2;
                   var8 = var6.length - 2;
@@ -968,11 +968,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   break;
                case 2:
                case 35:
-                  this.sub_24b(var1, var3, "help", var_43e, false);
+                  this.sub_24b(var1, var3, "help", HELP_MENU_ITEMS, false);
                   break;
                case 3:
                case 36:
-                  this.sub_24b(var1, var3, "about", var_44c, true);
+                  this.sub_24b(var1, var3, "about", ABOUT_MENU_TEXT, true);
                   break;
                case 4:
                case 5:
@@ -1037,11 +1037,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                case 18:
                case 19:
                case 20:
-                  this.chapterMenuItems = new String[var_3de.length];
-                  this.chapterMenuItems[0] = var_3de[0];
-                  this.chapterMenuItems[1] = var_3de[1];
-                  this.chapterMenuItems[2] = var_3de[2];
-                  this.chapterMenuItems[this.chapterMenuItems.length - 1] = var_3de[this.chapterMenuItems.length - 1];
+                  this.chapterMenuItems = new String[CHAPTER_MENU_DATA.length];
+                  this.chapterMenuItems[0] = CHAPTER_MENU_DATA[0];
+                  this.chapterMenuItems[1] = CHAPTER_MENU_DATA[1];
+                  this.chapterMenuItems[2] = CHAPTER_MENU_DATA[2];
+                  this.chapterMenuItems[this.chapterMenuItems.length - 1] = CHAPTER_MENU_DATA[this.chapterMenuItems.length - 1];
                   (var23 = new Object[4])[0] = var6;
                   var23[1] = new Integer(var4);
                   var23[2] = new Integer(var7);
@@ -1059,7 +1059,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      if (saveData[var17 - 3] != null) {
                         var10000 = this.chapterMenuItems;
                         var10001 = var17;
-                        var10002 = var_3de[var17];
+                        var10002 = CHAPTER_MENU_DATA[var17];
                      } else {
                         var10000 = this.chapterMenuItems;
                         var10001 = var17;
@@ -1135,7 +1135,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      var23[2] = new Integer(var7);
                      var23[3] = new Integer(var8);
                      var10.push(var23);
-                     var6 = var_421;
+                     var6 = CONFIRMATION_MENU_ITEMS;
                      var4 = 80;
                      var7 = 0;
                      var8 = 0;
@@ -1204,7 +1204,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawImage(var2, 0, 0, 20);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-            this.flushScreemBuffer();
+            this.flushScreenBuffer();
             yieldToOtherThreads();
             delay(50);
          }
@@ -1250,7 +1250,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var14 += this.var_6d3 + 2;
                }
 
-               this.flushScreemBuffer();
+               this.flushScreenBuffer();
             }
 
             var7 = var5;
@@ -1266,7 +1266,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawImage(var2, 0, 0, 20);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
             var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-            this.flushScreemBuffer();
+            this.flushScreenBuffer();
             yieldToOtherThreads();
             delay(50);
          }
@@ -1327,10 +1327,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
 
       ++this.var_cda;
-      ++this.var_ccf;
+      ++this.enemyUpdateCounter;
 
       for(var9 = 0; var9 < 8; ++var9) {
-         if (this.var_ccf % 10 == 0) {
+         if (this.enemyUpdateCounter % 10 == 0) {
             label182: {
                switch(var1[var9]) {
                case 1:
@@ -1364,7 +1364,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             continue;
          }
 
-         if ((var8[var9] != 1 || this.var_ccf % 7 == 0) && (var8[var9] != 2 || this.var_ccf % 5 == 0)) {
+         if ((var8[var9] != 1 || this.enemyUpdateCounter % 7 == 0) && (var8[var9] != 2 || this.enemyUpdateCounter % 5 == 0)) {
             if (var1[var9] != 1 && var1[var9] != 2) {
                if (var1[var9] != 5 && var1[var9] != 6) {
                   continue;
@@ -1523,7 +1523,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int[][] var12 = new int[6][];
          int[][] var13 = new int[6][];
          this.var_cda = 0;
-         this.var_ccf = 0;
+         this.enemyUpdateCounter = 0;
          this.var_cfa = 0;
          int[][] var14 = new int[][]{{84, 147, 197, 132, 147, 155, 77, 155}, {63, 177, 89, 149, 104, 132, 84, 146}};
          int[][] var15 = new int[][]{{147, 84, 164, 147, 132, 160, 155, 77}, {75, 162, 149, 89, 132, 104, 90, 152}};
@@ -1565,8 +1565,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          this.var_d88 = 88;
          this.var_d9b = 112;
          int[] var32 = new int[8];
-         this.var_7de = 0L;
-         this.var_842 = 0L;
+         this.accumulatedTime = 0L;
+         this.lastFrameTime = 0L;
          GameEngine.levelTransitionState = 2;
 
          while(this.isGameRunning) {
@@ -1580,20 +1580,20 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             long var63 = System.currentTimeMillis();
-            this.var_790 = var63 - this.var_842;
-            this.var_842 = var63;
-            this.var_7de += this.var_790;
-            if (this.var_7de > 600L) {
-               this.var_7de = 600L;
+            this.frameDeltaTime = var63 - this.lastFrameTime;
+            this.lastFrameTime = var63;
+            this.accumulatedTime += this.frameDeltaTime;
+            if (this.accumulatedTime > 600L) {
+               this.accumulatedTime = 600L;
             }
 
-            while(this.var_7de >= (long)40) {
+            while(this.accumulatedTime >= (long)40) {
                ++this.frameCounter;
                if (!this.sub_255(var26, var25, var27, var32, var28, var14[var2], var15[var2], var17[var2])) {
                   return -1;
                }
 
-               this.var_7de -= (long)40;
+               this.accumulatedTime -= (long)40;
             }
 
             int var36 = 0;
@@ -1837,7 +1837,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var1.drawImage(this.statusBarImage, 0, 288, 0);
             this.sub_547(GameEngine.playerHealth, var1, 58, 294);
             this.sub_547(GameEngine.playerArmor, var1, 138, 294);
-            this.flushScreemBuffer();
+            this.flushScreenBuffer();
             if (var21) {
                return -2;
             }
@@ -1927,7 +1927,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    public final void resumeGame() {
       if (this.isGamePaused) {
-         if (audioManager != null && musicEnabled == 1 && this.var_1ae) {
+         if (audioManager != null && musicEnabled == 1 && this.areResourcesLoaded) {
             playSound(0, true, 80, 2);
          }
 
@@ -2196,7 +2196,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    }
 
-   private void sub_3d0() {
+   private void initializeGameResources() {
       try {
          this.statusBarImage = Image.createImage("/bar.png");
          this.weaponSprites[0] = Image.createImage("/fist_a.png");
@@ -2428,7 +2428,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
       var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
       this.sub_681(var2, var1, var3, var4);
-      this.flushScreemBuffer();
+      this.flushScreenBuffer();
    }
 
    private int drawDialogOverlay(Graphics var1, int var2) {
@@ -2588,7 +2588,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var31 += var37 + 1;
                }
 
-               this.flushScreemBuffer();
+               this.flushScreenBuffer();
                delay(var34 == ',' ? 300 : (var34 != '.' && var34 != '?' && var34 != '!' ? 50 : 400));
                long var57 = System.currentTimeMillis();
 
@@ -2605,7 +2605,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   GameEngine.inputRun = false;
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("pause"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
                   this.sub_681("resume", var1, 3, 320 - this.var_550 - 3);
-                  this.flushScreemBuffer();
+                  this.flushScreenBuffer();
 
                   while(!GameEngine.inputRun && !GameEngine.inputBack && !this.isGamePaused && !GameEngine.inputFire) {
                      yieldToOtherThreads();
@@ -2615,7 +2615,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                if (GameEngine.inputRun) {
                   var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("resume"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
                   this.sub_681("pause", var1, 3, 320 - this.var_550 - 3);
-                  this.flushScreemBuffer();
+                  this.flushScreenBuffer();
                   GameEngine.inputRun = false;
                }
 
@@ -2694,7 +2694,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      }
                   }
 
-                  this.flushScreemBuffer();
+                  this.flushScreenBuffer();
                }
 
                if (GameEngine.inputFire) {
@@ -3221,7 +3221,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       }
    }
 
-   private void flushScreemBuffer() {
+   private void flushScreenBuffer() {
       this.flushGraphics();
    }
 
