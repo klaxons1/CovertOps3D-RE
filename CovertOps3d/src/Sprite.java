@@ -1,9 +1,8 @@
 /**
  * Sprite class for handling game sprites (objects, items, UI elements)
- * Fixed 64x64 pixel size with palette-based rendering
  */
 public final class Sprite {
-    public byte[] pixelData;     // Sprite pixel data (64x64 = 4096 bytes, 4-bit color)
+    public byte[] pixelData;     // Sprite pixel data
     public int[][] colorPalettes; // Color palettes for different lighting conditions
     public byte spriteId;        // Unique identifier for this sprite
 
@@ -21,11 +20,11 @@ public final class Sprite {
      * Create a sprite from pixel data with 90-degree rotation
      * Sprites are stored rotated for efficient rendering
      * @param spriteId Unique identifier for the sprite
-     * @param sourcePixels Source pixel data (64x64 array)
+     * @param sourcePixels
      */
     public Sprite(byte spriteId, byte[] sourcePixels) {
         this.spriteId = spriteId;
-        this.pixelData = new byte[4096]; // 64x64 pixels
+        this.pixelData = new byte[4096];
 
         // Rotate sprite 90 degrees clockwise for rendering optimization
         for(int x = 0; x < 64; ++x) {
