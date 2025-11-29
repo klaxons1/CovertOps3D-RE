@@ -13,7 +13,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public boolean isGameInitialized = true;
    public boolean areResourcesLoaded = false;
    public static CovertOps3D mainMidlet = null;
-   private static final String[] levelNames = new String[]{"01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"};
+   private static final String[] levelFileNames = new String[]{"01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"};
    public static int currentLevelId = 0;
    public static int previousLevelId = -1;
    public static int keyMappingOffset;
@@ -50,8 +50,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private Image crosshairImage;
    private Image largeFontImage;
    private Image smallFontImage;
-   private GameObject[] var_ab7;
-   private GameObject[] var_ae7;
+   private GameObject[] cachedStaticObjects;
+   private GameObject[] nextLevelObjects;
    private int[] var_b23;
    private int[] var_b56;
    private int[] var_b60;
@@ -149,8 +149,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       this.weaponSprites = new Image[3];
       this.isWeaponCentered = true;
       this.weaponAnimationState = 0;
-      this.var_ab7 = null;
-      this.var_ae7 = null;
+      this.cachedStaticObjects = null;
+      this.nextLevelObjects = null;
       this.var_b23 = null;
       this.var_b56 = null;
       this.var_b60 = null;
@@ -2216,29 +2216,29 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          freeMemory();
          if (previousLevelId < currentLevelId) {
             if (previousLevelId > -1) {
-               this.var_ab7 = GameEngine.gameWorld.staticObjects;
+               this.cachedStaticObjects = GameEngine.gameWorld.staticObjects;
             }
 
-            if (!GameEngine.loadMapData("/gamedata/levels/level_" + levelNames[currentLevelId], this.var_ae7 == null)) {
+            if (!GameEngine.loadMapData("/gamedata/levels/level_" + levelFileNames[currentLevelId], this.nextLevelObjects == null)) {
                CovertOps3D.exitApplication();
             }
 
-            if (this.var_ae7 != null) {
-               GameEngine.gameWorld.staticObjects = this.var_ae7;
-               this.var_ae7 = null;
+            if (this.nextLevelObjects != null) {
+               GameEngine.gameWorld.staticObjects = this.nextLevelObjects;
+               this.nextLevelObjects = null;
             } else {
                GameEngine.keysCollected[0] = false;
                GameEngine.keysCollected[1] = false;
             }
          } else {
-            this.var_ae7 = GameEngine.gameWorld.staticObjects;
-            if (!GameEngine.loadMapData("/level_" + levelNames[currentLevelId], this.var_ab7 == null)) {
+            this.nextLevelObjects = GameEngine.gameWorld.staticObjects;
+            if (!GameEngine.loadMapData("/level_" + levelFileNames[currentLevelId], this.cachedStaticObjects == null)) {
                CovertOps3D.exitApplication();
             }
 
-            if (this.var_ab7 != null) {
-               GameEngine.gameWorld.staticObjects = this.var_ab7;
-               this.var_ab7 = null;
+            if (this.cachedStaticObjects != null) {
+               GameEngine.gameWorld.staticObjects = this.cachedStaticObjects;
+               this.cachedStaticObjects = null;
             }
          }
 
@@ -2278,7 +2278,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         break label166;
                      case 10:
                         sub_3bc(var19, var9, var10);
-                        if (levelNames[currentLevelId] == "06c") {
+                        if (levelFileNames[currentLevelId] == "06c") {
                            var19.currentState = 1;
                         }
                         continue;
