@@ -1,130 +1,149 @@
 public final class BSPNode {
-   private int splitX;
-   private int splitZ;
-   private int normalX;
-   private int splitSlope;
-   private int frontChildIndex;
-   private int backChildIndex;
-   private Object frontChild;
-   private Object backChild;
-   public boolean[] visibleSectors;
-   public static Sector[] visibleSectorsList;
-   public static int visibleSectorsCount;
 
-   public BSPNode(int var1, int var2, int var3, int var4, int var5, int var6) {
-      this.frontChildIndex = var5;
-      this.backChildIndex = var6;
-      this.splitX = var1;
-      this.splitZ = var2;
-      this.normalX = var3;
-      this.splitSlope = MathUtils.fixedPointDivide(var4, var3);
-      this.visibleSectors = null;
-   }
+    private int splitX;
+    private int splitZ;
+    private int normalX;
+    private int splitSlope;
 
-   public final void initializeBSPNode(GameWorld var1) {
-      BSPNode var10000;
-      Object var10001;
-      int var10002;
-      if ((this.frontChildIndex & '耀') == 32768) {
-         var10000 = this;
-         var10001 = var1.bspSectors;
-         var10002 = this.frontChildIndex - '耀';
-      } else {
-         var10000 = this;
-         var10001 = var1.bspNodes;
-         var10002 = this.frontChildIndex;
-      }
+    private int frontChildIndex;
+    private int backChildIndex;
 
-      var10000.frontChild = ((Object[])var10001)[var10002];
-      if ((this.backChildIndex & '耀') == 32768) {
-         var10000 = this;
-         var10001 = var1.bspSectors;
-         var10002 = this.backChildIndex - '耀';
-      } else {
-         var10000 = this;
-         var10001 = var1.bspNodes;
-         var10002 = this.backChildIndex;
-      }
+    private Object frontChild;   // BSPNode or Sector
+    private Object backChild;    // BSPNode or Sector
 
-      var10000.backChild = ((Object[])var10001)[var10002];
-   }
+    public boolean[] visibleSectors;
+    public static Sector[] visibleSectorsList;
+    public static int visibleSectorsCount;
 
-   private boolean isPointInFront(int var1, int var2) {
-      if (this.splitSlope == Integer.MAX_VALUE) {
-         return this.splitX - var1 >= 0;
-      } else if (this.splitSlope == Integer.MIN_VALUE) {
-         return var1 - this.splitX >= 0;
-      } else {
-         boolean var3 = var2 - this.splitZ - (int)((long)this.splitSlope * (long)(var1 - this.splitX) >> 16) >= 0;
-         if (this.normalX < 0) {
-            var3 = !var3;
-         }
+    private static final int LEAF_FLAG = 32768; // 0x8000
 
-         return var3;
-      }
-   }
+    public BSPNode(int splitX, int splitZ, int normalX, int splitDy,
+                   int frontChildIndex, int backChildIndex) {
+        this.splitX = splitX;
+        this.splitZ = splitZ;
+        this.normalX = normalX;
+        this.splitSlope = MathUtils.fixedPointDivide(splitDy, normalX);
 
-   public final void traverseBSP(Transform3D var1, SectorData var2) {
-      int var3 = var1.x;
-      int var4 = var1.z;
-      Object var10000;
-      Object var5;
-      if (!this.isPointInFront(var3, var4)) {
-         var5 = this.frontChild;
-         var10000 = this.backChild;
-      } else {
-         var5 = this.backChild;
-         var10000 = this.frontChild;
-      }
+        this.frontChildIndex = frontChildIndex;
+        this.backChildIndex  = backChildIndex;
 
-      Object var6 = var10000;
-      BSPNode var7;
-      Sector var8;
-      if (var5 instanceof BSPNode) {
-         var7 = (BSPNode)var5;
-         if (var2.isBSPNodeVisible(var7)) {
-            var7.traverseBSP(var1, var2);
-         }
-      } else {
-         var8 = (Sector)var5;
-         if (var2.isSectorConnected(var8)) {
-            visibleSectorsList[visibleSectorsCount++] = var8;
-         }
-      }
+        this.visibleSectors = null;
+    }
 
-      if (var6 instanceof BSPNode) {
-         var7 = (BSPNode)var6;
-         if (var2.isBSPNodeVisible(var7)) {
-            var7.traverseBSP(var1, var2);
-         }
+    public final void initializeBSPNode(GameWorld world) {
+        // Front child
+        if ((frontChildIndex & LEAF_FLAG) != 0) {
+            int sectorIdx = frontChildIndex - LEAF_FLAG;
+            this.frontChild = world.bspSectors[sectorIdx];
+        } else {
+            this.frontChild = world.bspNodes[frontChildIndex];
+        }
 
-      } else {
-         var8 = (Sector)var6;
-         if (var2.isSectorConnected(var8)) {
-            visibleSectorsList[visibleSectorsCount++] = var8;
-         }
+        // Back child
+        if ((backChildIndex & LEAF_FLAG) != 0) {
+            int sectorIdx = backChildIndex - LEAF_FLAG;
+            this.backChild = world.bspSectors[sectorIdx];
+        } else {
+            this.backChild = world.bspNodes[backChildIndex];
+        }
+    }
 
-      }
-   }
+    private boolean isPointInFront(int x, int z) {
+        if (splitSlope == Integer.MAX_VALUE) {
+            return splitX - x >= 0;
+        }
+        if (splitSlope == Integer.MIN_VALUE) {
+            return x - splitX >= 0;
+        }
 
-   public final SectorData findSectorAtPoint(int var1, int var2) {
-      return this.findSectorNodeAtPoint(var1, var2).getSectorData();
-   }
+        long dx = x - splitX;
+        long predictedZ = splitZ + ((long)splitSlope * dx >> 16);
+        boolean front = (z - predictedZ) >= 0;
 
-   public final Sector findSectorNodeAtPoint(int var1, int var2) {
-      Object var3;
-      return (var3 = this.isPointInFront(var1, var2) ? this.backChild : this.frontChild) instanceof BSPNode ? ((BSPNode)var3).findSectorNodeAtPoint(var1, var2) : (Sector)var3;
-   }
+        if (normalX < 0) {
+            front = !front;
+        }
+        return front;
+    }
 
-   public final boolean[] calculateVisibleSectors() {
-      boolean[] var1 = this.frontChild instanceof BSPNode ? ((BSPNode)this.frontChild).calculateVisibleSectors() : ((Sector)this.frontChild).getVisibilityMask();
-      boolean[] var2 = this.backChild instanceof BSPNode ? ((BSPNode)this.backChild).calculateVisibleSectors() : ((Sector)this.backChild).getVisibilityMask();
-      this.visibleSectors = new boolean[var1.length];
+    public final void traverseBSP(Transform3D camera, SectorData fromSector) {
+        int playerX = camera.x;
+        int playerZ = camera.z;
 
-      for(int var3 = 0; var3 < this.visibleSectors.length; ++var3) {
-         this.visibleSectors[var3] = var1[var3] && var2[var3];
-      }
+        Object nearChild, farChild;
+        if (isPointInFront(playerX, playerZ)) {
+            nearChild = backChild;
+            farChild  = frontChild;
+        } else {
+            nearChild = frontChild;
+            farChild  = backChild;
+        }
 
-      return this.visibleSectors;
-   }
+        // Near subtree first
+        if (nearChild instanceof BSPNode) {
+            BSPNode node = (BSPNode)nearChild;
+            if (fromSector.isBSPNodeVisible(node)) {
+                node.traverseBSP(camera, fromSector);
+            }
+        } else if (nearChild instanceof Sector) {
+            Sector sector = (Sector)nearChild;
+            if (fromSector.isSectorConnected(sector)) {
+                visibleSectorsList[visibleSectorsCount] = sector;
+                visibleSectorsCount++;                     // correct increment
+            }
+        }
+
+        // Far subtree second
+        if (farChild instanceof BSPNode) {
+            BSPNode node = (BSPNode)farChild;
+            if (fromSector.isBSPNodeVisible(node)) {
+                node.traverseBSP(camera, fromSector);
+            }
+        } else if (farChild instanceof Sector) {
+            Sector sector = (Sector)farChild;
+            if (fromSector.isSectorConnected(sector)) {
+                visibleSectorsList[visibleSectorsCount] = sector;
+                visibleSectorsCount++;                     // correct increment
+            }
+        }
+    }
+
+    public final SectorData findSectorAtPoint(int x, int z) {
+        return findSectorNodeAtPoint(x, z).getSectorData();
+    }
+
+    public final Sector findSectorNodeAtPoint(int x, int z) {
+        Object child = isPointInFront(x, z) ? backChild : frontChild;
+        if (child instanceof BSPNode) {
+            return ((BSPNode)child).findSectorNodeAtPoint(x, z);
+        } else {
+            return (Sector)child;
+        }
+    }
+
+    public final boolean[] calculateVisibleSectors() {
+        boolean[] frontMask;
+        if (frontChild instanceof BSPNode) {
+            frontMask = ((BSPNode)frontChild).calculateVisibleSectors();
+        } else {
+            frontMask = ((Sector)frontChild).getVisibilityMask();
+        }
+
+        boolean[] backMask;
+        if (backChild instanceof BSPNode) {
+            backMask = ((BSPNode)backChild).calculateVisibleSectors();
+        } else {
+            backMask = ((Sector)backChild).getVisibilityMask();
+        }
+
+        if (visibleSectors == null || visibleSectors.length != frontMask.length) {
+            visibleSectors = new boolean[frontMask.length];
+        }
+
+        for (int i = 0; i < visibleSectors.length; i++) {
+            visibleSectors[i] = frontMask[i] && backMask[i];
+        }
+
+        return visibleSectors;
+    }
 }
