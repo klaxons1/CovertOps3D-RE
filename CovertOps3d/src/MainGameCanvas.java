@@ -48,8 +48,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private int weaponAnimationState;
    public static int weaponSpriteFrame = 0;
    private Image crosshairImage;
-   private Image fontImage;
-   private Image var_a63;
+   private Image largeFontImage;
+   private Image smallFontImage;
    private GameObject[] var_ab7;
    private GameObject[] var_ae7;
    private int[] var_b23;
@@ -171,7 +171,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    public void sizeChanged(int var1, int var2) {
    }
 
-   private int sub_14(int var1) {
+   private int translateKeyCode(int var1) {
       switch((var1 < 0 ? -var1 : var1) - keyMappingOffset) {
       case 1:
          return 11;
@@ -207,7 +207,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public void keyPressed(int var1) {
-      switch(this.sub_14(var1)) {
+      switch(this.translateKeyCode(var1)) {
       case 1:
          GameEngine.inputForward = true;
          return;
@@ -238,7 +238,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             GameEngine.var_3e3 = true;
             return;
          case 51:
-            GameEngine.var_3b8 = true;
+            GameEngine.selectNextWeapon = true;
             return;
          case 53:
             GameEngine.inputFire = true;
@@ -265,7 +265,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public void keyReleased(int var1) {
-      switch(this.sub_14(var1)) {
+      switch(this.translateKeyCode(var1)) {
       case 1:
          GameEngine.inputForward = false;
          return;
@@ -1194,7 +1194,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
       try {
          String var6 = mainMidlet.getAppProperty("MIDlet-Version");
-         this.var_a63 = Image.createImage("/gamedata/sprites/font_cut.png");
+         this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
          boolean var7 = true;
          int var8 = 320 - this.var_550;
 
@@ -1279,7 +1279,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       GameEngine.inputFire = false;
       GameEngine.inputForward = false;
       GameEngine.inputBackward = false;
-      this.var_a63 = null;
+      this.smallFontImage = null;
       var1.setClip(0, 0, 240, 320);
    }
 
@@ -1953,8 +1953,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       } else {
          if (!GameEngine.weaponSwitchAnimationActive) {
             GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
-            if (GameEngine.var_3b8) {
-               GameEngine.var_3b8 = false;
+            if (GameEngine.selectNextWeapon) {
+               GameEngine.selectNextWeapon = false;
                GameEngine.pendingWeaponSwitch = GameEngine.cycleWeaponForward(GameEngine.pendingWeaponSwitch);
             }
 
@@ -2203,7 +2203,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          this.weaponSprites[1] = Image.createImage("/gamedata/sprites/fist_b.png");
          this.weaponSprites[2] = null;
          this.crosshairImage = Image.createImage("/gamedata/sprites/aim.png");
-         this.fontImage = Image.createImage("/gamedata/sprites/font.png");
+         this.largeFontImage = Image.createImage("/gamedata/sprites/font.png");
          MathUtils.initializeMathTables();
          GameEngine.initializeEngine();
       } catch (Exception var1) {
@@ -2440,7 +2440,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          Image var7 = Image.createImage("/gamedata/sprites/player.png");
          Image var8 = var2 != 0 && var2 != 9 ? Image.createImage(var2 == 8 ? "/gamedata/sprites/ag_hurt.png" : "/gamedata/sprites/ag.png") : null;
          Image var9 = var2 == 7 ? Image.createImage("/gamedata/sprites/doctor.png") : null;
-         this.var_a63 = Image.createImage("/gamedata/sprites/font_cut.png");
+         this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
          int var10 = 240 - var7.getWidth() - 6;
          Graphics var11;
          (var11 = var5.getGraphics()).setColor(16711680);
@@ -2584,7 +2584,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      }
                   }
 
-                  var1.drawRegion(this.var_a63, var38, var39, var37, this.var_6d3, 0, var31, var32, 20);
+                  var1.drawRegion(this.smallFontImage, var38, var39, var37, this.var_6d3, 0, var31, var32, 20);
                   var31 += var37 + 1;
                }
 
@@ -2623,7 +2623,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   GameEngine.inputRun = false;
                   GameEngine.inputBack = false;
                   if ((var37 = this.showMenuScreen(var1, false)) != 32) {
-                     this.var_a63 = null;
+                     this.smallFontImage = null;
                      return var37;
                   }
 
@@ -2681,7 +2681,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                  int var50 = this.var_6a8[var49];
                                  int var51 = this.var_691[var49];
                                  int var52 = var48[1] * this.var_6d3;
-                                 var1.drawRegion(this.var_a63, var51, var52, var50, this.var_6d3, 0, var45, var41, 20);
+                                 var1.drawRegion(this.smallFontImage, var51, var52, var50, this.var_6d3, 0, var45, var41, 20);
                                  var59 = var45;
                                  var60 = var50 + 1;
                               }
@@ -2699,7 +2699,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                if (GameEngine.inputFire) {
                   GameEngine.inputFire = false;
-                  this.var_a63 = null;
+                  this.smallFontImage = null;
                   return -1;
                }
 
@@ -2716,7 +2716,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          }
 
          delay(5000);
-         this.var_a63 = null;
+         this.smallFontImage = null;
       } catch (Exception var53) {
       } catch (OutOfMemoryError var54) {
       }
@@ -2747,7 +2747,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                int var19 = this.var_6a8[var18];
                int var20 = this.var_691[var18];
                int var21 = var17[1] * this.var_6d3;
-               var1.drawRegion(this.var_a63, var20, var21, var19, this.var_6d3, 0, var14, var10, 20);
+               var1.drawRegion(this.smallFontImage, var20, var21, var19, this.var_6d3, 0, var14, var10, 20);
                var10000 = var14;
                var10001 = var19 + 1;
             }
@@ -3018,7 +3018,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int var9 = this.var_65d[var8];
             int var10 = this.var_5fa[var8];
             int var11 = var7[1] * this.var_550;
-            var2.drawRegion(this.fontImage, var10, var11, var9, this.var_550, 0, var3, var4, 20);
+            var2.drawRegion(this.largeFontImage, var10, var11, var9, this.var_550, 0, var3, var4, 20);
             var10000 = var3;
             var10001 = var9;
          }
@@ -3042,7 +3042,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int var9 = this.var_6a8[var8];
             int var10 = this.var_691[var8];
             int var11 = var7[1] * this.var_6d3;
-            var2.drawRegion(this.var_a63, var10, var11, var9, this.var_6d3, 0, var3, var4, 20);
+            var2.drawRegion(this.smallFontImage, var10, var11, var9, this.var_6d3, 0, var3, var4, 20);
             var10000 = var3;
             var10001 = var9 + 1;
          }

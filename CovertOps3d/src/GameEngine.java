@@ -22,7 +22,7 @@ public final class GameEngine {
    public static boolean inputStrafe;
    public static boolean inputRun;
    public static boolean inputBack;
-   public static boolean var_3b8;
+   public static boolean selectNextWeapon;
    public static boolean var_3e3;
    public static boolean toggleMapInput;
    public static int levelTransitionState;
@@ -1124,7 +1124,7 @@ public final class GameEngine {
       inputBack = false;
       var_3e3 = false;
       toggleMapInput = false;
-      var_3b8 = false;
+      selectNextWeapon = false;
       levelTransitionState = 0;
       weaponCooldownTimer = 0;
    }
