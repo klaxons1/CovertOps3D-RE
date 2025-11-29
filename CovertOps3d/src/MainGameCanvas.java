@@ -235,7 +235,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             GameEngine.toggleMapInput = true;
             return;
          case 49:
-            GameEngine.var_3e3 = true;
+            GameEngine.useKey = true;
             return;
          case 51:
             GameEngine.selectNextWeapon = true;

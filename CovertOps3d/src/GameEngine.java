@@ -23,7 +23,7 @@ public final class GameEngine {
    public static boolean inputRun;
    public static boolean inputBack;
    public static boolean selectNextWeapon;
-   public static boolean var_3e3;
+   public static boolean useKey;
    public static boolean toggleMapInput;
    public static int levelTransitionState;
    public static int weaponCooldownTimer = 0;
@@ -43,7 +43,7 @@ public final class GameEngine {
    private static Texture defaultErrorTexture;
    private static Texture skyboxTexture;
    private static short[] depthBuffer;
-   private static int var_958;
+   private static int playerViewHeight;
    private static int var_9b4;
    private static int var_9e4;
    private static int var_9fa;
@@ -572,7 +572,7 @@ public final class GameEngine {
       }
 
       int var21;
-      if (!var_3e3) {
+      if (!useKey) {
          if (var1 != null) {
             activeInteractable = (var21 = var1.getWallType()) != 1 && var21 != 11 && var21 != 26 && var21 != 28 && var21 != 51 && var21 != 62 ? null : var1;
          }
@@ -620,7 +620,7 @@ public final class GameEngine {
       int var12;
       byte var10001;
       int var35;
-      if (var_3e3) {
+      if (useKey) {
          ElevatorController var22;
          ElevatorController var41;
          if (currentSector.getSectorType() == 10 && (var22 = getElevatorController(currentSector)).elevatorState == 0) {
@@ -720,7 +720,7 @@ public final class GameEngine {
             }
          }
 
-         var_3e3 = false;
+         useKey = false;
       }
 
       SectorData var43;
@@ -1122,7 +1122,7 @@ public final class GameEngine {
       inputStrafe = false;
       inputRun = false;
       inputBack = false;
-      var_3e3 = false;
+      useKey = false;
       toggleMapInput = false;
       selectNextWeapon = false;
       levelTransitionState = 0;
@@ -1239,7 +1239,7 @@ public final class GameEngine {
          var_9fa = Integer.MIN_VALUE;
          var_9e4 = Integer.MIN_VALUE;
          var_9b4 = Integer.MIN_VALUE;
-         var_958 = Integer.MIN_VALUE;
+         playerViewHeight = Integer.MIN_VALUE;
          var_a34 = Integer.MIN_VALUE;
          var_a27 = Integer.MIN_VALUE;
          short var42 = (short)var0.sectorId;
@@ -1363,10 +1363,10 @@ public final class GameEngine {
             }
          }
 
-         if (var_958 >= 0) {
+         if (playerViewHeight >= 0) {
             var67 = (short)var_a27;
 
-            for(var68 = var_958; var68 <= var_9b4; ++var68) {
+            for(var68 = playerViewHeight; var68 <= var_9b4; ++var68) {
                renderUtils.addRenderSpan(depthBuffer[var68], var67, var42, var68);
             }
          }
@@ -1488,8 +1488,8 @@ public final class GameEngine {
          if (var_a27 == var1 - 1) {
             var9 = (short)var_a27;
             var10 = var4 > var_9b4 + 1 ? var4 : var_9b4 + 1;
-            int var11 = var7 < var_958 - 1 ? var7 : var_958 - 1;
-            int var12 = var_958 > var7 + 1 ? var_958 : var7 + 1;
+            int var11 = var7 < playerViewHeight - 1 ? var7 : playerViewHeight - 1;
+            int var12 = playerViewHeight > var7 + 1 ? playerViewHeight : var7 + 1;
             int var13 = var_9b4 < var4 - 1 ? var_9b4 : var4 - 1;
 
             int var14;
@@ -1501,7 +1501,7 @@ public final class GameEngine {
                depthBuffer[var14] = var8;
             }
 
-            for(var14 = var_958; var14 <= var13; ++var14) {
+            for(var14 = playerViewHeight; var14 <= var13; ++var14) {
                renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
 
@@ -1509,10 +1509,10 @@ public final class GameEngine {
                renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
             }
          } else {
-            if (var_958 >= 0) {
+            if (playerViewHeight >= 0) {
                var9 = (short)var_a27;
 
-               for(var10 = var_958; var10 <= var_9b4; ++var10) {
+               for(var10 = playerViewHeight; var10 <= var_9b4; ++var10) {
                   renderUtils.addRenderSpan(depthBuffer[var10], var9, var0, var10);
                }
             }
@@ -1523,7 +1523,7 @@ public final class GameEngine {
          }
 
          var_a27 = var1;
-         var_958 = var4;
+         playerViewHeight = var4;
          var_9b4 = var7;
       }
    }
