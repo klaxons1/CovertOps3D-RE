@@ -1,36 +1,53 @@
 public final class WallSegment {
-   private short wallDefinitionIndex;
-   public short startVertexIndex;
-   public short endVertexIndex;
-   public boolean isFrontFacing;
-   public WallDefinition wallDefinition;
-   private WallSurface sectorLink;
-   public short textureOffset;
 
-   public WallSegment(short var1, short var2, short var3, boolean var4, short var5) {
-      this.startVertexIndex = var1;
-      this.endVertexIndex = var2;
-      this.wallDefinitionIndex = var3;
-      this.isFrontFacing = var4;
-      this.textureOffset = var5;
-   }
+    private short wallDefinitionIndex;   // Index in GameWorld.wallDefinitions[]
+    public  short startVertexIndex;      // Index of start vertex (for rendering order)
+    public  short endVertexIndex;        // Index of end vertex
 
-   public final void initializeWallSegment(GameWorld var1) {
-      this.wallDefinition = var1.wallDefinitions[this.wallDefinitionIndex & '\uffff'];
-      WallSegment var10000;
-      WallSurface var10001;
-      if (this.isFrontFacing) {
-         var10000 = this;
-         var10001 = this.wallDefinition.frontSurface;
-      } else {
-         var10000 = this;
-         var10001 = this.wallDefinition.backSurface;
-      }
+    public boolean isFrontFacing;        // true = we see front side of wall, false = back side
 
-      var10000.sectorLink = var10001;
-   }
+    public WallDefinition wallDefinition; // Resolved after initializeWallSegment()
+    private WallSurface   sectorLink;     // Surface that links to adjacent sector (portal)
+    public short          textureOffset;  // Horizontal texture offset (for doors, switches, etc.)
 
-   public final SectorData getWallSector() {
-      return this.sectorLink.linkedSector;
-   }
+    /**
+     * Constructor used during level loading.
+     *
+     * @param startVertex   start vertex index
+     * @param endVertex     end vertex index
+     * @param defIndex      index of WallDefinition
+     * @param frontFacing   true if this segment belongs to front side of the wall
+     * @param texOffset     texture X offset (animated doors, etc.)
+     */
+    public WallSegment(short startVertex, short endVertex,
+                       short defIndex, boolean frontFacing,
+                       short texOffset) {
+        this.startVertexIndex     = startVertex;
+        this.endVertexIndex       = endVertex;
+        this.wallDefinitionIndex  = defIndex;
+        this.isFrontFacing        = frontFacing;
+        this.textureOffset        = texOffset;
+    }
+
+    /**
+     * Called after level load: resolves references to WallDefinition
+     * and determines which WallSurface connects to the adjacent sector.
+     */
+    public final void initializeWallSegment(GameWorld world) {
+        this.wallDefinition = world.wallDefinitions[wallDefinitionIndex & 0xFFFF];
+
+        if (isFrontFacing) {
+            this.sectorLink = this.wallDefinition.frontSurface;
+        } else {
+            this.sectorLink = this.wallDefinition.backSurface;
+        }
+    }
+
+    /**
+     * Returns the SectorData of the sector on the other side of this wall segment.
+     * Used heavily by the renderer and portal system.
+     */
+    public final SectorData getWallSector() {
+        return this.sectorLink.linkedSector;
+    }
 }

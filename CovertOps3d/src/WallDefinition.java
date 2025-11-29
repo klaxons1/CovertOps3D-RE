@@ -1,89 +1,105 @@
 public final class WallDefinition {
-   public short startVertexId;
-   public short endVertexId;
-   public Point2D normalVector;
-   private short frontSurfaceId;
-   private short backSurfaceId;
-   public WallSurface frontSurface;
-   public WallSurface backSurface;
-   private byte wallFlags;
-   private byte wallType;
-   private byte specialType;
 
-   public WallDefinition(short var1, short var2, short var3, short var4, byte var5, byte var6, byte var7) {
-      this.startVertexId = var1;
-      this.endVertexId = var2;
-      this.normalVector = new Point2D(0, 0);
-      this.frontSurfaceId = var3;
-      this.backSurfaceId = var4;
-      this.wallFlags = var5;
-      this.wallType = var6;
-      this.specialType = var7;
-   }
+    public short startVertexId;
+    public short endVertexId;
 
-   public final int getWallType() {
-      return this.wallType & '\uffff';
-   }
+    public Point2D normalVector;
 
-   public final int getSpecialType() {
-      return this.specialType & '\uffff';
-   }
+    private short frontSurfaceId;
+    private short backSurfaceId;
 
-   public final void initializeWall(GameWorld var1) {
-      if (this.frontSurfaceId == -1) {
-         throw new IllegalArgumentException();
-      } else {
-         this.frontSurface = var1.wallSurfaces[this.frontSurfaceId & '\uffff'];
-         WallDefinition var10000;
-         WallSurface var10001;
-         if (this.backSurfaceId == -1) {
-            var10000 = this;
-            var10001 = null;
-         } else {
-            var10000 = this;
-            var10001 = var1.wallSurfaces[this.backSurfaceId & '\uffff'];
-         }
+    public WallSurface frontSurface;
+    public WallSurface backSurface;
 
-         var10000.backSurface = var10001;
-         Point2D var2 = var1.vertices[this.startVertexId & '\uffff'];
-         Point2D var3 = var1.vertices[this.endVertexId & '\uffff'];
-         int var4 = var2.y - var3.y;
-         int var5 = var3.x - var2.x;
-         int var6 = MathUtils.preciseHypot(var4, var5);
-         this.normalVector.x = MathUtils.fixedPointDivide(var4, var6);
-         this.normalVector.y = MathUtils.fixedPointDivide(var5, var6);
-      }
-   }
+    private byte wallFlags;
+    private byte wallType;
+    private byte specialType;
 
-   public final boolean isPassable() {
-      return (this.wallFlags & 3) > 0;
-   }
+    // Bit masks for wallFlags
+    private static final byte FLAG_SOLID       = 1;    // 0x01
+    private static final byte FLAG_PASSABLE    = 2;    // 0x02 (used by isPassable)
+    private static final byte FLAG_TRANSPARENT= 4;    // 0x04
+    private static final byte FLAG_DOOR        = 8;    // 0x08
+    private static final byte FLAG_SECRET      = 16;   // 0x10
+    private static final byte FLAG_RENDERED    = -128; // 0x80
 
-   public final boolean isCollidable() {
-      return (this.wallFlags & 67) > 0;
-   }
+    public WallDefinition(short startVertexId, short endVertexId,
+                          short frontSurfaceId, short backSurfaceId,
+                          byte flags, byte type, byte special) {
+        this.startVertexId   = startVertexId;
+        this.endVertexId     = endVertexId;
+        this.frontSurfaceId  = frontSurfaceId;
+        this.backSurfaceId   = backSurfaceId;
+        this.wallFlags       = flags;
+        this.wallType        = type;
+        this.specialType     = special;
 
-   public final boolean isSolid() {
-      return (this.wallFlags & 1) > 0;
-   }
+        this.normalVector = new Point2D(0, 0);
+    }
 
-   public final boolean isTransparent() {
-      return (this.wallFlags & 4) > 0;
-   }
+    public final int getWallType() {
+        return wallType & 0xFF;
+    }
 
-   public final boolean isDoor() {
-      return (this.wallFlags & 8) > 0;
-   }
+    public final int getSpecialType() {
+        return specialType & 0xFF;
+    }
 
-   public final boolean isSecret() {
-      return (this.wallFlags & 16) > 0;
-   }
+    /** Resolves surface references and pre-computes normal vector after level load */
+    public final void initializeWall(GameWorld world) {
+        if (frontSurfaceId == -1) {
+            throw new IllegalArgumentException("Wall has no front surface");
+        }
 
-   public final boolean isRendered() {
-      return (this.wallFlags & 128) > 0;
-   }
+        this.frontSurface = world.wallSurfaces[frontSurfaceId & 0xFFFF];
 
-   public final void markAsRendered() {
-      this.wallFlags = (byte)(this.wallFlags | 128);
-   }
+        if (backSurfaceId == -1) {
+            this.backSurface = null;
+        } else {
+            this.backSurface = world.wallSurfaces[backSurfaceId & 0xFFFF];
+        }
+
+        Point2D v1 = world.vertices[startVertexId & 0xFFFF];
+        Point2D v2 = world.vertices[endVertexId   & 0xFFFF];
+
+        int dy = v1.y - v2.y;
+        int dx = v2.x - v1.x;
+
+        int length = MathUtils.preciseHypot(dx, dy);
+
+        this.normalVector.x = MathUtils.fixedPointDivide(dy, length);
+        this.normalVector.y = MathUtils.fixedPointDivide(dx, length);
+    }
+
+    public final boolean isPassable() {
+        return (wallFlags & 3) != 0;
+    }
+
+    public final boolean isCollidable() {
+        return (wallFlags & 67) != 0;
+    }
+
+    public final boolean isSolid() {
+        return (wallFlags & FLAG_SOLID) != 0;
+    }
+
+    public final boolean isTransparent() {
+        return (wallFlags & FLAG_TRANSPARENT) != 0;
+    }
+
+    public final boolean isDoor() {
+        return (wallFlags & FLAG_DOOR) != 0;
+    }
+
+    public final boolean isSecret() {
+        return (wallFlags & FLAG_SECRET) != 0;
+    }
+
+    public final boolean isRendered() {
+        return (wallFlags & FLAG_RENDERED) != 0;
+    }
+
+    public final void markAsRendered() {
+        wallFlags = (byte)(wallFlags | FLAG_RENDERED);
+    }
 }

@@ -1,55 +1,75 @@
 public class Transform3D {
-   public int x;
-   public int y;
-   public int z;
-   public int rotation;
 
-   public Transform3D(int var1, int var2, int var3, int var4) {
-      this.x = var1;
-      this.y = var2;
-      this.z = var3;
-      this.rotation = var4;
-   }
+    public int x;        // X position in world (fixed-point 16.16)
+    public int y;        // Y position (height) in world (fixed-point 16.16)
+    public int z;        // Z position in world (fixed-point 16.16)
+    public int rotation; // Rotation in fixed-point degrees (0..411774 = 0..359.999°)
 
-   public final void applyMovement(int var1, int var2, int var3, int var4) {
-      this.x += var1;
-      this.y += var2;
-      this.z += var3;
-      Transform3D var10000 = this;
-      int var10001 = this.rotation;
-      int var10002 = var4;
+    // 360 degrees in fixed-point format: 360 * 65536 / 360 = 65536 * (360/360) + fraction
+    private static final int FULL_CIRCLE = 411775; // approximately 360 * 114.59 (actual value used in game)
 
-      while(true) {
-         var10000.rotation = var10001 + var10002;
-         if (this.rotation >= 0) {
-            while(this.rotation >= 411775) {
-               this.rotation -= 411775;
-            }
+    public Transform3D(int x, int y, int z, int rotation) {
+        this.x        = x;
+        this.y        = y;
+        this.z        = z;
+        this.rotation = rotation;
+    }
 
-            return;
-         }
+    /**
+     * Adds absolute movement deltas and angular velocity.
+     * Rotation is normalized to [0..FULL_CIRCLE).
+     */
+    public final void applyMovement(int deltaX, int deltaY, int deltaZ, int deltaRotation) {
+        this.x += deltaX;
+        this.y += deltaY;
+        this.z += deltaZ;
 
-         var10000 = this;
-         var10001 = this.rotation;
-         var10002 = 411775;
-      }
-   }
+        // Add angular velocity and wrap around 360 degrees
+        this.rotation += deltaRotation;
 
-   public final void copyFrom(Transform3D var1) {
-      this.setPosition(var1.x, var1.y, var1.z, var1.rotation);
-   }
+        // Normalize positive overflow
+        while (this.rotation >= FULL_CIRCLE) {
+            this.rotation -= FULL_CIRCLE;
+        }
 
-   public final void setPosition(int var1, int var2, int var3, int var4) {
-      this.x = var1;
-      this.y = var2;
-      this.z = var3;
-      this.rotation = var4;
-   }
+        // Normalize negative values
+        while (this.rotation < 0) {
+            this.rotation += FULL_CIRCLE;
+        }
+    }
 
-   public final void moveRelative(int var1, int var2) {
-      int var3 = MathUtils.fastSin(this.rotation);
-      int var4 = MathUtils.fastCos(this.rotation);
-      this.x += MathUtils.fixedPointMultiply(var4, var1) - MathUtils.fixedPointMultiply(var3, var2);
-      this.z += MathUtils.fixedPointMultiply(-var3, var1) - MathUtils.fixedPointMultiply(var4, var2);
-   }
+    /** Copies position and rotation from another transform */
+    public final void copyFrom(Transform3D source) {
+        this.x        = source.x;
+        this.y        = source.y;
+        this.z        = source.z;
+        this.rotation = source.rotation;
+    }
+
+    /** Sets absolute position and rotation */
+    public final void setPosition(int x, int y, int z, int rotation) {
+        this.x        = x;
+        this.y        = y;
+        this.z        = z;
+        this.rotation = rotation;
+    }
+
+    /**
+     * Moves the object relative to its current facing direction.
+     *
+     * @param forward  positive = forward, negative = backward
+     * @param strafe   positive = right, negative = left
+     */
+    public final void moveRelative(int forward, int strafe) {
+        int sin = MathUtils.fastSin(this.rotation);
+        int cos = MathUtils.fastCos(this.rotation);
+
+        // X movement: cos(forward) - sin(strafe)
+        this.x += MathUtils.fixedPointMultiply(cos, forward)
+                - MathUtils.fixedPointMultiply(sin, strafe);
+
+        // Z movement: -sin(forward) - cos(strafe)
+        this.z += MathUtils.fixedPointMultiply(-sin, forward)
+                - MathUtils.fixedPointMultiply(cos, strafe);
+    }
 }

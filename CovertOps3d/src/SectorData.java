@@ -1,55 +1,62 @@
 public final class SectorData {
-   public short sectorId;
-   public short floorHeight;
-   public short ceilingHeight;
-   public byte ceilingTextureId;
-   public byte floorTextureId;
-   private short baseLightLevel;
-   private short sectorType;
-   public boolean[] visitedFlags;
-   public Sprite floorTexture;
-   public Sprite ceilingTexture;
-   public int lightLevel;
-   public int floorOffsetX;
-   public int ceilingOffsetX;
 
-   public SectorData(short var1, short var2, short var3, byte var4, byte var5, short var6, short var7, short var8) {
-      this.sectorId = var1;
-      this.floorHeight = var2;
-      this.ceilingHeight = var3;
-      this.ceilingTextureId = var4;
-      this.floorTextureId = var5;
-      this.baseLightLevel = var6;
-      this.sectorType = var8;
-      this.visitedFlags = null;
-   }
+    public short sectorId;
+    public short floorHeight;
+    public short ceilingHeight;
+    public byte  ceilingTextureId;
+    public byte  floorTextureId;
 
-   public final int getLightLevel() {
-      if (GameEngine.screenShake > 0) {
-         int var1;
-         if ((var1 = (this.baseLightLevel & '\uffff') + (GameEngine.screenShake >> 1)) > 16) {
-            var1 = 16;
-         }
+    private short baseLightLevel;   // 0..16, stored as short
+    private short sectorType;       // special type (door, elevator, damage, etc.)
 
-         return var1;
-      } else {
-         return this.baseLightLevel & '\uffff';
-      }
-   }
+    public boolean[] visitedFlags;     // PVS: true = already visited from current sector
+    public Sprite    floorTexture;     // resolved after resource loading
+    public Sprite    ceilingTexture;
 
-   public final int getSectorType() {
-      return this.sectorType & '\uffff';
-   }
+    public int lightLevel;             // current light (cached)
+    public int floorOffsetX;           // animated texture offset
+    public int ceilingOffsetX;
 
-   public final boolean isSectorVisible(SectorData var1) {
-      return !var1.visitedFlags[this.sectorId];
-   }
+    public SectorData(short id, short floorH, short ceilingH,
+                      byte ceilTex, byte floorTex,
+                      short light, short tag, short type) {
+        this.sectorId         = id;
+        this.floorHeight      = floorH;
+        this.ceilingHeight    = ceilingH;
+        this.ceilingTextureId = ceilTex;
+        this.floorTextureId   = floorTex;
+        this.baseLightLevel   = light;
+        this.sectorType       = type;
 
-   public final boolean isSectorConnected(Sector var1) {
-      return !var1.visibilityMask[this.sectorId];
-   }
+        this.visitedFlags     = null;
+    }
 
-   public final boolean isBSPNodeVisible(BSPNode var1) {
-      return !var1.visibleSectors[this.sectorId];
-   }
+    /** Returns current light level (0-16) with screen-shake flash effect */
+    public final int getLightLevel() {
+        if (GameEngine.screenShake > 0) {
+            int boosted = (baseLightLevel & 0xFFFF) + (GameEngine.screenShake >> 1);
+            return (boosted > 16) ? 16 : boosted;
+        }
+        return baseLightLevel & 0xFFFF;
+    }
+
+    /** Returns sector special type */
+    public final int getSectorType() {
+        return sectorType & 0xFFFF;
+    }
+
+    /** Portal visibility test */
+    public final boolean isSectorVisible(SectorData other) {
+        return !other.visitedFlags[this.sectorId];
+    }
+
+    /** BSP leaf connectivity test */
+    public final boolean isSectorConnected(Sector bspLeaf) {
+        return !bspLeaf.visibilityMask[this.sectorId];
+    }
+
+    /** BSP subtree visibility test */
+    public final boolean isBSPNodeVisible(BSPNode node) {
+        return !node.visibleSectors[this.sectorId];
+    }
 }

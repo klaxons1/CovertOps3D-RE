@@ -1,22 +1,42 @@
 public final class WallSurface {
-   public byte upperTextureId;
-   public byte mainTextureId;
-   public byte lowerTextureId;
-   private byte sectorLinkId;
-   public SectorData linkedSector;
-   public short textureOffsetX;
-   public short textureOffsetY;
 
-   public WallSurface(byte var1, byte var2, byte var3, byte var4, short var5, short var6) {
-      this.upperTextureId = var1;
-      this.mainTextureId = var2;
-      this.lowerTextureId = var3;
-      this.sectorLinkId = var4;
-      this.textureOffsetX = var5;
-      this.textureOffsetY = var6;
-   }
+    public byte  upperTextureId;   // Texture for upper part (above player view)
+    public byte  mainTextureId;    // Main wall texture (middle)
+    public byte  lowerTextureId;   // Texture for lower part (below player view)
 
-   public final void resolveSectorLink(GameWorld var1) {
-      this.linkedSector = var1.sectors[this.sectorLinkId & 255];
-   }
+    private byte sectorLinkId;     // Index in GameWorld.sectors[] — which sector this side faces
+
+    public SectorData linkedSector; // Resolved after resolveSectorLink() — adjacent sector (portal)
+
+    public short textureOffsetX;   // Horizontal texture offset (for switches, animated walls)
+    public short textureOffsetY;   // Vertical texture offset
+
+    /**
+     * Constructor called when loading level data.
+     *
+     * @param upperTex  texture ID for upper unpegged area
+     * @param mainTex   main wall texture
+     * @param lowerTex  texture ID for lower unpegged area
+     * @param linkId    index of the sector this wall side belongs to / looks into
+     * @param offsetX   X texture offset
+     * @param offsetY   Y texture offset
+     */
+    public WallSurface(byte upperTex, byte mainTex, byte lowerTex,
+                       byte linkId, short offsetX, short offsetY) {
+        this.upperTextureId = upperTex;
+        this.mainTextureId  = mainTex;
+        this.lowerTextureId = lowerTex;
+        this.sectorLinkId   = linkId;
+        this.textureOffsetX = offsetX;
+        this.textureOffsetY = offsetY;
+    }
+
+    /**
+     * Called after level loading.
+     * Resolves the sector index into an actual SectorData reference.
+     * This is the core of the portal system — every wall side knows which sector it "opens" into.
+     */
+    public final void resolveSectorLink(GameWorld world) {
+        this.linkedSector = world.sectors[this.sectorLinkId & 0xFF];
+    }
 }
