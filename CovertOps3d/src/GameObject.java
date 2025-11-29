@@ -4,8 +4,8 @@ public final class GameObject {
     public Transform3D transform;
     public int objectType;
     public int spawnDelay;
-    private Vector spriteIds1;
-    private Vector spriteIds2;
+    private Vector torsoSpriteIds;
+    private Vector legsSpriteIds;
     public int currentState;
     public int health;
     public int stateTimer;
@@ -25,8 +25,8 @@ public final class GameObject {
         this.screenPos = new Point2D(0, 0);
         this.objectType = var3;
         this.spawnDelay = var4;
-        this.spriteIds1 = new Vector();
-        this.spriteIds2 = new Vector();
+        this.torsoSpriteIds = new Vector();
+        this.legsSpriteIds = new Vector();
         this.currentState = 0;
         this.screenHeight = 0;
         this.texture1 = null;
@@ -97,22 +97,22 @@ public final class GameObject {
     }
 
     public final byte getCurrentSprite1() {
-        if (this.currentState > -1 && this.currentState < this.spriteIds1.size()) {
-            return ((Byte)this.spriteIds1.elementAt(this.currentState)).byteValue();
+        if (this.currentState > -1 && this.currentState < this.torsoSpriteIds.size()) {
+            return ((Byte)this.torsoSpriteIds.elementAt(this.currentState)).byteValue();
         }
         return 0;
     }
 
     public final byte getCurrentSprite2() {
-        if (this.currentState > -1 && this.currentState < this.spriteIds2.size()) {
-            return ((Byte)this.spriteIds2.elementAt(this.currentState)).byteValue();
+        if (this.currentState > -1 && this.currentState < this.legsSpriteIds.size()) {
+            return ((Byte)this.legsSpriteIds.elementAt(this.currentState)).byteValue();
         }
         return 0;
     }
 
     public final void addSpriteFrame(byte var1, byte var2) {
-        this.spriteIds1.addElement(new Byte(var1));
-        this.spriteIds2.addElement(new Byte(var2));
+        this.torsoSpriteIds.addElement(new Byte(var1));
+        this.legsSpriteIds.addElement(new Byte(var2));
     }
 
     public final boolean compareDepth(GameObject var1) {
