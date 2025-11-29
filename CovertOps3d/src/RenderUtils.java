@@ -1,144 +1,195 @@
+/**
+ * Render span management system for efficient surface rendering
+ * Handles span merging and optimization for floor/ceiling rendering
+ */
 public final class RenderUtils {
-   private RenderSpan[] renderSpans = new RenderSpan[288];
-   private RenderSpan freeList = null;
+    private RenderSpan[] renderSpans = new RenderSpan[288]; // 144 floor + 144 ceiling spans
+    private RenderSpan freeList = null; // Free list for span reuse
 
-   public RenderUtils() {
-      this.resetRenderer();
-   }
+    public RenderUtils() {
+        this.resetRenderer();
+    }
 
-   public final void resetRenderer() {
-      for(int var1 = 0; var1 < 288; ++var1) {
-         if (this.renderSpans[var1] != null) {
-            RenderSpan var10000 = this.renderSpans[var1];
+    /**
+     * Resets the renderer and rebuilds the free list
+     */
+    public final void resetRenderer() {
+        for(int scanline = 0; scanline < 288; ++scanline) {
+            if (this.renderSpans[scanline] != null) {
+                RenderSpan currentSpan = this.renderSpans[scanline];
+
+                // Add all spans from this scanline to free list
+                while(true) {
+                    RenderSpan span = currentSpan;
+                    if (currentSpan.next == null) {
+                        span.next = this.freeList;
+                        this.freeList = this.renderSpans[scanline];
+                        break;
+                    }
+                    currentSpan = span.next;
+                }
+            }
+
+            this.renderSpans[scanline] = null;
+        }
+    }
+
+    /**
+     * Adds a render span, merging with adjacent spans when possible
+     * @param startX Starting X coordinate of the span
+     * @param endX Ending X coordinate of the span  
+     * @param sectorId ID of the sector this span belongs to
+     * @param scanline The scanline (0-287) where this span is rendered
+     */
+    public final void addRenderSpan(short startX, short endX, short sectorId, int scanline) {
+        RenderSpan currentSpan = this.renderSpans[scanline];
+
+        while(true) {
+            RenderSpan span = currentSpan;
+            RenderSpan newSpan;
+
+            // If no span exists for this scanline, create new one
+            if (currentSpan == null) {
+                if (this.freeList != null) {
+                    // Reuse span from free list
+                    newSpan = this.freeList;
+                    this.freeList = this.freeList.next;
+                    newSpan.startX = startX;
+                    newSpan.endX = endX;
+                    newSpan.sectorId = sectorId;
+                } else {
+                    // Create new span if free list is empty
+                    newSpan = new RenderSpan(startX, endX, sectorId);
+                }
+
+                newSpan.next = this.renderSpans[scanline];
+                this.renderSpans[scanline] = newSpan;
+                return;
+            }
+
+            // Check if we can merge with existing span of same sector
+            if (span.sectorId == sectorId) {
+                RenderSpan prevSpan;
+
+                // Merge with right side: current span ends where new span starts
+                if (span.endX == startX - 1) {
+                    span.endX = endX;
+                    RenderSpan searchSpan = this.renderSpans[scanline];
+
+                    // Check if we can merge with next span to the right
+                    for(prevSpan = null; searchSpan != null; searchSpan = searchSpan.next) {
+                        if (searchSpan.sectorId == sectorId && searchSpan.startX == endX + 1) {
+                            span.endX = searchSpan.endX;
+
+                            // Remove the merged span from linked list
+                            if (prevSpan != null) {
+                                prevSpan.next = searchSpan.next;
+                            } else {
+                                this.renderSpans[scanline] = searchSpan.next;
+                            }
+
+                            // Add merged span to free list
+                            searchSpan.next = this.freeList;
+                            this.freeList = searchSpan;
+                            return;
+                        }
+                        prevSpan = searchSpan;
+                    }
+                    return;
+                }
+
+                // Merge with left side: current span starts where new span ends  
+                if (span.startX == endX + 1) {
+                    span.startX = startX;
+                    RenderSpan searchSpan = this.renderSpans[scanline];
+
+                    // Check if we can merge with previous span to the left
+                    for(prevSpan = null; searchSpan != null; searchSpan = searchSpan.next) {
+                        if (searchSpan.sectorId == sectorId && searchSpan.endX == startX - 1) {
+                            span.startX = searchSpan.startX;
+
+                            // Remove the merged span from linked list
+                            if (prevSpan != null) {
+                                prevSpan.next = searchSpan.next;
+                            } else {
+                                this.renderSpans[scanline] = searchSpan.next;
+                            }
+
+                            // Add merged span to free list
+                            searchSpan.next = this.freeList;
+                            this.freeList = searchSpan;
+                            return;
+                        }
+                        prevSpan = searchSpan;
+                    }
+                    return;
+                }
+            }
+
+            currentSpan = span.next;
+        }
+    }
+
+    /**
+     * Renders all accumulated spans for floor and ceiling surfaces
+     * @param cameraX Camera X position for texture mapping
+     * @param cameraY Camera Y position for texture mapping  
+     * @param cameraZ Camera Z position for texture mapping
+     * @param cameraAngle Camera angle for texture mapping
+     */
+    public final void renderAllSpans(int cameraX, int cameraY, int cameraZ, int cameraAngle) {
+        RenderSpan currentSpan;
+        int scanline;
+        RenderSpan span;
+        SectorData sector;
+
+        // Render floor spans (scanlines 0-143)
+        for(scanline = 0; scanline < 144; ++scanline) {
+            currentSpan = this.renderSpans[scanline];
 
             while(true) {
-               RenderSpan var2 = var10000;
-               if (var10000.next == null) {
-                  var2.next = this.freeList;
-                  this.freeList = this.renderSpans[var1];
-                  break;
-               }
+                span = currentSpan;
+                if (currentSpan == null) {
+                    break;
+                }
 
-               var10000 = var2.next;
+                sector = GameEngine.gameWorld.sectors[span.sectorId];
+                GameEngine.drawFlatSurface(
+                        span.startX, span.endX, scanline,
+                        sector.floorTexture.pixelData,
+                        sector.floorTexture.colorPalettes,
+                        sector.lightLevel,
+                        cameraX, cameraY, cameraZ,
+                        sector.floorOffsetX,
+                        cameraAngle
+                );
+                currentSpan = span.next;
             }
-         }
+        }
 
-         this.renderSpans[var1] = null;
-      }
+        // Render ceiling spans (scanlines 144-287)
+        for(scanline = 144; scanline < 288; ++scanline) {
+            currentSpan = this.renderSpans[scanline];
 
-   }
+            while(true) {
+                span = currentSpan;
+                if (currentSpan == null) {
+                    break;
+                }
 
-   public final void addRenderSpan(short var1, short var2, short var3, int var4) {
-      RenderSpan var10000 = this.renderSpans[var4];
-
-      while(true) {
-         RenderSpan var5 = var10000;
-         RenderSpan var6;
-         if (var10000 == null) {
-            if (this.freeList != null) {
-               var6 = this.freeList;
-               this.freeList = this.freeList.next;
-               var6.startX = var1;
-               var6.endX = var2;
-               var6.sectorId = var3;
-            } else {
-               var6 = new RenderSpan(var1, var2, var3);
+                sector = GameEngine.gameWorld.sectors[span.sectorId];
+                GameEngine.drawFlatSurface(
+                        span.startX, span.endX, scanline,
+                        sector.ceilingTexture.pixelData,
+                        sector.ceilingTexture.colorPalettes,
+                        sector.lightLevel,
+                        cameraX, cameraY, cameraZ,
+                        sector.ceilingOffsetX,
+                        cameraAngle
+                );
+                currentSpan = span.next;
             }
-
-            var6.next = this.renderSpans[var4];
-            this.renderSpans[var4] = var6;
-            return;
-         }
-
-         if (var5.sectorId == var3) {
-            RenderSpan var7;
-            if (var5.endX == var1 - 1) {
-               var5.endX = var2;
-               var6 = this.renderSpans[var4];
-
-               for(var7 = null; var6 != null; var6 = var6.next) {
-                  if (var6.sectorId == var3 && var6.startX == var2 + 1) {
-                     var5.endX = var6.endX;
-                     if (var7 != null) {
-                        var7.next = var6.next;
-                     } else {
-                        this.renderSpans[var4] = var6.next;
-                     }
-
-                     var6.next = this.freeList;
-                     this.freeList = var6;
-                     return;
-                  }
-
-                  var7 = var6;
-               }
-
-               return;
-            }
-
-            if (var5.startX == var2 + 1) {
-               var5.startX = var1;
-               var6 = this.renderSpans[var4];
-
-               for(var7 = null; var6 != null; var6 = var6.next) {
-                  if (var6.sectorId == var3 && var6.endX == var1 - 1) {
-                     var5.startX = var6.startX;
-                     if (var7 != null) {
-                        var7.next = var6.next;
-                     } else {
-                        this.renderSpans[var4] = var6.next;
-                     }
-
-                     var6.next = this.freeList;
-                     this.freeList = var6;
-                     return;
-                  }
-
-                  var7 = var6;
-               }
-
-               return;
-            }
-         }
-
-         var10000 = var5.next;
-      }
-   }
-
-   public final void renderAllSpans(int var1, int var2, int var3, int var4) {
-      RenderSpan var10000;
-      int var5;
-      RenderSpan var6;
-      SectorData var7;
-      for(var5 = 0; var5 < 144; ++var5) {
-         var10000 = this.renderSpans[var5];
-
-         while(true) {
-            var6 = var10000;
-            if (var10000 == null) {
-               break;
-            }
-
-            var7 = GameEngine.gameWorld.sectors[var6.sectorId];
-            GameEngine.drawFlatSurface(var6.startX, var6.endX, var5, var7.floorTexture.pixelData, var7.floorTexture.colorPalettes, var7.lightLevel, var1, var2, var3, var7.floorOffsetX, var4);
-            var10000 = var6.next;
-         }
-      }
-
-      for(var5 = 144; var5 < 288; ++var5) {
-         var10000 = this.renderSpans[var5];
-
-         while(true) {
-            var6 = var10000;
-            if (var10000 == null) {
-               break;
-            }
-
-            var7 = GameEngine.gameWorld.sectors[var6.sectorId];
-            GameEngine.drawFlatSurface(var6.startX, var6.endX, var5, var7.ceilingTexture.pixelData, var7.ceilingTexture.colorPalettes, var7.lightLevel, var1, var2, var3, var7.ceilingOffsetX, var4);
-            var10000 = var6.next;
-         }
-      }
-
-   }
+        }
+    }
 }
+
