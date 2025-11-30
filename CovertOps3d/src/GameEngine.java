@@ -1,5 +1,4 @@
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Random;
@@ -1789,31 +1788,31 @@ public final class GameEngine {
          DataInputStream var4 = new DataInputStream(var3);
          gameWorld = new GameWorld();
          var4.readByte();
-         Point2D[] var6 = new Point2D[readIntLE(var4) / 4];
+         Point2D[] var6 = new Point2D[BinaryUtils.readIntLE(var4) / 4];
 
          for(int var7 = 0; var7 < var6.length; ++var7) {
-            var6[var7] = new Point2D(readShortLE(var4) << 16, readShortLE(var4) << 16);
+            var6[var7] = new Point2D(BinaryUtils.readShortLE(var4) << 16, BinaryUtils.readShortLE(var4) << 16);
          }
 
          gameWorld.setVertices(var6);
-         WallDefinition[] var25 = new WallDefinition[readIntLE(var4) / 11];
+         WallDefinition[] var25 = new WallDefinition[BinaryUtils.readIntLE(var4) / 11];
 
          int var8;
          short var14;
          short var15;
          for(var8 = 0; var8 < var25.length; ++var8) {
-            short var9 = readShortLE(var4);
-            short var10 = readShortLE(var4);
+            short var9 = BinaryUtils.readShortLE(var4);
+            short var10 = BinaryUtils.readShortLE(var4);
             byte var11 = var4.readByte();
             byte var12 = var4.readByte();
             byte var13 = var4.readByte();
-            var14 = readShortLE(var4);
-            var15 = readShortLE(var4);
+            var14 = BinaryUtils.readShortLE(var4);
+            var15 = BinaryUtils.readShortLE(var4);
             var25[var8] = new WallDefinition(var9, var10, var14, var15, var11, var12, var13);
          }
 
          gameWorld.wallDefinitions = var25;
-         int var5 = readIntLE(var4);
+         int var5 = BinaryUtils.readIntLE(var4);
          if (levelVariant == 0) {
             levelVariant = 1;
          }
@@ -1827,11 +1826,11 @@ public final class GameEngine {
          short var31;
          short var33;
          for(int var27 = 0; var27 < var8; ++var27) {
-            short var29 = readShortLE(var4);
-            var31 = readShortLE(var4);
-            var33 = readShortLE(var4);
-            var14 = readShortLE(var4);
-            var15 = readShortLE(var4);
+            short var29 = BinaryUtils.readShortLE(var4);
+            var31 = BinaryUtils.readShortLE(var4);
+            var33 = BinaryUtils.readShortLE(var4);
+            var14 = BinaryUtils.readShortLE(var4);
+            var15 = BinaryUtils.readShortLE(var4);
             GameObject[] var10000;
             int var10001;
             GameObject var10002;
@@ -1864,13 +1863,13 @@ public final class GameEngine {
             gameWorld.staticObjects = var26;
          }
 
-         WallSurface[] var28 = new WallSurface[readIntLE(var4) / 8];
+         WallSurface[] var28 = new WallSurface[BinaryUtils.readIntLE(var4) / 8];
 
          byte var16;
          byte var38;
          for(int var30 = 0; var30 < var28.length; ++var30) {
-            var31 = readShortLE(var4);
-            var33 = readShortLE(var4);
+            var31 = BinaryUtils.readShortLE(var4);
+            var33 = BinaryUtils.readShortLE(var4);
             byte var36 = remapLegacyTextureId(var4.readByte());
             var38 = remapLegacyTextureId(var4.readByte());
             var16 = remapLegacyTextureId(var4.readByte());
@@ -1890,7 +1889,7 @@ public final class GameEngine {
          }
 
          gameWorld.wallSurfaces = var28;
-         SectorData[] var32 = new SectorData[readIntLE(var4) / 12];
+         SectorData[] var32 = new SectorData[BinaryUtils.readIntLE(var4) / 12];
          short var42 = 0;
 
          while(true) {
@@ -1899,45 +1898,45 @@ public final class GameEngine {
             short var44;
             if (var42 >= var32.length) {
                gameWorld.sectors = var32;
-               BSPNode[] var34 = new BSPNode[readIntLE(var4) / 12];
+               BSPNode[] var34 = new BSPNode[BinaryUtils.readIntLE(var4) / 12];
 
                short var41;
                int var48;
                for(int var35 = 0; var35 < var34.length; ++var35) {
-                  var14 = readShortLE(var4);
-                  var15 = readShortLE(var4);
-                  var41 = readShortLE(var4);
-                  var44 = readShortLE(var4);
-                  int var46 = readShortLE(var4) & '\uffff';
-                  var48 = readShortLE(var4) & '\uffff';
+                  var14 = BinaryUtils.readShortLE(var4);
+                  var15 = BinaryUtils.readShortLE(var4);
+                  var41 = BinaryUtils.readShortLE(var4);
+                  var44 = BinaryUtils.readShortLE(var4);
+                  int var46 = BinaryUtils.readShortLE(var4) & '\uffff';
+                  var48 = BinaryUtils.readShortLE(var4) & '\uffff';
                   var34[var35] = new BSPNode(var14 << 16, var15 << 16, var41 << 16, var44 << 16, var46, var48);
                }
 
                gameWorld.bspNodes = var34;
-               Sector[] var37 = new Sector[(var5 = readIntLE(var4)) / 4];
+               Sector[] var37 = new Sector[(var5 = BinaryUtils.readIntLE(var4)) / 4];
 
                for(int var39 = 0; var39 < var37.length; ++var39) {
-                  var15 = readShortLE(var4);
-                  var41 = readShortLE(var4);
+                  var15 = BinaryUtils.readShortLE(var4);
+                  var41 = BinaryUtils.readShortLE(var4);
                   var37[var39] = new Sector(var15, var41);
                }
 
                gameWorld.bspSectors = var37;
                BSPNode.visibleSectorsList = new Sector[var5 / 4];
-               WallSegment[] var40 = new WallSegment[readIntLE(var4) / 9];
+               WallSegment[] var40 = new WallSegment[BinaryUtils.readIntLE(var4) / 9];
 
                int var43;
                for(var43 = 0; var43 < var40.length; ++var43) {
-                  var41 = readShortLE(var4);
-                  var44 = readShortLE(var4);
-                  var18 = readShortLE(var4);
+                  var41 = BinaryUtils.readShortLE(var4);
+                  var44 = BinaryUtils.readShortLE(var4);
+                  var18 = BinaryUtils.readShortLE(var4);
                   boolean var49 = var4.readByte() == 0;
-                  short var20 = readShortLE(var4);
+                  short var20 = BinaryUtils.readShortLE(var4);
                   var40[var43] = new WallSegment(var41, var44, var18, var49, var20);
                }
 
                gameWorld.wallSegments = var40;
-               readIntLE(var4);
+               BinaryUtils.readIntLE(var4);
                boolean[][] var45 = new boolean[var43 = gameWorld.sectors.length][var43];
                int var47 = 0;
                var48 = 0;
@@ -1963,13 +1962,13 @@ public final class GameEngine {
                break;
             }
 
-            var33 = readShortLE(var4);
-            var14 = readShortLE(var4);
+            var33 = BinaryUtils.readShortLE(var4);
+            var14 = BinaryUtils.readShortLE(var4);
             var38 = remapLegacyTextureId(var4.readByte());
             var16 = remapLegacyTextureId(var4.readByte());
-            var44 = readShortLE(var4);
-            var18 = readShortLE(var4);
-            short var19 = readShortLE(var4);
+            var44 = BinaryUtils.readShortLE(var4);
+            var18 = BinaryUtils.readShortLE(var4);
+            short var19 = BinaryUtils.readShortLE(var4);
             var32[var31] = new SectorData(var31, var33, var14, var38, var16, (short)(var44 >> 4 & 15), var18, var19);
             if (var38 != 0) {
                preloadSprite(var38);
@@ -2093,22 +2092,22 @@ public final class GameEngine {
                         throw new IllegalStateException();
                      }
 
-                     if ((readShortBE(var8 = new DataInputStream(var7)) & '\uffff') != 39251) {
+                     if ((BinaryUtils.readShortBE(var8 = new DataInputStream(var7)) & '\uffff') != 39251) {
                         throw new IllegalStateException();
                      }
 
-                     var9 = readShortBE(var8);
-                     var10 = readShortBE(var8);
-                     readIntBE(var8);
+                     var9 = BinaryUtils.readShortBE(var8);
+                     var10 = BinaryUtils.readShortBE(var8);
+                     BinaryUtils.readIntBE(var8);
 
                      for(var16 = 0; var16 < var9; ++var16) {
                         var15 = var8.readByte();
-                        var12 = readShortBE(var8);
-                        var13 = readShortBE(var8);
-                        var17 = readShortBE(var8);
-                        var18 = readShortBE(var8);
-                        short var43 = readShortBE(var8);
-                        short var45 = readShortBE(var8);
+                        var12 = BinaryUtils.readShortBE(var8);
+                        var13 = BinaryUtils.readShortBE(var8);
+                        var17 = BinaryUtils.readShortBE(var8);
+                        var18 = BinaryUtils.readShortBE(var8);
+                        short var43 = BinaryUtils.readShortBE(var8);
+                        short var45 = BinaryUtils.readShortBE(var8);
                         int var44;
                         int var47 = (var44 = var12 * var13 * var45) / 8;
                         if (var44 % 8 > 0) {
@@ -2133,19 +2132,19 @@ public final class GameEngine {
                            textureTable[var15 + 128] = var48;
                            var5.put(new Byte(var15), new Integer(var4 + var43));
                         } else {
-                           skipBytes(var8, var47);
+                           BinaryUtils.skipBytes(var8, var47);
                         }
                      }
 
                      for(var16 = 0; var16 < var10; ++var16) {
-                        var40 = readIntBE(var8);
+                        var40 = BinaryUtils.readIntBE(var8);
                         if (!var5.contains(new Integer(var4 + var16))) {
-                           skipBytes(var8, 4 * var40);
+                           BinaryUtils.skipBytes(var8, 4 * var40);
                         } else {
                            var41 = new int[var40];
 
                            for(var19 = 0; var19 < var40; ++var19) {
-                              var41[var19] = readIntBE(var8);
+                              var41[var19] = BinaryUtils.readIntBE(var8);
                            }
 
                            var42 = Texture.createColorPalettes(var41);
@@ -2266,20 +2265,20 @@ public final class GameEngine {
                   throw new IllegalStateException();
                }
 
-               if ((readShortBE(var8 = new DataInputStream(var7)) & '\uffff') != 39252) {
+               if ((BinaryUtils.readShortBE(var8 = new DataInputStream(var7)) & '\uffff') != 39252) {
                   throw new IllegalStateException();
                }
 
-               var9 = readShortBE(var8);
-               var10 = readShortBE(var8);
-               readIntBE(var8);
+               var9 = BinaryUtils.readShortBE(var8);
+               var10 = BinaryUtils.readShortBE(var8);
+               BinaryUtils.readIntBE(var8);
 
                for(var16 = 0; var16 < var9; ++var16) {
                   var15 = var8.readByte();
-                  var12 = readShortBE(var8);
-                  var13 = readShortBE(var8);
-                  var17 = readShortBE(var8);
-                  var18 = readShortBE(var8);
+                  var12 = BinaryUtils.readShortBE(var8);
+                  var13 = BinaryUtils.readShortBE(var8);
+                  var17 = BinaryUtils.readShortBE(var8);
+                  var18 = BinaryUtils.readShortBE(var8);
                   int var20 = (var19 = var12 * var13 * var18) / 8;
                   if (var19 % 8 > 0) {
                      ++var20;
@@ -2314,19 +2313,19 @@ public final class GameEngine {
                      textureTable[var15 + 128] = var46;
                      var5.put(new Byte(var15), new Integer(var4 + var17));
                   } else {
-                     skipBytes(var8, var20);
+                     BinaryUtils.skipBytes(var8, var20);
                   }
                }
 
                for(var16 = 0; var16 < var10; ++var16) {
-                  var40 = readIntBE(var8);
+                  var40 = BinaryUtils.readIntBE(var8);
                   if (!var5.contains(new Integer(var4 + var16))) {
-                     skipBytes(var8, 4 * var40);
+                     BinaryUtils.skipBytes(var8, 4 * var40);
                   } else {
                      var41 = new int[var40];
 
                      for(var19 = 0; var19 < var40; ++var19) {
-                        var41[var19] = readIntBE(var8);
+                        var41[var19] = BinaryUtils.readIntBE(var8);
                      }
 
                      var42 = Texture.createColorPalettes(var41);
@@ -2349,32 +2348,7 @@ public final class GameEngine {
       }
    }
 
-   private static short readShortBE(DataInputStream var0) throws IOException {
-      return (short)((var0.read() << 8) + var0.read());
-   }
-
-   private static int readIntBE(DataInputStream var0) throws IOException {
-      return (var0.read() << 24) + (var0.read() << 16) + (var0.read() << 8) + var0.read();
-   }
-
-   private static short readShortLE(DataInputStream var0) throws IOException {
-      return (short)(var0.read() + (var0.read() << 8));
-   }
-
-   private static int readIntLE(DataInputStream var0) throws IOException {
-      return var0.read() + (var0.read() << 8) + (var0.read() << 16) + (var0.read() << 24);
-   }
-
-   private static void skipBytes(DataInputStream var0, int var1) throws IOException {
-      while(var1 > 0) {
-         int var2 = var1 > 4096 ? 4096 : var1;
-         int var3 = (int)var0.skip((long)var2);
-         var1 -= var3;
-      }
-
-   }
-
-   public static void preloadTexture(byte var0) {
+    public static void preloadTexture(byte var0) {
       if (!isTextureRegistered(var0)) {
          textureTable[var0 + 128] = new Texture(var0, 0, 0, 0, 0);
       }
