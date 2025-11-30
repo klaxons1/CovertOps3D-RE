@@ -332,7 +332,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
          if (mapEnabled) {
             var1.setClip(0, 0, 240, 288);
-            GameEngine.gameWorld.drawMapOnScreen(var1);
+            LevelLoader.gameWorld.drawMapOnScreen(var1);
             var1.setClip(0, 0, 240, 320);
          }
 
@@ -587,7 +587,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var11;
          byte[] var12 = new byte[var11 = var4.readInt()];
          var4.readFully(var12, 0, var11);
-         GameEngine.decompressSprite(var12, 0, var10, 0, var9, var5);
+         LevelLoader.decompressSprite(var12, 0, var10, 0, var9, var5);
          int[] var13 = new int[var8];
 
          int var14;
@@ -634,7 +634,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int var16;
             byte[] var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
-            GameEngine.decompressSprite(var17, 0, var4, 0, var15, var11);
+            LevelLoader.decompressSprite(var17, 0, var4, 0, var15, var11);
             this.var_b23 = new int[var14];
             this.var_b56 = new int[var14];
             this.var_b60 = new int[var14];
@@ -662,13 +662,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
             var10.close();
-            GameEngine.decompressSprite(var17, 0, var6, 0, 4096, 1);
+            LevelLoader.decompressSprite(var17, 0, var6, 0, 4096, 1);
             var9 = (new Object()).getClass().getResourceAsStream(var8 + "_mask");
             (var10 = new DataInputStream(var9)).skipBytes(8);
             var17 = new byte[var16 = var10.readInt()];
             var10.readFully(var17, 0, var16);
             var10.close();
-            GameEngine.decompressSprite(var17, 0, var5, 0, var15, 1);
+            LevelLoader.decompressSprite(var17, 0, var5, 0, var15, 1);
 
             for(var18 = 0; var18 < var15; ++var18) {
                var5[var18] = var5[var18] == 0 ? -1 : var4[var18];
@@ -2070,7 +2070,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             switch(GameEngine.currentWeapon) {
             case 0:
                if (GameEngine.weaponCooldownTimer < -var_111e[GameEngine.difficultyLevel]) {
-                  GameEngine.gameWorld.fireWeapon();
+                  LevelLoader.gameWorld.fireWeapon();
                   this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
@@ -2079,7 +2079,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             case 1:
                if (GameEngine.weaponCooldownTimer < -var_1128[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  GameEngine.gameWorld.fireWeapon();
+                  LevelLoader.gameWorld.fireWeapon();
                   this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
@@ -2088,7 +2088,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             case 2:
                if (GameEngine.weaponCooldownTimer < -var_1147[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  GameEngine.gameWorld.fireWeapon();
+                  LevelLoader.gameWorld.fireWeapon();
                   this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
@@ -2099,7 +2099,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   if (this.weaponAnimationState == 0) {
                      if (GameEngine.ammoCounts[1] > 0) {
                         var6 = GameEngine.ammoCounts[1]--;
-                        GameEngine.gameWorld.fireWeapon();
+                        LevelLoader.gameWorld.fireWeapon();
                         this.weaponAnimationState = 1;
                         weaponSpriteFrame = 1;
                         GameEngine.weaponCooldownTimer = 1;
@@ -2115,7 +2115,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   if (this.weaponAnimationState == 0) {
                      if (GameEngine.ammoCounts[1] > 0) {
                         var6 = GameEngine.ammoCounts[1]--;
-                        GameEngine.gameWorld.fireWeapon();
+                        LevelLoader.gameWorld.fireWeapon();
                         this.weaponAnimationState = 1;
                         weaponSpriteFrame = 1;
                         GameEngine.weaponCooldownTimer = 1;
@@ -2129,7 +2129,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             case 5:
                if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  GameEngine.gameWorld.fireWeapon();
+                  LevelLoader.gameWorld.fireWeapon();
                   this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 2;
@@ -2140,7 +2140,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   if ((currentLevelId == 4 || currentLevelId == 7 || currentLevelId == 8) && (currentLevelId != 4 || GameEngine.currentSector.getSectorType() != 666) && GameEngine.ammoCounts[6] == 1) {
                      GameEngine.messageText = "i'd better use it|to finish my mission";
                      GameEngine.messageTimer = 50;
-                  } else if (GameEngine.gameWorld.throwGrenade()) {
+                  } else if (LevelLoader.gameWorld.throwGrenade()) {
                      var6 = GameEngine.ammoCounts[6]--;
                      GameEngine.weaponCooldownTimer = 0;
                      GameEngine.weaponAnimationState = 8;
@@ -2152,7 +2152,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             case 7:
                if (GameEngine.weaponCooldownTimer < -var_11f1[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                   var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  GameEngine.gameWorld.fireWeapon();
+                  LevelLoader.gameWorld.fireWeapon();
                   this.weaponAnimationState = 1;
                   weaponSpriteFrame = 1;
                   GameEngine.weaponCooldownTimer = 1;
@@ -2186,11 +2186,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          byte var5 = var2[var3];
          var0.addSpriteFrame(var4, var5);
          if (var4 != 0) {
-            GameEngine.preloadTexture(var4);
+            LevelLoader.preloadTexture(var4);
          }
 
          if (var5 != 0) {
-            GameEngine.preloadTexture(var5);
+            LevelLoader.preloadTexture(var5);
          }
       }
 
@@ -2216,28 +2216,28 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          freeMemory();
          if (previousLevelId < currentLevelId) {
             if (previousLevelId > -1) {
-               this.cachedStaticObjects = GameEngine.gameWorld.staticObjects;
+               this.cachedStaticObjects = LevelLoader.gameWorld.staticObjects;
             }
 
-            if (!GameEngine.loadMapData("/gamedata/levels/level_" + levelFileNames[currentLevelId], this.nextLevelObjects == null)) {
+            if (!LevelLoader.loadMapData("/gamedata/levels/level_" + levelFileNames[currentLevelId], this.nextLevelObjects == null)) {
                CovertOps3D.exitApplication();
             }
 
             if (this.nextLevelObjects != null) {
-               GameEngine.gameWorld.staticObjects = this.nextLevelObjects;
+               LevelLoader.gameWorld.staticObjects = this.nextLevelObjects;
                this.nextLevelObjects = null;
             } else {
                GameEngine.keysCollected[0] = false;
                GameEngine.keysCollected[1] = false;
             }
          } else {
-            this.nextLevelObjects = GameEngine.gameWorld.staticObjects;
-            if (!GameEngine.loadMapData("/level_" + levelFileNames[currentLevelId], this.cachedStaticObjects == null)) {
+            this.nextLevelObjects = LevelLoader.gameWorld.staticObjects;
+            if (!LevelLoader.loadMapData("/level_" + levelFileNames[currentLevelId], this.cachedStaticObjects == null)) {
                CovertOps3D.exitApplication();
             }
 
             if (this.cachedStaticObjects != null) {
-               GameEngine.gameWorld.staticObjects = this.cachedStaticObjects;
+               LevelLoader.gameWorld.staticObjects = this.cachedStaticObjects;
                this.cachedStaticObjects = null;
             }
          }
@@ -2245,7 +2245,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          freeMemory();
          GameEngine.resetLevelState();
          boolean var1 = false;
-         GameEngine.preloadTexture((byte)25);
+         LevelLoader.preloadTexture((byte)25);
          byte[] var2 = new byte[]{-23, -25, -28, -30, -32, 0, 0};
          byte[] var3 = new byte[]{-24, -26, -29, -31, -33, -34, -27};
          byte[] var4 = new byte[]{-35, -36, -38, -39, -40, 0, 0};
@@ -2261,7 +2261,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          byte[] var14 = new byte[]{-10};
          byte[] var15 = new byte[]{-4, -6, -11, -13, 0, 0};
          byte[] var16 = new byte[]{-5, -7, -12, -14, -15, -8};
-         GameObject[] var17 = GameEngine.gameWorld.staticObjects;
+         GameObject[] var17 = LevelLoader.gameWorld.staticObjects;
 
          for(int var18 = 0; var18 < var17.length; ++var18) {
             GameObject var19;
@@ -2392,23 +2392,23 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var10000 = -48;
                }
 
-               GameEngine.preloadTexture(var10000);
+               LevelLoader.preloadTexture(var10000);
             }
          }
 
-         GameEngine.preloadTexture((byte)-44);
-         GameEngine.preloadTexture((byte)-45);
-         GameEngine.preloadTexture((byte)-46);
-         GameEngine.preloadTexture((byte)-47);
-         GameEngine.preloadTexture((byte)-71);
-         GameEngine.preloadTexture((byte)-51);
-         GameEngine.preloadTexture((byte)-43);
+         LevelLoader.preloadTexture((byte)-44);
+         LevelLoader.preloadTexture((byte)-45);
+         LevelLoader.preloadTexture((byte)-46);
+         LevelLoader.preloadTexture((byte)-47);
+         LevelLoader.preloadTexture((byte)-71);
+         LevelLoader.preloadTexture((byte)-51);
+         LevelLoader.preloadTexture((byte)-43);
          if (currentLevelId == 10) {
-            GameEngine.preloadTexture((byte)-72);
+            LevelLoader.preloadTexture((byte)-72);
          }
 
          freeMemory();
-         if (!GameEngine.loadGameAssets("/gamedata/textures/tx", 4, "/gamedata/textures/sp", 4)) {
+         if (!LevelLoader.loadGameAssets("/gamedata/textures/tx", 4, "/gamedata/textures/sp", 4)) {
             CovertOps3D.exitApplication();
          }
 

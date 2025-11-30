@@ -153,7 +153,7 @@ public final class RenderUtils {
                     break;
                 }
 
-                sector = GameEngine.gameWorld.sectors[span.sectorId];
+                sector = LevelLoader.gameWorld.sectors[span.sectorId];
                 GameEngine.drawFlatSurface(
                         span.startX, span.endX, scanline,
                         sector.floorTexture.pixelData,
@@ -177,7 +177,7 @@ public final class RenderUtils {
                     break;
                 }
 
-                sector = GameEngine.gameWorld.sectors[span.sectorId];
+                sector = LevelLoader.gameWorld.sectors[span.sectorId];
                 GameEngine.drawFlatSurface(
                         span.startX, span.endX, scanline,
                         sector.ceilingTexture.pixelData,

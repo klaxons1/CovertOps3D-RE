@@ -295,7 +295,7 @@ public final class GameWorld {
                GameEngine.weaponSwitchAnimationActive = true;
                GameEngine.weaponAnimationState = 8;
                MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
-               GameEngine.levelVariant = 0;
+               LevelLoader.levelVariant = 0;
                GameEngine.levelTransitionState = 1;
                break;
             case 2007:
@@ -483,7 +483,7 @@ public final class GameWorld {
                   }
 
                   MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
-                  GameEngine.levelVariant = 0;
+                  LevelLoader.levelVariant = 0;
                   GameEngine.levelTransitionState = 1;
                }
 
@@ -974,7 +974,7 @@ public final class GameWorld {
                var15 = var2.transform;
                if (this.getSectorDataAtPoint(var15.x, var15.z).getSectorType() == 666) {
                   MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
-                  GameEngine.levelVariant = 0;
+                  LevelLoader.levelVariant = 0;
                   GameEngine.levelTransitionState = 1;
                }
             }
