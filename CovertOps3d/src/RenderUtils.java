@@ -154,7 +154,7 @@ public final class RenderUtils {
                 }
 
                 sector = LevelLoader.gameWorld.sectors[span.sectorId];
-                GameEngine.drawFlatSurface(
+                PortalRenderer.drawFlatSurface(
                         span.startX, span.endX, scanline,
                         sector.floorTexture.pixelData,
                         sector.floorTexture.colorPalettes,
@@ -178,7 +178,7 @@ public final class RenderUtils {
                 }
 
                 sector = LevelLoader.gameWorld.sectors[span.sectorId];
-                GameEngine.drawFlatSurface(
+                PortalRenderer.drawFlatSurface(
                         span.startX, span.endX, scanline,
                         sector.ceilingTexture.pixelData,
                         sector.ceilingTexture.colorPalettes,

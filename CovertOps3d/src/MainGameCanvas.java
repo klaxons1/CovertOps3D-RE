@@ -745,10 +745,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private void sub_180(Graphics var1) {
       try {
          Image var2 = Image.createImage("/gamedata/sprites/splash.png");
-         GameEngine.screenBuffer[0] = -2130771968;
-         sub_159(GameEngine.screenBuffer, 0, 38400);
-         var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-         var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
+         PortalRenderer.screenBuffer[0] = -2130771968;
+         sub_159(PortalRenderer.screenBuffer, 0, 38400);
+         var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+         var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
          String var3 = "mission failed|game over";
          this.sub_2e3(var1, "mission failed|game over");
          this.flushScreenBuffer();
@@ -767,11 +767,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                }
             }
 
-            GameEngine.screenBuffer[0] = var6;
-            sub_159(GameEngine.screenBuffer, 0, 38400);
+            PortalRenderer.screenBuffer[0] = var6;
+            sub_159(PortalRenderer.screenBuffer, 0, 38400);
             var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
+            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.sub_2e3(var1, var3);
             this.flushScreenBuffer();
             yieldToOtherThreads();
@@ -1192,11 +1192,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var8 = 320 - this.var_550;
 
          for(int var9 = 1; var9 <= 8; ++var9) {
-            GameEngine.screenBuffer[0] = 16777215 | var9 * 268435456;
-            sub_159(GameEngine.screenBuffer, 0, 38400);
+            PortalRenderer.screenBuffer[0] = 16777215 | var9 * 268435456;
+            sub_159(PortalRenderer.screenBuffer, 0, 38400);
             var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
+            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.flushScreenBuffer();
             yieldToOtherThreads();
             delay(50);
@@ -1208,8 +1208,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             if (var7) {
                var1.setClip(0, 0, 240, 320);
                var1.drawImage(var2, 0, 0, 20);
-               var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-               var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
+               var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+               var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
                String var11 = "back";
                this.drawLargeString(var11, var1, 240 - this.sub_5d2(var11) - 3, 320 - this.var_550 - 3);
                this.drawLargeString(var3, var1, (240 - this.sub_5d2(var3)) / 2, 3);
@@ -1254,11 +1254,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          var1.setClip(0, 0, 240, 320);
 
          for(int var22 = 8; var22 >= 1; --var22) {
-            GameEngine.screenBuffer[0] = 16777215 | var22 * 268435456;
-            sub_159(GameEngine.screenBuffer, 0, 38400);
+            PortalRenderer.screenBuffer[0] = 16777215 | var22 * 268435456;
+            sub_159(PortalRenderer.screenBuffer, 0, 38400);
             var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
+            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
             this.flushScreenBuffer();
             yieldToOtherThreads();
             delay(50);
@@ -1651,7 +1651,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                var45 = var42 + 240 * var43;
 
                for(var46 = var44; var46 < var45; ++var46) {
-                  GameEngine.screenBuffer[var46] = var38[var7[var46] & 255];
+                  PortalRenderer.screenBuffer[var46] = var38[var7[var46] & 255];
                }
             }
 
@@ -1717,7 +1717,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                for(var47 = var45; var47 < var46; ++var47) {
                   if ((var48 = var8[var47] & 255) != 255) {
-                     GameEngine.screenBuffer[var47] = var38[var48];
+                     PortalRenderer.screenBuffer[var47] = var38[var48];
                   }
                }
             }
@@ -1755,7 +1755,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             var44 = 240 * var39;
 
             for(var45 = 0; var45 < var44; ++var45) {
-               GameEngine.screenBuffer[var45] = var64[var7[var45] & 255];
+               PortalRenderer.screenBuffer[var45] = var64[var7[var45] & 255];
             }
 
             var45 = var39 - var31;
@@ -1765,13 +1765,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                var44 = (var47 = 240 * var46) + var41;
 
                for(var48 = var47; var48 < var44; ++var48) {
-                  GameEngine.screenBuffer[var48] = var64[var7[var48] & 255];
+                  PortalRenderer.screenBuffer[var48] = var64[var7[var48] & 255];
                }
 
                var44 = var47 + 240;
 
                for(var48 = var42 + var47; var48 < var44; ++var48) {
-                  GameEngine.screenBuffer[var48] = var64[var7[var48] & 255];
+                  PortalRenderer.screenBuffer[var48] = var64[var7[var48] & 255];
                }
 
                var48 = 64 * var45;
@@ -1780,7 +1780,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                for(var50 = var41; var50 < var42; ++var49) {
                   if (var9[var48 + var49] == 0) {
                      var51 = var47 + var50;
-                     GameEngine.screenBuffer[var51] = var64[var7[var51] & 255];
+                     PortalRenderer.screenBuffer[var51] = var64[var7[var51] & 255];
                   }
 
                   ++var50;
@@ -1790,7 +1790,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             for(var47 = var46 = 240 * var40; var47 < var5; ++var47) {
-               GameEngine.screenBuffer[var47] = var64[var7[var47] & 255];
+               PortalRenderer.screenBuffer[var47] = var64[var7[var47] & 255];
             }
 
             if (GameEngine.inputFire) {
@@ -1821,11 +1821,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                }
 
-               GameEngine.screenBuffer[240 * var48 + var47] = var49;
+               PortalRenderer.screenBuffer[240 * var48 + var47] = var49;
                GameEngine.inputFire = false;
             }
 
-            var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 288, false);
+            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 288, false);
             var1.drawImage(var61, var62, var31, 20);
             var1.drawImage(this.statusBarImage, 0, 288, 0);
             this.sub_547(GameEngine.playerHealth, var1, 58, 294);
@@ -1854,7 +1854,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          for(var8 = 0; var8 < var2; ++var8) {
             for(var9 = 0; var9 < var1; ++var9) {
                if ((var10 = var0[var7++]) != 16711935) {
-                  GameEngine.screenBuffer[var6 + var9] = var10;
+                  PortalRenderer.screenBuffer[var6 + var9] = var10;
                }
             }
 
@@ -1865,7 +1865,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          for(var8 = 0; var8 < var2; ++var8) {
             for(var9 = 0; var9 < var1; ++var9) {
                if ((var10 = var0[var7++]) != 16711935) {
-                  GameEngine.screenBuffer[var6 + var9] = var10 | 16711680;
+                  PortalRenderer.screenBuffer[var6 + var9] = var10 | 16711680;
                }
             }
 
@@ -2416,10 +2416,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       String var2 = "please wait...";
       int var3 = (240 - this.sub_5d2(var2)) / 2;
       int var4 = 160 - this.var_550 / 2;
-      GameEngine.screenBuffer[0] = Integer.MIN_VALUE;
-      sub_159(GameEngine.screenBuffer, 0, 38400);
-      var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-      var1.drawRGB(GameEngine.screenBuffer, 0, 240, 0, 160, 240, 160, true);
+      PortalRenderer.screenBuffer[0] = Integer.MIN_VALUE;
+      sub_159(PortalRenderer.screenBuffer, 0, 38400);
+      var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
+      var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
       this.drawLargeString(var2, var1, var3, var4);
       this.flushScreenBuffer();
    }
