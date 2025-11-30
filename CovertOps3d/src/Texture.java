@@ -157,35 +157,49 @@ public final class Texture {
      * @return Array of 16 shaded palettes
      */
     private static int[][] generateShadedPalettes(int[] basePalette, int paletteSize) {
-        // Brightness adjustment values for each palette (-128 to +112 in steps of 16)
-        int[] brightnessLevels = new int[]{-128, -112, -96, -80, -64, -48, -32, -16,
-                0, 16, 32, 48, 64, 80, 96, 112};
 
         int[][] palettes = new int[16][paletteSize];
-        int alpha = 0xFF000000; // Fully opaque
 
         for(int paletteIndex = 0; paletteIndex < 16; ++paletteIndex) {
             for(int colorIndex = 0; colorIndex < paletteSize; ++colorIndex) {
                 // Extract RGB components
-                int red = ((basePalette[colorIndex] & 0xFF0000) >> 16) + brightnessLevels[paletteIndex];
-                int green = ((basePalette[colorIndex] & 0xFF00) >> 8) + brightnessLevels[paletteIndex];
-                int blue = (basePalette[colorIndex] & 0xFF) + brightnessLevels[paletteIndex];
+                float red = ((basePalette[colorIndex] & 0xFF0000) >> 16) / 255.0f;
+                float green = ((basePalette[colorIndex] & 0xFF00) >> 8) / 255.0f;
+                float blue = (basePalette[colorIndex] & 0xFF) / 255.0f;
+
+                //to linear
+                red = (float) Math.sqrt(red);
+                green = (float) Math.sqrt(green);
+                blue = (float) Math.sqrt(blue);
+
+                float brightness = paletteIndex / 8.0f * 0.75f + 0.25f;
+
+                red *= brightness;
+                green *= brightness;
+                blue *= brightness;
+
+                //to srgb
+                int red2 = (int) (red * red * 255);
+                int green2 = (int) (green * green * 255);
+                int blue2 = (int) (blue * blue * 255);
 
                 // Clamp values to 0-255 range
-                if (red < 0) red = 0;
-                else if (red > 255) red = 255;
+                if (red2 < 0) red2 = 0;
+                else if (red2 > 255) red2 = 255;
 
-                if (green < 0) green = 0;
-                else if (green > 255) green = 255;
+                if (green2 < 0) green2 = 0;
+                else if (green2 > 255) green2 = 255;
 
-                if (blue < 0) blue = 0;
-                else if (blue > 255) blue = 255;
+                if (blue2 < 0) blue2 = 0;
+                else if (blue2 > 255) blue2 = 255;
 
                 // Combine with alpha channel
-                palettes[paletteIndex][colorIndex] = alpha + (red << 16) + (green << 8) + blue;
+                palettes[paletteIndex][colorIndex] = 0xff000000 + (red2 << 16) + (green2 << 8) + blue2;
             }
         }
 
         return palettes;
     }
+
+
 }
