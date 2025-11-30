@@ -7,7 +7,7 @@ public final class Texture {
     public short height;          // Texture height in pixels
     public short horizontalOffset; // Horizontal offset for texture alignment
     public short verticalOffset;   // Vertical offset for texture alignment
-    public byte[][] pixelData;    // 4-bit pixel data (2 pixels per byte)
+    public byte[][] pixelData;    // 4-bit pixel data (2 pixels per byte) // 30.11.2025 - can be 3, 2 bit
     public int[][] colorPalettes; // 16 color palettes with different lighting levels
     public byte textureType;      // Texture type identifier
     private int widthMask;        // Mask for fast modulo operations (width - 1)
