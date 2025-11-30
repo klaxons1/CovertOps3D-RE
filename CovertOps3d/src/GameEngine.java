@@ -490,7 +490,7 @@ public final class GameEngine {
          }
       }
 
-      if ((MainGameCanvas.gameProgressFlags & 1) == 0 && MainGameCanvas.currentLevelId == 0 && currentSector.sectorId == 31) {
+      if ((SaveSystem.gameProgressFlags & 1) == 0 && MainGameCanvas.currentLevelId == 0 && currentSector.sectorId == 31) {
          messageText = "press 1 to open the door";
          messageTimer = 30;
       }
@@ -622,8 +622,8 @@ public final class GameEngine {
                Point2D var13 = var32[var11.startVertexId & '\uffff'];
                Point2D var14 = var32[var11.endVertexId & '\uffff'];
                if (GameWorld.doLineSegmentsIntersect(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
-                  if ((MainGameCanvas.gameProgressFlags & 1) == 0) {
-                     MainGameCanvas.gameProgressFlags = (byte)(MainGameCanvas.gameProgressFlags | 1);
+                  if ((SaveSystem.gameProgressFlags & 1) == 0) {
+                     SaveSystem.gameProgressFlags = (byte)(SaveSystem.gameProgressFlags | 1);
                   }
 
                   DoorController var38;
@@ -1753,7 +1753,7 @@ public final class GameEngine {
       lastGameLogicTime = 0;
       weaponSwitchAnimationActive = true;
       weaponAnimationState = 1;
-      MainGameCanvas.gameProgressFlags = 0;
+      SaveSystem.gameProgressFlags = 0;
       LevelLoader.levelVariant = 0;
    }
 }

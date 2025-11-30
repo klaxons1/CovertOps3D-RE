@@ -4,8 +4,6 @@ import java.util.Stack;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.game.GameCanvas;
-import javax.microedition.rms.RecordStore;
-import javax.microedition.rms.RecordStoreException;
 
 public class MainGameCanvas extends GameCanvas implements Runnable {
    public boolean isGameRunning = false;
@@ -65,12 +63,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    private int var_d2a;
    private int var_d88;
    private int var_d9b;
-   public static byte soundEnabled = 1;
-   public static byte musicEnabled = 1;
-   public static byte vibrationEnabled = 1;
-   public static byte gameProgressFlags = 0;
-   public static byte[][] saveData;
-   public static boolean mapEnabled = false;
+    public static boolean mapEnabled = false;
    public static final int[] var_f4a = new int[]{5, 5, 5};
    public static final int[] var_f5c = new int[]{25, 25, 25};
    public static final int[] var_f76 = new int[]{30, 30, 30};
@@ -366,8 +359,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
       (var1 = this.getGraphics()).setClip(0, 0, 240, 320);
       this.sub_175(var1);
       this.initializeGameResources();
-      loadSaveData();
-      loadSettingsFromRMS();
+      SaveSystem.loadSaveData();
+      SaveSystem.loadSettingsFromRMS();
       this.areResourcesLoaded = true;
       int var2 = this.showMenuScreen(var1, true);
 
@@ -404,7 +397,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int var4 = var2 - 67;
             currentLevelId = var3[var4];
             previousLevelId = -1;
-            loadGameState(var4);
+            SaveSystem.loadGameState(var4);
             GameEngine.levelTransitionState = 1;
             break;
          }
@@ -425,7 +418,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      case 0:
                      case 13:
                         currentLevelId = 0;
-                        saveGameState(8);
+                        SaveSystem.saveGameState(8);
                         if ((var2 = this.drawDialogOverlay(var1, 9)) == -1) {
                            var2 = this.showMenuScreen(var1, true);
                         }
@@ -446,7 +439,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      default:
                         break;
                      case 2:
-                        saveGameState(0);
+                        SaveSystem.saveGameState(0);
                         if ((var2 = this.drawDialogOverlay(var1, 1)) != -1) {
                            continue label182;
                         }
@@ -454,7 +447,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      case 4:
                      case 20:
                         if (currentLevelId == 4) {
-                           saveGameState(1);
+                           SaveSystem.saveGameState(1);
                            if ((var2 = this.drawDialogOverlay(var1, 2)) != -1) {
                               continue label182;
                            }
@@ -472,13 +465,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                            currentLevelId = 4;
                         }
 
-                        saveGameState(2);
+                        SaveSystem.saveGameState(2);
                         if ((var2 = this.drawDialogOverlay(var1, 3)) != -1) {
                            continue label182;
                         }
                         break;
                      case 5:
-                        saveGameState(3);
+                        SaveSystem.saveGameState(3);
                         if ((var2 = this.drawDialogOverlay(var1, 4)) != -1) {
                            continue label182;
                         }
@@ -486,7 +479,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      case 6:
                      case 22:
                         if (currentLevelId == 6) {
-                           saveGameState(4);
+                           SaveSystem.saveGameState(4);
                            if ((var2 = this.drawDialogOverlay(var1, 5)) != -1) {
                               continue label182;
                            }
@@ -504,19 +497,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                            currentLevelId = 6;
                         }
 
-                        saveGameState(5);
+                        SaveSystem.saveGameState(5);
                         if ((var2 = this.drawDialogOverlay(var1, 6)) != -1) {
                            continue label182;
                         }
                         break;
                      case 7:
-                        saveGameState(6);
+                        SaveSystem.saveGameState(6);
                         if ((var2 = this.drawDialogOverlay(var1, 7)) != -1) {
                            continue label182;
                         }
                         break;
                      case 9:
-                        saveGameState(7);
+                        SaveSystem.saveGameState(7);
                         if ((var2 = this.drawDialogOverlay(var1, 8)) != -1) {
                            continue label182;
                         }
@@ -876,7 +869,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
          int var7 = 0;
          int var8 = var6.length - 2;
          this.sub_1e3(var1, var3);
-         if (musicEnabled == 1 && !this.isGamePaused) {
+         if (SaveSystem.musicEnabled == 1 && !this.isGamePaused) {
             playSound(0, true, 80, 2);
          }
 
@@ -952,9 +945,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   this.SETTINGS_MENU_ITEMS = new String[6];
                   this.SETTINGS_MENU_ITEMS[0] = "settings";
                   this.SETTINGS_MENU_ITEMS[1] = "";
-                  this.SETTINGS_MENU_ITEMS[2] = "sound: " + (soundEnabled == 1 ? "on" : "off");
-                  this.SETTINGS_MENU_ITEMS[3] = "music: " + (musicEnabled == 1 ? "on" : "off");
-                  this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (vibrationEnabled == 1 ? "on" : "off");
+                  this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
+                  this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
+                  this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
                   this.SETTINGS_MENU_ITEMS[5] = "back";
                   (var23 = new Object[4])[0] = var6;
                   var23[1] = new Integer(var4);
@@ -1048,7 +1041,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var23[3] = new Integer(var8);
                   var10.push(var23);
                   GameEngine.difficultyLevel = var4 - 18;
-                  loadSaveData();
+                  SaveSystem.loadSaveData();
                   var7 = 2;
                   var8 = this.chapterMenuItems.length - 2;
 
@@ -1056,7 +1049,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                      String[] var10000;
                      int var10001;
                      String var10002;
-                     if (saveData[var17 - 3] != null) {
+                     if (SaveSystem.saveData[var17 - 3] != null) {
                         var10000 = this.chapterMenuItems;
                         var10001 = var17;
                         var10002 = CHAPTER_MENU_DATA[var17];
@@ -1073,38 +1066,38 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   var4 = 66;
                   break;
                case 50:
-                  soundEnabled = (byte)(soundEnabled ^ 1);
-                  this.SETTINGS_MENU_ITEMS[2] = "sound: " + (soundEnabled == 1 ? "on" : "off");
-                  if (musicEnabled != 1) {
-                     if (soundEnabled == 1) {
+                  SaveSystem.soundEnabled = (byte)(SaveSystem.soundEnabled ^ 1);
+                  this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
+                  if (SaveSystem.musicEnabled != 1) {
+                     if (SaveSystem.soundEnabled == 1) {
                         playSound(1, false, 80, 0);
                      } else {
                         stopCurrentSound();
                      }
                   }
 
-                  saveSettingsToRMS();
+                  SaveSystem.saveSettingsToRMS();
                   break;
                case 51:
-                  musicEnabled = (byte)(musicEnabled ^ 1);
-                  this.SETTINGS_MENU_ITEMS[3] = "music: " + (musicEnabled == 1 ? "on" : "off");
-                  if (musicEnabled == 1) {
+                  SaveSystem.musicEnabled = (byte)(SaveSystem.musicEnabled ^ 1);
+                  this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
+                  if (SaveSystem.musicEnabled == 1) {
                      stopCurrentSound();
                      playSound(0, true, 80, 2);
                   } else {
                      stopCurrentSound();
                   }
 
-                  saveSettingsToRMS();
+                  SaveSystem.saveSettingsToRMS();
                   break;
                case 52:
-                  vibrationEnabled = (byte)(vibrationEnabled ^ 1);
-                  this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (vibrationEnabled == 1 ? "on" : "off");
-                  if (vibrationEnabled == 1) {
+                  SaveSystem.vibrationEnabled = (byte)(SaveSystem.vibrationEnabled ^ 1);
+                  this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
+                  if (SaveSystem.vibrationEnabled == 1) {
                      vibrateDevice(100);
                   }
 
-                  saveSettingsToRMS();
+                  SaveSystem.saveSettingsToRMS();
                   break;
                case 66:
                case 67:
@@ -1927,7 +1920,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    public final void resumeGame() {
       if (this.isGamePaused) {
-         if (audioManager != null && musicEnabled == 1 && this.areResourcesLoaded) {
+         if (audioManager != null && SaveSystem.musicEnabled == 1 && this.areResourcesLoaded) {
             playSound(0, true, 80, 2);
          }
 
@@ -3052,155 +3045,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
    }
 
-   public static void loadSaveData() {
-      try {
-         String var0;
-         label33: {
-            var0 = "data";
-            StringBuffer var10000;
-            String var10001;
-            if (GameEngine.difficultyLevel == 0) {
-               var10000 = (new StringBuffer()).append(var0);
-               var10001 = "e";
-            } else {
-               if (GameEngine.difficultyLevel != 2) {
-                  break label33;
-               }
-
-               var10000 = (new StringBuffer()).append(var0);
-               var10001 = "h";
-            }
-
-            var0 = var10000.append(var10001).toString();
-         }
-
-         RecordStore var1 = RecordStore.openRecordStore(var0, true);
-         saveData = new byte[9][];
-         int var2;
-         if ((var2 = var1.getNumRecords()) > 9) {
-            var2 = 9;
-         }
-
-         for(int var3 = 0; var3 < var2; ++var3) {
-            saveData[var3] = var1.getRecord(var3 + 1);
-         }
-
-         var1.closeRecordStore();
-      } catch (RecordStoreException var4) {
-      } catch (OutOfMemoryError var5) {
-      }
-   }
-
-   public static void loadGameState(int var0) {
-      GameEngine.playerHealth = saveData[var0][0];
-      GameEngine.playerArmor = saveData[var0][1];
-
-      for(int var1 = 0; var1 < 9; ++var1) {
-         GameEngine.weaponsAvailable[var1] = saveData[var0][2 + var1] == 1;
-         GameEngine.ammoCounts[var1] = (saveData[var0][11 + var1] & 255) + ((saveData[var0][20 + var1] & 255) << 8);
-      }
-
-      GameEngine.currentWeapon = saveData[var0][29];
-      GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
-   }
-
-   public static void saveGameState(int var0) {
-      saveData[var0] = new byte[30];
-      saveData[var0][0] = (byte) GameEngine.playerHealth;
-      saveData[var0][1] = (byte) GameEngine.playerArmor;
-
-      for(int var1 = 0; var1 < 9; ++var1) {
-         saveData[var0][2 + var1] = (byte)(GameEngine.weaponsAvailable[var1] ? 1 : 0);
-         saveData[var0][11 + var1] = (byte)(GameEngine.ammoCounts[var1] & 255);
-         saveData[var0][20 + var1] = (byte)(GameEngine.ammoCounts[var1] >> 8 & 255);
-      }
-
-      saveData[var0][29] = (byte) GameEngine.currentWeapon;
-      writeSaveData();
-   }
-
-   public static void writeSaveData() {
-      try {
-         String var0;
-         label39: {
-            var0 = "data";
-            StringBuffer var10000;
-            String var10001;
-            if (GameEngine.difficultyLevel == 0) {
-               var10000 = (new StringBuffer()).append(var0);
-               var10001 = "e";
-            } else {
-               if (GameEngine.difficultyLevel != 2) {
-                  break label39;
-               }
-
-               var10000 = (new StringBuffer()).append(var0);
-               var10001 = "h";
-            }
-
-            var0 = var10000.append(var10001).toString();
-         }
-
-         RecordStore var1;
-         int var2 = (var1 = RecordStore.openRecordStore(var0, true)).getNumRecords();
-
-         for(int var3 = 0; var3 < 9; ++var3) {
-            int var4 = saveData[var3] == null ? 0 : saveData[var3].length;
-            if (var2 > var3) {
-               var1.setRecord(var3 + 1, saveData[var3], 0, var4);
-            } else if (var4 > 0) {
-               var1.addRecord(saveData[var3], 0, var4);
-            }
-         }
-
-         var1.closeRecordStore();
-      } catch (RecordStoreException var5) {
-      } catch (OutOfMemoryError var6) {
-      }
-   }
-
-   public static void loadSettingsFromRMS() {
-      try {
-         RecordStore var0 = RecordStore.openRecordStore("settings", true);
-         Object var1 = null;
-         if (var0.getNumRecords() > 0) {
-            byte[] var5;
-            soundEnabled = (var5 = var0.getRecord(1))[0];
-            musicEnabled = var5[1];
-            vibrationEnabled = var5[2];
-            gameProgressFlags = var5[3];
-         }
-
-         var0.closeRecordStore();
-      } catch (RecordStoreException var3) {
-      } catch (OutOfMemoryError var4) {
-      }
-   }
-
-   public static void saveSettingsToRMS() {
-      try {
-         RecordStore var0;
-         int var1 = (var0 = RecordStore.openRecordStore("settings", true)).getNumRecords();
-         byte[] var2;
-         (var2 = new byte[16])[0] = soundEnabled;
-         var2[1] = musicEnabled;
-         var2[2] = vibrationEnabled;
-         var2[3] = gameProgressFlags;
-         if (var1 > 0) {
-            var0.setRecord(1, var2, 0, 16);
-         } else {
-            var0.addRecord(var2, 0, 16);
-         }
-
-         var0.closeRecordStore();
-      } catch (RecordStoreException var3) {
-      } catch (OutOfMemoryError var4) {
-      }
-   }
-
-   public static void playSound(int var0, boolean var1, int var2, int var3) {
+    public static void playSound(int var0, boolean var1, int var2, int var3) {
       boolean var4;
-      if (!(var4 = var0 > 0) || soundEnabled != 0) {
+      if (!(var4 = var0 > 0) || SaveSystem.soundEnabled != 0) {
          int var5 = var1 ? -1 : 1;
          audioManager.setVolume(var2);
          audioManager.playSound(var0, var5, var3);
@@ -3212,7 +3059,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
    }
 
    public static void vibrateDevice(int var0) {
-      if (vibrationEnabled != 0) {
+      if (SaveSystem.vibrationEnabled != 0) {
          try {
             CovertOps3D.display.vibrate(var0);
          } catch (Exception var1) {
