@@ -535,9 +535,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                   this.loadLevelResources();
                }
 
-               long var7 = System.currentTimeMillis();
-               this.frameDeltaTime = var7 - this.lastFrameTime;
-               this.lastFrameTime = var7;
+               long currentTime = System.currentTimeMillis();
+               this.frameDeltaTime = currentTime - this.lastFrameTime;
+               this.lastFrameTime = currentTime;
                this.accumulatedTime += this.frameDeltaTime;
                if (this.accumulatedTime > 600L) {
                   this.accumulatedTime = 600L;
