@@ -1,899 +1,1256 @@
 import java.util.Vector;
 
+/**
+ * Portal-based renderer for a 2.5D game engine.
+ * Handles rendering of walls, floors, ceilings, skybox, and dynamic objects
+ * using a BSP traversal and portal visibility system.
+ */
 public class PortalRenderer {
+    /** Screen pixel buffer for rendering */
     public static int[] screenBuffer;
+
+    /** History of floor clipping arrays for each visible sector */
     public static Vector floorClipHistory;
+
+    /** History of ceiling clipping arrays for each visible sector */
     public static Vector ceilingClipHistory;
+
+    /** Flag indicating if gun fire lighting effect is active */
     public static boolean gunFireLighting = false;
+
+    /** Skybox horizontal scale factor */
     public static int skyboxScaleX;
+
+    /** Skybox angle correction factor */
     public static int skyboxAngleFactor;
+
+    /** Skybox vertical scale factor */
     public static int skyboxScaleY;
+
+    /** Skybox vertical offset factor */
     public static int skyboxOffsetFactor;
+
+    /** Array of visible game objects for rendering */
     public static GameObject[] visibleGameObjects;
+
+    /** Count of currently visible objects */
     public static int visibleObjectsCount;
+
+    /** Clipped wall segment start point (reused to avoid allocations) */
     private static Point2D clippedWallStart = new Point2D(0, 0);
+
+    /** Clipped wall segment end point (reused to avoid allocations) */
     private static Point2D clippedWallEnd = new Point2D(0, 0);
+
+    /** Projected ceiling Y coordinate at wall start */
     private static int projectedCeilingStart;
+
+    /** Projected floor Y coordinate at wall start */
     private static int projectedFloorStart;
+
+    /** Projected ceiling Y coordinate at wall end */
     private static int projectedCeilingEnd;
+
+    /** Projected floor Y coordinate at wall end */
     private static int projectedFloorEnd;
+
+    /** Clipped texture U coordinate at wall start */
     private static int clippedTextureStartU;
+
+    /** Clipped texture U coordinate at wall end */
     private static int clippedTextureEndU;
+
+    /** Current skybox texture */
     private static Texture skyboxTexture;
+
+    /** Depth buffer for span rendering */
     static short[] depthBuffer;
+
+    /** Floor span start Y coordinate */
     private static int floorSpanStart;
+
+    /** Floor span end Y coordinate */
     private static int floorSpanEnd;
+
+    /** Ceiling span start Y coordinate */
     private static int ceilingSpanStart;
+
+    /** Ceiling span end Y coordinate */
     private static int ceilingSpanEnd;
+
+    /** Last X column where floor span was updated */
     private static int lastFloorColumnX;
+
+    /** Last X column where ceiling span was updated */
     private static int lastCeilingColumnX;
+
+    /** Render utilities for span-based rendering */
     static RenderUtils renderUtils;
+
+    /** Lookup table for angle corrections */
     static int[] angleCorrectionTable;
+
+    /** Lookup table for reciprocal values (1/x) */
     static int[] reciprocalTable;
 
-    private static boolean clipAndProjectWallSegment(Point2D var0, Point2D var1, int var2, int var3, int var4) {
-      if (var0.y <= 327680 && var1.y <= 327680) {
-         return false;
-      } else {
-         int var5;
-         int var6 = (var5 = var4 << 16) + MathUtils.fastHypot(var0.x - var1.x, var0.y - var1.y);
-         clippedTextureStartU = var5;
-         clippedTextureEndU = var6;
-         clippedWallStart.x = var0.x;
-         clippedWallStart.y = var0.y;
-         clippedWallEnd.x = var1.x;
-         clippedWallEnd.y = var1.y;
-         int var7;
-         if (var1.y < 327680) {
-            var7 = MathUtils.fixedPointDivide(var0.y - 327680, var0.y - var1.y);
-            clippedWallEnd.y = 327680;
-            if (var7 == Integer.MAX_VALUE) {
-               clippedWallEnd.x = var1.x > var0.x ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-               clippedTextureEndU = var6 > var5 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-            } else if (var7 == Integer.MIN_VALUE) {
-               clippedWallEnd.x = var1.x > var0.x ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-               clippedTextureEndU = var6 > var5 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-            } else {
-               clippedWallEnd.x = (int)((long)(var1.x - var0.x) * (long)var7 >> 16) + var0.x;
-               clippedTextureEndU = (int)((long)(var6 - var5) * (long)var7 >> 16) + var5;
-            }
-         }
+    /** Near clipping plane distance in fixed-point (5.0) */
+    private static final int NEAR_CLIP_DISTANCE = 327680;
 
-         if (var0.y < 327680) {
-            var7 = MathUtils.fixedPointDivide(var1.y - 327680, var1.y - var0.y);
-            clippedWallStart.y = 327680;
-            if (var7 == Integer.MAX_VALUE) {
-               clippedWallStart.x = var0.x > var1.x ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-               clippedTextureStartU = var5 > var6 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-            } else if (var7 == Integer.MIN_VALUE) {
-               clippedWallStart.x = var0.x > var1.x ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-               clippedTextureStartU = var5 > var6 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-            } else {
-               clippedWallStart.x = (int)((long)(var0.x - var1.x) * (long)var7 >> 16) + var1.x;
-               clippedTextureStartU = (int)((long)(var5 - var6) * (long)var7 >> 16) + var6;
-            }
-         }
+    /** Half screen width in fixed-point */
+    private static final int HALF_SCREEN_WIDTH_FP = 7864320;
 
-         long var11 = 33776997205278720L / (long) clippedWallStart.y >> 16;
-         long var9 = 33776997205278720L / (long) clippedWallEnd.y >> 16;
-         clippedWallStart.x = (int)((long) clippedWallStart.x * var11 >> 16);
-         if (clippedWallStart.x > 7864320) {
+    /** Half screen height in fixed-point */
+    private static final int HALF_SCREEN_HEIGHT_FP = 9437184;
+
+    /** Projection constant for perspective transformation */
+    private static final long PROJECTION_CONSTANT = 33776997205278720L;
+
+    /** Fixed-point rounding constant (0.5 in 16.16 format) */
+    private static final int FP_HALF = 32768;
+
+    /**
+     * Clips a wall segment to the near clipping plane and projects it to screen coordinates.
+     *
+     * @param startPoint           Start point of the wall segment in view space
+     * @param endPoint             End point of the wall segment in view space
+     * @param relativeCeilingHeight Ceiling height relative to camera in fixed-point
+     * @param relativeFloorHeight   Floor height relative to camera in fixed-point
+     * @param textureOffset        Texture horizontal offset
+     * @return true if the wall segment is visible after clipping, false otherwise
+     */
+    private static boolean clipAndProjectWallSegment(Point2D startPoint, Point2D endPoint,
+                                                     int relativeCeilingHeight, int relativeFloorHeight, int textureOffset) {
+
+        if (startPoint.y <= NEAR_CLIP_DISTANCE && endPoint.y <= NEAR_CLIP_DISTANCE) {
             return false;
-         } else {
-            clippedWallEnd.x = (int)((long) clippedWallEnd.x * var9 >> 16);
-            if (clippedWallEnd.x < -7864320) {
-               return false;
-            } else if (clippedWallEnd.x < clippedWallStart.x) {
-               return false;
+        }
+
+        int textureStartU = textureOffset << 16;
+        int textureEndU = textureStartU + MathUtils.fastHypot(startPoint.x - endPoint.x, startPoint.y - endPoint.y);
+        clippedTextureStartU = textureStartU;
+        clippedTextureEndU = textureEndU;
+
+        clippedWallStart.x = startPoint.x;
+        clippedWallStart.y = startPoint.y;
+        clippedWallEnd.x = endPoint.x;
+        clippedWallEnd.y = endPoint.y;
+
+        // Clip end point to near plane if behind it
+        if (endPoint.y < NEAR_CLIP_DISTANCE) {
+            int interpolationFactor = MathUtils.fixedPointDivide(startPoint.y - NEAR_CLIP_DISTANCE, startPoint.y - endPoint.y);
+            clippedWallEnd.y = NEAR_CLIP_DISTANCE;
+
+            if (interpolationFactor == Integer.MAX_VALUE) {
+                clippedWallEnd.x = endPoint.x > startPoint.x ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+                clippedTextureEndU = textureEndU > textureStartU ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            } else if (interpolationFactor == Integer.MIN_VALUE) {
+                clippedWallEnd.x = endPoint.x > startPoint.x ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+                clippedTextureEndU = textureEndU > textureStartU ? Integer.MIN_VALUE : Integer.MAX_VALUE;
             } else {
-                projectedCeilingStart = (int)((long)var2 * var11 >> 16);
-                projectedFloorStart = (int)((long)var3 * var11 >> 16);
-                projectedCeilingEnd = (int)((long)var2 * var9 >> 16);
-                projectedFloorEnd = (int)((long)var3 * var9 >> 16);
-               return true;
+                clippedWallEnd.x = (int)((long)(endPoint.x - startPoint.x) * (long)interpolationFactor >> 16) + startPoint.x;
+                clippedTextureEndU = (int)((long)(textureEndU - textureStartU) * (long)interpolationFactor >> 16) + textureStartU;
             }
-         }
-      }
-   }
-
-    private static void renderSolidWallSegment(WallSegment var0, WallDefinition var1, WallSurface var2, Point2D[] var3, int var4, int var5, int var6, int var7) {
-      SectorData var8 = var2.linkedSector;
-      int var9 = -var5 + (-var8.ceilingHeight << 16);
-      int var10 = -var5 + (-var8.floorHeight << 16);
-      if (clipAndProjectWallSegment(var3[var0.startVertexIndex & '\uffff'], var3[var0.endVertexIndex & '\uffff'], var9, var10, var0.textureOffset & '\uffff')) {
-         Point2D var11 = clippedWallStart;
-         Point2D var12 = clippedWallEnd;
-         int var13 = var11.x + 7864320 >> 16;
-         int var14 = projectedCeilingStart + 9437184 >> 16;
-         int var15 = var12.x + 7864320 >> 16;
-         int var16 = projectedCeilingEnd + 9437184 >> 16;
-         int var17 = projectedFloorStart + 9437184 >> 16;
-         int var18 = projectedFloorEnd + 9437184 >> 16;
-         int var19 = var8.ceilingHeight - var8.floorHeight;
-         Texture var20 = LevelLoader.getTexture(var2.mainTextureId);
-         int var21 = var2.textureOffsetY & '\uffff';
-         int var22 = var20.height - var19 + var21;
-         if (!var1.isSecret()) {
-            var22 = var21;
-         }
-
-         var1.markAsRendered();
-         int var23 = (var2.textureOffsetX & '\uffff') << 16;
-         drawWallColumn(var8, var20, var20, var13, var14, var17, var17, var17, var11.y, var15, var16, var18, var18, var18, var12.y, clippedTextureStartU + var23, clippedTextureEndU - clippedTextureStartU, var22, var19, var22, var19, -var4, -var6, var7, var9, var10);
-      }
-
-   }
-
-    private static void renderPortalWallSegment(WallSegment var0, WallDefinition var1, WallSurface var2, WallSurface var3, Point2D[] var4, int var5, int var6, int var7, int var8) {
-      SectorData var9 = var2.linkedSector;
-      SectorData var10 = var3.linkedSector;
-      int var11 = -var6 + (-var9.ceilingHeight << 16);
-      int var12 = -var6 + (-var9.floorHeight << 16);
-      int var13 = -var6 + (-var10.ceilingHeight << 16);
-      int var14 = -var6 + (-var10.floorHeight << 16);
-      if (clipAndProjectWallSegment(var4[var0.startVertexIndex & '\uffff'], var4[var0.endVertexIndex & '\uffff'], var11, var12, var0.textureOffset & '\uffff')) {
-         Point2D var15 = clippedWallStart;
-         Point2D var16 = clippedWallEnd;
-         int var17 = var15.x + 7864320 >> 16;
-         int var18 = projectedCeilingStart + 9437184 >> 16;
-         int var19 = projectedFloorStart + 9437184 >> 16;
-         int var20 = var16.x + 7864320 >> 16;
-         int var21 = projectedCeilingEnd + 9437184 >> 16;
-         int var22 = projectedFloorEnd + 9437184 >> 16;
-         int var23 = MathUtils.fixedPointDivide(var13, var15.y) * 120 + 9437184 >> 16;
-         int var24 = MathUtils.fixedPointDivide(var14, var15.y) * 120 + 9437184 >> 16;
-         int var25 = MathUtils.fixedPointDivide(var13, var16.y) * 120 + 9437184 >> 16;
-         int var26 = MathUtils.fixedPointDivide(var14, var16.y) * 120 + 9437184 >> 16;
-         int var27 = var9.ceilingHeight - var10.ceilingHeight;
-         int var28 = var10.floorHeight - var9.floorHeight;
-         Texture var29 = LevelLoader.getTexture(var2.upperTextureId);
-         Texture var30 = LevelLoader.getTexture(var2.lowerTextureId);
-         if (var10.floorTextureId == 51) {
-            var29 = LevelLoader.defaultErrorTexture;
-         }
-
-         if (var10.ceilingTextureId == 51) {
-            var30 = LevelLoader.defaultErrorTexture;
-         }
-
-         int var31 = var2.textureOffsetY & '\uffff';
-         int var32 = var29.height - var27 + var31;
-         if (var1.isDoor()) {
-            var32 = var31;
-         }
-
-         int var33 = var9.ceilingHeight - var10.floorHeight + var31;
-         if (!var1.isSecret()) {
-            var33 = var31;
-         }
-
-         var1.markAsRendered();
-         int var34 = (var2.textureOffsetX & '\uffff') << 16;
-         drawWallColumn(var9, var29, var30, var17, var18, var23, var24, var19, var15.y, var20, var21, var25, var26, var22, var16.y, clippedTextureStartU + var34, clippedTextureEndU - clippedTextureStartU, var32, var27, var33, var28, -var5, -var7, var8, var11, var12);
-      }
-
-   }
-
-    private static void renderWallSegment(WallSegment var0, Point2D[] var1, int var2, int var3, int var4, int var5) {
-      WallDefinition var6;
-      WallSurface var7 = (var6 = var0.wallDefinition).frontSurface;
-      WallSurface var8;
-      if ((var8 = var6.backSurface) != null) {
-         if (var0.isFrontFacing) {
-            renderPortalWallSegment(var0, var6, var7, var8, var1, var2, var3, var4, var5);
-         } else {
-            renderPortalWallSegment(var0, var6, var8, var7, var1, var2, var3, var4, var5);
-         }
-      } else if (var0.isFrontFacing) {
-         renderSolidWallSegment(var0, var6, var7, var1, var2, var3, var4, var5);
-      } else {
-         throw new IllegalStateException();
-      }
-   }
-
-    private static void renderDynamicObjects(Sector var0, int var1, int var2, int var3, long var4, long var6) {
-      SectorData var8 = var0.getSectorData();
-      Vector var9 = var0.dynamicObjects;
-      visibleObjectsCount = 0;
-
-      int var10;
-      GameObject var11;
-      for(var10 = 0; var10 < var9.size(); ++var10) {
-         Transform3D var12;
-         int var13 = (var12 = (var11 = (GameObject)var9.elementAt(var10)).transform).x - var1;
-         int var14 = var12.z - var3;
-         var11.screenPos.x = (int)(var6 * (long)var13 - var4 * (long)var14 >> 16);
-         var11.screenPos.y = (int)(var4 * (long)var13 + var6 * (long)var14 >> 16);
-         if (var11.screenPos.y > 327680) {
-            byte var15 = var11.getCurrentSprite1();
-            byte var16 = var11.getCurrentSprite2();
-            if (var15 != 0 || var16 != 0) {
-               GameObject var10000;
-               int var18;
-               label99: {
-                  short var10001;
-                  if (var11.objectType >= 59 && var11.objectType <= 63) {
-                     var10000 = var11;
-                     var10001 = var8.ceilingHeight;
-                  } else {
-                     if (var11.objectType >= 100 && var11.objectType <= 102) {
-                        var10000 = var11;
-                        var18 = -var11.transform.y;
-                        break label99;
-                     }
-
-                     var10000 = var11;
-                     var10001 = var8.floorHeight;
-                  }
-
-                  var18 = -var10001 << 16;
-               }
-
-               var10000.screenHeight = var18 - var2;
-               Texture var19;
-               if (var15 != 0) {
-                  var10000 = var11;
-                  var19 = LevelLoader.textureTable[var15 + 128];
-               } else {
-                  var10000 = var11;
-                  var19 = null;
-               }
-
-               var10000.texture1 = var19;
-               if (var16 != 0) {
-                  var10000 = var11;
-                  var19 = LevelLoader.textureTable[var16 + 128];
-               } else {
-                  var10000 = var11;
-                  var19 = null;
-               }
-
-               var10000.texture2 = var19;
-               visibleGameObjects[visibleObjectsCount++] = var11;
-               if (visibleObjectsCount >= 64) {
-                  break;
-               }
-            }
-         }
-      }
-
-      for(var10 = 1; var10 < visibleObjectsCount; ++var10) {
-         var11 = visibleGameObjects[var10];
-
-         int var17;
-         for(var17 = var10; var17 > 0 && visibleGameObjects[var17 - 1].compareDepth(var11); --var17) {
-            visibleGameObjects[var17] = visibleGameObjects[var17 - 1];
-         }
-
-         visibleGameObjects[var17] = var11;
-      }
-
-      for(var10 = 0; var10 < visibleObjectsCount; ++var10) {
-         if ((var11 = visibleGameObjects[var10]).projectToScreen()) {
-            if (var11.texture2 != null) {
-               var11.calculateSpriteSize2();
-               drawSprite(var11.texture2, var8.getLightLevel(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth2, var11.spriteHeight2);
-            }
-
-            if (var11.texture1 != null) {
-               var11.calculateSpriteSize1();
-               drawSprite(var11.texture1, var8.getLightLevel(), (var11.screenPos.x >> 16) + 120, (var11.screenHeight >> 16) + 144, var11.screenPos.y, var11.spriteWidth1, var11.spriteHeight1);
-            }
-         }
-      }
-
-   }
-
-    static void renderWorld(int var0, int var1, int var2, int var3) {
-     LevelLoader.gameWorld.toggleProjectileSprites();
-     Point2D[] var4 = LevelLoader.gameWorld.transformVertices(var0, var2, var3);
-     LevelLoader.gameWorld.updateWorld();
-     BSPNode.visibleSectorsCount = 0;
-     LevelLoader.gameWorld.getRootBSPNode().traverseBSP(GameEngine.player, LevelLoader.gameWorld.getSectorDataAtPoint(var0, var2));
-     int var5 = var2 << 8;
-     int var6 = var0 << 8;
-     int var7 = var3 << 1;
-     int var8 = MathUtils.fastSin(var3);
-     int var9 = MathUtils.fastCos(var3);
-     gunFireLighting = MainGameCanvas.weaponSpriteFrame == 1 && GameEngine.currentWeapon != 0;
-     renderUtils.resetRenderer();
-     Sector.resetClipArrays();
-
-     int var10;
-     Sector var11;
-     for(var10 = 0; var10 < BSPNode.visibleSectorsCount; ++var10) {
-        var11 = BSPNode.visibleSectorsList[var10];
-        if (var10 > 0 && Sector.isRenderComplete()) {
-           BSPNode.visibleSectorsCount = var10;
-           break;
         }
 
-        if (var10 >= floorClipHistory.size()) {
-           short[] var12 = new short[240];
-           short[] var13 = new short[240];
-           floorClipHistory.addElement(var12);
-           ceilingClipHistory.addElement(var13);
+        // Clip start point to near plane if behind it
+        if (startPoint.y < NEAR_CLIP_DISTANCE) {
+            int interpolationFactor = MathUtils.fixedPointDivide(endPoint.y - NEAR_CLIP_DISTANCE, endPoint.y - startPoint.y);
+            clippedWallStart.y = NEAR_CLIP_DISTANCE;
+
+            if (interpolationFactor == Integer.MAX_VALUE) {
+                clippedWallStart.x = startPoint.x > endPoint.x ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+                clippedTextureStartU = textureStartU > textureEndU ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            } else if (interpolationFactor == Integer.MIN_VALUE) {
+                clippedWallStart.x = startPoint.x > endPoint.x ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+                clippedTextureStartU = textureStartU > textureEndU ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+            } else {
+                clippedWallStart.x = (int)((long)(startPoint.x - endPoint.x) * (long)interpolationFactor >> 16) + endPoint.x;
+                clippedTextureStartU = (int)((long)(textureStartU - textureEndU) * (long)interpolationFactor >> 16) + textureEndU;
+            }
         }
 
-        System.arraycopy(Sector.floorClip, 0, (short[])((short[]) floorClipHistory.elementAt(var10)), 0, 240);
-        System.arraycopy(Sector.ceilingClip, 0, (short[])((short[]) ceilingClipHistory.elementAt(var10)), 0, 240);
-        WallSegment[] var15 = var11.walls;
+        // Project to screen space
+        long startDepthReciprocal = PROJECTION_CONSTANT / (long)clippedWallStart.y >> 16;
+        long endDepthReciprocal = PROJECTION_CONSTANT / (long)clippedWallEnd.y >> 16;
 
-        for(int var16 = 0; var16 < var15.length; ++var16) {
-           renderWallSegment(var15[var16], var4, var6, var1, var5, var7);
+        clippedWallStart.x = (int)((long)clippedWallStart.x * startDepthReciprocal >> 16);
+        if (clippedWallStart.x > HALF_SCREEN_WIDTH_FP) {
+            return false;
         }
-     }
 
-     renderUtils.renderAllSpans(var8, var9, -var6, -var5);
+        clippedWallEnd.x = (int)((long)clippedWallEnd.x * endDepthReciprocal >> 16);
+        if (clippedWallEnd.x < -HALF_SCREEN_WIDTH_FP) {
+            return false;
+        }
 
-     for(var10 = BSPNode.visibleSectorsCount - 1; var10 >= 0; --var10) {
-        var11 = BSPNode.visibleSectorsList[var10];
-        System.arraycopy(floorClipHistory.elementAt(var10), 0, Sector.floorClip, 0, 240);
-        System.arraycopy(ceilingClipHistory.elementAt(var10), 0, Sector.ceilingClip, 0, 240);
-        renderDynamicObjects(var11, var0, var1, var2, (long)var8, (long)var9);
-     }
+        if (clippedWallEnd.x < clippedWallStart.x) {
+            return false;
+        }
 
-  }
+        projectedCeilingStart = (int)((long)relativeCeilingHeight * startDepthReciprocal >> 16);
+        projectedFloorStart = (int)((long)relativeFloorHeight * startDepthReciprocal >> 16);
+        projectedCeilingEnd = (int)((long)relativeCeilingHeight * endDepthReciprocal >> 16);
+        projectedFloorEnd = (int)((long)relativeFloorHeight * endDepthReciprocal >> 16);
 
-    static void setSkyboxTexture(Texture var0) {
-     skyboxTexture = var0;
-  }
-
-    private static void drawSprite(Texture var0, int var1, int var2, int var3, int var4, int var5, int var6) {
-       int var10000;
-       label68: {
-          if (var0.horizontalOffset > 0) {
-             var10000 = var2 - var0.horizontalOffset * var5 / var0.width;
-          } else {
-             if (var0.horizontalOffset >= 0) {
-                break label68;
-             }
-
-             var10000 = var2 + var0.horizontalOffset;
-          }
-
-          var2 = var10000;
-       }
-
-       label62: {
-          if (var0.verticalOffset > 0) {
-             var10000 = var3 - var0.verticalOffset * var6 / var0.height;
-          } else {
-             if (var0.verticalOffset >= 0) {
-                break label62;
-             }
-
-             var10000 = var3 + var0.verticalOffset;
-          }
-
-          var3 = var10000;
-       }
-
-       int var8 = 0;
-       int var9 = var5;
-       if (0 + var2 < 240 && var5 + var2 >= 0) {
-          if (0 + var2 < 0) {
-             var8 = 0 - (0 + var2);
-          }
-
-          if (var5 + var2 >= 240) {
-             var9 = var5 + (239 - (var5 + var2));
-          }
-
-          short var11;
-          int var12;
-          int var13;
-          int var14;
-          int var16;
-          label45: {
-             short var10 = var0.width;
-             var11 = var0.height;
-             var12 = (var10 << 16) / (var5 + 1);
-             var14 = (var13 = (var8 - 0) * var12) >>> 16;
-             var16 = var4 >> 22;
-             byte var21;
-             if ((var16 = gunFireLighting && var16 < 3 ? var1 + (4 >> var16) : var1 - var16) < 0) {
-                var21 = 0;
-             } else {
-                if (var16 <= 15) {
-                   break label45;
-                }
-
-                var21 = 15;
-             }
-
-             var16 = var21;
-          }
-
-          int[] var17 = var0.colorPalettes[var16];
-          int var18 = var3 + var6;
-
-          for(int var19 = var8; var19 <= var9; ++var19) {
-             drawSpriteColumn(var0.getPixelRow(var14), var14 & 1, var17, var19 + var2, var3, var18, 0, var11);
-             var14 = (var13 += var12) >>> 16;
-          }
-
-       }
+        return true;
     }
 
-    private static void drawWallColumn(SectorData var0, Texture var1, Texture var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9, int var10, int var11, int var12, int var13, int var14, int var15, int var16, int var17, int var18, int var19, int var20, int var21, int var22, int var23, int var24, int var25) {
-       int var26 = var3;
-       int var27 = var9;
-       if (var3 < 240 && var9 >= 0) {
-          short[] var28 = Sector.floorClip;
-          short[] var29 = Sector.ceilingClip;
-          if (var3 < 0) {
-             var26 = 0;
-          }
+    /**
+     * Renders a solid (non-portal) wall segment with a single texture.
+     *
+     * @param wallSegment         The wall segment to render
+     * @param wallDef             Wall definition containing surface data
+     * @param surface             The wall surface with texture information
+     * @param transformedVertices Array of transformed vertex positions
+     * @param cameraX             Camera X position in fixed-point
+     * @param cameraY             Camera Y (height) position in fixed-point
+     * @param cameraZ             Camera Z position in fixed-point
+     * @param viewAngle           View angle multiplied by 2
+     */
+    private static void renderSolidWallSegment(WallSegment wallSegment, WallDefinition wallDef,
+                                               WallSurface surface, Point2D[] transformedVertices,
+                                               int cameraX, int cameraY, int cameraZ, int viewAngle) {
 
-          if (var9 >= 240) {
-             var27 = 239;
-          }
+        SectorData sectorData = surface.linkedSector;
+        int relativeCeilingHeight = -cameraY + (-sectorData.ceilingHeight << 16);
+        int relativeFloorHeight = -cameraY + (-sectorData.floorHeight << 16);
 
-          short var30 = var1.height;
-          short var31 = var2.height;
-          int var32 = var9 - var3 + 1;
-          int var33 = var26 - var3;
-          int var34 = (var10 - var4 << 16) / var32;
-          int var35 = (var4 << 16) + var33 * var34 + '耀';
-          int var36 = (var11 - var5 << 16) / var32;
-          int var37 = (var5 << 16) + var33 * var36 + '耀';
-          int var38 = (var12 - var6 << 16) / var32;
-          int var39 = (var6 << 16) + var33 * var38 + '耀';
-          int var40 = (var13 - var7 << 16) / var32;
-          int var41 = (var7 << 16) + var33 * var40 + '耀';
-          ceilingSpanEnd = Integer.MIN_VALUE;
-          ceilingSpanStart = Integer.MIN_VALUE;
-          floorSpanEnd = Integer.MIN_VALUE;
-          floorSpanStart = Integer.MIN_VALUE;
-          lastCeilingColumnX = Integer.MIN_VALUE;
-          lastFloorColumnX = Integer.MIN_VALUE;
-          short var42 = (short)var0.sectorId;
-          Sprite var43 = var0.floorTexture;
-          Sprite var44 = var0.ceilingTexture;
-          int var45 = var0.lightLevel = var0.getLightLevel();
-          long var46;
-          long var48 = (var46 = (long)(var8 - var14)) >> 16;
-          long var50 = (long)(var9 - var3 + 1 << 16) * (long)var14;
-          var0.floorOffsetX = var24 * 120 >> 16;
-          var0.ceilingOffsetX = var25 * 120 >> 16;
+        int startVertexIndex = wallSegment.startVertexIndex & 0xFFFF;
+        int endVertexIndex = wallSegment.endVertexIndex & 0xFFFF;
+        int textureOffset = wallSegment.textureOffset & 0xFFFF;
 
-          for(int var52 = var26; var52 <= var27; ++var52) {
-             if (var28[var52] < var29[var52]) {
-                int var59;
-                int var60;
-                label114: {
-                   long var53 = (long)(var52 - var3 << 16);
-                   long var55 = (long)var8 * var53;
-                   long var57 = var50 + var53 * var46;
-                   var59 = (int)(var55 / (var57 >> 16));
-                   var60 = (int)((long)var8 - var48 * (long)var59 >> 22);
-                   byte var10000;
-                   if ((var60 = gunFireLighting && var60 < 3 ? var45 + (4 >> var60) : var45 - var60) < 0) {
-                      var10000 = 0;
-                   } else {
-                      if (var60 <= 15) {
-                         break label114;
-                      }
+        if (clipAndProjectWallSegment(transformedVertices[startVertexIndex],
+                transformedVertices[endVertexIndex],
+                relativeCeilingHeight, relativeFloorHeight, textureOffset)) {
 
-                      var10000 = 15;
-                   }
+            Point2D screenStart = clippedWallStart;
+            Point2D screenEnd = clippedWallEnd;
 
-                   var60 = var10000;
-                }
+            int screenStartX = (screenStart.x + HALF_SCREEN_WIDTH_FP) >> 16;
+            int screenCeilingStartY = (projectedCeilingStart + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int screenEndX = (screenEnd.x + HALF_SCREEN_WIDTH_FP) >> 16;
+            int screenCeilingEndY = (projectedCeilingEnd + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int screenFloorStartY = (projectedFloorStart + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int screenFloorEndY = (projectedFloorEnd + HALF_SCREEN_HEIGHT_FP) >> 16;
 
-                int var61 = var35 >> 16;
-                int var62 = var37 >> 16;
-                int var63 = var39 >> 16;
-                int var64 = var41 >> 16;
-                int var65 = (int)((long)var59 * (long)var16 >> 16) + var15 >> 16;
-                if (var39 >= var41 && var44 != null) {
-                   updateCeilingSpan(var42, var52, var64 + 1, var25);
-                   if (var64 < var29[var52]) {
-                      var29[var52] = (short)var64;
-                   }
-                }
+            int wallHeight = sectorData.ceilingHeight - sectorData.floorHeight;
+            Texture wallTexture = LevelLoader.getTexture(surface.mainTextureId);
 
-                if (var43 == null) {
-                   drawSkyboxColumn(var52, 0, var61, var23);
-                }
+            int textureOffsetY = surface.textureOffsetY & 0xFFFF;
+            int adjustedTextureOffsetY = wallTexture.height - wallHeight + textureOffsetY;
+            if (!wallDef.isSecret()) {
+                adjustedTextureOffsetY = textureOffsetY;
+            }
 
-                label105: {
-                   int var10001;
-                   int var10002;
-                   short[] var66;
-                   if (var35 < var37) {
-                      drawWallTextureColumn(var1.getPixelRowFast(var65), var65 & 1, var1.colorPalettes[var60], var52, var61, var62, var17, var18, var30);
-                      if (var43 != null) {
-                         updateFloorSpan(var42, var52, var61, var24);
-                      }
+            wallDef.markAsRendered();
 
-                      if (var62 <= var28[var52] || var1 == LevelLoader.defaultErrorTexture) {
-                         break label105;
-                      }
+            int textureOffsetX = (surface.textureOffsetX & 0xFFFF) << 16;
 
-                      var66 = var28;
-                      var10001 = var52;
-                      var10002 = var62;
-                   } else {
-                      if (var43 == null) {
-                         break label105;
-                      }
-
-                      updateFloorSpan(var42, var52, var61, var24);
-                      if (var61 <= var28[var52]) {
-                         break label105;
-                      }
-
-                      var66 = var28;
-                      var10001 = var52;
-                      var10002 = var61;
-                   }
-
-                   var66[var10001] = (short)var10002;
-                }
-
-                if (var44 == null) {
-                   drawSkyboxColumn(var52, var64 + 1, 287, var23);
-                }
-
-                if (var39 < var41) {
-                   drawWallTextureColumn(var2.getPixelRowFast(var65), var65 & 1, var2.colorPalettes[var60], var52, var63, var64, var19, var20, var31);
-                   if (var44 != null) {
-                      updateCeilingSpan(var42, var52, var64 + 1, var25);
-                   }
-
-                   if (var63 < var29[var52] && var2 != LevelLoader.defaultErrorTexture) {
-                      var29[var52] = (short)var63;
-                   }
-                }
-             }
-
-             if (var37 == var39) {
-                var29[var52] = var28[var52];
-             }
-
-             var35 += var34;
-             var37 += var36;
-             var39 += var38;
-             var41 += var40;
-          }
-
-          short var67;
-          int var68;
-          if (ceilingSpanStart >= 0) {
-             var67 = (short) lastCeilingColumnX;
-
-             for(var68 = ceilingSpanStart; var68 <= ceilingSpanEnd; ++var68) {
-                renderUtils.addRenderSpan(depthBuffer[var68], var67, var42, var68);
-             }
-          }
-
-          if (floorSpanStart >= 0) {
-             var67 = (short) lastFloorColumnX;
-
-             for(var68 = floorSpanStart; var68 <= floorSpanEnd; ++var68) {
-                renderUtils.addRenderSpan(depthBuffer[var68], var67, var42, var68);
-             }
-          }
-
-       }
+            drawWallColumn(sectorData, wallTexture, wallTexture,
+                    screenStartX, screenCeilingStartY, screenFloorStartY, screenFloorStartY, screenFloorStartY, screenStart.y,
+                    screenEndX, screenCeilingEndY, screenFloorEndY, screenFloorEndY, screenFloorEndY, screenEnd.y,
+                    clippedTextureStartU + textureOffsetX, clippedTextureEndU - clippedTextureStartU,
+                    adjustedTextureOffsetY, wallHeight, adjustedTextureOffsetY, wallHeight,
+                    -cameraX, -cameraZ, viewAngle, relativeCeilingHeight, relativeFloorHeight);
+        }
     }
 
-    public static void drawFlatSurface(int var0, int var1, int var2, byte[] var3, int[][] var4, int var5, int var6, int var7, int var8, int var9, int var10) {
-       int var11;
-       int var14;
-       int var15;
-       label31: {
-          var11 = var2 * 240;
-          int var12;
-          int var13 = (var12 = var2 - 144) < 0 ? -reciprocalTable[-var12] : reciprocalTable[var12];
-          var15 = (var14 = var9 * var13 >> 8) >> 14;
-          byte var10000;
-          if ((var15 = gunFireLighting && var15 < 3 ? var5 + (4 >> var15) : var5 - var15) < 0) {
-             var10000 = 0;
-          } else {
-             if (var15 <= 15) {
-                break label31;
-             }
+    /**
+     * Renders a portal wall segment with upper and lower textures.
+     *
+     * @param wallSegment         The wall segment to render
+     * @param wallDef             Wall definition containing surface data
+     * @param frontSurface        Front-facing wall surface
+     * @param backSurface         Back-facing wall surface (portal target)
+     * @param transformedVertices Array of transformed vertex positions
+     * @param cameraX             Camera X position in fixed-point
+     * @param cameraY             Camera Y (height) position in fixed-point
+     * @param cameraZ             Camera Z position in fixed-point
+     * @param viewAngle           View angle multiplied by 2
+     */
+    private static void renderPortalWallSegment(WallSegment wallSegment, WallDefinition wallDef,
+                                                WallSurface frontSurface, WallSurface backSurface, Point2D[] transformedVertices,
+                                                int cameraX, int cameraY, int cameraZ, int viewAngle) {
 
-             var10000 = 15;
-          }
+        SectorData frontSector = frontSurface.linkedSector;
+        SectorData backSector = backSurface.linkedSector;
 
-          var15 = var10000;
-       }
+        int frontCeilingHeight = -cameraY + (-frontSector.ceilingHeight << 16);
+        int frontFloorHeight = -cameraY + (-frontSector.floorHeight << 16);
+        int backCeilingHeight = -cameraY + (-backSector.ceilingHeight << 16);
+        int backFloorHeight = -cameraY + (-backSector.floorHeight << 16);
 
-       int[] var16 = var4[var15];
-       int var17 = angleCorrectionTable[var0];
-       int var18 = angleCorrectionTable[var1];
-       int var19 = (var6 + (var7 * var17 >> 14)) * var14 - var8 >> 6;
-       int var20 = (var7 - (var6 * var17 >> 14)) * var14 - var10;
-       int var21 = (var18 - var17) * reciprocalTable[var1 - var0 + 1] >> 16;
-       int var22 = (var7 * var21 >> 14) * var14 >> 6;
-       int var23 = (-var6 * var21 >> 14) * var14;
-       var0 += var11;
-       var1 += var11;
-       int[] var24 = screenBuffer;
+        int startVertexIndex = wallSegment.startVertexIndex & 0xFFFF;
+        int endVertexIndex = wallSegment.endVertexIndex & 0xFFFF;
+        int textureOffset = wallSegment.textureOffset & 0xFFFF;
 
-       for(int var25 = var0; var25 <= var1; ++var25) {
-          var24[var25] = var16[var3[(var19 & 16515072) + (var20 & 1056964608) >> 18]];
-          var19 += var22;
-          var20 += var23;
-       }
+        if (clipAndProjectWallSegment(transformedVertices[startVertexIndex],
+                transformedVertices[endVertexIndex],
+                frontCeilingHeight, frontFloorHeight, textureOffset)) {
 
+            Point2D screenStart = clippedWallStart;
+            Point2D screenEnd = clippedWallEnd;
+
+            int screenStartX = (screenStart.x + HALF_SCREEN_WIDTH_FP) >> 16;
+            int frontCeilingStartY = (projectedCeilingStart + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int frontFloorStartY = (projectedFloorStart + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int screenEndX = (screenEnd.x + HALF_SCREEN_WIDTH_FP) >> 16;
+            int frontCeilingEndY = (projectedCeilingEnd + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int frontFloorEndY = (projectedFloorEnd + HALF_SCREEN_HEIGHT_FP) >> 16;
+
+            int backCeilingStartY = (MathUtils.fixedPointDivide(backCeilingHeight, screenStart.y) * 120 + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int backFloorStartY = (MathUtils.fixedPointDivide(backFloorHeight, screenStart.y) * 120 + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int backCeilingEndY = (MathUtils.fixedPointDivide(backCeilingHeight, screenEnd.y) * 120 + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int backFloorEndY = (MathUtils.fixedPointDivide(backFloorHeight, screenEnd.y) * 120 + HALF_SCREEN_HEIGHT_FP) >> 16;
+
+            int upperWallHeight = frontSector.ceilingHeight - backSector.ceilingHeight;
+            int lowerWallHeight = backSector.floorHeight - frontSector.floorHeight;
+
+            Texture upperTexture = LevelLoader.getTexture(frontSurface.upperTextureId);
+            Texture lowerTexture = LevelLoader.getTexture(frontSurface.lowerTextureId);
+
+            if (backSector.floorTextureId == 51) {
+                upperTexture = LevelLoader.defaultErrorTexture;
+            }
+            if (backSector.ceilingTextureId == 51) {
+                lowerTexture = LevelLoader.defaultErrorTexture;
+            }
+
+            int textureOffsetY = frontSurface.textureOffsetY & 0xFFFF;
+            int upperTextureOffset = upperTexture.height - upperWallHeight + textureOffsetY;
+            if (wallDef.isDoor()) {
+                upperTextureOffset = textureOffsetY;
+            }
+
+            int lowerTextureOffset = frontSector.ceilingHeight - backSector.floorHeight + textureOffsetY;
+            if (!wallDef.isSecret()) {
+                lowerTextureOffset = textureOffsetY;
+            }
+
+            wallDef.markAsRendered();
+
+            int textureOffsetX = (frontSurface.textureOffsetX & 0xFFFF) << 16;
+
+            drawWallColumn(frontSector, upperTexture, lowerTexture,
+                    screenStartX, frontCeilingStartY, backCeilingStartY, backFloorStartY, frontFloorStartY, screenStart.y,
+                    screenEndX, frontCeilingEndY, backCeilingEndY, backFloorEndY, frontFloorEndY, screenEnd.y,
+                    clippedTextureStartU + textureOffsetX, clippedTextureEndU - clippedTextureStartU,
+                    upperTextureOffset, upperWallHeight, lowerTextureOffset, lowerWallHeight,
+                    -cameraX, -cameraZ, viewAngle, frontCeilingHeight, frontFloorHeight);
+        }
     }
 
-    private static void updateCeilingSpan(short var0, int var1, int var2, int var3) {
-       short var4 = Sector.floorClip[var1];
-       short var5 = Sector.ceilingClip[var1];
-       if (var2 <= var5 && var2 > 144 && var3 > 0) {
-          int var6 = var2;
-          short var7 = var5;
-          if (var2 < var4) {
-             var6 = var4;
-          }
+    /**
+     * Renders a wall segment, dispatching to solid or portal rendering as appropriate.
+     *
+     * @param wallSegment         The wall segment to render
+     * @param transformedVertices Array of transformed vertex positions
+     * @param cameraX             Camera X position in fixed-point
+     * @param cameraY             Camera Y (height) position in fixed-point
+     * @param cameraZ             Camera Z position in fixed-point
+     * @param viewAngle           View angle multiplied by 2
+     */
+    private static void renderWallSegment(WallSegment wallSegment, Point2D[] transformedVertices,
+                                          int cameraX, int cameraY, int cameraZ, int viewAngle) {
 
-          short var8 = (short)var1;
-          short var9;
-          int var10;
-          if (lastCeilingColumnX == var1 - 1) {
-             var9 = (short) lastCeilingColumnX;
-             var10 = var6 > ceilingSpanEnd + 1 ? var6 : ceilingSpanEnd + 1;
-             int var11 = var5 < ceilingSpanStart - 1 ? var5 : ceilingSpanStart - 1;
-             int var12 = ceilingSpanStart > var5 + 1 ? ceilingSpanStart : var5 + 1;
-             int var13 = ceilingSpanEnd < var6 - 1 ? ceilingSpanEnd : var6 - 1;
+        WallDefinition wallDef = wallSegment.wallDefinition;
+        WallSurface frontSurface = wallDef.frontSurface;
+        WallSurface backSurface = wallDef.backSurface;
 
-             int var14;
-             for(var14 = var6; var14 <= var11; ++var14) {
-                depthBuffer[var14] = var8;
-             }
+        if (backSurface != null) {
+            if (wallSegment.isFrontFacing) {
+                renderPortalWallSegment(wallSegment, wallDef, frontSurface, backSurface,
+                        transformedVertices, cameraX, cameraY, cameraZ, viewAngle);
+            } else {
+                renderPortalWallSegment(wallSegment, wallDef, backSurface, frontSurface,
+                        transformedVertices, cameraX, cameraY, cameraZ, viewAngle);
+            }
+        } else if (wallSegment.isFrontFacing) {
+            renderSolidWallSegment(wallSegment, wallDef, frontSurface,
+                    transformedVertices, cameraX, cameraY, cameraZ, viewAngle);
+        } else {
+            throw new IllegalStateException();
+        }
+    }
 
-             for(var14 = var10; var14 <= var7; ++var14) {
-                depthBuffer[var14] = var8;
-             }
+    /**
+     * Renders all dynamic objects (sprites) within a sector.
+     *
+     * @param sector      The sector containing the objects
+     * @param cameraX     Camera X position
+     * @param cameraY     Camera Y (height) position
+     * @param cameraZ     Camera Z position
+     * @param sinAngle    Sine of view angle
+     * @param cosAngle    Cosine of view angle
+     */
+    private static void renderDynamicObjects(Sector sector, int cameraX, int cameraY, int cameraZ,
+                                             long sinAngle, long cosAngle) {
 
-             for(var14 = ceilingSpanStart; var14 <= var13; ++var14) {
-                renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
-             }
+        SectorData sectorData = sector.getSectorData();
+        Vector dynamicObjects = sector.dynamicObjects;
+        visibleObjectsCount = 0;
 
-             for(var14 = var12; var14 <= ceilingSpanEnd; ++var14) {
-                renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
-             }
-          } else {
-             if (ceilingSpanStart >= 0) {
-                var9 = (short) lastCeilingColumnX;
+        // Transform objects to view space and collect visible ones
+        for (int i = 0; i < dynamicObjects.size(); i++) {
+            GameObject gameObject = (GameObject)dynamicObjects.elementAt(i);
+            Transform3D transform = gameObject.transform;
 
-                for(var10 = ceilingSpanStart; var10 <= ceilingSpanEnd; ++var10) {
-                   renderUtils.addRenderSpan(depthBuffer[var10], var9, var0, var10);
+            int relativeX = transform.x - cameraX;
+            int relativeZ = transform.z - cameraZ;
+
+            gameObject.screenPos.x = (int)(cosAngle * (long)relativeX - sinAngle * (long)relativeZ >> 16);
+            gameObject.screenPos.y = (int)(sinAngle * (long)relativeX + cosAngle * (long)relativeZ >> 16);
+
+            if (gameObject.screenPos.y > NEAR_CLIP_DISTANCE) {
+                byte spriteIndex1 = gameObject.getCurrentSprite1();
+                byte spriteIndex2 = gameObject.getCurrentSprite2();
+
+                if (spriteIndex1 != 0 || spriteIndex2 != 0) {
+                    int objectHeight;
+
+                    // Ceiling-mounted objects
+                    if (gameObject.objectType >= 59 && gameObject.objectType <= 63) {
+                        objectHeight = -sectorData.ceilingHeight << 16;
+                    }
+                    // Floating objects
+                    else if (gameObject.objectType >= 100 && gameObject.objectType <= 102) {
+                        objectHeight = -gameObject.transform.y;
+                    }
+                    // Floor-based objects
+                    else {
+                        objectHeight = -sectorData.floorHeight << 16;
+                    }
+
+                    gameObject.screenHeight = objectHeight - cameraY;
+
+                    gameObject.texture1 = (spriteIndex1 != 0)
+                            ? LevelLoader.textureTable[spriteIndex1 + 128]
+                            : null;
+                    gameObject.texture2 = (spriteIndex2 != 0)
+                            ? LevelLoader.textureTable[spriteIndex2 + 128]
+                            : null;
+
+                    visibleGameObjects[visibleObjectsCount++] = gameObject;
+
+                    if (visibleObjectsCount >= 64) {
+                        break;
+                    }
                 }
-             }
+            }
+        }
 
-             for(int var15 = var6; var15 <= var7; ++var15) {
-                depthBuffer[var15] = var8;
-             }
-          }
+        // Sort objects by depth (insertion sort)
+        for (int i = 1; i < visibleObjectsCount; i++) {
+            GameObject currentObject = visibleGameObjects[i];
+            int insertPos = i;
 
-          lastCeilingColumnX = var1;
-          ceilingSpanStart = var6;
-          ceilingSpanEnd = var7;
-       }
-    }
+            while (insertPos > 0 && visibleGameObjects[insertPos - 1].compareDepth(currentObject)) {
+                visibleGameObjects[insertPos] = visibleGameObjects[insertPos - 1];
+                insertPos--;
+            }
 
-    private static void updateFloorSpan(short var0, int var1, int var2, int var3) {
-       short var4 = Sector.floorClip[var1];
-       short var5 = Sector.ceilingClip[var1];
-       if (var2 >= var4 && var2 < 144 && var3 < 0) {
-          int var7 = var2;
-          if (var2 > var5) {
-             var7 = var5;
-          }
+            visibleGameObjects[insertPos] = currentObject;
+        }
 
-          short var8 = (short)var1;
-          short var9;
-          int var10;
-          if (lastFloorColumnX == var1 - 1) {
-             var9 = (short) lastFloorColumnX;
-             var10 = var4 > floorSpanEnd + 1 ? var4 : floorSpanEnd + 1;
-             int var11 = var7 < floorSpanStart - 1 ? var7 : floorSpanStart - 1;
-             int var12 = floorSpanStart > var7 + 1 ? floorSpanStart : var7 + 1;
-             int var13 = floorSpanEnd < var4 - 1 ? floorSpanEnd : var4 - 1;
+        // Render sorted objects
+        for (int i = 0; i < visibleObjectsCount; i++) {
+            GameObject gameObject = visibleGameObjects[i];
 
-             int var14;
-             for(var14 = var4; var14 <= var11; ++var14) {
-                depthBuffer[var14] = var8;
-             }
+            if (gameObject.projectToScreen()) {
+                int lightLevel = sectorData.getLightLevel();
+                int screenX = (gameObject.screenPos.x >> 16) + 120;
+                int screenY = (gameObject.screenHeight >> 16) + 144;
+                int depth = gameObject.screenPos.y;
 
-             for(var14 = var10; var14 <= var7; ++var14) {
-                depthBuffer[var14] = var8;
-             }
-
-             for(var14 = floorSpanStart; var14 <= var13; ++var14) {
-                renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
-             }
-
-             for(var14 = var12; var14 <= floorSpanEnd; ++var14) {
-                renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
-             }
-          } else {
-             if (floorSpanStart >= 0) {
-                var9 = (short) lastFloorColumnX;
-
-                for(var10 = floorSpanStart; var10 <= floorSpanEnd; ++var10) {
-                   renderUtils.addRenderSpan(depthBuffer[var10], var9, var0, var10);
-                }
-             }
-
-             for(int var15 = var4; var15 <= var7; ++var15) {
-                depthBuffer[var15] = var8;
-             }
-          }
-
-          lastFloorColumnX = var1;
-          floorSpanStart = var4;
-          floorSpanEnd = var7;
-       }
-    }
-
-    private static void drawSpriteColumn(byte[] var0, int var1, int[] var2, int var3, int var4, int var5, int var6, int var7) {
-       short var8 = Sector.floorClip[var3];
-       short var9 = Sector.ceilingClip[var3];
-       if (var4 <= var9 && var5 >= var8) {
-          int var10 = var4;
-          int var11 = var5;
-          if (var5 > var9) {
-             var11 = var9;
-          }
-
-          if (var4 < var8) {
-             var10 = var8;
-          }
-
-          if (var10 < 0) {
-             var10 = 0;
-          }
-
-          if (var11 >= 288) {
-             var11 = 287;
-          }
-
-          if (var11 >= 0 && var10 < 288 && var5 > var4 && var6 <= var0.length) {
-             int var12 = var10 * 240 + var3;
-             int var13 = var11 * 240 + var3;
-             int var14 = (var14 = var5 - var4) > 288 ? (var7 << 16) / var14 : var7 * reciprocalTable[var14];
-             int var15 = (var10 - var4) * var14 + (var6 << 16);
-             int var16 = var0.length;
-             int[] var17 = screenBuffer;
-             int var18;
-             int var19;
-             int var20;
-             if (var1 == 0) {
-                for(var18 = var12; var18 <= var13; var18 += 240) {
-                   if ((var19 = var15 >>> 16) < var16 && (var20 = var0[var19] >> 4 & 15) != 0) {
-                      var17[var18] = var2[var20];
-                   }
-
-                   var15 += var14;
+                if (gameObject.texture2 != null) {
+                    gameObject.calculateSpriteSize2();
+                    drawSprite(gameObject.texture2, lightLevel, screenX, screenY,
+                            depth, gameObject.spriteWidth2, gameObject.spriteHeight2);
                 }
 
-             } else {
-                for(var18 = var12; var18 <= var13; var18 += 240) {
-                   if ((var19 = var15 >>> 16) < var16 && (var20 = var0[var19] & 15) != 0) {
-                      var17[var18] = var2[var20];
-                   }
+                if (gameObject.texture1 != null) {
+                    gameObject.calculateSpriteSize1();
+                    drawSprite(gameObject.texture1, lightLevel, screenX, screenY,
+                            depth, gameObject.spriteWidth1, gameObject.spriteHeight1);
+                }
+            }
+        }
+    }
 
-                   var15 += var14;
+    /**
+     * Main rendering function that draws the entire visible world.
+     *
+     * @param playerX     Player X position
+     * @param playerY     Player Y (height) position
+     * @param playerZ     Player Z position
+     * @param playerAngle Player view angle
+     */
+    static void renderWorld(int playerX, int playerY, int playerZ, int playerAngle) {
+        LevelLoader.gameWorld.toggleProjectileSprites();
+        Point2D[] transformedVertices = LevelLoader.gameWorld.transformVertices(playerX, playerZ, playerAngle);
+        LevelLoader.gameWorld.updateWorld();
+
+        BSPNode.visibleSectorsCount = 0;
+        LevelLoader.gameWorld.getRootBSPNode().traverseBSP(GameEngine.player,
+                LevelLoader.gameWorld.getSectorDataAtPoint(playerX, playerZ));
+
+        int cameraZFixed = playerZ << 8;
+        int cameraXFixed = playerX << 8;
+        int doubleAngle = playerAngle << 1;
+        int sinAngle = MathUtils.fastSin(playerAngle);
+        int cosAngle = MathUtils.fastCos(playerAngle);
+
+        gunFireLighting = MainGameCanvas.weaponSpriteFrame == 1 && GameEngine.currentWeapon != 0;
+
+        renderUtils.resetRenderer();
+        Sector.resetClipArrays();
+
+        // Render walls for each visible sector
+        for (int sectorIndex = 0; sectorIndex < BSPNode.visibleSectorsCount; sectorIndex++) {
+            Sector currentSector = BSPNode.visibleSectorsList[sectorIndex];
+
+            if (sectorIndex > 0 && Sector.isRenderComplete()) {
+                BSPNode.visibleSectorsCount = sectorIndex;
+                break;
+            }
+
+            // Expand clip history if needed
+            if (sectorIndex >= floorClipHistory.size()) {
+                short[] floorClipCopy = new short[240];
+                short[] ceilingClipCopy = new short[240];
+                floorClipHistory.addElement(floorClipCopy);
+                ceilingClipHistory.addElement(ceilingClipCopy);
+            }
+
+            // Save current clip state
+            System.arraycopy(Sector.floorClip, 0,
+                    (short[])floorClipHistory.elementAt(sectorIndex), 0, 240);
+            System.arraycopy(Sector.ceilingClip, 0,
+                    (short[])ceilingClipHistory.elementAt(sectorIndex), 0, 240);
+
+            // Render all walls in sector
+            WallSegment[] walls = currentSector.walls;
+            for (int wallIndex = 0; wallIndex < walls.length; wallIndex++) {
+                renderWallSegment(walls[wallIndex], transformedVertices,
+                        cameraXFixed, playerY, cameraZFixed, doubleAngle);
+            }
+        }
+
+        // Render floor and ceiling spans
+        renderUtils.renderAllSpans(sinAngle, cosAngle, -cameraXFixed, -cameraZFixed);
+
+        // Render dynamic objects in back-to-front order
+        for (int sectorIndex = BSPNode.visibleSectorsCount - 1; sectorIndex >= 0; sectorIndex--) {
+            Sector currentSector = BSPNode.visibleSectorsList[sectorIndex];
+
+            // Restore clip state for this sector
+            System.arraycopy(floorClipHistory.elementAt(sectorIndex), 0,
+                    Sector.floorClip, 0, 240);
+            System.arraycopy(ceilingClipHistory.elementAt(sectorIndex), 0,
+                    Sector.ceilingClip, 0, 240);
+
+            renderDynamicObjects(currentSector, playerX, playerY, playerZ,
+                    (long)sinAngle, (long)cosAngle);
+        }
+    }
+
+    /**
+     * Sets the texture to use for skybox rendering.
+     *
+     * @param texture The skybox texture
+     */
+    static void setSkyboxTexture(Texture texture) {
+        skyboxTexture = texture;
+    }
+
+    /**
+     * Draws a sprite at the specified screen position.
+     *
+     * @param texture     The sprite texture
+     * @param lightLevel  Sector light level
+     * @param screenX     Screen X position (center)
+     * @param screenY     Screen Y position (bottom)
+     * @param depth       Depth value for lighting calculation
+     * @param spriteWidth Rendered sprite width
+     * @param spriteHeight Rendered sprite height
+     */
+    private static void drawSprite(Texture texture, int lightLevel, int screenX, int screenY,
+                                   int depth, int spriteWidth, int spriteHeight) {
+
+        // Apply horizontal offset
+        if (texture.horizontalOffset > 0) {
+            screenX = screenX - texture.horizontalOffset * spriteWidth / texture.width;
+        } else if (texture.horizontalOffset < 0) {
+            screenX = screenX + texture.horizontalOffset;
+        }
+
+        // Apply vertical offset
+        if (texture.verticalOffset > 0) {
+            screenY = screenY - texture.verticalOffset * spriteHeight / texture.height;
+        } else if (texture.verticalOffset < 0) {
+            screenY = screenY + texture.verticalOffset;
+        }
+
+        int clipLeft = 0;
+        int clipRight = spriteWidth;
+
+        // Check horizontal visibility
+        if (screenX >= 240 || screenX + spriteWidth < 0) {
+            return;
+        }
+
+        // Clip to screen bounds
+        if (screenX < 0) {
+            clipLeft = -screenX;
+        }
+        if (screenX + spriteWidth >= 240) {
+            clipRight = 239 - screenX;
+        }
+
+        short textureWidth = texture.width;
+        short textureHeight = texture.height;
+        int textureStepU = (textureWidth << 16) / (spriteWidth + 1);
+        int textureU = clipLeft * textureStepU;
+        int textureColumn = textureU >>> 16;
+
+        // Calculate light level with depth attenuation
+        int depthFactor = depth >> 22;
+        int effectiveLightLevel;
+        if (gunFireLighting && depthFactor < 3) {
+            effectiveLightLevel = lightLevel + (4 >> depthFactor);
+        } else {
+            effectiveLightLevel = lightLevel - depthFactor;
+        }
+        effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
+
+        int[] colorPalette = texture.colorPalettes[effectiveLightLevel];
+        int bottomY = screenY + spriteHeight;
+
+        for (int column = clipLeft; column <= clipRight; column++) {
+            drawSpriteColumn(texture.getPixelRow(textureColumn), textureColumn & 1, colorPalette,
+                    column + screenX, screenY, bottomY, 0, textureHeight);
+            textureU += textureStepU;
+            textureColumn = textureU >>> 16;
+        }
+    }
+
+    /**
+     * Draws wall columns with upper and lower textures, handling portal visibility.
+     *
+     * @param sectorData          Sector data for lighting and floor/ceiling rendering
+     * @param upperTexture        Upper wall texture (above portal)
+     * @param lowerTexture        Lower wall texture (below portal)
+     * @param startX              Screen X start position
+     * @param ceilingStartY       Ceiling Y at start
+     * @param upperBottomStartY   Upper wall bottom Y at start
+     * @param lowerTopStartY      Lower wall top Y at start
+     * @param floorStartY         Floor Y at start
+     * @param startDepth          Depth at start
+     * @param endX                Screen X end position
+     * @param ceilingEndY         Ceiling Y at end
+     * @param upperBottomEndY     Upper wall bottom Y at end
+     * @param lowerTopEndY        Lower wall top Y at end
+     * @param floorEndY           Floor Y at end
+     * @param endDepth            Depth at end
+     * @param textureStartU       Texture U at start
+     * @param textureRangeU       Texture U range
+     * @param upperTextureOffsetV Upper texture V offset
+     * @param upperWallHeight     Upper wall height in texels
+     * @param lowerTextureOffsetV Lower texture V offset
+     * @param lowerWallHeight     Lower wall height in texels
+     * @param cameraX             Camera X position
+     * @param cameraZ             Camera Z position
+     * @param viewAngle           View angle
+     * @param relativeCeiling     Relative ceiling height
+     * @param relativeFloor       Relative floor height
+     */
+    private static void drawWallColumn(SectorData sectorData, Texture upperTexture, Texture lowerTexture,
+                                       int startX, int ceilingStartY, int upperBottomStartY, int lowerTopStartY, int floorStartY, int startDepth,
+                                       int endX, int ceilingEndY, int upperBottomEndY, int lowerTopEndY, int floorEndY, int endDepth,
+                                       int textureStartU, int textureRangeU,
+                                       int upperTextureOffsetV, int upperWallHeight, int lowerTextureOffsetV, int lowerWallHeight,
+                                       int cameraX, int cameraZ, int viewAngle, int relativeCeiling, int relativeFloor) {
+
+        int clippedStartX = startX;
+        int clippedEndX = endX;
+
+        if (startX >= 240 || endX < 0) {
+            return;
+        }
+
+        short[] floorClip = Sector.floorClip;
+        short[] ceilingClip = Sector.ceilingClip;
+
+        if (startX < 0) {
+            clippedStartX = 0;
+        }
+        if (endX >= 240) {
+            clippedEndX = 239;
+        }
+
+        short upperTextureHeight = upperTexture.height;
+        short lowerTextureHeight = lowerTexture.height;
+
+        int columnCount = endX - startX + 1;
+        int columnOffset = clippedStartX - startX;
+
+        // Calculate interpolation steps
+        int ceilingYStep = ((ceilingEndY - ceilingStartY) << 16) / columnCount;
+        int ceilingY = (ceilingStartY << 16) + columnOffset * ceilingYStep + FP_HALF;
+
+        int upperBottomYStep = ((upperBottomEndY - upperBottomStartY) << 16) / columnCount;
+        int upperBottomY = (upperBottomStartY << 16) + columnOffset * upperBottomYStep + FP_HALF;
+
+        int lowerTopYStep = ((lowerTopEndY - lowerTopStartY) << 16) / columnCount;
+        int lowerTopY = (lowerTopStartY << 16) + columnOffset * lowerTopYStep + FP_HALF;
+
+        int floorYStep = ((floorEndY - floorStartY) << 16) / columnCount;
+        int floorY = (floorStartY << 16) + columnOffset * floorYStep + FP_HALF;
+
+        // Reset span tracking
+        ceilingSpanEnd = Integer.MIN_VALUE;
+        ceilingSpanStart = Integer.MIN_VALUE;
+        floorSpanEnd = Integer.MIN_VALUE;
+        floorSpanStart = Integer.MIN_VALUE;
+        lastCeilingColumnX = Integer.MIN_VALUE;
+        lastFloorColumnX = Integer.MIN_VALUE;
+
+        short sectorId = (short)sectorData.sectorId;
+        Sprite floorTexture = sectorData.floorTexture;
+        Sprite ceilingTexture = sectorData.ceilingTexture;
+        int lightLevel = sectorData.lightLevel = sectorData.getLightLevel();
+
+        // Depth interpolation for perspective-correct texturing
+        long depthRange = (long)(startDepth - endDepth);
+        long depthRangeShifted = depthRange >> 16;
+        long depthDenominator = (long)(endX - startX + 1 << 16) * (long)endDepth;
+
+        sectorData.floorOffsetX = relativeCeiling * 120 >> 16;
+        sectorData.ceilingOffsetX = relativeFloor * 120 >> 16;
+
+        for (int column = clippedStartX; column <= clippedEndX; column++) {
+            if (floorClip[column] < ceilingClip[column]) {
+                // Calculate perspective-correct texture coordinate
+                long columnOffset64 = (long)(column - startX << 16);
+                long depthNumerator = (long)startDepth * columnOffset64;
+                long depthTotal = depthDenominator + columnOffset64 * depthRange;
+                int textureU = (int)(depthNumerator / (depthTotal >> 16));
+
+                // Calculate light level with depth attenuation
+                int depthFactor = (int)((long)startDepth - depthRangeShifted * (long)textureU >> 22);
+                int effectiveLightLevel;
+                if (gunFireLighting && depthFactor < 3) {
+                    effectiveLightLevel = lightLevel + (4 >> depthFactor);
+                } else {
+                    effectiveLightLevel = lightLevel - depthFactor;
+                }
+                effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
+
+                int screenCeilingY = ceilingY >> 16;
+                int screenUpperBottomY = upperBottomY >> 16;
+                int screenLowerTopY = lowerTopY >> 16;
+                int screenFloorY = floorY >> 16;
+
+                int textureColumn = ((int)((long)textureU * (long)textureRangeU >> 16) + textureStartU) >> 16;
+
+                // Update ceiling span if portal exists
+                if (lowerTopY >= floorY && ceilingTexture != null) {
+                    updateCeilingSpan(sectorId, column, screenFloorY + 1, relativeFloor);
+                    if (screenFloorY < ceilingClip[column]) {
+                        ceilingClip[column] = (short)screenFloorY;
+                    }
                 }
 
-             }
-          }
-       }
+                // Draw skybox for floor if no floor texture
+                if (floorTexture == null) {
+                    drawSkyboxColumn(column, 0, screenCeilingY, viewAngle);
+                }
+
+                // Draw upper wall or update floor span
+                if (ceilingY < upperBottomY) {
+                    drawWallTextureColumn(upperTexture.getPixelRowFast(textureColumn), textureColumn & 1,
+                            upperTexture.colorPalettes[effectiveLightLevel], column,
+                            screenCeilingY, screenUpperBottomY, upperTextureOffsetV, upperWallHeight, upperTextureHeight);
+
+                    if (floorTexture != null) {
+                        updateFloorSpan(sectorId, column, screenCeilingY, relativeCeiling);
+                    }
+
+                    if (screenUpperBottomY > floorClip[column] && upperTexture != LevelLoader.defaultErrorTexture) {
+                        floorClip[column] = (short)screenUpperBottomY;
+                    }
+                } else if (floorTexture != null) {
+                    updateFloorSpan(sectorId, column, screenCeilingY, relativeCeiling);
+                    if (screenCeilingY > floorClip[column]) {
+                        floorClip[column] = (short)screenCeilingY;
+                    }
+                }
+
+                // Draw skybox for ceiling if no ceiling texture
+                if (ceilingTexture == null) {
+                    drawSkyboxColumn(column, screenFloorY + 1, 287, viewAngle);
+                }
+
+                // Draw lower wall
+                if (lowerTopY < floorY) {
+                    drawWallTextureColumn(lowerTexture.getPixelRowFast(textureColumn), textureColumn & 1,
+                            lowerTexture.colorPalettes[effectiveLightLevel], column,
+                            screenLowerTopY, screenFloorY, lowerTextureOffsetV, lowerWallHeight, lowerTextureHeight);
+
+                    if (ceilingTexture != null) {
+                        updateCeilingSpan(sectorId, column, screenFloorY + 1, relativeFloor);
+                    }
+
+                    if (screenLowerTopY < ceilingClip[column] && lowerTexture != LevelLoader.defaultErrorTexture) {
+                        ceilingClip[column] = (short)screenLowerTopY;
+                    }
+                }
+            }
+
+            // Close portal if upper and lower walls meet
+            if (upperBottomY == lowerTopY) {
+                ceilingClip[column] = floorClip[column];
+            }
+
+            // Step interpolants
+            ceilingY += ceilingYStep;
+            upperBottomY += upperBottomYStep;
+            lowerTopY += lowerTopYStep;
+            floorY += floorYStep;
+        }
+
+        // Flush remaining ceiling spans
+        if (ceilingSpanStart >= 0) {
+            short lastColumnX = (short)lastCeilingColumnX;
+            for (int row = ceilingSpanStart; row <= ceilingSpanEnd; row++) {
+                renderUtils.addRenderSpan(depthBuffer[row], lastColumnX, sectorId, row);
+            }
+        }
+
+        // Flush remaining floor spans
+        if (floorSpanStart >= 0) {
+            short lastColumnX = (short)lastFloorColumnX;
+            for (int row = floorSpanStart; row <= floorSpanEnd; row++) {
+                renderUtils.addRenderSpan(depthBuffer[row], lastColumnX, sectorId, row);
+            }
+        }
     }
 
-    private static void drawWallTextureColumn(byte[] var0, int var1, int[] var2, int var3, int var4, int var5, int var6, int var7, int var8) {
-       short var9 = Sector.floorClip[var3];
-       short var10 = Sector.ceilingClip[var3];
-       if (var5 >= var9 && var4 <= var10) {
-          int var11 = var4;
-          int var12 = var5;
-          if (var4 < var9) {
-             var11 = var9;
-          }
+    /**
+     * Draws a horizontal span of floor or ceiling texture.
+     *
+     * @param startColumn   Start column (X) of the span
+     * @param endColumn     End column (X) of the span
+     * @param row           Row (Y) of the span
+     * @param texturePixels Texture pixel data
+     * @param colorPalettes Color palettes for different light levels
+     * @param lightLevel    Base light level
+     * @param sinAngle      Sine of view angle
+     * @param cosAngle      Cosine of view angle
+     * @param cameraX       Camera X position
+     * @param heightOffset  Height offset for perspective
+     * @param cameraZ       Camera Z position
+     */
+    public static void drawFlatSurface(int startColumn, int endColumn, int row, byte[] texturePixels,
+                                       int[][] colorPalettes, int lightLevel, int sinAngle, int cosAngle,
+                                       int cameraX, int heightOffset, int cameraZ) {
 
-          if (var5 > var10) {
-             var12 = var10;
-          }
+        int rowOffset = row * 240;
+        int rowFromCenter = row - 144;
+        int perspectiveFactor = rowFromCenter < 0 ? -reciprocalTable[-rowFromCenter] : reciprocalTable[rowFromCenter];
+        int scaledPerspective = (heightOffset * perspectiveFactor) >> 8;
 
-          int var13 = var11 * 240 + var3;
-          int var14 = var12 * 240 + var3;
-          int var15 = (var15 = var5 - var4) > 288 ? (var7 - 1 << 16) / var15 : (var7 - 1) * reciprocalTable[var15];
-          int var16 = var8 - 1;
-          int var17 = (var11 - var4) * var15 + ((var6 & var16) << 16);
-          int[] var18 = screenBuffer;
-          int var19;
-          switch(var8 + var1) {
-          case 16:
-             for(var19 = var13; var19 <= var14; var19 += 240) {
-                var18[var19] = var2[var0[(var17 & 983040) >> 16] >> 4 & 15];
-                var17 += var15;
-             }
+        // Calculate light level with distance attenuation
+        int depthFactor = scaledPerspective >> 14;
+        int effectiveLightLevel;
+        if (gunFireLighting && depthFactor < 3) {
+            effectiveLightLevel = lightLevel + (4 >> depthFactor);
+        } else {
+            effectiveLightLevel = lightLevel - depthFactor;
+        }
+        effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
 
-             return;
-          case 17:
-             for(var19 = var13; var19 <= var14; var19 += 240) {
-                var18[var19] = var2[var0[(var17 & 983040) >> 16] & 15];
-                var17 += var15;
-             }
+        int[] colorPalette = colorPalettes[effectiveLightLevel];
 
-             return;
-          case 64:
-             for(var19 = var13; var19 <= var14; var19 += 240) {
-                var18[var19] = var2[var0[(var17 & 4128768) >> 16] >> 4 & 15];
-                var17 += var15;
-             }
+        int startAngle = angleCorrectionTable[startColumn];
+        int endAngle = angleCorrectionTable[endColumn];
 
-             return;
-          case 65:
-             for(var19 = var13; var19 <= var14; var19 += 240) {
-                var18[var19] = var2[var0[(var17 & 4128768) >> 16] & 15];
-                var17 += var15;
-             }
+        int textureU = ((sinAngle + (cosAngle * startAngle >> 14)) * scaledPerspective - cameraX) >> 6;
+        int textureV = (cosAngle - (sinAngle * startAngle >> 14)) * scaledPerspective - cameraZ;
 
-             return;
-          case 128:
-             for(var19 = var13; var19 <= var14; var19 += 240) {
-                var18[var19] = var2[var0[(var17 & 8323072) >> 16] >> 4 & 15];
-                var17 += var15;
-             }
+        int angleDelta = (endAngle - startAngle) * reciprocalTable[endColumn - startColumn + 1] >> 16;
+        int textureStepU = ((cosAngle * angleDelta >> 14) * scaledPerspective) >> 6;
+        int textureStepV = ((-sinAngle * angleDelta >> 14) * scaledPerspective);
 
-             return;
-          case 129:
-             for(var19 = var13; var19 <= var14; var19 += 240) {
-                var18[var19] = var2[var0[(var17 & 8323072) >> 16] & 15];
-                var17 += var15;
-             }
-          default:
-          }
-       }
+        int startPixelIndex = startColumn + rowOffset;
+        int endPixelIndex = endColumn + rowOffset;
+        int[] buffer = screenBuffer;
+
+        for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex++) {
+            buffer[pixelIndex] = colorPalette[texturePixels[(textureU & 16515072) + (textureV & 1056964608) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+        }
     }
 
-    private static void drawSkyboxColumn(int var0, int var1, int var2, int var3) {
-       short var4 = Sector.floorClip[var0];
-       short var5 = Sector.ceilingClip[var0];
-       int var6 = var1;
-       int var7 = var2;
-       if (var1 < var4) {
-          var6 = var4;
-       }
+    /**
+     * Updates the ceiling span tracking for span-based rendering.
+     *
+     * @param sectorId   Current sector ID
+     * @param column     Current column (X)
+     * @param topY       Top Y of the visible ceiling area
+     * @param heightOffset Height offset for rendering
+     */
+    private static void updateCeilingSpan(short sectorId, int column, int topY, int heightOffset) {
+        short floorClipY = Sector.floorClip[column];
+        short ceilingClipY = Sector.ceilingClip[column];
 
-       if (var2 > var5) {
-          var7 = var5;
-       }
+        if (topY > ceilingClipY || topY <= 144 || heightOffset <= 0) {
+            return;
+        }
 
-       int var8;
-       int var9 = MathUtils.fastCos(var8 = MathUtils.fixedPointMultiply(var0 - 120 << 16, skyboxAngleFactor));
-       int var10 = MathUtils.fixedPointMultiply(var0 - 120, skyboxScaleX);
-       int var11 = MathUtils.fastSin(var8);
-       int var13 = MathUtils.fixedPointMultiply(MathUtils.fixedPointMultiply(102943, var11 + MathUtils.fixedPointMultiply(var9, var10)) + var3, skyboxOffsetFactor) >> 8;
-       byte[] var14 = skyboxTexture.getPixelRowFast(var13);
-       int[] var15 = skyboxTexture.colorPalettes[8];
-       int var16 = var6 * 240 + var0;
-       int var17 = var7 * 240 + var0;
-       int var18;
-       int var19 = -(var18 = MathUtils.fixedPointMultiply(var9 * 200, skyboxScaleY)) * (144 - var6) + 6553600;
-       int[] var20 = screenBuffer;
-       int var21;
-       if ((var13 & 1) == 0) {
-          for(var21 = var16; var21 <= var17; var21 += 240) {
-             var20[var21] = var15[var14[var19 >> 16 & 127] >> 4 & 15];
-             var19 += var18;
-          }
+        int clippedTopY = topY;
+        short bottomY = ceilingClipY;
 
-       } else {
-          for(var21 = var16; var21 <= var17; var21 += 240) {
-             var20[var21] = var15[var14[var19 >> 16 & 127] & 15];
-             var19 += var18;
-          }
+        if (topY < floorClipY) {
+            clippedTopY = floorClipY;
+        }
 
-       }
+        short columnShort = (short)column;
+
+        if (lastCeilingColumnX == column - 1) {
+            // Continue existing span
+            short prevColumnX = (short)lastCeilingColumnX;
+            int newSpanStart = clippedTopY > ceilingSpanEnd + 1 ? clippedTopY : ceilingSpanEnd + 1;
+            int extendedBottom = ceilingClipY < ceilingSpanStart - 1 ? ceilingClipY : ceilingSpanStart - 1;
+            int trimmedStart = ceilingSpanStart > ceilingClipY + 1 ? ceilingSpanStart : ceilingClipY + 1;
+            int trimmedEnd = ceilingSpanEnd < clippedTopY - 1 ? ceilingSpanEnd : clippedTopY - 1;
+
+            // Add new rows to depth buffer
+            for (int row = clippedTopY; row <= extendedBottom; row++) {
+                depthBuffer[row] = columnShort;
+            }
+            for (int row = newSpanStart; row <= bottomY; row++) {
+                depthBuffer[row] = columnShort;
+            }
+
+            // Flush completed span rows
+            for (int row = ceilingSpanStart; row <= trimmedEnd; row++) {
+                renderUtils.addRenderSpan(depthBuffer[row], prevColumnX, sectorId, row);
+            }
+            for (int row = trimmedStart; row <= ceilingSpanEnd; row++) {
+                renderUtils.addRenderSpan(depthBuffer[row], prevColumnX, sectorId, row);
+            }
+        } else {
+            // Start new span
+            if (ceilingSpanStart >= 0) {
+                short prevColumnX = (short)lastCeilingColumnX;
+                for (int row = ceilingSpanStart; row <= ceilingSpanEnd; row++) {
+                    renderUtils.addRenderSpan(depthBuffer[row], prevColumnX, sectorId, row);
+                }
+            }
+
+            for (int row = clippedTopY; row <= bottomY; row++) {
+                depthBuffer[row] = columnShort;
+            }
+        }
+
+        lastCeilingColumnX = column;
+        ceilingSpanStart = clippedTopY;
+        ceilingSpanEnd = bottomY;
+    }
+
+    /**
+     * Updates the floor span tracking for span-based rendering.
+     *
+     * @param sectorId   Current sector ID
+     * @param column     Current column (X)
+     * @param bottomY    Bottom Y of the visible floor area
+     * @param heightOffset Height offset for rendering
+     */
+    private static void updateFloorSpan(short sectorId, int column, int bottomY, int heightOffset) {
+        short floorClipY = Sector.floorClip[column];
+        short ceilingClipY = Sector.ceilingClip[column];
+
+        if (bottomY < floorClipY || bottomY >= 144 || heightOffset >= 0) {
+            return;
+        }
+
+        int clippedBottomY = bottomY;
+        if (bottomY > ceilingClipY) {
+            clippedBottomY = ceilingClipY;
+        }
+
+        short columnShort = (short)column;
+
+        if (lastFloorColumnX == column - 1) {
+            // Continue existing span
+            short prevColumnX = (short)lastFloorColumnX;
+            int newSpanStart = floorClipY > floorSpanEnd + 1 ? floorClipY : floorSpanEnd + 1;
+            int extendedTop = clippedBottomY < floorSpanStart - 1 ? clippedBottomY : floorSpanStart - 1;
+            int trimmedStart = floorSpanStart > clippedBottomY + 1 ? floorSpanStart : clippedBottomY + 1;
+            int trimmedEnd = floorSpanEnd < floorClipY - 1 ? floorSpanEnd : floorClipY - 1;
+
+            // Add new rows to depth buffer
+            for (int row = floorClipY; row <= extendedTop; row++) {
+                depthBuffer[row] = columnShort;
+            }
+            for (int row = newSpanStart; row <= clippedBottomY; row++) {
+                depthBuffer[row] = columnShort;
+            }
+
+            // Flush completed span rows
+            for (int row = floorSpanStart; row <= trimmedEnd; row++) {
+                renderUtils.addRenderSpan(depthBuffer[row], prevColumnX, sectorId, row);
+            }
+            for (int row = trimmedStart; row <= floorSpanEnd; row++) {
+                renderUtils.addRenderSpan(depthBuffer[row], prevColumnX, sectorId, row);
+            }
+        } else {
+            // Start new span
+            if (floorSpanStart >= 0) {
+                short prevColumnX = (short)lastFloorColumnX;
+                for (int row = floorSpanStart; row <= floorSpanEnd; row++) {
+                    renderUtils.addRenderSpan(depthBuffer[row], prevColumnX, sectorId, row);
+                }
+            }
+
+            for (int row = floorClipY; row <= clippedBottomY; row++) {
+                depthBuffer[row] = columnShort;
+            }
+        }
+
+        lastFloorColumnX = column;
+        floorSpanStart = floorClipY;
+        floorSpanEnd = clippedBottomY;
+    }
+
+    /**
+     * Draws a single vertical column of a sprite with transparency.
+     *
+     * @param pixelData    Packed pixel data (2 pixels per byte)
+     * @param pixelNibble  Which nibble to read (0 = high, 1 = low)
+     * @param colorPalette Color palette for the sprite
+     * @param column       Screen column (X)
+     * @param topY         Top Y of sprite column
+     * @param bottomY      Bottom Y of sprite column
+     * @param textureStartV Starting V coordinate in texture
+     * @param textureHeight Texture height for scaling
+     */
+    private static void drawSpriteColumn(byte[] pixelData, int pixelNibble, int[] colorPalette,
+                                         int column, int topY, int bottomY, int textureStartV, int textureHeight) {
+
+        short floorClipY = Sector.floorClip[column];
+        short ceilingClipY = Sector.ceilingClip[column];
+
+        if (topY > ceilingClipY || bottomY < floorClipY) {
+            return;
+        }
+
+        int clippedTopY = topY;
+        int clippedBottomY = bottomY;
+
+        if (bottomY > ceilingClipY) {
+            clippedBottomY = ceilingClipY;
+        }
+        if (topY < floorClipY) {
+            clippedTopY = floorClipY;
+        }
+        if (clippedTopY < 0) {
+            clippedTopY = 0;
+        }
+        if (clippedBottomY >= 288) {
+            clippedBottomY = 287;
+        }
+
+        if (clippedBottomY < 0 || clippedTopY >= 288 || bottomY <= topY || textureStartV > pixelData.length) {
+            return;
+        }
+
+        int startPixelIndex = clippedTopY * 240 + column;
+        int endPixelIndex = clippedBottomY * 240 + column;
+
+        int columnHeight = bottomY - topY;
+        int textureStepV = columnHeight > 288
+                ? (textureHeight << 16) / columnHeight
+                : textureHeight * reciprocalTable[columnHeight];
+
+        int textureV = (clippedTopY - topY) * textureStepV + (textureStartV << 16);
+        int pixelDataLength = pixelData.length;
+        int[] buffer = screenBuffer;
+
+        if (pixelNibble == 0) {
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                int texelIndex = textureV >>> 16;
+                if (texelIndex < pixelDataLength) {
+                    int colorIndex = (pixelData[texelIndex] >> 4) & 15;
+                    if (colorIndex != 0) {
+                        buffer[pixelIndex] = colorPalette[colorIndex];
+                    }
+                }
+                textureV += textureStepV;
+            }
+        } else {
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                int texelIndex = textureV >>> 16;
+                if (texelIndex < pixelDataLength) {
+                    int colorIndex = pixelData[texelIndex] & 15;
+                    if (colorIndex != 0) {
+                        buffer[pixelIndex] = colorPalette[colorIndex];
+                    }
+                }
+                textureV += textureStepV;
+            }
+        }
+    }
+
+    /**
+     * Draws a single vertical column of wall texture (no transparency).
+     *
+     * @param pixelData     Packed pixel data (2 pixels per byte)
+     * @param pixelNibble   Which nibble to read (0 = high, 1 = low)
+     * @param colorPalette  Color palette for the texture
+     * @param column        Screen column (X)
+     * @param topY          Top Y of wall column
+     * @param bottomY       Bottom Y of wall column
+     * @param textureOffsetV Texture V offset
+     * @param wallHeight    Wall height in texels
+     * @param textureHeight Texture height for masking
+     */
+    private static void drawWallTextureColumn(byte[] pixelData, int pixelNibble, int[] colorPalette,
+                                              int column, int topY, int bottomY, int textureOffsetV, int wallHeight, int textureHeight) {
+
+        short floorClipY = Sector.floorClip[column];
+        short ceilingClipY = Sector.ceilingClip[column];
+
+        if (bottomY < floorClipY || topY > ceilingClipY) {
+            return;
+        }
+
+        int clippedTopY = topY;
+        int clippedBottomY = bottomY;
+
+        if (topY < floorClipY) {
+            clippedTopY = floorClipY;
+        }
+        if (bottomY > ceilingClipY) {
+            clippedBottomY = ceilingClipY;
+        }
+
+        int startPixelIndex = clippedTopY * 240 + column;
+        int endPixelIndex = clippedBottomY * 240 + column;
+
+        int columnHeight = bottomY - topY;
+        int textureStepV = columnHeight > 288
+                ? ((wallHeight - 1) << 16) / columnHeight
+                : (wallHeight - 1) * reciprocalTable[columnHeight];
+
+        int textureMask = textureHeight - 1;
+        int textureV = (clippedTopY - topY) * textureStepV + ((textureOffsetV & textureMask) << 16);
+        int[] buffer = screenBuffer;
+
+        // Optimized loops for common texture heights
+        switch (textureHeight + pixelNibble) {
+            case 16: // Height 16, high nibble
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                    buffer[pixelIndex] = colorPalette[(pixelData[(textureV & 0xF0000) >> 16] >> 4) & 15];
+                    textureV += textureStepV;
+                }
+                return;
+
+            case 17: // Height 16, low nibble
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                    buffer[pixelIndex] = colorPalette[pixelData[(textureV & 0xF0000) >> 16] & 15];
+                    textureV += textureStepV;
+                }
+                return;
+
+            case 64: // Height 64, high nibble
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                    buffer[pixelIndex] = colorPalette[(pixelData[(textureV & 0x3F0000) >> 16] >> 4) & 15];
+                    textureV += textureStepV;
+                }
+                return;
+
+            case 65: // Height 64, low nibble
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                    buffer[pixelIndex] = colorPalette[pixelData[(textureV & 0x3F0000) >> 16] & 15];
+                    textureV += textureStepV;
+                }
+                return;
+
+            case 128: // Height 128, high nibble
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                    buffer[pixelIndex] = colorPalette[(pixelData[(textureV & 0x7F0000) >> 16] >> 4) & 15];
+                    textureV += textureStepV;
+                }
+                return;
+
+            case 129: // Height 128, low nibble
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                    buffer[pixelIndex] = colorPalette[pixelData[(textureV & 0x7F0000) >> 16] & 15];
+                    textureV += textureStepV;
+                }
+                return;
+
+            default:
+                // Generic case - should not normally be reached
+                return;
+        }
+    }
+
+    /**
+     * Draws a single vertical column of skybox texture.
+     *
+     * @param column    Screen column (X)
+     * @param topY      Top Y of column
+     * @param bottomY   Bottom Y of column
+     * @param viewAngle Current view angle
+     */
+    private static void drawSkyboxColumn(int column, int topY, int bottomY, int viewAngle) {
+        short floorClipY = Sector.floorClip[column];
+        short ceilingClipY = Sector.ceilingClip[column];
+
+        int clippedTopY = topY;
+        int clippedBottomY = bottomY;
+
+        if (topY < floorClipY) {
+            clippedTopY = floorClipY;
+        }
+        if (bottomY > ceilingClipY) {
+            clippedBottomY = ceilingClipY;
+        }
+
+        int columnAngle = MathUtils.fixedPointMultiply((column - 120) << 16, skyboxAngleFactor);
+        int angleCos = MathUtils.fastCos(columnAngle);
+        int scaledX = MathUtils.fixedPointMultiply(column - 120, skyboxScaleX);
+        int angleSin = MathUtils.fastSin(columnAngle);
+
+        int textureColumn = MathUtils.fixedPointMultiply(
+                MathUtils.fixedPointMultiply(102943, angleSin + MathUtils.fixedPointMultiply(angleCos, scaledX)) + viewAngle,
+                skyboxOffsetFactor) >> 8;
+
+        byte[] pixelData = skyboxTexture.getPixelRowFast(textureColumn);
+        int[] colorPalette = skyboxTexture.colorPalettes[8];
+
+        int startPixelIndex = clippedTopY * 240 + column;
+        int endPixelIndex = clippedBottomY * 240 + column;
+
+        int textureStepV = -MathUtils.fixedPointMultiply(angleCos * 200, skyboxScaleY);
+        int textureV = -textureStepV * (144 - clippedTopY) + 6553600;
+
+        int[] buffer = screenBuffer;
+
+        if ((textureColumn & 1) == 0) {
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                buffer[pixelIndex] = colorPalette[(pixelData[(textureV >> 16) & 127] >> 4) & 15];
+                textureV += textureStepV;
+            }
+        } else {
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += 240) {
+                buffer[pixelIndex] = colorPalette[pixelData[(textureV >> 16) & 127] & 15];
+                textureV += textureStepV;
+            }
+        }
     }
 }
