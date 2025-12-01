@@ -6,3065 +6,2949 @@ import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.game.GameCanvas;
 
 public class MainGameCanvas extends GameCanvas implements Runnable {
-   public boolean isGameRunning = false;
-   public boolean isGamePaused = false;
-   public boolean isGameInitialized = true;
-   public boolean areResourcesLoaded = false;
-   public static CovertOps3D mainMidlet = null;
-   private static final String[] levelFileNames = new String[]{"01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"};
-   public static int currentLevelId = 0;
-   public static int previousLevelId = -1;
-   public static int keyMappingOffset;
-   public static AudioManager audioManager;
-   private String[] SETTINGS_MENU_ITEMS;
-   private String[] chapterMenuItems;
+
+    // ==================== UI Constants ====================
+
+    /** Total UI height (screen + status bar) */
+    private static final int UI_HEIGHT = 320;
+
+    /** Status bar height */
+    private static final int STATUS_BAR_HEIGHT = 32;
+
+    /** Half of total UI height */
+    private static final int HALF_UI_HEIGHT = UI_HEIGHT / 2;
+
+    // ==================== Fields ====================
+
+    public boolean isGameRunning = false;
+    public boolean isGamePaused = false;
+    public boolean isGameInitialized = true;
+    public boolean areResourcesLoaded = false;
+    public static CovertOps3D mainMidlet = null;
+
+    private static final String[] levelFileNames = new String[]{
+            "01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
+    };
+
+    public static int currentLevelId = 0;
+    public static int previousLevelId = -1;
+    public static int keyMappingOffset;
+    public static AudioManager audioManager;
+
+    private String[] SETTINGS_MENU_ITEMS;
+    private String[] chapterMenuItems;
     private int var_4db;
-   private int smallFontCharsPerRow;
-   private int var_550;
-   private int var_59b;
-   private int[] var_5fa;
-   private int[] var_65d;
-   private int[] var_691;
-   private int[] var_6a8;
-   private int var_6d3;
-   private int var_75f;
-   private long frameDeltaTime;
-   private long accumulatedTime;
-   private long lastFrameTime;
-   private int frameCounter;
-   private Image statusBarImage;
-   private Image[] weaponSprites;
-   private boolean isWeaponCentered;
-   private int weaponAnimationState;
-   public static int weaponSpriteFrame = 0;
-   private Image crosshairImage;
-   private Image largeFontImage;
-   private Image smallFontImage;
-   private GameObject[] cachedStaticObjects;
-   private GameObject[] nextLevelObjects;
-   private int[] var_b23;
-   private int[] var_b56;
-   private int[] var_b60;
-   private int[] var_b96;
-   private int var_be4;
-   private int var_c1f;
-   private int var_c2f;
-   private int enemyUpdateCounter;
-   private int enemySpawnTimer;
-   private int activeEnemyCount;
-   private int var_d2a;
-   private int var_d88;
-   private int var_d9b;
+    private int smallFontCharsPerRow;
+    private int var_550;
+    private int var_59b;
+    private int[] var_5fa;
+    private int[] var_65d;
+    private int[] var_691;
+    private int[] var_6a8;
+    private int var_6d3;
+    private int var_75f;
+    private long frameDeltaTime;
+    private long accumulatedTime;
+    private long lastFrameTime;
+    private int frameCounter;
+
+    private Image statusBarImage;
+    private Image[] weaponSprites;
+    private boolean isWeaponCentered;
+    private int weaponAnimationState;
+    public static int weaponSpriteFrame = 0;
+    private Image crosshairImage;
+    private Image largeFontImage;
+    private Image smallFontImage;
+
+    private GameObject[] cachedStaticObjects;
+    private GameObject[] nextLevelObjects;
+    private int[] var_b23;
+    private int[] var_b56;
+    private int[] var_b60;
+    private int[] var_b96;
+    private int var_be4;
+    private int var_c1f;
+    private int var_c2f;
+    private int enemyUpdateCounter;
+    private int enemySpawnTimer;
+    private int activeEnemyCount;
+    private int var_d2a;
+    private int var_d88;
+    private int var_d9b;
+
     public static boolean mapEnabled = false;
-   public static final int[] var_f4a = new int[]{5, 5, 5};
-   public static final int[] var_f5c = new int[]{25, 25, 25};
-   public static final int[] var_f76 = new int[]{30, 30, 30};
-   public static final int[] var_fa7 = new int[]{25, 25, 25};
-   public static final int[] var_ff1 = new int[]{25, 25, 25};
-   public static final int[] var_104c = new int[]{100, 100, 100};
-   public static final int[] var_1071 = new int[]{150, 150, 150};
-   public static final int[] var_10c4 = new int[]{65536, 65536, 65536};
-   public static final int[] var_1113 = new int[]{400, 400, 400};
-   public static final int[] var_111e = new int[]{4, 4, 4};
-   public static final int[] var_1128 = new int[]{6, 6, 6};
-   public static final int[] var_1147 = new int[]{8, 8, 8};
-   public static final int[] var_119b = new int[]{3, 3, 3};
-   public static final int[] var_11e0 = new int[]{2, 2, 2};
-   public static final int[] var_11f1 = new int[]{10, 10, 10};
-   public static final int[] enemyDamageEasy = new int[]{10, 15, 20};
-   public static final int[] enemyDamageNormal = new int[]{15, 20, 25};
-   public static final int[] enemyDamageHard = new int[]{20, 25, 30};
-   public static final int[] var_12d2 = new int[]{25, 30, 40};
-   public static final int[] var_1329 = new int[]{1, 2, 3};
-   public static final int[] var_1358 = new int[]{2, 4, 5};
-   public static final int[] var_1366 = new int[]{3, 5, 7};
-   public static final int[] var_139c = new int[]{50, 100, 150};
-   public static final int[] var_13e4 = new int[]{100, 200, 300};
-   public static final int[] var_13fe = new int[]{100, 200, 300};
-   public static final int[] var_143e = new int[]{100, 200, 300};
-   public static final int[] var_146a = new int[]{200, 400, 600};
-   public static final int[] var_1492 = new int[]{300, 600, 900};
-   public static final int[] var_14be = new int[]{10, 10, 10};
-   public static final int[] var_14f5 = new int[]{10, 10, 10};
-   public static final int[] var_151d = new int[]{1, 1, 1};
-   public static final int[] var_156b = new int[]{6, 6, 6};
-   public static final int[] var_157a = new int[]{10, 10, 10};
-   public static final int[] var_1592 = new int[]{10, 10, 10};
-   public static final int[] var_15c4 = new int[]{20, 20, 20};
-   public static final int[] var_15d0 = new int[]{20, 20, 20};
-   public static final int[] var_1616 = new int[]{3, 3, 3};
-   public static final int[] var_1630 = new int[]{1, 1, 1};
-   public static final int[] var_1677 = new int[]{3, 3, 3};
-   public static final int[] var_16c7 = new int[]{25, 25, 25};
-   public static final int[] var_16e8 = new int[]{50, 50, 50};
-   public static final int[] var_1731 = new int[]{25, 25, 25};
-   public static final int[] enemyReactionTime = new int[]{64, 64, 64};
-   public static final int[] var_17b5 = new int[]{6, 4, 2};
-   public static final int[] var_180b = new int[]{32, 22, 12};
-   public static final int[] var_1851 = new int[]{32, 22, 12};
-   public static final int[] var_18a0 = new int[]{256, 192, 128};
-   public static final int[] var_18ad = new int[]{128, 128, 128};
-   public static final int[] var_1910 = new int[]{128, 64, 32};
-   public static final int[] var_191e = new int[]{32, 32, 32};
-   public static final int[] var_1966 = new int[]{131072, 196608, 262144};
-   public static final int[] var_19bb = new int[]{131072, 196608, 262144};
-   public static final int[] var_19fd = new int[]{196608, 262144, 327680};
-   public static final int[] var_1a1b = new int[]{196608, 262144, 327680};
-   public static final int[] var_1a4a = new int[]{196608, 262144, 327680};
-   public static final int[] var_1a74 = new int[]{196608, 262144, 327680};
-   public static final int[] var_1ad2 = new int[]{4, 3, 2};
 
-   public MainGameCanvas() {
-      super(false);
-      System.currentTimeMillis();
-      this.var_4db = 18;
-      this.smallFontCharsPerRow = 26;
-      this.var_550 = 23;
-      this.var_59b = 4;
-      this.var_5fa = new int[]{1, 11, 22, 31, 42, 52, 62, 70, 82, 91, 101, 112, 120, 130, 142, 151, 161, 171, 2, 12, 20, 31, 40, 51, 61, 72, 80, 90, 100, 110, 120, 130, 142, 151, 160, 170, 1, 12, 21, 31, 41, 51, 61, 71, 81, 91, 100, 110, 120, 130, 140, 150, 160, 170};
-      this.var_65d = new int[]{9, 9, 7, 8, 7, 7, 7, 10, 6, 6, 9, 6, 10, 10, 7, 9, 8, 8, 7, 6, 10, 8, 10, 9, 8, 7, 4, 4, 4, 8, 4, 4, 7, 4, 0, 0, 8, 6, 8, 8, 9, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0};
-      this.var_691 = new int[]{0, 8, 14, 21, 29, 36, 42, 49, 58, 64, 71, 78, 85, 91, 98, 106, 112, 120, 126, 134, 140, 148, 154, 162, 169, 176, 1, 8, 15, 22, 29, 36, 43, 50, 59, 65, 71, 80, 84, 92, 99, 106, 113, 121, 127, 135, 141, 148, 155, 162, 169, 177, 1, 9, 15, 22, 29, 36, 43, 50, 57, 64, 71, 77, 85, 92, 99, 105, 112, 121, 127, 133, 140, 147, 154, 161, 168, 175};
-      this.var_6a8 = new int[]{6, 5, 6, 6, 5, 5, 6, 6, 3, 3, 5, 4, 5, 6, 6, 5, 6, 5, 5, 5, 6, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 1, 2, 5, 2, 7, 5, 5, 5, 5, 3, 5, 2, 5, 5, 5, 4, 5, 3, 4, 3, 4, 4, 5, 4, 4, 4, 4, 4, 1, 2, 1, 4, 1, 2, 4, 3, 2, 7, 0, 0, 0, 0, 0, 0};
-      this.var_6d3 = 10;
-      this.var_75f = 3;
-      this.frameDeltaTime = 0L;
-      this.accumulatedTime = 0L;
-      this.lastFrameTime = 0L;
-      this.frameCounter = 0;
-      this.weaponSprites = new Image[3];
-      this.isWeaponCentered = true;
-      this.weaponAnimationState = 0;
-      this.cachedStaticObjects = null;
-      this.nextLevelObjects = null;
-      this.var_b23 = null;
-      this.var_b56 = null;
-      this.var_b60 = null;
-      this.var_b96 = null;
-      this.var_be4 = 0;
-      this.var_c1f = 0;
-      this.var_c2f = 0;
-      this.enemyUpdateCounter = 0;
-      this.enemySpawnTimer = 0;
-      this.activeEnemyCount = 0;
-      this.var_d2a = 0;
-      this.var_d88 = 0;
-      this.var_d9b = 0;
-      keyMappingOffset = Math.abs(this.getKeyCode(8)) == 53 ? 5 : Math.abs(this.getKeyCode(8));
-      this.setFullScreenMode(true);
-   }
+    public static final int[] var_f4a = new int[]{5, 5, 5};
+    public static final int[] var_f5c = new int[]{25, 25, 25};
+    public static final int[] var_f76 = new int[]{30, 30, 30};
+    public static final int[] var_fa7 = new int[]{25, 25, 25};
+    public static final int[] var_ff1 = new int[]{25, 25, 25};
+    public static final int[] var_104c = new int[]{100, 100, 100};
+    public static final int[] var_1071 = new int[]{150, 150, 150};
+    public static final int[] var_10c4 = new int[]{65536, 65536, 65536};
+    public static final int[] var_1113 = new int[]{400, 400, 400};
+    public static final int[] var_111e = new int[]{4, 4, 4};
+    public static final int[] var_1128 = new int[]{6, 6, 6};
+    public static final int[] var_1147 = new int[]{8, 8, 8};
+    public static final int[] var_119b = new int[]{3, 3, 3};
+    public static final int[] var_11e0 = new int[]{2, 2, 2};
+    public static final int[] var_11f1 = new int[]{10, 10, 10};
+    public static final int[] enemyDamageEasy = new int[]{10, 15, 20};
+    public static final int[] enemyDamageNormal = new int[]{15, 20, 25};
+    public static final int[] enemyDamageHard = new int[]{20, 25, 30};
+    public static final int[] var_12d2 = new int[]{25, 30, 40};
+    public static final int[] var_1329 = new int[]{1, 2, 3};
+    public static final int[] var_1358 = new int[]{2, 4, 5};
+    public static final int[] var_1366 = new int[]{3, 5, 7};
+    public static final int[] var_139c = new int[]{50, 100, 150};
+    public static final int[] var_13e4 = new int[]{100, 200, 300};
+    public static final int[] var_13fe = new int[]{100, 200, 300};
+    public static final int[] var_143e = new int[]{100, 200, 300};
+    public static final int[] var_146a = new int[]{200, 400, 600};
+    public static final int[] var_1492 = new int[]{300, 600, 900};
+    public static final int[] var_14be = new int[]{10, 10, 10};
+    public static final int[] var_14f5 = new int[]{10, 10, 10};
+    public static final int[] var_151d = new int[]{1, 1, 1};
+    public static final int[] var_156b = new int[]{6, 6, 6};
+    public static final int[] var_157a = new int[]{10, 10, 10};
+    public static final int[] var_1592 = new int[]{10, 10, 10};
+    public static final int[] var_15c4 = new int[]{20, 20, 20};
+    public static final int[] var_15d0 = new int[]{20, 20, 20};
+    public static final int[] var_1616 = new int[]{3, 3, 3};
+    public static final int[] var_1630 = new int[]{1, 1, 1};
+    public static final int[] var_1677 = new int[]{3, 3, 3};
+    public static final int[] var_16c7 = new int[]{25, 25, 25};
+    public static final int[] var_16e8 = new int[]{50, 50, 50};
+    public static final int[] var_1731 = new int[]{25, 25, 25};
+    public static final int[] enemyReactionTime = new int[]{64, 64, 64};
+    public static final int[] var_17b5 = new int[]{6, 4, 2};
+    public static final int[] var_180b = new int[]{32, 22, 12};
+    public static final int[] var_1851 = new int[]{32, 22, 12};
+    public static final int[] var_18a0 = new int[]{256, 192, 128};
+    public static final int[] var_18ad = new int[]{128, 128, 128};
+    public static final int[] var_1910 = new int[]{128, 64, 32};
+    public static final int[] var_191e = new int[]{32, 32, 32};
+    public static final int[] var_1966 = new int[]{131072, 196608, 262144};
+    public static final int[] var_19bb = new int[]{131072, 196608, 262144};
+    public static final int[] var_19fd = new int[]{196608, 262144, 327680};
+    public static final int[] var_1a1b = new int[]{196608, 262144, 327680};
+    public static final int[] var_1a4a = new int[]{196608, 262144, 327680};
+    public static final int[] var_1a74 = new int[]{196608, 262144, 327680};
+    public static final int[] var_1ad2 = new int[]{4, 3, 2};
 
-   public void sizeChanged(int var1, int var2) {
-   }
+    public MainGameCanvas() {
+        super(false);
+        System.currentTimeMillis();
+        this.var_4db = 18;
+        this.smallFontCharsPerRow = 26;
+        this.var_550 = 23;
+        this.var_59b = 4;
+        this.var_5fa = new int[]{1, 11, 22, 31, 42, 52, 62, 70, 82, 91, 101, 112, 120, 130, 142, 151, 161, 171, 2, 12, 20, 31, 40, 51, 61, 72, 80, 90, 100, 110, 120, 130, 142, 151, 160, 170, 1, 12, 21, 31, 41, 51, 61, 71, 81, 91, 100, 110, 120, 130, 140, 150, 160, 170};
+        this.var_65d = new int[]{9, 9, 7, 8, 7, 7, 7, 10, 6, 6, 9, 6, 10, 10, 7, 9, 8, 8, 7, 6, 10, 8, 10, 9, 8, 7, 4, 4, 4, 8, 4, 4, 7, 4, 0, 0, 8, 6, 8, 8, 9, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0};
+        this.var_691 = new int[]{0, 8, 14, 21, 29, 36, 42, 49, 58, 64, 71, 78, 85, 91, 98, 106, 112, 120, 126, 134, 140, 148, 154, 162, 169, 176, 1, 8, 15, 22, 29, 36, 43, 50, 59, 65, 71, 80, 84, 92, 99, 106, 113, 121, 127, 135, 141, 148, 155, 162, 169, 177, 1, 9, 15, 22, 29, 36, 43, 50, 57, 64, 71, 77, 85, 92, 99, 105, 112, 121, 127, 133, 140, 147, 154, 161, 168, 175};
+        this.var_6a8 = new int[]{6, 5, 6, 6, 5, 5, 6, 6, 3, 3, 5, 4, 5, 6, 6, 5, 6, 5, 5, 5, 6, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 1, 2, 5, 2, 7, 5, 5, 5, 5, 3, 5, 2, 5, 5, 5, 4, 5, 3, 4, 3, 4, 4, 5, 4, 4, 4, 4, 4, 1, 2, 1, 4, 1, 2, 4, 3, 2, 7, 0, 0, 0, 0, 0, 0};
+        this.var_6d3 = 10;
+        this.var_75f = 3;
+        this.frameDeltaTime = 0L;
+        this.accumulatedTime = 0L;
+        this.lastFrameTime = 0L;
+        this.frameCounter = 0;
+        this.weaponSprites = new Image[3];
+        this.isWeaponCentered = true;
+        this.weaponAnimationState = 0;
+        this.cachedStaticObjects = null;
+        this.nextLevelObjects = null;
+        this.var_b23 = null;
+        this.var_b56 = null;
+        this.var_b60 = null;
+        this.var_b96 = null;
+        this.var_be4 = 0;
+        this.var_c1f = 0;
+        this.var_c2f = 0;
+        this.enemyUpdateCounter = 0;
+        this.enemySpawnTimer = 0;
+        this.activeEnemyCount = 0;
+        this.var_d2a = 0;
+        this.var_d88 = 0;
+        this.var_d9b = 0;
+        keyMappingOffset = Math.abs(this.getKeyCode(8)) == 53 ? 5 : Math.abs(this.getKeyCode(8));
+        this.setFullScreenMode(true);
+    }
 
-   private int translateKeyCode(int var1) {
-      switch((var1 < 0 ? -var1 : var1) - keyMappingOffset) {
-      case 1:
-         return 11;
-      case 2:
-         return 12;
-      default:
-         switch(this.getGameAction(var1)) {
-         case 1:
-            return 1;
-         case 2:
-            return 3;
-         case 3:
-         case 4:
-         case 7:
-         default:
-            return 10;
-         case 5:
-            return 4;
-         case 6:
-            return 2;
-         case 8:
-            return 5;
-         case 9:
-            return 6;
-         case 10:
-            return 7;
-         case 11:
-            return 8;
-         case 12:
-            return 9;
-         }
-      }
-   }
+    public void sizeChanged(int width, int height) {
+    }
 
-   public void keyPressed(int var1) {
-      switch(this.translateKeyCode(var1)) {
-      case 1:
-         GameEngine.inputForward = true;
-         return;
-      case 2:
-         GameEngine.inputBackward = true;
-         return;
-      case 3:
-         GameEngine.inputLookUp = true;
-         return;
-      case 4:
-         GameEngine.inputLookDown = true;
-         return;
-      case 5:
-         GameEngine.inputFire = true;
-         GameEngine.inputStrafe = false;
-         return;
-      case 6:
-      case 7:
-      case 8:
-      case 9:
-      case 10:
-      default:
-         switch(var1) {
-         case 48:
-            GameEngine.toggleMapInput = true;
-            return;
-         case 49:
-            GameEngine.useKey = true;
-            return;
-         case 51:
-            GameEngine.selectNextWeapon = true;
-            return;
-         case 53:
-            GameEngine.inputFire = true;
-            GameEngine.inputStrafe = false;
-            return;
-         case 55:
-            GameEngine.inputLeft = true;
-            return;
-         case 57:
-            GameEngine.inputRight = true;
-         case 50:
-         case 52:
-         case 54:
-         case 56:
-         default:
-            return;
-         }
-      case 11:
-         GameEngine.inputRun = true;
-         return;
-      case 12:
-         GameEngine.inputBack = true;
-      }
-   }
+    private int translateKeyCode(int keyCode) {
+        switch((keyCode < 0 ? -keyCode : keyCode) - keyMappingOffset) {
+            case 1:
+                return 11;
+            case 2:
+                return 12;
+            default:
+                switch(this.getGameAction(keyCode)) {
+                    case 1:
+                        return 1;
+                    case 2:
+                        return 3;
+                    case 3:
+                    case 4:
+                    case 7:
+                    default:
+                        return 10;
+                    case 5:
+                        return 4;
+                    case 6:
+                        return 2;
+                    case 8:
+                        return 5;
+                    case 9:
+                        return 6;
+                    case 10:
+                        return 7;
+                    case 11:
+                        return 8;
+                    case 12:
+                        return 9;
+                }
+        }
+    }
 
-   public void keyReleased(int var1) {
-      switch(this.translateKeyCode(var1)) {
-      case 1:
-         GameEngine.inputForward = false;
-         return;
-      case 2:
-         GameEngine.inputBackward = false;
-         return;
-      case 3:
-         GameEngine.inputLookUp = false;
-         return;
-      case 4:
-         GameEngine.inputLookDown = false;
-         return;
-      case 5:
-         GameEngine.inputStrafe = true;
-         return;
-      default:
-         switch(var1) {
-         case 55:
-            GameEngine.inputLeft = false;
-            return;
-         case 57:
-            GameEngine.inputRight = false;
-         default:
-         }
-      }
-   }
+    public void keyPressed(int keyCode) {
+        switch(this.translateKeyCode(keyCode)) {
+            case 1:
+                GameEngine.inputForward = true;
+                return;
+            case 2:
+                GameEngine.inputBackward = true;
+                return;
+            case 3:
+                GameEngine.inputLookUp = true;
+                return;
+            case 4:
+                GameEngine.inputLookDown = true;
+                return;
+            case 5:
+                GameEngine.inputFire = true;
+                GameEngine.inputStrafe = false;
+                return;
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            default:
+                switch(keyCode) {
+                    case 48:
+                        GameEngine.toggleMapInput = true;
+                        return;
+                    case 49:
+                        GameEngine.useKey = true;
+                        return;
+                    case 51:
+                        GameEngine.selectNextWeapon = true;
+                        return;
+                    case 53:
+                        GameEngine.inputFire = true;
+                        GameEngine.inputStrafe = false;
+                        return;
+                    case 55:
+                        GameEngine.inputLeft = true;
+                        return;
+                    case 57:
+                        GameEngine.inputRight = true;
+                    case 50:
+                    case 52:
+                    case 54:
+                    case 56:
+                    default:
+                        return;
+                }
+            case 11:
+                GameEngine.inputRun = true;
+                return;
+            case 12:
+                GameEngine.inputBack = true;
+        }
+    }
 
-   private void sub_47(Graphics var1) {
-      try {
-         int var2 = GameEngine.renderFrame(var1, this.frameCounter) >> 15;
-         int var3 = this.weaponSprites[weaponSpriteFrame].getHeight();
-         int var4;
-         if (GameEngine.weaponSwitchAnimationActive) {
-            if ((var4 = GameEngine.weaponAnimationState) < 0) {
-               var4 = -var4;
+    public void keyReleased(int keyCode) {
+        switch(this.translateKeyCode(keyCode)) {
+            case 1:
+                GameEngine.inputForward = false;
+                return;
+            case 2:
+                GameEngine.inputBackward = false;
+                return;
+            case 3:
+                GameEngine.inputLookUp = false;
+                return;
+            case 4:
+                GameEngine.inputLookDown = false;
+                return;
+            case 5:
+                GameEngine.inputStrafe = true;
+                return;
+            default:
+                switch(keyCode) {
+                    case 55:
+                        GameEngine.inputLeft = false;
+                        return;
+                    case 57:
+                        GameEngine.inputRight = false;
+                    default:
+                }
+        }
+    }
+
+    private void sub_47(Graphics graphics) {
+        try {
+            int headBob = GameEngine.renderFrame(graphics, this.frameCounter) >> 15;
+            int weaponHeight = this.weaponSprites[weaponSpriteFrame].getHeight();
+
+            if (GameEngine.weaponSwitchAnimationActive) {
+                int animState = GameEngine.weaponAnimationState;
+                if (animState < 0) {
+                    animState = -animState;
+                }
+                weaponHeight = weaponHeight * animState >> 3;
             }
 
-            var3 = var3 * var4 >> 3;
-         }
-
-         Graphics var10000;
-         Image var10001;
-         int var10002;
-         if (this.isWeaponCentered) {
-            var10000 = var1;
-            var10001 = this.weaponSprites[weaponSpriteFrame];
-            var10002 = (240 - this.weaponSprites[weaponSpriteFrame].getWidth()) / 2;
-         } else {
-            var10000 = var1;
-            var10001 = this.weaponSprites[weaponSpriteFrame];
-            var10002 = 240 - this.weaponSprites[weaponSpriteFrame].getWidth();
-         }
-
-         var10000.drawImage(var10001, var10002, 288 - var3 - var2 + 3, 0);
-         weaponSpriteFrame = this.weaponAnimationState;
-         var1.drawImage(this.statusBarImage, 0, 288, 0);
-         this.sub_547(GameEngine.playerHealth, var1, 58, 294);
-         this.sub_547(GameEngine.playerArmor, var1, 138, 294);
-         var4 = GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 ? GameEngine.currentWeapon : 1;
-         this.sub_547(GameEngine.ammoCounts[var4], var1, 218, 294);
-         if (GameEngine.currentWeapon > 0 && GameEngine.messageTimer == 0 && !mapEnabled) {
-            var1.drawImage(this.crosshairImage, 240 - this.crosshairImage.getWidth() >> 1, 288 - this.crosshairImage.getHeight() >> 1, 0);
-         }
-
-         if (mapEnabled) {
-            var1.setClip(0, 0, 240, 288);
-            LevelLoader.gameWorld.drawMapOnScreen(var1);
-            var1.setClip(0, 0, 240, 320);
-         }
-
-      } catch (Exception var9) {
-      } catch (OutOfMemoryError var10) {
-      } finally {
-         ;
-      }
-   }
-
-   public final void startGameThread() {
-      Thread var1 = new Thread(this);
-      this.isGameRunning = true;
-      this.isGameInitialized = false;
-      var1.start();
-   }
-
-   public void run() {
-      audioManager = new AudioManager();
-      audioManager.loadSound("/gamedata/sound/0.mid");
-      audioManager.loadSound("/gamedata/sound/1.amr");
-      audioManager.loadSound("/gamedata/sound/2.amr");
-      audioManager.loadSound("/gamedata/sound/3.amr");
-      audioManager.loadSound("/gamedata/sound/4.amr");
-      audioManager.loadSound("/gamedata/sound/5.amr");
-      audioManager.loadSound("/gamedata/sound/6.amr");
-      audioManager.loadSound("/gamedata/sound/7.amr");
-      audioManager.loadSound("/gamedata/sound/8.amr");
-      audioManager.loadSound("/gamedata/sound/9.amr");
-      Graphics var1;
-      (var1 = this.getGraphics()).setClip(0, 0, 240, 320);
-      this.drawSplash(var1);
-      this.initializeGameResources();
-      SaveSystem.loadSaveData();
-      SaveSystem.loadSettingsFromRMS();
-      this.areResourcesLoaded = true;
-      int var2 = this.showMenuScreen(var1, true);
-
-      label182:
-      while(true) {
-         while(true) {
-            do {
-               if (!this.isGameRunning) {
-                  this.isGameInitialized = true;
-                  return;
-               }
-            } while(this.isGamePaused);
-
-            if (var2 == 4) {
-               this.isGameInitialized = true;
-               CovertOps3D.exitApplication();
-               return;
+            Graphics targetGraphics;
+            Image weaponSprite;
+            int weaponX;
+            if (this.isWeaponCentered) {
+                targetGraphics = graphics;
+                weaponSprite = this.weaponSprites[weaponSpriteFrame];
+                weaponX = (PortalRenderer.SCREEN_WIDTH - this.weaponSprites[weaponSpriteFrame].getWidth()) / 2;
+            } else {
+                targetGraphics = graphics;
+                weaponSprite = this.weaponSprites[weaponSpriteFrame];
+                weaponX = PortalRenderer.SCREEN_WIDTH - this.weaponSprites[weaponSpriteFrame].getWidth();
             }
 
-            GameEngine.resetPlayerProgress();
-            if (var2 == 66) {
-               currentLevelId = 0;
-               previousLevelId = -1;
-               if ((var2 = this.drawDialogOverlay(var1, 0)) != -1) {
-                  continue;
-               }
+            targetGraphics.drawImage(weaponSprite, weaponX, PortalRenderer.SCREEN_HEIGHT - weaponHeight - headBob + 3, 0);
+            weaponSpriteFrame = this.weaponAnimationState;
 
-               this.drawPleaseWait(var1);
-               this.loadLevelResources();
-               break;
+            graphics.drawImage(this.statusBarImage, 0, PortalRenderer.SCREEN_HEIGHT, 0);
+            this.sub_547(GameEngine.playerHealth, graphics, 58, PortalRenderer.SCREEN_HEIGHT + 6);
+            this.sub_547(GameEngine.playerArmor, graphics, 138, PortalRenderer.SCREEN_HEIGHT + 6);
+
+            int ammoType = GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4
+                    ? GameEngine.currentWeapon : 1;
+            this.sub_547(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.SCREEN_HEIGHT + 6);
+
+            if (GameEngine.currentWeapon > 0 && GameEngine.messageTimer == 0 && !mapEnabled) {
+                graphics.drawImage(this.crosshairImage,
+                        (PortalRenderer.SCREEN_WIDTH - this.crosshairImage.getWidth()) >> 1,
+                        (PortalRenderer.SCREEN_HEIGHT - this.crosshairImage.getHeight()) >> 1, 0);
             }
 
-            int[] var3 = new int[]{2, 4, 20, 5, 6, 22, 7, 9};
-            int var4 = var2 - 67;
-            currentLevelId = var3[var4];
-            previousLevelId = -1;
-            SaveSystem.loadGameState(var4);
-            GameEngine.levelTransitionState = 1;
-            break;
-         }
+            if (mapEnabled) {
+                graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, PortalRenderer.SCREEN_HEIGHT);
+                LevelLoader.gameWorld.drawMapOnScreen(graphics);
+                graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+            }
 
-         this.accumulatedTime = 0L;
-         this.lastFrameTime = 0L;
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        } finally {
+            ;
+        }
+    }
 
-         while(this.isGameRunning) {
-            try {
-               if ((GameEngine.inputRun || GameEngine.inputBack || this.isGamePaused) && (var2 = this.showMenuScreen(var1, false)) != 32) {
-                  break;
-               }
+    public final void startGameThread() {
+        Thread gameThread = new Thread(this);
+        this.isGameRunning = true;
+        this.isGameInitialized = false;
+        gameThread.start();
+    }
 
-               label170: {
-                  MainGameCanvas var10000;
-                  if (GameEngine.levelTransitionState == 1) {
-                     switch(currentLevelId) {
-                     case 0:
-                     case 13:
-                        currentLevelId = 0;
-                        SaveSystem.saveGameState(8);
-                        if ((var2 = this.drawDialogOverlay(var1, 9)) == -1) {
-                           var2 = this.showMenuScreen(var1, true);
-                        }
-                        continue label182;
-                     case 1:
-                     case 3:
-                     case 8:
-                     case 10:
-                     case 11:
-                     case 12:
-                     case 14:
-                     case 15:
-                     case 16:
-                     case 17:
-                     case 18:
-                     case 19:
-                     case 21:
-                     default:
+    public void run() {
+        audioManager = new AudioManager();
+        audioManager.loadSound("/gamedata/sound/0.mid");
+        audioManager.loadSound("/gamedata/sound/1.amr");
+        audioManager.loadSound("/gamedata/sound/2.amr");
+        audioManager.loadSound("/gamedata/sound/3.amr");
+        audioManager.loadSound("/gamedata/sound/4.amr");
+        audioManager.loadSound("/gamedata/sound/5.amr");
+        audioManager.loadSound("/gamedata/sound/6.amr");
+        audioManager.loadSound("/gamedata/sound/7.amr");
+        audioManager.loadSound("/gamedata/sound/8.amr");
+        audioManager.loadSound("/gamedata/sound/9.amr");
+
+        Graphics graphics = this.getGraphics();
+        graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+        this.drawSplash(graphics);
+        this.initializeGameResources();
+        SaveSystem.loadSaveData();
+        SaveSystem.loadSettingsFromRMS();
+        this.areResourcesLoaded = true;
+        int menuResult = this.showMenuScreen(graphics, true);
+
+        label182:
+        while(true) {
+            while(true) {
+                do {
+                    if (!this.isGameRunning) {
+                        this.isGameInitialized = true;
+                        return;
+                    }
+                } while(this.isGamePaused);
+
+                if (menuResult == 4) {
+                    this.isGameInitialized = true;
+                    CovertOps3D.exitApplication();
+                    return;
+                }
+
+                GameEngine.resetPlayerProgress();
+                if (menuResult == 66) {
+                    currentLevelId = 0;
+                    previousLevelId = -1;
+                    if ((menuResult = this.drawDialogOverlay(graphics, 0)) != -1) {
+                        continue;
+                    }
+
+                    this.drawPleaseWait(graphics);
+                    this.loadLevelResources();
+                    break;
+                }
+
+                int[] levelMap = new int[]{2, 4, 20, 5, 6, 22, 7, 9};
+                int chapterIndex = menuResult - 67;
+                currentLevelId = levelMap[chapterIndex];
+                previousLevelId = -1;
+                SaveSystem.loadGameState(chapterIndex);
+                GameEngine.levelTransitionState = 1;
+                break;
+            }
+
+            this.accumulatedTime = 0L;
+            this.lastFrameTime = 0L;
+
+            while(this.isGameRunning) {
+                try {
+                    if ((GameEngine.inputRun || GameEngine.inputBack || this.isGamePaused)
+                            && (menuResult = this.showMenuScreen(graphics, false)) != 32) {
                         break;
-                     case 2:
-                        SaveSystem.saveGameState(0);
-                        if ((var2 = this.drawDialogOverlay(var1, 1)) != -1) {
-                           continue label182;
-                        }
-                        break;
-                     case 4:
-                     case 20:
-                        if (currentLevelId == 4) {
-                           SaveSystem.saveGameState(1);
-                           if ((var2 = this.drawDialogOverlay(var1, 2)) != -1) {
-                              continue label182;
-                           }
+                    }
 
-                           if ((var2 = this.runMiniGameSniper(var1, 0)) == -2) {
-                              this.drawGameOver(var1);
-                              var2 = this.showMenuScreen(var1, true);
-                              continue label182;
-                           }
+                    label170: {
+                        MainGameCanvas tempCanvas;
+                        if (GameEngine.levelTransitionState == 1) {
+                            switch(currentLevelId) {
+                                case 0:
+                                case 13:
+                                    currentLevelId = 0;
+                                    SaveSystem.saveGameState(8);
+                                    if ((menuResult = this.drawDialogOverlay(graphics, 9)) == -1) {
+                                        menuResult = this.showMenuScreen(graphics, true);
+                                    }
+                                    continue label182;
+                                case 1:
+                                case 3:
+                                case 8:
+                                case 10:
+                                case 11:
+                                case 12:
+                                case 14:
+                                case 15:
+                                case 16:
+                                case 17:
+                                case 18:
+                                case 19:
+                                case 21:
+                                default:
+                                    break;
+                                case 2:
+                                    SaveSystem.saveGameState(0);
+                                    if ((menuResult = this.drawDialogOverlay(graphics, 1)) != -1) {
+                                        continue label182;
+                                    }
+                                    break;
+                                case 4:
+                                case 20:
+                                    if (currentLevelId == 4) {
+                                        SaveSystem.saveGameState(1);
+                                        if ((menuResult = this.drawDialogOverlay(graphics, 2)) != -1) {
+                                            continue label182;
+                                        }
 
-                           if (var2 != -1) {
-                              continue label182;
-                           }
+                                        if ((menuResult = this.runMiniGameSniper(graphics, 0)) == -2) {
+                                            this.drawGameOver(graphics);
+                                            menuResult = this.showMenuScreen(graphics, true);
+                                            continue label182;
+                                        }
+
+                                        if (menuResult != -1) {
+                                            continue label182;
+                                        }
+                                    } else {
+                                        currentLevelId = 4;
+                                    }
+
+                                    SaveSystem.saveGameState(2);
+                                    if ((menuResult = this.drawDialogOverlay(graphics, 3)) != -1) {
+                                        continue label182;
+                                    }
+                                    break;
+                                case 5:
+                                    SaveSystem.saveGameState(3);
+                                    if ((menuResult = this.drawDialogOverlay(graphics, 4)) != -1) {
+                                        continue label182;
+                                    }
+                                    break;
+                                case 6:
+                                case 22:
+                                    if (currentLevelId == 6) {
+                                        SaveSystem.saveGameState(4);
+                                        if ((menuResult = this.drawDialogOverlay(graphics, 5)) != -1) {
+                                            continue label182;
+                                        }
+
+                                        if ((menuResult = this.runMiniGameSniper(graphics, 1)) == -2) {
+                                            this.drawGameOver(graphics);
+                                            menuResult = this.showMenuScreen(graphics, true);
+                                            continue label182;
+                                        }
+
+                                        if (menuResult != -1) {
+                                            continue label182;
+                                        }
+                                    } else {
+                                        currentLevelId = 6;
+                                    }
+
+                                    SaveSystem.saveGameState(5);
+                                    if ((menuResult = this.drawDialogOverlay(graphics, 6)) != -1) {
+                                        continue label182;
+                                    }
+                                    break;
+                                case 7:
+                                    SaveSystem.saveGameState(6);
+                                    if ((menuResult = this.drawDialogOverlay(graphics, 7)) != -1) {
+                                        continue label182;
+                                    }
+                                    break;
+                                case 9:
+                                    SaveSystem.saveGameState(7);
+                                    if ((menuResult = this.drawDialogOverlay(graphics, 8)) != -1) {
+                                        continue label182;
+                                    }
+                            }
+
+                            tempCanvas = this;
                         } else {
-                           currentLevelId = 4;
+                            if (GameEngine.levelTransitionState != -1) {
+                                break label170;
+                            }
+
+                            tempCanvas = this;
                         }
 
-                        SaveSystem.saveGameState(2);
-                        if ((var2 = this.drawDialogOverlay(var1, 3)) != -1) {
-                           continue label182;
+                        tempCanvas.drawPleaseWait(graphics);
+                        this.loadLevelResources();
+                    }
+
+                    long currentTime = System.currentTimeMillis();
+                    this.frameDeltaTime = currentTime - this.lastFrameTime;
+                    this.lastFrameTime = currentTime;
+                    this.accumulatedTime += this.frameDeltaTime;
+                    if (this.accumulatedTime > 600L) {
+                        this.accumulatedTime = 600L;
+                    }
+
+                    while(this.accumulatedTime >= 80L) {
+                        ++this.frameCounter;
+                        if (this.gameLoopTick()) {
+                            GameEngine.damageFlash = false;
+                            this.sub_47(graphics);
+                            this.flushScreenBuffer();
+                            this.drawGameOver(graphics);
+                            menuResult = this.showMenuScreen(graphics, true);
+                            continue label182;
                         }
+
+                        this.accumulatedTime -= 80L;
+                    }
+
+                    this.sub_47(graphics);
+                    if (GameEngine.messageTimer > 0) {
+                        this.sub_2e3(graphics, GameEngine.messageText);
+                    }
+
+                    this.flushScreenBuffer();
+                    yieldToOtherThreads();
+                } catch (Exception e) {
+                } catch (OutOfMemoryError e) {
+                }
+            }
+        }
+    }
+
+    private static int[] sub_d3(String path, boolean flip) {
+        int[] result = null;
+
+        try {
+            InputStream stream = (new Object()).getClass().getResourceAsStream(path);
+            DataInputStream dataInput = new DataInputStream(stream);
+            dataInput.skipBytes(1);
+            byte compression = dataInput.readByte();
+            short width = dataInput.readShort();
+            short height = dataInput.readShort();
+            short paletteSize = dataInput.readShort();
+
+            int pixelCount = width * height;
+            byte[] pixelData = new byte[pixelCount];
+
+            int compressedSize = dataInput.readInt();
+            byte[] compressed = new byte[compressedSize];
+            dataInput.readFully(compressed, 0, compressedSize);
+            LevelLoader.decompressSprite(compressed, 0, pixelData, 0, pixelCount, compression);
+
+            int[] palette = new int[paletteSize];
+
+            for(int i = 0; i < paletteSize; ++i) {
+                int r = dataInput.readByte() & 255;
+                int g = dataInput.readByte() & 255;
+                int b = dataInput.readByte() & 255;
+                palette[i] = r << 16 | g << 8 | b;
+            }
+
+            dataInput.close();
+            result = new int[pixelCount];
+
+            if (flip) {
+                for(int y = 0; y < height; ++y) {
+                    for(int x = 0; x < width; ++x) {
+                        result[y * width + (width - x - 1)] = palette[pixelData[y * width + x] & 255];
+                    }
+                }
+            } else {
+                for(int i = 0; i < pixelCount; ++i) {
+                    result[i] = palette[pixelData[i] & 255];
+                }
+            }
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        }
+
+        return result;
+    }
+
+    private void sub_10f(int level, int width, int height, byte[] pixels, byte[] mask, byte[] sight) {
+        try {
+            String basePath = "/" + (level == 0 ? "gamedata/sniperminigame/ss1" : "gamedata/sniperminigame/ss2");
+            InputStream stream = (new Object()).getClass().getResourceAsStream(basePath);
+            DataInputStream dataInput = new DataInputStream(stream);
+            dataInput.skipBytes(1);
+            byte compression = dataInput.readByte();
+            short imageWidth = dataInput.readShort();
+            short imageHeight = dataInput.readShort();
+
+            if (imageWidth == width && imageHeight == height) {
+                short paletteSize = dataInput.readShort();
+                int pixelCount = width * height;
+
+                int compressedSize = dataInput.readInt();
+                byte[] compressed = new byte[compressedSize];
+                dataInput.readFully(compressed, 0, compressedSize);
+                LevelLoader.decompressSprite(compressed, 0, pixels, 0, pixelCount, compression);
+
+                this.var_b23 = new int[paletteSize];
+                this.var_b56 = new int[paletteSize];
+                this.var_b60 = new int[paletteSize];
+                this.var_b96 = new int[paletteSize];
+
+                for(int i = 0; i < paletteSize; ++i) {
+                    int r = dataInput.readByte() & 255;
+                    int g = dataInput.readByte() & 255;
+                    int b = dataInput.readByte() & 255;
+                    this.var_b23[i] = r << 16 | g << 8 | b;
+                    this.var_b60[i] = this.var_b23[i] | 16711680;
+
+                    int gray = (r + g + b) / 3;
+                    gray = gray + (96 - (gray >> 2));
+                    if (gray > 255) {
+                        gray = 255;
+                    }
+                    this.var_b56[i] = gray << 16 | gray << 8 | gray;
+                    this.var_b96[i] = this.var_b56[i] | 16711680;
+                }
+
+                dataInput.close();
+
+                stream = (new Object()).getClass().getResourceAsStream("/gamedata/sniperminigame/sight");
+                dataInput = new DataInputStream(stream);
+                dataInput.skipBytes(8);
+                compressed = new byte[compressedSize = dataInput.readInt()];
+                dataInput.readFully(compressed, 0, compressedSize);
+                dataInput.close();
+                LevelLoader.decompressSprite(compressed, 0, sight, 0, 4096, 1);
+
+                stream = (new Object()).getClass().getResourceAsStream(basePath + "_mask");
+                dataInput = new DataInputStream(stream);
+                dataInput.skipBytes(8);
+                compressed = new byte[compressedSize = dataInput.readInt()];
+                dataInput.readFully(compressed, 0, compressedSize);
+                dataInput.close();
+                LevelLoader.decompressSprite(compressed, 0, mask, 0, pixelCount, 1);
+
+                for(int i = 0; i < pixelCount; ++i) {
+                    mask[i] = mask[i] == 0 ? -1 : pixels[i];
+                }
+
+            } else {
+                throw new IllegalStateException();
+            }
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        }
+    }
+
+    private static void sub_159(Object buffer, int offset, int length) {
+        int step = 1;
+
+        while(step < length) {
+            System.arraycopy(buffer, offset, buffer, offset + step,
+                    (length - step > step) ? step : (length - step));
+            step += step;
+        }
+    }
+
+    private void drawSplash(Graphics graphics) {
+        try {
+            Image logo = Image.createImage("/gamedata/sprites/logo.png");
+            Image splash = Image.createImage("/gamedata/sprites/splash.png");
+
+            int pixelCount = logo.getWidth() * logo.getHeight();
+            int[] fadeBuffer = new int[pixelCount];
+            int logoX = (PortalRenderer.SCREEN_WIDTH - logo.getWidth()) / 2;
+            int logoY = (UI_HEIGHT - logo.getHeight()) / 2;
+
+            graphics.setColor(16777215);
+            graphics.drawRect(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+            this.flushScreenBuffer();
+
+            long startTime = System.currentTimeMillis();
+
+            while(true) {
+                int fadeColor = 16777215;
+                int elapsed = (int)(System.currentTimeMillis() - startTime >> 2);
+
+                if (elapsed < 256) {
+                    fadeColor |= (255 - elapsed) << 24;
+                } else if (elapsed >= 512 && elapsed < 768) {
+                    fadeColor |= (elapsed - 512) << 24;
+                } else if (elapsed >= 768) {
+                    fadeBuffer = new int[pixelCount = splash.getWidth() * splash.getHeight()];
+                    startTime = System.currentTimeMillis();
+
+                    while(true) {
+                        fadeColor = 16777215;
+                        elapsed = (int)(System.currentTimeMillis() - startTime >> 2);
+
+                        if (elapsed < 256) {
+                            fadeColor |= (255 - elapsed) << 24;
+                        } else if (elapsed >= 768) {
+                            return;
+                        }
+
+                        fadeBuffer[0] = fadeColor;
+                        sub_159(fadeBuffer, 0, pixelCount);
+                        graphics.drawImage(splash, 0, 0, 20);
+                        graphics.drawRGB(fadeBuffer, 0, splash.getWidth(), 0, 0,
+                                splash.getWidth(), splash.getHeight(), true);
+                        this.flushScreenBuffer();
+                        yieldToOtherThreads();
+                    }
+                }
+
+                fadeBuffer[0] = fadeColor;
+                sub_159(fadeBuffer, 0, pixelCount);
+                graphics.drawImage(logo, logoX, logoY, 20);
+                graphics.drawRGB(fadeBuffer, 0, logo.getWidth(), logoX, logoY,
+                        logo.getWidth(), logo.getHeight(), true);
+                this.flushScreenBuffer();
+                yieldToOtherThreads();
+            }
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        }
+    }
+
+    private void drawGameOver(Graphics graphics) {
+        try {
+            Image splash = Image.createImage("/gamedata/sprites/splash.png");
+
+            int halfScreenBuffer = PortalRenderer.SCREEN_WIDTH * HALF_UI_HEIGHT;
+            PortalRenderer.screenBuffer[0] = -2130771968;
+            sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+
+            graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                    0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+            graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                    0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+
+            String message = "mission failed|game over";
+            this.sub_2e3(graphics, message);
+            this.flushScreenBuffer();
+            delay(2000);
+
+            long startTime = System.currentTimeMillis();
+
+            while(true) {
+                int fadeColor = 16711680;
+                int elapsed = (int)(System.currentTimeMillis() - startTime >> 4);
+
+                if (elapsed < 128) {
+                    fadeColor |= (255 - elapsed) << 24;
+                } else {
+                    fadeColor |= Integer.MIN_VALUE;
+                    if (elapsed >= 512) {
                         break;
-                     case 5:
-                        SaveSystem.saveGameState(3);
-                        if ((var2 = this.drawDialogOverlay(var1, 4)) != -1) {
-                           continue label182;
-                        }
-                        break;
-                     case 6:
-                     case 22:
-                        if (currentLevelId == 6) {
-                           SaveSystem.saveGameState(4);
-                           if ((var2 = this.drawDialogOverlay(var1, 5)) != -1) {
-                              continue label182;
-                           }
+                    }
+                }
 
-                           if ((var2 = this.runMiniGameSniper(var1, 1)) == -2) {
-                              this.drawGameOver(var1);
-                              var2 = this.showMenuScreen(var1, true);
-                              continue label182;
-                           }
-
-                           if (var2 != -1) {
-                              continue label182;
-                           }
-                        } else {
-                           currentLevelId = 6;
-                        }
-
-                        SaveSystem.saveGameState(5);
-                        if ((var2 = this.drawDialogOverlay(var1, 6)) != -1) {
-                           continue label182;
-                        }
-                        break;
-                     case 7:
-                        SaveSystem.saveGameState(6);
-                        if ((var2 = this.drawDialogOverlay(var1, 7)) != -1) {
-                           continue label182;
-                        }
-                        break;
-                     case 9:
-                        SaveSystem.saveGameState(7);
-                        if ((var2 = this.drawDialogOverlay(var1, 8)) != -1) {
-                           continue label182;
-                        }
-                     }
-
-                     var10000 = this;
-                  } else {
-                     if (GameEngine.levelTransitionState != -1) {
-                        break label170;
-                     }
-
-                     var10000 = this;
-                  }
-
-                  var10000.drawPleaseWait(var1);
-                  this.loadLevelResources();
-               }
-
-               long currentTime = System.currentTimeMillis();
-               this.frameDeltaTime = currentTime - this.lastFrameTime;
-               this.lastFrameTime = currentTime;
-               this.accumulatedTime += this.frameDeltaTime;
-               if (this.accumulatedTime > 600L) {
-                  this.accumulatedTime = 600L;
-               }
-
-               while(this.accumulatedTime >= 80L) {
-                  ++this.frameCounter;
-                  if (this.gameLoopTick()) {
-                     GameEngine.damageFlash = false;
-                     this.sub_47(var1);
-                     this.flushScreenBuffer();
-                     this.drawGameOver(var1);
-                     var2 = this.showMenuScreen(var1, true);
-                     continue label182;
-                  }
-
-                  this.accumulatedTime -= 80L;
-               }
-
-               this.sub_47(var1);
-               if (GameEngine.messageTimer > 0) {
-                  this.sub_2e3(var1, GameEngine.messageText);
-               }
-
-               this.flushScreenBuffer();
-               yieldToOtherThreads();
-            } catch (Exception var5) {
-            } catch (OutOfMemoryError var6) {
+                PortalRenderer.screenBuffer[0] = fadeColor;
+                sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                graphics.drawImage(splash, 0, 0, 20);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                        0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                        0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                this.sub_2e3(graphics, message);
+                this.flushScreenBuffer();
+                yieldToOtherThreads();
             }
-         }
-      }
-   }
-
-   private static int[] sub_d3(String var0, boolean var1) {
-      int[] var2 = null;
-
-      try {
-         InputStream var3 = (new Object()).getClass().getResourceAsStream(var0);
-         DataInputStream var4;
-         (var4 = new DataInputStream(var3)).skipBytes(1);
-         byte var5 = var4.readByte();
-         short var6 = var4.readShort();
-         short var7 = var4.readShort();
-         short var8 = var4.readShort();
-         int var9;
-         byte[] var10 = new byte[var9 = var6 * var7];
-         int var11;
-         byte[] var12 = new byte[var11 = var4.readInt()];
-         var4.readFully(var12, 0, var11);
-         LevelLoader.decompressSprite(var12, 0, var10, 0, var9, var5);
-         int[] var13 = new int[var8];
-
-         int var14;
-         int var15;
-         for(var14 = 0; var14 < var8; ++var14) {
-            var15 = var4.readByte() & 255;
-            int var16 = var4.readByte() & 255;
-            int var17 = var4.readByte() & 255;
-            var13[var14] = var15 << 16 | var16 << 8 | var17;
-         }
-
-         var4.close();
-         var2 = new int[var9];
-         if (var1) {
-            for(var14 = 0; var14 < var7; ++var14) {
-               for(var15 = 0; var15 < var6; ++var15) {
-                  var2[var14 * var6 + (var6 - var15 - 1)] = var13[var10[var14 * var6 + var15] & 255];
-               }
-            }
-         } else {
-            for(var14 = 0; var14 < var9; ++var14) {
-               var2[var14] = var13[var10[var14] & 255];
-            }
-         }
-      } catch (Exception var18) {
-      } catch (OutOfMemoryError var19) {
-      }
-
-      return var2;
-   }
-
-   private void sub_10f(int var1, int var2, int var3, byte[] var4, byte[] var5, byte[] var6) {
-      try {
-         String var8 = "/" + (var1 == 0 ? "gamedata/sniperminigame/ss1" : "gamedata/sniperminigame/ss2");
-         InputStream var9 = (new Object()).getClass().getResourceAsStream(var8);
-         DataInputStream var10;
-         (var10 = new DataInputStream(var9)).skipBytes(1);
-         byte var11 = var10.readByte();
-         short var12 = var10.readShort();
-         short var13 = var10.readShort();
-         if (var12 == var2 && var13 == var3) {
-            short var14 = var10.readShort();
-            int var15 = var2 * var3;
-            int var16;
-            byte[] var17 = new byte[var16 = var10.readInt()];
-            var10.readFully(var17, 0, var16);
-            LevelLoader.decompressSprite(var17, 0, var4, 0, var15, var11);
-            this.var_b23 = new int[var14];
-            this.var_b56 = new int[var14];
-            this.var_b60 = new int[var14];
-            this.var_b96 = new int[var14];
-
-            int var18;
-            for(var18 = 0; var18 < var14; ++var18) {
-               int var19 = var10.readByte() & 255;
-               int var20 = var10.readByte() & 255;
-               int var21 = var10.readByte() & 255;
-               this.var_b23[var18] = var19 << 16 | var20 << 8 | var21;
-               this.var_b60[var18] = this.var_b23[var18] | 16711680;
-               int var22;
-               if ((var22 = (var22 = (var19 + var20 + var21) / 3) + (96 - (var22 >> 2))) > 255) {
-                  var22 = 255;
-               }
-
-               this.var_b56[var18] = var22 << 16 | var22 << 8 | var22;
-               this.var_b96[var18] = this.var_b56[var18] | 16711680;
-            }
-
-            var10.close();
-            var9 = (new Object()).getClass().getResourceAsStream("/gamedata/sniperminigame/sight");
-            (var10 = new DataInputStream(var9)).skipBytes(8);
-            var17 = new byte[var16 = var10.readInt()];
-            var10.readFully(var17, 0, var16);
-            var10.close();
-            LevelLoader.decompressSprite(var17, 0, var6, 0, 4096, 1);
-            var9 = (new Object()).getClass().getResourceAsStream(var8 + "_mask");
-            (var10 = new DataInputStream(var9)).skipBytes(8);
-            var17 = new byte[var16 = var10.readInt()];
-            var10.readFully(var17, 0, var16);
-            var10.close();
-            LevelLoader.decompressSprite(var17, 0, var5, 0, var15, 1);
-
-            for(var18 = 0; var18 < var15; ++var18) {
-               var5[var18] = var5[var18] == 0 ? -1 : var4[var18];
-            }
-
-         } else {
-            throw new IllegalStateException();
-         }
-      } catch (Exception var23) {
-      } catch (OutOfMemoryError var24) {
-      }
-   }
-
-   private static void sub_159(Object var0, int var1, int var2) {
-      int var10000 = 1;
-
-      while(true) {
-         int var3 = var10000;
-         if (var10000 >= var2) {
+        } catch (Exception e) {
             return;
-         }
-
-         System.arraycopy(var0, var1, var0, var1 + var3, var2 - var3 > var3 ? var3 : var2 - var3);
-         var10000 = var3 + var3;
-      }
-   }
-
-   private void drawSplash(Graphics var1) {
-      try {
-         Image var2 = Image.createImage("/gamedata/sprites/logo.png");
-         Image var3 = Image.createImage("/gamedata/sprites/splash.png");
-         int var4;
-         int[] var5 = new int[var4 = var2.getWidth() * var2.getHeight()];
-         int var6 = (240 - var2.getWidth()) / 2;
-         int var7 = (320 - var2.getHeight()) / 2;
-         var1.setColor(16777215);
-         var1.drawRect(0, 0, 240, 320);
-         this.flushScreenBuffer();
-         long var8 = System.currentTimeMillis();
-
-         while(true) {
-            int var10 = 16777215;
-            int var11;
-            if ((var11 = (int)(System.currentTimeMillis() - var8 >> 2)) < 256) {
-               var10 |= 255 - var11 << 24;
-            } else if (var11 >= 512 && var11 < 768) {
-               var10 |= var11 - 512 << 24;
-            } else if (var11 >= 768) {
-               var5 = new int[var4 = var3.getWidth() * var3.getHeight()];
-               var8 = System.currentTimeMillis();
-
-               while(true) {
-                  var10 = 16777215;
-                  if ((var11 = (int)(System.currentTimeMillis() - var8 >> 2)) < 256) {
-                     var10 |= 255 - var11 << 24;
-                  } else if (var11 >= 768) {
-                     return;
-                  }
-
-                  var5[0] = var10;
-                  sub_159(var5, 0, var4);
-                  var1.drawImage(var3, 0, 0, 20);
-                  var1.drawRGB(var5, 0, var3.getWidth(), 0, 0, var3.getWidth(), var3.getHeight(), true);
-                  this.flushScreenBuffer();
-                  yieldToOtherThreads();
-               }
-            }
-
-            var5[0] = var10;
-            sub_159(var5, 0, var4);
-            var1.drawImage(var2, var6, var7, 20);
-            var1.drawRGB(var5, 0, var2.getWidth(), var6, var7, var2.getWidth(), var2.getHeight(), true);
-            this.flushScreenBuffer();
-            yieldToOtherThreads();
-         }
-      } catch (Exception var12) {
-      } catch (OutOfMemoryError var13) {
-      }
-   }
-
-   private void drawGameOver(Graphics var1) {
-      try {
-         Image var2 = Image.createImage("/gamedata/sprites/splash.png");
-         PortalRenderer.screenBuffer[0] = -2130771968;
-         sub_159(PortalRenderer.screenBuffer, 0, 38400);
-         var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-         var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-         String var3 = "mission failed|game over";
-         this.sub_2e3(var1, "mission failed|game over");
-         this.flushScreenBuffer();
-         delay(2000);
-         long var4 = System.currentTimeMillis();
-
-         while(true) {
-            int var6 = 16711680;
-            int var7;
-            if ((var7 = (int)(System.currentTimeMillis() - var4 >> 4)) < 128) {
-               var6 |= 255 - var7 << 24;
-            } else {
-               var6 |= Integer.MIN_VALUE;
-               if (var7 >= 512) {
-                  break;
-               }
-            }
-
-            PortalRenderer.screenBuffer[0] = var6;
-            sub_159(PortalRenderer.screenBuffer, 0, 38400);
-            var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-            this.sub_2e3(var1, var3);
-            this.flushScreenBuffer();
-            yieldToOtherThreads();
-         }
-      } catch (Exception var8) {
-         return;
-      } catch (OutOfMemoryError var9) {
-      }
-
-   }
-
-   private void sub_1e3(Graphics var1, Image var2) {
-      this.accumulatedTime = 0L;
-      this.lastFrameTime = System.currentTimeMillis();
-      int var4 = 0;
-
-      do {
-         long var5 = System.currentTimeMillis();
-         this.frameDeltaTime = var5 - this.lastFrameTime;
-         this.lastFrameTime = var5;
-         this.accumulatedTime += this.frameDeltaTime;
-         if (this.accumulatedTime > 600L) {
-            this.accumulatedTime = 600L;
-         }
-
-         while(this.accumulatedTime >= (long)6) {
-            ++var4;
-            this.accumulatedTime -= (long)6;
-         }
-
-         int var7 = var4;
-         if (var4 > 320) {
-            var7 = 320;
-         }
-
-         int var8 = 0;
-
-         for(int var9 = 0; var9 < 240; var9 += 10) {
-            Graphics var10000;
-            Image var10001;
-            int var10002;
-            int var10003;
-            byte var10004;
-            int var10005;
-            byte var10006;
-            int var10007;
-            int var10008;
-            if ((var8 & 1) == 0) {
-               var10000 = var1;
-               var10001 = var2;
-               var10002 = var9;
-               var10003 = 320 - var7;
-               var10004 = 10;
-               var10005 = var7;
-               var10006 = 0;
-               var10007 = var9;
-               var10008 = 0;
-            } else {
-               var10000 = var1;
-               var10001 = var2;
-               var10002 = var9;
-               var10003 = 0;
-               var10004 = 10;
-               var10005 = var7;
-               var10006 = 0;
-               var10007 = var9;
-               var10008 = 320 - var7;
-            }
-
-            var10000.drawRegion(var10001, var10002, var10003, var10004, var10005, var10006, var10007, var10008, 20);
-            ++var8;
-         }
-
-         this.flushScreenBuffer();
-      } while(var4 <= 320);
-
-   }
-
-   private int showMenuScreen(Graphics var1, boolean var2) {
-      try {
-         GameEngine.inputRun = false;
-         GameEngine.inputBack = false;
-         GameEngine.inputFire = false;
-         GameEngine.inputForward = false;
-         GameEngine.inputBackward = false;
-         Image var3 = Image.createImage("/gamedata/sprites/bkg.png");
-         int var4 = 0;
-         int var5 = 0;
-         String[] var6 = MenuSystem.mainMenuItems;
-         if (!var2) {
-            var4 = 32;
-            var6 = MenuSystem.pauseMenuItems;
-         }
-
-         int var7 = 0;
-         int var8 = var6.length - 2;
-         this.sub_1e3(var1, var3);
-         if (SaveSystem.musicEnabled == 1 && !this.isGamePaused) {
-            playSound(0, true, 80, 2);
-         }
-
-         Stack var10 = new Stack();
-
-         while(true) {
-            var1.drawImage(var3, 0, 0, 20);
-            int var12 = var6.length - 1;
-            int var13;
-            if ((var13 = var6.length - 1) > 5) {
-               var13 = 5;
-            }
-
-            int var14 = 320 - var13 * this.var_550 - 3 - this.var_550;
-            int var16;
-            if (var12 > var13 && var5 > 0) {
-               boolean var15 = false;
-               var16 = var14 + 2 * this.var_550 - 2;
-               var1.setColor(16115387);
-               var1.fillTriangle(117, var16, 123, var16, 120, var16 - 3);
-            }
-
-            var1.setColor(7433570);
-
-            int var17;
-            for(int var21 = 0; var21 < var13; ++var21) {
-               var16 = var21;
-               if (var5 > 0 && var21 > 1) {
-                  var16 = var21 + var5;
-               }
-
-               String var11 = var6[var16];
-               var17 = (240 - this.sub_5d2(var11)) / 2;
-               if ((var4 & 15) == var16) {
-                  int var18 = this.var_59b * 30;
-                  var1.fillRoundRect((240 - var18) / 2, var14, var18, this.var_550, 10, 10);
-               }
-
-               this.drawLargeString(var11, var1, var17, var14);
-               var14 += this.var_550;
-            }
-
-            if (var12 > var13 && var5 < var12 - 5) {
-               var16 = var14 + 1;
-               var1.setColor(16115387);
-               var1.fillTriangle(117, var16, 123, var16, 120, var16 + 3);
-            }
-
-            String var22 = var6 == this.SETTINGS_MENU_ITEMS ? "change" : (var6 == MenuSystem.CONFIRMATION_MENU_ITEMS ? "yes" : "select");
-            this.drawLargeString(var22, var1, 3, 320 - this.var_550 - 3);
-            this.drawLargeString(var6[var12], var1, 240 - this.sub_5d2(var6[var12]) - 3, 320 - this.var_550 - 3);
-            this.flushScreenBuffer();
-            yieldToOtherThreads();
-            Object[] var23 = new Object[0];
-            if (GameEngine.inputRun || GameEngine.inputFire) {
-               GameEngine.inputRun = false;
-               GameEngine.inputFire = false;
-               switch(var4) {
-               case 0:
-               case 33:
-                  (var23 = new Object[4])[0] = var6;
-                  var23[1] = new Integer(var4);
-                  var23[2] = new Integer(var7);
-                  var23[3] = new Integer(var8);
-                  var10.push(var23);
-                  var6 = MenuSystem.difficultyMenuItems;
-                  var4 = 18 + GameEngine.difficultyLevel;
-                  var7 = 2;
-                  var8 = var6.length - 2;
-                  break;
-               case 1:
-               case 34:
-                  this.SETTINGS_MENU_ITEMS = new String[6];
-                  this.SETTINGS_MENU_ITEMS[0] = "settings";
-                  this.SETTINGS_MENU_ITEMS[1] = "";
-                  this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
-                  this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
-                  this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
-                  this.SETTINGS_MENU_ITEMS[5] = "back";
-                  (var23 = new Object[4])[0] = var6;
-                  var23[1] = new Integer(var4);
-                  var23[2] = new Integer(var7);
-                  var23[3] = new Integer(var8);
-                  var10.push(var23);
-                  var6 = this.SETTINGS_MENU_ITEMS;
-                  var4 = 50;
-                  var7 = 2;
-                  var8 = this.SETTINGS_MENU_ITEMS.length - 2;
-                  break;
-               case 2:
-               case 35:
-                  this.sub_24b(var1, var3, "help", MenuSystem.HELP_MENU_ITEMS, false);
-                  break;
-               case 3:
-               case 36:
-                  this.sub_24b(var1, var3, "about", MenuSystem.ABOUT_MENU_TEXT, true);
-                  break;
-               case 4:
-               case 5:
-               case 6:
-               case 7:
-               case 8:
-               case 9:
-               case 10:
-               case 11:
-               case 12:
-               case 13:
-               case 14:
-               case 15:
-               case 16:
-               case 17:
-               case 21:
-               case 22:
-               case 23:
-               case 24:
-               case 25:
-               case 26:
-               case 27:
-               case 28:
-               case 29:
-               case 30:
-               case 31:
-               case 32:
-               case 37:
-               case 38:
-               case 39:
-               case 40:
-               case 41:
-               case 42:
-               case 43:
-               case 44:
-               case 45:
-               case 46:
-               case 47:
-               case 48:
-               case 49:
-               case 53:
-               case 54:
-               case 55:
-               case 56:
-               case 57:
-               case 58:
-               case 59:
-               case 60:
-               case 61:
-               case 62:
-               case 63:
-               case 64:
-               case 65:
-               case 75:
-               case 76:
-               case 77:
-               case 78:
-               case 79:
-               default:
-                  stopCurrentSound();
-                  return var4;
-               case 18:
-               case 19:
-               case 20:
-                  this.chapterMenuItems = new String[MenuSystem.CHAPTER_MENU_DATA.length];
-                  this.chapterMenuItems[0] = MenuSystem.CHAPTER_MENU_DATA[0];
-                  this.chapterMenuItems[1] = MenuSystem.CHAPTER_MENU_DATA[1];
-                  this.chapterMenuItems[2] = MenuSystem.CHAPTER_MENU_DATA[2];
-                  this.chapterMenuItems[this.chapterMenuItems.length - 1] = MenuSystem.CHAPTER_MENU_DATA[this.chapterMenuItems.length - 1];
-                  (var23 = new Object[4])[0] = var6;
-                  var23[1] = new Integer(var4);
-                  var23[2] = new Integer(var7);
-                  var23[3] = new Integer(var8);
-                  var10.push(var23);
-                  GameEngine.difficultyLevel = var4 - 18;
-                  SaveSystem.loadSaveData();
-                  var7 = 2;
-                  var8 = this.chapterMenuItems.length - 2;
-
-                  for(var17 = 3; var17 <= var8; ++var17) {
-                     String[] var10000;
-                     int var10001;
-                     String var10002;
-                     if (SaveSystem.saveData[var17 - 3] != null) {
-                        var10000 = this.chapterMenuItems;
-                        var10001 = var17;
-                        var10002 = MenuSystem.CHAPTER_MENU_DATA[var17];
-                     } else {
-                        var10000 = this.chapterMenuItems;
-                        var10001 = var17;
-                        var10002 = "unavailable";
-                     }
-
-                     var10000[var10001] = var10002;
-                  }
-
-                  var6 = this.chapterMenuItems;
-                  var4 = 66;
-                  break;
-               case 50:
-                  SaveSystem.soundEnabled = (byte)(SaveSystem.soundEnabled ^ 1);
-                  this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
-                  if (SaveSystem.musicEnabled != 1) {
-                     if (SaveSystem.soundEnabled == 1) {
-                        playSound(1, false, 80, 0);
-                     } else {
-                        stopCurrentSound();
-                     }
-                  }
-
-                  SaveSystem.saveSettingsToRMS();
-                  break;
-               case 51:
-                  SaveSystem.musicEnabled = (byte)(SaveSystem.musicEnabled ^ 1);
-                  this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
-                  if (SaveSystem.musicEnabled == 1) {
-                     stopCurrentSound();
-                     playSound(0, true, 80, 2);
-                  } else {
-                     stopCurrentSound();
-                  }
-
-                  SaveSystem.saveSettingsToRMS();
-                  break;
-               case 52:
-                  SaveSystem.vibrationEnabled = (byte)(SaveSystem.vibrationEnabled ^ 1);
-                  this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
-                  if (SaveSystem.vibrationEnabled == 1) {
-                     vibrateDevice(100);
-                  }
-
-                  SaveSystem.saveSettingsToRMS();
-                  break;
-               case 66:
-               case 67:
-               case 68:
-               case 69:
-               case 70:
-               case 71:
-               case 72:
-               case 73:
-               case 74:
-                  if (!this.chapterMenuItems[var4 - 64].equals("unavailable")) {
-                     stopCurrentSound();
-                     return var4;
-                  }
-                  break;
-               case 80:
-                  stopCurrentSound();
-                  return 4;
-               }
-            }
-
-            if (GameEngine.inputBack) {
-               GameEngine.inputBack = false;
-               if (var6[var6.length - 1] != "back" && var6[var6.length - 1] != "no") {
-                  if (var6[var6.length - 1] == "quit") {
-                     (var23 = new Object[4])[0] = var6;
-                     var23[1] = new Integer(var4);
-                     var23[2] = new Integer(var7);
-                     var23[3] = new Integer(var8);
-                     var10.push(var23);
-                     var6 = MenuSystem.CONFIRMATION_MENU_ITEMS;
-                     var4 = 80;
-                     var7 = 0;
-                     var8 = 0;
-                  }
-               } else {
-                   Object[] popped = (Object[])var10.pop();
-                   var6 = (String[])popped[0];
-                   var4 = ((Integer)popped[1]).intValue();
-                   var7 = ((Integer)popped[2]).intValue();
-                   var8 = ((Integer)popped[3]).intValue();
-                  var5 = 0;
-               }
-            }
-
-            if (GameEngine.inputForward) {
-               var16 = var4 & 15;
-               --var16;
-               if (var16 < var7) {
-                  var16 = var7;
-               } else if (var16 - var5 < 2) {
-                  --var5;
-               }
-
-               var4 = var4 & -16 | var16;
-               GameEngine.inputForward = false;
-            }
-
-            if (GameEngine.inputBackward) {
-               var16 = var4 & 15;
-               ++var16;
-               if (var16 > var8) {
-                  var16 = var8;
-               } else if (var12 > var13 && var16 - var5 > 4) {
-                  ++var5;
-               }
-
-               var4 = var4 & -16 | var16;
-               GameEngine.inputBackward = false;
-            }
-         }
-      } catch (Exception var19) {
-         stopCurrentSound();
-         return 4;
-      } catch (OutOfMemoryError var20) {
-         stopCurrentSound();
-         return 4;
-      }
-   }
-
-   private void sub_24b(Graphics var1, Image var2, String var3, String[] var4, boolean var5) {
-      GameEngine.inputRun = false;
-      GameEngine.inputBack = false;
-      GameEngine.inputFire = false;
-      GameEngine.inputForward = false;
-      GameEngine.inputBackward = false;
-
-      try {
-         String var6 = mainMidlet.getAppProperty("MIDlet-Version");
-         this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
-         boolean var7 = true;
-         int var8 = 320 - this.var_550;
-
-         for(int var9 = 1; var9 <= 8; ++var9) {
-            PortalRenderer.screenBuffer[0] = 16777215 | var9 * 268435456;
-            sub_159(PortalRenderer.screenBuffer, 0, 38400);
-            var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-            this.flushScreenBuffer();
-            yieldToOtherThreads();
-            delay(50);
-         }
-
-         long var21 = System.currentTimeMillis();
-
-         do {
-            if (var7) {
-               var1.setClip(0, 0, 240, 320);
-               var1.drawImage(var2, 0, 0, 20);
-               var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-               var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-               String var11 = "back";
-               this.drawLargeString(var11, var1, 240 - this.sub_5d2(var11) - 3, 320 - this.var_550 - 3);
-               this.drawLargeString(var3, var1, (240 - this.sub_5d2(var3)) / 2, 3);
-               var1.setClip(0, this.var_550 + 6, 240, 320 - 2 * this.var_550 - 12);
-               int var14;
-               if (var5) {
-                  long var15;
-                  int var17 = (int)((var15 = System.currentTimeMillis()) - var21);
-                  var14 = var8;
-                  int var18 = var17 / 50 + 1;
-                  if ((var8 -= var18) + var4.length * (this.var_6d3 + 2) < 0) {
-                     var8 = 320 - this.var_550;
-                  }
-
-                  if ((var17 = var18 * 50 - var17) > 0) {
-                     delay(var17);
-                  }
-
-                  var21 = var15;
-               } else {
-                  var14 = (320 - (this.var_6d3 + 2) * var4.length) / 2;
-               }
-
-               for(int var23 = 0; var23 < var4.length; ++var23) {
-                  String var16 = var4[var23];
-                  if (var23 == 0 && var5) {
-                     var16 = var16 + " " + var6;
-                  }
-
-                  this.drawSmallString(var16, var1, (240 - this.sub_5ef(var16)) / 2, var14);
-                  var14 += this.var_6d3 + 2;
-               }
-
-               this.flushScreenBuffer();
-            }
-
-            var7 = var5;
-            yieldToOtherThreads();
-         } while(!GameEngine.inputBack);
-
-         GameEngine.inputBack = false;
-         var1.setClip(0, 0, 240, 320);
-
-         for(int var22 = 8; var22 >= 1; --var22) {
-            PortalRenderer.screenBuffer[0] = 16777215 | var22 * 268435456;
-            sub_159(PortalRenderer.screenBuffer, 0, 38400);
-            var1.drawImage(var2, 0, 0, 20);
-            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-            this.flushScreenBuffer();
-            yieldToOtherThreads();
-            delay(50);
-         }
-      } catch (Exception var19) {
-      } catch (OutOfMemoryError var20) {
-      }
-
-      GameEngine.inputRun = false;
-      GameEngine.inputBack = false;
-      GameEngine.inputFire = false;
-      GameEngine.inputForward = false;
-      GameEngine.inputBackward = false;
-      this.smallFontImage = null;
-      var1.setClip(0, 0, 240, 320);
-   }
-
-   private boolean sub_255(int[] var1, int[] var2, int[] var3, int[] var4, int[] var5, int[] var6, int[] var7, int[] var8) {
-      int var9;
-      int var10;
-      int var11;
-      int[] var10000;
-      int var10001;
-      byte var10002;
-      if (this.enemySpawnTimer >= 200) {
-         this.enemySpawnTimer = 0;
-         var9 = 0;
-
-         for(var10 = 0; var10 < 8; ++var10) {
-            if (var1[var10] == 0) {
-               var4[var9++] = var10;
-            }
-         }
-
-         if (this.activeEnemyCount < 20) {
-            if (var9 > 0) {
-               var10 = GameEngine.random.nextInt() & 1;
-               var11 = var4[(GameEngine.random.nextInt() & 7) % var9];
-               var2[var11] = var10;
-               int var12 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-               var3[var11] = var12 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
-               var5[var11] = var6[var11];
-               if (var6[var11] > var7[var11]) {
-                  var10000 = var1;
-                  var10001 = var11;
-                  var10002 = 1;
-               } else {
-                  var10000 = var1;
-                  var10001 = var11;
-                  var10002 = 5;
-               }
-
-               var10000[var10001] = var10002;
-               ++this.activeEnemyCount;
-            }
-         } else if (var9 == 8) {
-            return false;
-         }
-      }
-
-      ++this.enemySpawnTimer;
-      ++this.enemyUpdateCounter;
-
-      for(var9 = 0; var9 < 8; ++var9) {
-         if (this.enemyUpdateCounter % 10 == 0) {
-            label182: {
-               switch(var1[var9]) {
-               case 1:
-                  var10000 = var1;
-                  var10001 = var9;
-                  var10002 = 2;
-                  break;
-               case 2:
-                  var10000 = var1;
-                  var10001 = var9;
-                  var10002 = 1;
-                  break;
-               case 3:
-               case 4:
-               default:
-                  break label182;
-               case 5:
-                  var10000 = var1;
-                  var10001 = var9;
-                  var10002 = 6;
-                  break;
-               case 6:
-                  var10000 = var1;
-                  var10001 = var9;
-                  var10002 = 5;
-               }
-
-               var10000[var10001] = var10002;
-            }
-         } else if (var8[var9] == 0) {
-            continue;
-         }
-
-         if ((var8[var9] != 1 || this.enemyUpdateCounter % 7 == 0) && (var8[var9] != 2 || this.enemyUpdateCounter % 5 == 0)) {
-            if (var1[var9] != 1 && var1[var9] != 2) {
-               if (var1[var9] != 5 && var1[var9] != 6) {
-                  continue;
-               }
-
-               var10 = var5[var9] + 1;
-               var11 = (var6[var9] > var7[var9] ? var6 : var7)[var9];
-               if (var10 > var11) {
-                  var10 = var11;
-                  var1[var9] = 1;
-               }
-
-               var10000 = var5;
-            } else {
-               var10 = var5[var9] - 1;
-               var11 = (var6[var9] < var7[var9] ? var6 : var7)[var9];
-               if (var10 < var11) {
-                  var10 = var11;
-                  var1[var9] = 5;
-               }
-
-               var10000 = var5;
-            }
-
-            var10000[var9] = var10;
-         }
-      }
-
-      for(var9 = 0; var9 < 8; ++var9) {
-         if ((var10 = var1[var9]) != 0) {
-            int var16;
-            if (var3[var9] <= 0) {
-               label154: {
-                  switch(var10) {
-                  case 1:
-                  case 2:
-                  case 5:
-                  case 6:
-                     var1[var9] = 3;
-                     var11 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                     var10000 = var3;
-                     var10001 = var9;
-                     var16 = var11 % var_191e[GameEngine.difficultyLevel] + var_1910[GameEngine.difficultyLevel];
-                     break;
-                  case 3:
-                     var1[var9] = 4;
-                     var10000 = var3;
-                     var10001 = var9;
-                     var16 = 1;
-                     break;
-                  case 4:
-                  default:
-                     break label154;
-                  }
-
-                  var10000[var10001] = var16;
-               }
-            }
-
-            var16 = var3[var9]--;
-         }
-      }
-
-      int[] var13 = new int[]{0, 0, -1, 1, -1, 1, -1, 1};
-      int[] var15 = new int[]{-1, 1, 0, 0, -1, 1, 1, -1};
-      var11 = this.var_c2f;
-      this.var_c2f = var11 + 1 & 7;
-      this.var_d88 += var13[var11];
-      this.var_d9b += var15[var11];
-      byte var14 = 0;
-      if (GameEngine.inputLookUp) {
-         if (this.var_d2a == 3) {
-            --this.var_be4;
-         }
-
-         var14 = 3;
-      }
-
-      if (GameEngine.inputLookDown) {
-         if (this.var_d2a == 4) {
-            ++this.var_be4;
-         }
-
-         var14 = 4;
-      }
-
-      if (GameEngine.inputForward) {
-         if (this.var_d2a == 1) {
-            --this.var_c1f;
-         }
-
-         var14 = 1;
-      }
-
-      if (GameEngine.inputBackward) {
-         if (this.var_d2a == 2) {
-            ++this.var_c1f;
-         }
-
-         var14 = 2;
-      }
-
-      this.var_d88 += this.var_be4 >> 2;
-      this.var_d9b += this.var_c1f >> 2;
-      if (this.var_d88 > 208) {
-         this.var_d88 = 208;
-         this.var_be4 = 0;
-      }
-
-      if (this.var_d88 < -31) {
-         this.var_d88 = -31;
-         this.var_be4 = 0;
-      }
-
-      if (this.var_d9b > 256) {
-         this.var_d9b = 256;
-         this.var_c1f = 0;
-      }
-
-      if (this.var_d9b < -31) {
-         this.var_d9b = -31;
-         this.var_c1f = 0;
-      }
-
-      this.var_d2a = var14;
-      if (this.var_d2a == 0) {
-         if (this.var_be4 > 0) {
-            --this.var_be4;
-         }
-
-         if (this.var_be4 < 0) {
-            ++this.var_be4;
-         }
-
-         if (this.var_c1f > 0) {
-            --this.var_c1f;
-         }
-
-         if (this.var_c1f < 0) {
-            ++this.var_c1f;
-         }
-      }
-
-      return true;
-   }
-
-   private int runMiniGameSniper(Graphics var1, int var2) {
-      try {
-         boolean var3 = false;
-         int var5;
-         byte[] var7 = new byte[var5 = 240 * 288];
-         byte[] var8 = new byte[var5];
-         byte[] var9 = new byte[4096];
-         int[][] var10 = new int[6][];
-         int[][] var11 = new int[6][];
-         int[][] var12 = new int[6][];
-         int[][] var13 = new int[6][];
-         this.enemySpawnTimer = 0;
-         this.enemyUpdateCounter = 0;
-         this.activeEnemyCount = 0;
-         int[][] var14 = new int[][]{{84, 147, 197, 132, 147, 155, 77, 155}, {63, 177, 89, 149, 104, 132, 84, 146}};
-         int[][] var15 = new int[][]{{147, 84, 164, 147, 132, 160, 155, 77}, {75, 162, 149, 89, 132, 104, 90, 152}};
-         int[][] var16 = new int[][]{{145, 145, 102, 84, 84, 144, 151, 151}, {108, 105, 111, 111, 160, 160, 152, 152}};
-         int[][] var17 = new int[][]{{1, 1, 1, 0, 0, 2, 2, 2}, {1, 1, 1, 1, 1, 1, 1, 1}};
-         int[] var18 = new int[]{4, 9, 14};
-         int[] var19 = new int[]{8, 18, 30};
-         int[] var20 = new int[]{var_1329[GameEngine.difficultyLevel], var_1358[GameEngine.difficultyLevel], var_1366[GameEngine.difficultyLevel]};
-         boolean var21 = false;
-         int[] var22 = new int[]{0, 0};
-         int[] var23 = new int[]{0, 0};
-         int[][] var24 = new int[8][];
-         int[] var25 = new int[8];
-         int[] var26 = new int[8];
-         int[] var27 = new int[8];
-         int[] var28 = new int[8];
-
-         int var29;
-         for(var29 = 0; var29 < 8; ++var29) {
-            var14[var2][var29] -= var22[var2];
-            var15[var2][var29] -= var22[var2];
-            var16[var2][var29] -= var23[var2];
-         }
-
-         int var31;
-         for(var29 = 0; var29 < 6; ++var29) {
-            boolean var30 = var29 > 3;
-            var31 = var29 > 3 ? var29 - 3 : var29 + 1;
-            var10[var29] = sub_d3("/gamedata/sniperminigame/ot8" + Integer.toString(var31), var30);
-            var11[var29] = sub_d3("/gamedata/sniperminigame/ot18" + Integer.toString(var31), var30);
-            var12[var29] = sub_d3("/gamedata/sniperminigame/ot30" + Integer.toString(var31), var30);
-            var13[var29] = sub_d3("/gamedata/sniperminigame/ss30" + Integer.toString(var31), var30);
-         }
-
-         Image var61 = Image.createImage("/gamedata/sniperminigame/sight.png");
-         this.sub_10f(var2, 240, 288, var7, var8, var9);
-         this.var_be4 = 0;
-         this.var_c1f = 0;
-         this.var_d88 = 88;
-         this.var_d9b = 112;
-         int[] var32 = new int[8];
-         this.accumulatedTime = 0L;
-         this.lastFrameTime = 0L;
-         GameEngine.levelTransitionState = 2;
-
-         while(this.isGameRunning) {
-            if (GameEngine.levelTransitionState == 1) {
-               return -1;
-            }
-
-            int var34;
-            if ((GameEngine.inputRun || GameEngine.inputBack || this.isGamePaused) && (var34 = this.showMenuScreen(var1, false)) != 32) {
-               return var34;
-            }
-
-            long var63 = System.currentTimeMillis();
-            this.frameDeltaTime = var63 - this.lastFrameTime;
-            this.lastFrameTime = var63;
+        } catch (OutOfMemoryError e) {
+        }
+    }
+
+    private void sub_1e3(Graphics graphics, Image background) {
+        this.accumulatedTime = 0L;
+        this.lastFrameTime = System.currentTimeMillis();
+        int progress = 0;
+
+        do {
+            long currentTime = System.currentTimeMillis();
+            this.frameDeltaTime = currentTime - this.lastFrameTime;
+            this.lastFrameTime = currentTime;
             this.accumulatedTime += this.frameDeltaTime;
             if (this.accumulatedTime > 600L) {
-               this.accumulatedTime = 600L;
+                this.accumulatedTime = 600L;
             }
 
-            while(this.accumulatedTime >= (long)40) {
-               ++this.frameCounter;
-               if (!this.sub_255(var26, var25, var27, var32, var28, var14[var2], var15[var2], var17[var2])) {
-                  return -1;
-               }
-
-               this.accumulatedTime -= (long)40;
+            while(this.accumulatedTime >= 6L) {
+                ++progress;
+                this.accumulatedTime -= 6L;
             }
 
-            int var36 = 0;
+            int displayProgress = progress > UI_HEIGHT ? UI_HEIGHT : progress;
+            int column = 0;
 
-            for(int var37 = 0; var37 < 8; ++var37) {
-               if (var26[var37] == 4) {
-                  var36 += var20[var17[var2][var37]];
-               }
+            for(int x = 0; x < PortalRenderer.SCREEN_WIDTH; x += 10) {
+                if ((column & 1) == 0) {
+                    graphics.drawRegion(background, x, UI_HEIGHT - displayProgress, 10, displayProgress,
+                            0, x, 0, 20);
+                } else {
+                    graphics.drawRegion(background, x, 0, 10, displayProgress,
+                            0, x, UI_HEIGHT - displayProgress, 20);
+                }
+                ++column;
             }
 
-            int[] var64 = this.var_b56;
-            int[] var38 = this.var_b23;
-            if (var36 > 0) {
-               byte var10000;
-               boolean var10001;
-               byte var10002;
-               if (var36 > var_1329[GameEngine.difficultyLevel]) {
-                  if (var36 > var_1358[GameEngine.difficultyLevel]) {
-                     var10000 = 2;
-                     var10001 = false;
-                     var10002 = 100;
-                  } else {
-                     var10000 = 2;
-                     var10001 = false;
-                     var10002 = 80;
-                  }
-               } else {
-                  var10000 = 2;
-                  var10001 = false;
-                  var10002 = 60;
-               }
-
-               playSound(var10000, var10001, var10002, 0);
-               vibrateDevice(var36 * 10);
-               if (GameEngine.applyDamage(var36)) {
-                  var21 = true;
-               } else {
-                  var64 = this.var_b96;
-                  var38 = this.var_b60;
-               }
-            }
-
-            int var62 = this.var_d88;
-            int var39 = (var31 = this.var_d9b) < 0 ? 0 : var31;
-            int var40;
-            if ((var40 = var31 + 64) > 288) {
-               var40 = 288;
-            }
-
-            int var41 = var62 < 0 ? 0 : var62;
-            int var42;
-            if ((var42 = var62 + 64) > 240) {
-               var42 = 240;
-            }
-
-            int var43;
-            int var44;
-            int var45;
-            int var46;
-            for(var43 = var39; var43 < var40; ++var43) {
-               var44 = var41 + 240 * var43;
-               var45 = var42 + 240 * var43;
-
-               for(var46 = var44; var46 < var45; ++var46) {
-                  PortalRenderer.screenBuffer[var46] = var38[var7[var46] & 255];
-               }
-            }
-
-            var43 = var2 == 0 ? 6 : 8;
-
-            int var47;
-            int var48;
-            int var49;
-            int var50;
-            int[][] var66;
-            int var67;
-            int[][] var68;
-            for(var44 = 0; var44 < var43; ++var44) {
-               if (var26[var44] > 0) {
-                  label273: {
-                     var24[var44] = null;
-                     var45 = var28[var44];
-                     var46 = var16[var2][var44];
-                     var47 = var17[var2][var44];
-                     var48 = var18[var47];
-                     var49 = var19[var47];
-                     switch(var47) {
-                     case 0:
-                        var66 = var24;
-                        var67 = var44;
-                        var68 = var10;
-                        break;
-                     case 1:
-                        var66 = var24;
-                        var67 = var44;
-                        var68 = var11;
-                        break;
-                     case 2:
-                        if (var25[var44] == 0) {
-                           var66 = var24;
-                           var67 = var44;
-                           var68 = var12;
-                        } else {
-                           var66 = var24;
-                           var67 = var44;
-                           var68 = var13;
-                        }
-                        break;
-                     default:
-                        break label273;
-                     }
-
-                     var66[var67] = var68[var26[var44] - 1];
-                  }
-
-                  copyToScreenBuffer(var24[var44], var48, var49, var45, var46, var36 > 0);
-                  if (var26[var44] == 4) {
-                     var26[var44] = (var28[var44] & 1) == 1 ? 1 : 5;
-                     var50 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                     var27[var44] = var50 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
-                  }
-               }
-            }
-
-            for(var44 = var39; var44 < var40; ++var44) {
-               var45 = var41 + 240 * var44;
-               var46 = var42 + 240 * var44;
-
-               for(var47 = var45; var47 < var46; ++var47) {
-                  if ((var48 = var8[var47] & 255) != 255) {
-                     PortalRenderer.screenBuffer[var47] = var38[var48];
-                  }
-               }
-            }
-
-            if (var2 == 0) {
-               for(var44 = 6; var44 < 8; ++var44) {
-                  if (var26[var44] > 0) {
-                     var24[var44] = null;
-                     var45 = var28[var44];
-                     var46 = var16[var2][var44];
-                     var47 = var17[var2][var44];
-                     var48 = var18[var47];
-                     var49 = var19[var47];
-                     if (var25[var44] == 0) {
-                        var66 = var24;
-                        var67 = var44;
-                        var68 = var12;
-                     } else {
-                        var66 = var24;
-                        var67 = var44;
-                        var68 = var13;
-                     }
-
-                     var66[var67] = var68[var26[var44] - 1];
-                     copyToScreenBuffer(var24[var44], var48, var49, var45, var46, var36 > 0);
-                     if (var26[var44] == 4) {
-                        var26[var44] = (var28[var44] & 1) == 1 ? 1 : 5;
-                        var50 = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                        var27[var44] = var50 % var_18ad[GameEngine.difficultyLevel] + var_18a0[GameEngine.difficultyLevel];
-                     }
-                  }
-               }
-            }
-
-            var44 = 240 * var39;
-
-            for(var45 = 0; var45 < var44; ++var45) {
-               PortalRenderer.screenBuffer[var45] = var64[var7[var45] & 255];
-            }
-
-            var45 = var39 - var31;
-
-            int var51;
-            for(var46 = var39; var46 < var40; ++var45) {
-               var44 = (var47 = 240 * var46) + var41;
-
-               for(var48 = var47; var48 < var44; ++var48) {
-                  PortalRenderer.screenBuffer[var48] = var64[var7[var48] & 255];
-               }
-
-               var44 = var47 + 240;
-
-               for(var48 = var42 + var47; var48 < var44; ++var48) {
-                  PortalRenderer.screenBuffer[var48] = var64[var7[var48] & 255];
-               }
-
-               var48 = 64 * var45;
-               var49 = var41 - var62;
-
-               for(var50 = var41; var50 < var42; ++var49) {
-                  if (var9[var48 + var49] == 0) {
-                     var51 = var47 + var50;
-                     PortalRenderer.screenBuffer[var51] = var64[var7[var51] & 255];
-                  }
-
-                  ++var50;
-               }
-
-               ++var46;
-            }
-
-            for(var47 = var46 = 240 * var40; var47 < var5; ++var47) {
-               PortalRenderer.screenBuffer[var47] = var64[var7[var47] & 255];
-            }
-
-            if (GameEngine.inputFire) {
-               var47 = this.var_d88 + 32 - 1;
-               var48 = this.var_d9b + 32 - 1;
-               var49 = 16777215;
-               boolean var65 = false;
-
-               for(var51 = 7; var51 >= 0; --var51) {
-                  int var52 = var28[var51];
-                  int var53 = var16[var2][var51];
-                  int var54 = var17[var2][var51];
-                  int var55 = var18[var54];
-                  int var56 = var19[var54];
-                  if ((var2 == 0 && (var51 >= 6 || var54 == 0) || var8[var48 * 240 + var47] == -1) && var26[var51] > 0 && var47 >= var52 && var47 <= var52 + var55 && var48 >= var53 && var48 <= var53 + var56) {
-                     int var57 = var47 - var52;
-                     int var58 = var48 - var53;
-                     if (var65 = var2 == 0 && var54 == 0 ? true : var24[var51][var55 * var58 + var57] != 16711935) {
-                        playSound(7, false, 100, 1);
-                        var26[var51] = 0;
-                        var49 = 16711680;
-                        break;
-                     }
-                  }
-               }
-
-               if (!var65) {
-                  playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
-               }
-
-               PortalRenderer.screenBuffer[240 * var48 + var47] = var49;
-               GameEngine.inputFire = false;
-            }
-
-            var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 288, false);
-            var1.drawImage(var61, var62, var31, 20);
-            var1.drawImage(this.statusBarImage, 0, 288, 0);
-            this.sub_547(GameEngine.playerHealth, var1, 58, 294);
-            this.sub_547(GameEngine.playerArmor, var1, 138, 294);
             this.flushScreenBuffer();
-            if (var21) {
-               return -2;
-            }
+        } while(progress <= UI_HEIGHT);
+    }
 
-            yieldToOtherThreads();
-         }
-      } catch (Exception var59) {
-      } catch (OutOfMemoryError var60) {
-      }
-
-      return -1;
-   }
-
-   private static void copyToScreenBuffer(int[] var0, int var1, int var2, int var3, int var4, boolean var5) {
-      int var6 = 240 * var4 + var3;
-      int var7 = 0;
-      int var8;
-      int var9;
-      int var10;
-      if (!var5) {
-         for(var8 = 0; var8 < var2; ++var8) {
-            for(var9 = 0; var9 < var1; ++var9) {
-               if ((var10 = var0[var7++]) != 16711935) {
-                  PortalRenderer.screenBuffer[var6 + var9] = var10;
-               }
-            }
-
-            var6 += 240;
-         }
-
-      } else {
-         for(var8 = 0; var8 < var2; ++var8) {
-            for(var9 = 0; var9 < var1; ++var9) {
-               if ((var10 = var0[var7++]) != 16711935) {
-                  PortalRenderer.screenBuffer[var6 + var9] = var10 | 16711680;
-               }
-            }
-
-            var6 += 240;
-         }
-
-      }
-   }
-
-   private void sub_2e3(Graphics var1, String var2) {
-      int var3 = 0;
-      int var5 = 0;
-
-      int var4;
-      do {
-         if ((var4 = var2.indexOf(124, var3)) == -1) {
-            var4 = var2.length() - 1;
-         } else {
-            --var4;
-         }
-
-         ++var5;
-      } while((var3 = var4 + 2) < var2.length());
-
-      int var7 = 160 - this.var_550 * var5 / 2;
-      var3 = 0;
-
-      do {
-         if ((var4 = var2.indexOf(124, var3)) == -1) {
-            var4 = var2.length() - 1;
-         } else {
-            --var4;
-         }
-
-         String var8 = var2.substring(var3, var4 + 1);
-         int var6 = (240 - this.sub_5d2(var8)) / 2;
-         this.drawLargeString(var8, var1, var6, var7);
-         var7 += this.var_550;
-      } while((var3 = var4 + 2) < var2.length());
-
-   }
-
-   public final void stopGame() {
-      if (!this.isGamePaused) {
-         this.isGamePaused = true;
-         if (audioManager != null) {
-            audioManager.stopCurrentSound();
-         }
-
-      }
-   }
-
-   public final void resumeGame() {
-      if (this.isGamePaused) {
-         if (audioManager != null && SaveSystem.musicEnabled == 1 && this.areResourcesLoaded) {
-            playSound(0, true, 80, 2);
-         }
-
-         this.isGamePaused = false;
-      }
-   }
-
-   public void showNotify() {
-      this.resumeGame();
-   }
-
-   public void hideNotify() {
-      this.stopGame();
-   }
-
-   public final void stopGameLoop() {
-      this.isGameRunning = false;
-   }
-
-   public final boolean gameLoopTick() {
-      if (GameEngine.updateGameLogic()) {
-         return true;
-      } else {
-         if (!GameEngine.weaponSwitchAnimationActive) {
-            GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
-            if (GameEngine.selectNextWeapon) {
-               GameEngine.selectNextWeapon = false;
-               GameEngine.pendingWeaponSwitch = GameEngine.cycleWeaponForward(GameEngine.pendingWeaponSwitch);
-            }
-
-            GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(GameEngine.pendingWeaponSwitch);
-            if (GameEngine.pendingWeaponSwitch != GameEngine.currentWeapon) {
-               GameEngine.weaponSwitchAnimationActive = true;
-               GameEngine.weaponAnimationState = 8;
-            }
-         }
-
-         if (GameEngine.weaponSwitchAnimationActive) {
-            --GameEngine.weaponAnimationState;
-            if (GameEngine.weaponAnimationState == -8) {
-               GameEngine.weaponSwitchAnimationActive = false;
-            }
-
-            if (GameEngine.weaponAnimationState == 0) {
-               GameEngine.currentWeapon = GameEngine.pendingWeaponSwitch;
-
-               try {
-                  label190: {
-                     MainGameCanvas var3;
-                     boolean var4;
-                     label162: {
-                        Image[] var10000;
-                        byte var10001;
-                        Image var5;
-                        label161: {
-                           String var10002;
-                           switch(GameEngine.currentWeapon) {
-                           case 0:
-                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/fist_a.png");
-                              var10000 = this.weaponSprites;
-                              var10001 = 1;
-                              var10002 = "/gamedata/sprites/fist_b.png";
-                              break;
-                           case 1:
-                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/luger_a.png");
-                              var10000 = this.weaponSprites;
-                              var10001 = 1;
-                              var10002 = "/gamedata/sprites/luger_b.png";
-                              break;
-                           case 2:
-                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/mauser_a.png");
-                              this.weaponSprites[1] = Image.createImage("/gamedata/sprites/mauser_b.png");
-                              this.weaponSprites[2] = null;
-                              var3 = this;
-                              var4 = false;
-                              break label162;
-                           case 3:
-                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/m40_a.png");
-                              this.weaponSprites[1] = Image.createImage("/gamedata/sprites/m40_b.png");
-                              this.weaponSprites[2] = null;
-                              var3 = this;
-                              var4 = false;
-                              break label162;
-                           case 4:
-                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/sten_a.png");
-                              this.weaponSprites[1] = Image.createImage("/gamedata/sprites/sten_b.png");
-                              this.weaponSprites[2] = null;
-                              var3 = this;
-                              var4 = false;
-                              break label162;
-                           case 5:
-                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/panzerfaust_a.png");
-                              this.weaponSprites[1] = Image.createImage("/gamedata/sprites/panzerfaust_b.png");
-                              this.weaponSprites[2] = Image.createImage("/gamedata/sprites/panzerfaust_c.png");
-                              var3 = this;
-                              var4 = false;
-                              break label162;
-                           case 6:
-                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/dynamite.png");
-                              var10000 = this.weaponSprites;
-                              var10001 = 1;
-                              var5 = null;
-                              break label161;
-                           case 7:
-                              this.weaponSprites[0] = Image.createImage("/gamedata/sprites/sonic_a.png");
-                              var10000 = this.weaponSprites;
-                              var10001 = 1;
-                              var10002 = "/gamedata/sprites/sonic_b.png";
-                              break;
-                           default:
-                              break label190;
-                           }
-
-                           var5 = Image.createImage(var10002);
-                        }
-
-                        var10000[var10001] = var5;
-                        this.weaponSprites[2] = null;
-                        var3 = this;
-                        var4 = true;
-                     }
-
-                     var3.isWeaponCentered = var4;
-                  }
-
-                  this.weaponAnimationState = 0;
-                  weaponSpriteFrame = 0;
-               } catch (Exception var1) {
-               } catch (OutOfMemoryError var2) {
-               }
-            }
-         }
-
-         if (GameEngine.weaponCooldownTimer > -32768) {
-            --GameEngine.weaponCooldownTimer;
-         }
-
-         if (GameEngine.inputFire && !GameEngine.weaponSwitchAnimationActive) {
-            int var6;
-            switch(GameEngine.currentWeapon) {
-            case 0:
-               if (GameEngine.weaponCooldownTimer < -var_111e[GameEngine.difficultyLevel]) {
-                  LevelLoader.gameWorld.fireWeapon();
-                  this.weaponAnimationState = 1;
-                  weaponSpriteFrame = 1;
-                  GameEngine.weaponCooldownTimer = 1;
-               }
-               break;
-            case 1:
-               if (GameEngine.weaponCooldownTimer < -var_1128[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
-                  var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  LevelLoader.gameWorld.fireWeapon();
-                  this.weaponAnimationState = 1;
-                  weaponSpriteFrame = 1;
-                  GameEngine.weaponCooldownTimer = 1;
-               }
-               break;
-            case 2:
-               if (GameEngine.weaponCooldownTimer < -var_1147[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
-                  var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  LevelLoader.gameWorld.fireWeapon();
-                  this.weaponAnimationState = 1;
-                  weaponSpriteFrame = 1;
-                  GameEngine.weaponCooldownTimer = 1;
-               }
-               break;
-            case 3:
-               if (GameEngine.weaponCooldownTimer <= 0) {
-                  if (this.weaponAnimationState == 0) {
-                     if (GameEngine.ammoCounts[1] > 0) {
-                        var6 = GameEngine.ammoCounts[1]--;
-                        LevelLoader.gameWorld.fireWeapon();
-                        this.weaponAnimationState = 1;
-                        weaponSpriteFrame = 1;
-                        GameEngine.weaponCooldownTimer = 1;
-                     }
-                  } else {
-                     this.weaponAnimationState = 0;
-                     GameEngine.weaponCooldownTimer = var_119b[GameEngine.difficultyLevel];
-                  }
-               }
-               break;
-            case 4:
-               if (GameEngine.weaponCooldownTimer <= 0) {
-                  if (this.weaponAnimationState == 0) {
-                     if (GameEngine.ammoCounts[1] > 0) {
-                        var6 = GameEngine.ammoCounts[1]--;
-                        LevelLoader.gameWorld.fireWeapon();
-                        this.weaponAnimationState = 1;
-                        weaponSpriteFrame = 1;
-                        GameEngine.weaponCooldownTimer = 1;
-                     }
-                  } else {
-                     this.weaponAnimationState = 0;
-                     GameEngine.weaponCooldownTimer = var_11e0[GameEngine.difficultyLevel];
-                  }
-               }
-               break;
-            case 5:
-               if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
-                  var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  LevelLoader.gameWorld.fireWeapon();
-                  this.weaponAnimationState = 1;
-                  weaponSpriteFrame = 1;
-                  GameEngine.weaponCooldownTimer = 2;
-               }
-               break;
-            case 6:
-               if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[6] > 0) {
-                  if ((currentLevelId == 4 || currentLevelId == 7 || currentLevelId == 8) && (currentLevelId != 4 || GameEngine.currentSector.getSectorType() != 666) && GameEngine.ammoCounts[6] == 1) {
-                     GameEngine.messageText = "i'd better use it|to finish my mission";
-                     GameEngine.messageTimer = 50;
-                  } else if (LevelLoader.gameWorld.throwGrenade()) {
-                     var6 = GameEngine.ammoCounts[6]--;
-                     GameEngine.weaponCooldownTimer = 0;
-                     GameEngine.weaponAnimationState = 8;
-                     GameEngine.weaponSwitchAnimationActive = true;
-                     GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(6);
-                  }
-               }
-               break;
-            case 7:
-               if (GameEngine.weaponCooldownTimer < -var_11f1[GameEngine.difficultyLevel] && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
-                  var6 = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                  LevelLoader.gameWorld.fireWeapon();
-                  this.weaponAnimationState = 1;
-                  weaponSpriteFrame = 1;
-                  GameEngine.weaponCooldownTimer = 1;
-               }
-            }
-         } else if (GameEngine.weaponCooldownTimer <= 0) {
-            if (GameEngine.currentWeapon == 5) {
-               if (this.weaponAnimationState == 1) {
-                  this.weaponAnimationState = 2;
-                  weaponSpriteFrame = 2;
-                  GameEngine.weaponAnimationState = 8;
-                  GameEngine.weaponSwitchAnimationActive = true;
-                  GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(5);
-               }
-            } else {
-               this.weaponAnimationState = 0;
-            }
-         }
-
-         if (GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 || GameEngine.inputStrafe) {
+    private int showMenuScreen(Graphics graphics, boolean isMainMenu) {
+        try {
+            GameEngine.inputRun = false;
+            GameEngine.inputBack = false;
             GameEngine.inputFire = false;
-         }
+            GameEngine.inputForward = false;
+            GameEngine.inputBackward = false;
 
-         return false;
-      }
-   }
+            Image background = Image.createImage("/gamedata/sprites/bkg.png");
+            int menuMode = 0;
+            int scrollOffset = 0;
+            String[] menuItems = MenuSystem.mainMenuItems;
 
-   private static void sub_3bc(GameObject var0, byte[] var1, byte[] var2) {
-      for(int var3 = 0; var3 < var1.length; ++var3) {
-         byte var4 = var1[var3];
-         byte var5 = var2[var3];
-         var0.addSpriteFrame(var4, var5);
-         if (var4 != 0) {
-            LevelLoader.preloadTexture(var4);
-         }
-
-         if (var5 != 0) {
-            LevelLoader.preloadTexture(var5);
-         }
-      }
-
-   }
-
-   private void initializeGameResources() {
-      try {
-         this.statusBarImage = Image.createImage("/gamedata/sprites/bar.png");
-         this.weaponSprites[0] = Image.createImage("/gamedata/sprites/fist_a.png");
-         this.weaponSprites[1] = Image.createImage("/gamedata/sprites/fist_b.png");
-         this.weaponSprites[2] = null;
-         this.crosshairImage = Image.createImage("/gamedata/sprites/aim.png");
-         this.largeFontImage = Image.createImage("/gamedata/sprites/font.png");
-         MathUtils.initializeMathTables();
-         GameEngine.initializeEngine();
-      } catch (Exception var1) {
-      } catch (OutOfMemoryError var2) {
-      }
-   }
-
-   private void loadLevelResources() {
-      try {
-         freeMemory();
-         if (previousLevelId < currentLevelId) {
-            if (previousLevelId > -1) {
-               this.cachedStaticObjects = LevelLoader.gameWorld.staticObjects;
+            if (!isMainMenu) {
+                menuMode = 32;
+                menuItems = MenuSystem.pauseMenuItems;
             }
 
-            if (!LevelLoader.loadMapData("/gamedata/levels/level_" + levelFileNames[currentLevelId], this.nextLevelObjects == null)) {
-               CovertOps3D.exitApplication();
+            int firstItem = 0;
+            int lastItem = menuItems.length - 2;
+            this.sub_1e3(graphics, background);
+
+            if (SaveSystem.musicEnabled == 1 && !this.isGamePaused) {
+                playSound(0, true, 80, 2);
             }
 
-            if (this.nextLevelObjects != null) {
-               LevelLoader.gameWorld.staticObjects = this.nextLevelObjects;
-               this.nextLevelObjects = null;
-            } else {
-               GameEngine.keysCollected[0] = false;
-               GameEngine.keysCollected[1] = false;
-            }
-         } else {
-            this.nextLevelObjects = LevelLoader.gameWorld.staticObjects;
-            if (!LevelLoader.loadMapData("/level_" + levelFileNames[currentLevelId], this.cachedStaticObjects == null)) {
-               CovertOps3D.exitApplication();
-            }
+            Stack menuStack = new Stack();
 
-            if (this.cachedStaticObjects != null) {
-               LevelLoader.gameWorld.staticObjects = this.cachedStaticObjects;
-               this.cachedStaticObjects = null;
-            }
-         }
+            while(true) {
+                graphics.drawImage(background, 0, 0, 20);
 
-         freeMemory();
-         GameEngine.resetLevelState();
-         boolean var1 = false;
-         LevelLoader.preloadTexture((byte)25);
-         byte[] var2 = new byte[]{-23, -25, -28, -30, -32, 0, 0};
-         byte[] var3 = new byte[]{-24, -26, -29, -31, -33, -34, -27};
-         byte[] var4 = new byte[]{-35, -36, -38, -39, -40, 0, 0};
-         byte[] var5 = new byte[]{-86, -88, -91, -93, -95, 0, 0};
-         byte[] var6 = new byte[]{-87, -89, -92, -94, -96, -97, -90};
-         byte[] var7 = new byte[]{-73, -75, -78, -80, -82, 0, 0};
-         byte[] var8 = new byte[]{-74, -76, -79, -81, -83, -84, -77};
-         byte[] var9 = new byte[]{-2, -1};
-         byte[] var10 = new byte[]{-3, 0};
-         byte[] var11 = new byte[]{-59, -61, -64, -66, -68, 0, 0};
-         byte[] var12 = new byte[]{-60, -62, -65, -67, -69, -70, -63};
-         byte[] var13 = new byte[]{-9};
-         byte[] var14 = new byte[]{-10};
-         byte[] var15 = new byte[]{-4, -6, -11, -13, 0, 0};
-         byte[] var16 = new byte[]{-5, -7, -12, -14, -15, -8};
-         GameObject[] var17 = LevelLoader.gameWorld.staticObjects;
+                int totalItems = menuItems.length - 1;
+                int visibleItems = totalItems > 5 ? 5 : totalItems;
+                int menuY = UI_HEIGHT - visibleItems * this.var_550 - 3 - this.var_550;
 
-         for(int var18 = 0; var18 < var17.length; ++var18) {
-            GameObject var19;
-            if ((var19 = var17[var18]) != null) {
-               byte var10000;
-               label166: {
-                  label165: {
-                     GameObject var22;
-                     switch(var19.objectType) {
-                     case 5:
-                     case 13:
-                        var19.addSpriteFrame((byte)0, (byte)-53);
-                        var10000 = -53;
-                        break label166;
-                     case 10:
-                        sub_3bc(var19, var9, var10);
-                        if (levelFileNames[currentLevelId] == "06c") {
-                           var19.currentState = 1;
+                if (totalItems > visibleItems && scrollOffset > 0) {
+                    int arrowY = menuY + 2 * this.var_550 - 2;
+                    graphics.setColor(16115387);
+                    graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_SCREEN_WIDTH, arrowY - 3);
+                }
+
+                graphics.setColor(7433570);
+
+                for(int i = 0; i < visibleItems; ++i) {
+                    int itemIndex = i;
+                    if (scrollOffset > 0 && i > 1) {
+                        itemIndex = i + scrollOffset;
+                    }
+
+                    String itemText = menuItems[itemIndex];
+                    int textX = (PortalRenderer.SCREEN_WIDTH - this.sub_5d2(itemText)) / 2;
+
+                    if ((menuMode & 15) == itemIndex) {
+                        int boxWidth = this.var_59b * 30;
+                        graphics.fillRoundRect((PortalRenderer.SCREEN_WIDTH - boxWidth) / 2, menuY,
+                                boxWidth, this.var_550, 10, 10);
+                    }
+
+                    this.drawLargeString(itemText, graphics, textX, menuY);
+                    menuY += this.var_550;
+                }
+
+                if (totalItems > visibleItems && scrollOffset < totalItems - 5) {
+                    int arrowY = menuY + 1;
+                    graphics.setColor(16115387);
+                    graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_SCREEN_WIDTH, arrowY + 3);
+                }
+
+                String actionText = menuItems == this.SETTINGS_MENU_ITEMS ? "change" :
+                        (menuItems == MenuSystem.CONFIRMATION_MENU_ITEMS ? "yes" : "select");
+                this.drawLargeString(actionText, graphics, 3, UI_HEIGHT - this.var_550 - 3);
+                this.drawLargeString(menuItems[totalItems], graphics,
+                        PortalRenderer.SCREEN_WIDTH - this.sub_5d2(menuItems[totalItems]) - 3,
+                        UI_HEIGHT - this.var_550 - 3);
+                this.flushScreenBuffer();
+                yieldToOtherThreads();
+
+                Object[] stackData = new Object[0];
+
+                if (GameEngine.inputRun || GameEngine.inputFire) {
+                    GameEngine.inputRun = false;
+                    GameEngine.inputFire = false;
+
+                    switch(menuMode) {
+                        case 0:
+                        case 33:
+                            stackData = new Object[4];
+                            stackData[0] = menuItems;
+                            stackData[1] = new Integer(menuMode);
+                            stackData[2] = new Integer(firstItem);
+                            stackData[3] = new Integer(lastItem);
+                            menuStack.push(stackData);
+                            menuItems = MenuSystem.difficultyMenuItems;
+                            menuMode = 18 + GameEngine.difficultyLevel;
+                            firstItem = 2;
+                            lastItem = menuItems.length - 2;
+                            break;
+
+                        case 1:
+                        case 34:
+                            this.SETTINGS_MENU_ITEMS = new String[6];
+                            this.SETTINGS_MENU_ITEMS[0] = "settings";
+                            this.SETTINGS_MENU_ITEMS[1] = "";
+                            this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[5] = "back";
+                            stackData = new Object[4];
+                            stackData[0] = menuItems;
+                            stackData[1] = new Integer(menuMode);
+                            stackData[2] = new Integer(firstItem);
+                            stackData[3] = new Integer(lastItem);
+                            menuStack.push(stackData);
+                            menuItems = this.SETTINGS_MENU_ITEMS;
+                            menuMode = 50;
+                            firstItem = 2;
+                            lastItem = this.SETTINGS_MENU_ITEMS.length - 2;
+                            break;
+
+                        case 2:
+                        case 35:
+                            this.sub_24b(graphics, background, "help", MenuSystem.HELP_MENU_ITEMS, false);
+                            break;
+
+                        case 3:
+                        case 36:
+                            this.sub_24b(graphics, background, "about", MenuSystem.ABOUT_MENU_TEXT, true);
+                            break;
+
+                        case 4:
+                        case 5:
+                        case 6:
+                        case 7:
+                        case 8:
+                        case 9:
+                        case 10:
+                        case 11:
+                        case 12:
+                        case 13:
+                        case 14:
+                        case 15:
+                        case 16:
+                        case 17:
+                        case 21:
+                        case 22:
+                        case 23:
+                        case 24:
+                        case 25:
+                        case 26:
+                        case 27:
+                        case 28:
+                        case 29:
+                        case 30:
+                        case 31:
+                        case 32:
+                        case 37:
+                        case 38:
+                        case 39:
+                        case 40:
+                        case 41:
+                        case 42:
+                        case 43:
+                        case 44:
+                        case 45:
+                        case 46:
+                        case 47:
+                        case 48:
+                        case 49:
+                        case 53:
+                        case 54:
+                        case 55:
+                        case 56:
+                        case 57:
+                        case 58:
+                        case 59:
+                        case 60:
+                        case 61:
+                        case 62:
+                        case 63:
+                        case 64:
+                        case 65:
+                        case 75:
+                        case 76:
+                        case 77:
+                        case 78:
+                        case 79:
+                        default:
+                            stopCurrentSound();
+                            return menuMode;
+
+                        case 18:
+                        case 19:
+                        case 20:
+                            this.chapterMenuItems = new String[MenuSystem.CHAPTER_MENU_DATA.length];
+                            this.chapterMenuItems[0] = MenuSystem.CHAPTER_MENU_DATA[0];
+                            this.chapterMenuItems[1] = MenuSystem.CHAPTER_MENU_DATA[1];
+                            this.chapterMenuItems[2] = MenuSystem.CHAPTER_MENU_DATA[2];
+                            this.chapterMenuItems[this.chapterMenuItems.length - 1] =
+                                    MenuSystem.CHAPTER_MENU_DATA[this.chapterMenuItems.length - 1];
+                            stackData = new Object[4];
+                            stackData[0] = menuItems;
+                            stackData[1] = new Integer(menuMode);
+                            stackData[2] = new Integer(firstItem);
+                            stackData[3] = new Integer(lastItem);
+                            menuStack.push(stackData);
+                            GameEngine.difficultyLevel = menuMode - 18;
+                            SaveSystem.loadSaveData();
+                            firstItem = 2;
+                            lastItem = this.chapterMenuItems.length - 2;
+
+                            for(int i = 3; i <= lastItem; ++i) {
+                                this.chapterMenuItems[i] = SaveSystem.saveData[i - 3] != null
+                                        ? MenuSystem.CHAPTER_MENU_DATA[i]
+                                        : "unavailable";
+                            }
+
+                            menuItems = this.chapterMenuItems;
+                            menuMode = 66;
+                            break;
+
+                        case 50:
+                            SaveSystem.soundEnabled = (byte)(SaveSystem.soundEnabled ^ 1);
+                            this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
+                            if (SaveSystem.musicEnabled != 1) {
+                                if (SaveSystem.soundEnabled == 1) {
+                                    playSound(1, false, 80, 0);
+                                } else {
+                                    stopCurrentSound();
+                                }
+                            }
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case 51:
+                            SaveSystem.musicEnabled = (byte)(SaveSystem.musicEnabled ^ 1);
+                            this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
+                            if (SaveSystem.musicEnabled == 1) {
+                                stopCurrentSound();
+                                playSound(0, true, 80, 2);
+                            } else {
+                                stopCurrentSound();
+                            }
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case 52:
+                            SaveSystem.vibrationEnabled = (byte)(SaveSystem.vibrationEnabled ^ 1);
+                            this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
+                            if (SaveSystem.vibrationEnabled == 1) {
+                                vibrateDevice(100);
+                            }
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case 66:
+                        case 67:
+                        case 68:
+                        case 69:
+                        case 70:
+                        case 71:
+                        case 72:
+                        case 73:
+                        case 74:
+                            if (!this.chapterMenuItems[menuMode - 64].equals("unavailable")) {
+                                stopCurrentSound();
+                                return menuMode;
+                            }
+                            break;
+
+                        case 80:
+                            stopCurrentSound();
+                            return 4;
+                    }
+                }
+
+                if (GameEngine.inputBack) {
+                    GameEngine.inputBack = false;
+                    if (menuItems[menuItems.length - 1] != "back" && menuItems[menuItems.length - 1] != "no") {
+                        if (menuItems[menuItems.length - 1] == "quit") {
+                            stackData = new Object[4];
+                            stackData[0] = menuItems;
+                            stackData[1] = new Integer(menuMode);
+                            stackData[2] = new Integer(firstItem);
+                            stackData[3] = new Integer(lastItem);
+                            menuStack.push(stackData);
+                            menuItems = MenuSystem.CONFIRMATION_MENU_ITEMS;
+                            menuMode = 80;
+                            firstItem = 0;
+                            lastItem = 0;
                         }
-                        continue;
-                     case 12:
-                        sub_3bc(var19, var13, var14);
-                        continue;
-                     case 26:
-                        var19.addSpriteFrame((byte)0, (byte)-16);
-                        var10000 = -16;
-                        break label166;
-                     case 60:
-                        var19.addSpriteFrame((byte)0, (byte)-18);
-                        var10000 = -18;
-                        break label166;
-                     case 61:
-                        var19.addSpriteFrame((byte)0, (byte)-17);
-                        var10000 = -17;
-                        break label166;
-                     case 82:
-                        var19.addSpriteFrame((byte)0, (byte)-21);
-                        var10000 = -21;
-                        break label166;
-                     case 2001:
-                        var19.addSpriteFrame((byte)0, (byte)-19);
-                        var10000 = -19;
-                        break label166;
-                     case 2002:
-                        var19.addSpriteFrame((byte)0, (byte)-20);
-                        var10000 = -20;
-                        break label166;
-                     case 2003:
-                        var19.addSpriteFrame((byte)0, (byte)-22);
-                        var10000 = -22;
-                        break label166;
-                     case 2004:
-                        var19.addSpriteFrame((byte)0, (byte)-43);
-                        var10000 = -43;
-                        break label166;
-                     case 2005:
-                        var19.addSpriteFrame((byte)0, (byte)-50);
-                        var10000 = -50;
-                        break label166;
-                     case 2006:
-                        var19.addSpriteFrame((byte)0, (byte)-72);
-                        var10000 = -72;
-                        break label166;
-                     case 2007:
-                        var22 = var19;
+                    } else {
+                        Object[] popped = (Object[])menuStack.pop();
+                        menuItems = (String[])popped[0];
+                        menuMode = ((Integer)popped[1]).intValue();
+                        firstItem = ((Integer)popped[2]).intValue();
+                        lastItem = ((Integer)popped[3]).intValue();
+                        scrollOffset = 0;
+                    }
+                }
+
+                if (GameEngine.inputForward) {
+                    int selectedItem = menuMode & 15;
+                    --selectedItem;
+                    if (selectedItem < firstItem) {
+                        selectedItem = firstItem;
+                    } else if (selectedItem - scrollOffset < 2) {
+                        --scrollOffset;
+                    }
+                    menuMode = (menuMode & ~15) | selectedItem;
+                    GameEngine.inputForward = false;
+                }
+
+                if (GameEngine.inputBackward) {
+                    int selectedItem = menuMode & 15;
+                    ++selectedItem;
+                    if (selectedItem > lastItem) {
+                        selectedItem = lastItem;
+                    } else if (totalItems > visibleItems && selectedItem - scrollOffset > 4) {
+                        ++scrollOffset;
+                    }
+                    menuMode = (menuMode & ~15) | selectedItem;
+                    GameEngine.inputBackward = false;
+                }
+            }
+        } catch (Exception e) {
+            stopCurrentSound();
+            return 4;
+        } catch (OutOfMemoryError e) {
+            stopCurrentSound();
+            return 4;
+        }
+    }
+
+    private void sub_24b(Graphics graphics, Image background, String title, String[] content, boolean scrolling) {
+        GameEngine.inputRun = false;
+        GameEngine.inputBack = false;
+        GameEngine.inputFire = false;
+        GameEngine.inputForward = false;
+        GameEngine.inputBackward = false;
+
+        try {
+            String version = mainMidlet.getAppProperty("MIDlet-Version");
+            this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
+
+            boolean needsUpdate = true;
+            int textY = UI_HEIGHT - this.var_550;
+
+            int halfScreenBuffer = PortalRenderer.SCREEN_WIDTH * HALF_UI_HEIGHT;
+
+            for(int fadeStep = 1; fadeStep <= 8; ++fadeStep) {
+                PortalRenderer.screenBuffer[0] = 16777215 | (fadeStep * 268435456);
+                sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                graphics.drawImage(background, 0, 0, 20);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                        0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                        0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                this.flushScreenBuffer();
+                yieldToOtherThreads();
+                delay(50);
+            }
+
+            long lastScrollTime = System.currentTimeMillis();
+
+            do {
+                if (needsUpdate) {
+                    graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+                    graphics.drawImage(background, 0, 0, 20);
+                    graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                            0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                    graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                            0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+
+                    String backText = "back";
+                    this.drawLargeString(backText, graphics,
+                            PortalRenderer.SCREEN_WIDTH - this.sub_5d2(backText) - 3,
+                            UI_HEIGHT - this.var_550 - 3);
+                    this.drawLargeString(title, graphics,
+                            (PortalRenderer.SCREEN_WIDTH - this.sub_5d2(title)) / 2, 3);
+
+                    graphics.setClip(0, this.var_550 + 6, PortalRenderer.SCREEN_WIDTH,
+                            UI_HEIGHT - 2 * this.var_550 - 12);
+
+                    int displayY;
+                    if (scrolling) {
+                        long currentTime = System.currentTimeMillis();
+                        int elapsed = (int)(currentTime - lastScrollTime);
+                        displayY = textY;
+                        int scrollSteps = elapsed / 50 + 1;
+                        textY -= scrollSteps;
+
+                        if (textY + content.length * (this.var_6d3 + 2) < 0) {
+                            textY = UI_HEIGHT - this.var_550;
+                        }
+
+                        int remainingDelay = scrollSteps * 50 - elapsed;
+                        if (remainingDelay > 0) {
+                            delay(remainingDelay);
+                        }
+                        lastScrollTime = currentTime;
+                    } else {
+                        displayY = (UI_HEIGHT - (this.var_6d3 + 2) * content.length) / 2;
+                    }
+
+                    for(int i = 0; i < content.length; ++i) {
+                        String line = content[i];
+                        if (i == 0 && scrolling) {
+                            line = line + " " + version;
+                        }
+                        this.drawSmallString(line, graphics,
+                                (PortalRenderer.SCREEN_WIDTH - this.sub_5ef(line)) / 2, displayY);
+                        displayY += this.var_6d3 + 2;
+                    }
+
+                    this.flushScreenBuffer();
+                }
+
+                needsUpdate = scrolling;
+                yieldToOtherThreads();
+            } while(!GameEngine.inputBack);
+
+            GameEngine.inputBack = false;
+            graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+
+            for(int fadeStep = 8; fadeStep >= 1; --fadeStep) {
+                PortalRenderer.screenBuffer[0] = 16777215 | (fadeStep * 268435456);
+                sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                graphics.drawImage(background, 0, 0, 20);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                        0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                        0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                this.flushScreenBuffer();
+                yieldToOtherThreads();
+                delay(50);
+            }
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        }
+
+        GameEngine.inputRun = false;
+        GameEngine.inputBack = false;
+        GameEngine.inputFire = false;
+        GameEngine.inputForward = false;
+        GameEngine.inputBackward = false;
+        this.smallFontImage = null;
+        graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+    }
+
+    private boolean sub_255(int[] states, int[] types, int[] timers, int[] freeSlots,
+                            int[] positions, int[] starts, int[] ends, int[] speeds) {
+
+        if (this.enemySpawnTimer >= 200) {
+            this.enemySpawnTimer = 0;
+            int freeCount = 0;
+
+            for(int i = 0; i < 8; ++i) {
+                if (states[i] == 0) {
+                    freeSlots[freeCount++] = i;
+                }
+            }
+
+            if (this.activeEnemyCount < 20) {
+                if (freeCount > 0) {
+                    int enemyType = GameEngine.random.nextInt() & 1;
+                    int slotIndex = freeSlots[(GameEngine.random.nextInt() & 7) % freeCount];
+                    types[slotIndex] = enemyType;
+                    int spawnDelay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
+                    timers[slotIndex] = spawnDelay % var_18ad[GameEngine.difficultyLevel]
+                            + var_18a0[GameEngine.difficultyLevel];
+                    positions[slotIndex] = starts[slotIndex];
+                    states[slotIndex] = starts[slotIndex] > ends[slotIndex] ? 1 : 5;
+                    ++this.activeEnemyCount;
+                }
+            } else if (freeCount == 8) {
+                return false;
+            }
+        }
+
+        ++this.enemySpawnTimer;
+        ++this.enemyUpdateCounter;
+
+        for(int i = 0; i < 8; ++i) {
+            if (this.enemyUpdateCounter % 10 == 0) {
+                switch(states[i]) {
+                    case 1:
+                        states[i] = 2;
                         break;
-                     case 2008:
-                        var19.addSpriteFrame((byte)0, (byte)-54);
-                        var10000 = -54;
-                        break label166;
-                     case 2010:
-                        var19.addSpriteFrame((byte)0, (byte)-57);
-                        var10000 = -57;
-                        break label166;
-                     case 2012:
-                        var19.addSpriteFrame((byte)0, (byte)-55);
-                        var10000 = -55;
-                        break label166;
-                     case 2013:
-                        var19.addSpriteFrame((byte)0, (byte)-49);
-                        var10000 = -49;
-                        break label166;
-                     case 2014:
-                        var19.addSpriteFrame((byte)0, (byte)-52);
-                        var10000 = -52;
-                        break label166;
-                     case 2015:
-                        var19.addSpriteFrame((byte)0, (byte)-58);
-                        var10000 = -58;
-                        break label166;
-                     case 2024:
-                        var19.addSpriteFrame((byte)0, (byte)-85);
-                        var10000 = -85;
-                        break label166;
-                     case 2047:
-                        var19.addSpriteFrame((byte)0, (byte)-56);
-                        var10000 = -56;
-                        break label166;
-                     case 3001:
-                        sub_3bc(var19, var11, var12);
-                        var10000 = -57;
-                        break label166;
-                     case 3002:
-                        sub_3bc(var19, var15, var16);
-                        var10000 = -56;
-                        break label166;
-                     case 3003:
-                        sub_3bc(var19, var2, var3);
-                        break label165;
-                     case 3004:
-                        sub_3bc(var19, var5, var6);
-                        var10000 = -54;
-                        break label166;
-                     case 3005:
-                        sub_3bc(var19, var4, var6);
-                        break label165;
-                     case 3006:
-                        sub_3bc(var19, var7, var8);
-                        var10000 = -54;
-                        break label166;
-                     default:
-                        var22 = var19;
-                     }
-
-                     var22.addSpriteFrame((byte)0, (byte)-48);
-                  }
-
-                  var10000 = -48;
-               }
-
-               LevelLoader.preloadTexture(var10000);
-            }
-         }
-
-         LevelLoader.preloadTexture((byte)-44);
-         LevelLoader.preloadTexture((byte)-45);
-         LevelLoader.preloadTexture((byte)-46);
-         LevelLoader.preloadTexture((byte)-47);
-         LevelLoader.preloadTexture((byte)-71);
-         LevelLoader.preloadTexture((byte)-51);
-         LevelLoader.preloadTexture((byte)-43);
-         if (currentLevelId == 10) {
-            LevelLoader.preloadTexture((byte)-72);
-         }
-
-         freeMemory();
-         if (!LevelLoader.loadGameAssets("/gamedata/textures/tx", 4, "/gamedata/textures/sp", 4)) {
-            CovertOps3D.exitApplication();
-         }
-
-         GameEngine.handleWeaponChange((byte)25);
-         freeMemory();
-      } catch (Exception var20) {
-      } catch (OutOfMemoryError var21) {
-      }
-   }
-
-   private void drawPleaseWait(Graphics var1) {
-      String var2 = "please wait...";
-      int var3 = (240 - this.sub_5d2(var2)) / 2;
-      int var4 = 160 - this.var_550 / 2;
-      PortalRenderer.screenBuffer[0] = Integer.MIN_VALUE;
-      sub_159(PortalRenderer.screenBuffer, 0, 38400);
-      var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 160, true);
-      var1.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 160, 240, 160, true);
-      this.drawLargeString(var2, var1, var3, var4);
-      this.flushScreenBuffer();
-   }
-
-   private int drawDialogOverlay(Graphics var1, int var2) {
-      try {
-         boolean var3 = false;
-         int var4 = this.var_550 + 6;
-         Image var5 = Image.createImage(240, 320);
-         Image var6 = Image.createImage("/gamedata/sprites/bkg_cut.png");
-         Image var7 = Image.createImage("/gamedata/sprites/player.png");
-         Image var8 = var2 != 0 && var2 != 9 ? Image.createImage(var2 == 8 ? "/gamedata/sprites/ag_hurt.png" : "/gamedata/sprites/ag.png") : null;
-         Image var9 = var2 == 7 ? Image.createImage("/gamedata/sprites/doctor.png") : null;
-         this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
-         int var10 = 240 - var7.getWidth() - 6;
-         Graphics var11;
-         (var11 = var5.getGraphics()).setColor(16711680);
-         var11.drawImage(var6, 0, 0, 20);
-         var11.drawImage(var7, 2, 2, 20);
-         int var12 = 162;
-         int var13 = 2 * (320 - var4) / 3 + 2;
-         int var14 = (316 - var4) / this.var_6d3;
-         int[][] var15 = new int[3][];
-         int[] var16 = new int[]{0, 0, 0};
-         String[] var17 = new String[3];
-         if (var8 != null) {
-            int[][] var10000;
-            byte var10001;
-            if (var9 != null) {
-               var12 = (320 - var4) / 3 + 2;
-               var11.drawImage(var8, 238 - var8.getWidth(), var12, 20);
-               var11.drawImage(var9, 238 - var9.getWidth(), var13, 20);
-               var14 = (316 - var4) / (this.var_6d3 * 3);
-               var15[1] = new int[var14];
-               var10000 = var15;
-               var10001 = 2;
-            } else {
-               var11.drawImage(var8, 238 - var8.getWidth(), 162, 20);
-               var14 = (316 - var4) / (this.var_6d3 * 2);
-               var10000 = var15;
-               var10001 = 1;
+                    case 2:
+                        states[i] = 1;
+                        break;
+                    case 5:
+                        states[i] = 6;
+                        break;
+                    case 6:
+                        states[i] = 5;
+                        break;
+                }
+            } else if (speeds[i] == 0) {
+                continue;
             }
 
-            var10000[var10001] = new int[var14];
-         }
+            if ((speeds[i] == 1 && this.enemyUpdateCounter % 7 == 0)
+                    || (speeds[i] == 2 && this.enemyUpdateCounter % 5 == 0)) {
+                if (states[i] == 1 || states[i] == 2) {
+                    int newPos = positions[i] - 1;
+                    int targetPos = (starts[i] < ends[i] ? starts : ends)[i];
+                    if (newPos < targetPos) {
+                        newPos = targetPos;
+                        states[i] = 5;
+                    }
+                    positions[i] = newPos;
+                } else if (states[i] == 5 || states[i] == 6) {
+                    int newPos = positions[i] + 1;
+                    int targetPos = (starts[i] > ends[i] ? starts : ends)[i];
+                    if (newPos > targetPos) {
+                        newPos = targetPos;
+                        states[i] = 1;
+                    }
+                    positions[i] = newPos;
+                }
+            }
+        }
 
-         var15[0] = new int[var14];
-         this.sub_1e3(var1, var5);
-         this.drawLargeString("back", var1, 240 - this.sub_5d2("back") - 3, 320 - this.var_550 - 3);
-         this.drawLargeString("pause", var1, 3, 320 - this.var_550 - 3);
-         int[] var18 = new int[]{0, 0, 0};
-         int[] var19 = new int[]{0, 0, 0};
-         int[] var20 = new int[]{0, 0, 0};
-         int[] var21 = new int[]{0, 0, 0};
-         long[] var22 = new long[]{0L, 0L, 0L};
-         boolean[] var23 = new boolean[]{false, false, false};
+        for(int i = 0; i < 8; ++i) {
+            int state = states[i];
+            if (state != 0) {
+                if (timers[i] <= 0) {
+                    switch(state) {
+                        case 1:
+                        case 2:
+                        case 5:
+                        case 6:
+                            states[i] = 3;
+                            int delay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
+                            timers[i] = delay % var_191e[GameEngine.difficultyLevel]
+                                    + var_1910[GameEngine.difficultyLevel];
+                            break;
+                        case 3:
+                            states[i] = 4;
+                            timers[i] = 1;
+                            break;
+                    }
+                }
+                --timers[i];
+            }
+        }
 
-         for(int var24 = 0; var24 < MenuSystem.storyText[var2].length; ++var24) {
-            String var25;
-            int var26;
-            int var27;
-            byte var28;
-            label165: {
-               var25 = MenuSystem.storyText[var2][var24];
-               var26 = var7.getWidth() + 4;
-               var27 = 2;
-               var28 = 0;
-               byte var58;
-               if (var25.startsWith("A")) {
-                  var26 = 2;
-                  var27 = var12;
-                  var58 = 1;
-               } else {
-                  if (!var25.startsWith("M")) {
-                     break label165;
-                  }
+        int[] deltaX = new int[]{0, 0, -1, 1, -1, 1, -1, 1};
+        int[] deltaY = new int[]{-1, 1, 0, 0, -1, 1, 1, -1};
+        int direction = this.var_c2f;
+        this.var_c2f = (direction + 1) & 7;
+        this.var_d88 += deltaX[direction];
+        this.var_d9b += deltaY[direction];
 
-                  var26 = 2;
-                  var27 = var13;
-                  var58 = 2;
-               }
+        byte inputDirection = 0;
+        if (GameEngine.inputLookUp) {
+            if (this.var_d2a == 3) {
+                --this.var_be4;
+            }
+            inputDirection = 3;
+        }
 
-               var28 = var58;
+        if (GameEngine.inputLookDown) {
+            if (this.var_d2a == 4) {
+                ++this.var_be4;
+            }
+            inputDirection = 4;
+        }
+
+        if (GameEngine.inputForward) {
+            if (this.var_d2a == 1) {
+                --this.var_c1f;
+            }
+            inputDirection = 1;
+        }
+
+        if (GameEngine.inputBackward) {
+            if (this.var_d2a == 2) {
+                ++this.var_c1f;
+            }
+            inputDirection = 2;
+        }
+
+        this.var_d88 += this.var_be4 >> 2;
+        this.var_d9b += this.var_c1f >> 2;
+
+        int maxSightX = PortalRenderer.SCREEN_WIDTH - 32;
+        int maxSightY = PortalRenderer.SCREEN_HEIGHT - 32;
+
+        if (this.var_d88 > maxSightX) {
+            this.var_d88 = maxSightX;
+            this.var_be4 = 0;
+        }
+
+        if (this.var_d88 < -31) {
+            this.var_d88 = -31;
+            this.var_be4 = 0;
+        }
+
+        if (this.var_d9b > maxSightY) {
+            this.var_d9b = maxSightY;
+            this.var_c1f = 0;
+        }
+
+        if (this.var_d9b < -31) {
+            this.var_d9b = -31;
+            this.var_c1f = 0;
+        }
+
+        this.var_d2a = inputDirection;
+
+        if (this.var_d2a == 0) {
+            if (this.var_be4 > 0) {
+                --this.var_be4;
+            }
+            if (this.var_be4 < 0) {
+                ++this.var_be4;
+            }
+            if (this.var_c1f > 0) {
+                --this.var_c1f;
+            }
+            if (this.var_c1f < 0) {
+                ++this.var_c1f;
+            }
+        }
+
+        return true;
+    }
+
+    private int runMiniGameSniper(Graphics graphics, int level) {
+        try {
+            int bufferSize = PortalRenderer.SCREEN_BUFFER_SIZE;
+            byte[] scenePixels = new byte[bufferSize];
+            byte[] maskPixels = new byte[bufferSize];
+            byte[] sightPixels = new byte[4096];
+
+            int[][] var10 = new int[6][];
+            int[][] var11 = new int[6][];
+            int[][] var12 = new int[6][];
+            int[][] var13 = new int[6][];
+
+            this.enemySpawnTimer = 0;
+            this.enemyUpdateCounter = 0;
+            this.activeEnemyCount = 0;
+
+            int[][] startPositions = new int[][]{
+                    {84, 147, 197, 132, 147, 155, 77, 155},
+                    {63, 177, 89, 149, 104, 132, 84, 146}
+            };
+            int[][] endPositions = new int[][]{
+                    {147, 84, 164, 147, 132, 160, 155, 77},
+                    {75, 162, 149, 89, 132, 104, 90, 152}
+            };
+            int[][] yPositions = new int[][]{
+                    {145, 145, 102, 84, 84, 144, 151, 151},
+                    {108, 105, 111, 111, 160, 160, 152, 152}
+            };
+            int[][] enemySpeeds = new int[][]{
+                    {1, 1, 1, 0, 0, 2, 2, 2},
+                    {1, 1, 1, 1, 1, 1, 1, 1}
+            };
+
+            int[] spriteWidths = new int[]{4, 9, 14};
+            int[] spriteHeights = new int[]{8, 18, 30};
+            int[] hitPoints = new int[]{
+                    var_1329[GameEngine.difficultyLevel],
+                    var_1358[GameEngine.difficultyLevel],
+                    var_1366[GameEngine.difficultyLevel]
+            };
+
+            int[] screenOffsets = new int[]{0, 0};
+            int[][] enemySprites = new int[8][];
+            int[] enemyStates = new int[8];
+            int[] enemyTimers = new int[8];
+            int[] enemyPositions = new int[8];
+            int[] enemyTypes = new int[8];
+
+            for(int i = 0; i < 8; ++i) {
+                startPositions[level][i] -= screenOffsets[level];
+                endPositions[level][i] -= screenOffsets[level];
+                yPositions[level][i] -= screenOffsets[level];
             }
 
-            int var29 = var26 + var10;
-            int var30 = var27 + var14 * this.var_6d3;
-            int var31 = var26;
-            int var32 = var27;
-            var18[var28] = 0;
-            var17[var28] = var25;
-            delay(500);
-            if (var23[var28]) {
-               var23[var28] = false;
-               var1.drawRegion(var5, var20[var28], var19[var28], var10, var21[var28] - var19[var28], 0, var20[var28], var19[var28], 20);
+            for(int i = 0; i < 6; ++i) {
+                boolean flip = i > 3;
+                int spriteNum = flip ? i - 3 : i + 1;
+                var10[i] = sub_d3("/gamedata/sniperminigame/ot8" + Integer.toString(spriteNum), flip);
+                var11[i] = sub_d3("/gamedata/sniperminigame/ot18" + Integer.toString(spriteNum), flip);
+                var12[i] = sub_d3("/gamedata/sniperminigame/ot30" + Integer.toString(spriteNum), flip);
+                var13[i] = sub_d3("/gamedata/sniperminigame/ss30" + Integer.toString(spriteNum), flip);
             }
 
-            var16[var28] = 0;
-            var15[var28][var16[var28]] = 1;
+            Image sightImage = Image.createImage("/gamedata/sniperminigame/sight.png");
+            this.sub_10f(level, PortalRenderer.SCREEN_WIDTH, PortalRenderer.SCREEN_HEIGHT,
+                    scenePixels, maskPixels, sightPixels);
 
-            for(int var33 = 1; var33 < var25.length(); ++var33) {
-               int var10002;
-               char var34;
-               int var37;
-               int var38;
-               int var39;
-               if ((var34 = var25.charAt(var33)) == ' ') {
-                  if (var31 + this.var_75f > var29) {
-                     var31 = var26;
-                     if (var16[var28] >= var14 - 1) {
-                        this.sub_493(var1, var5, var25, var15[var28], var33 + 1, var26, var27, var30, var10);
-                     } else {
-                        var32 += this.var_6d3;
-                        var18[var28] += this.var_6d3;
-                        var10002 = var16[var28]++;
-                        var15[var28][var16[var28]] = var33 + 1;
-                     }
-                  } else {
-                     int var35;
-                     if ((var35 = var25.indexOf(32, var33 + 1)) == -1) {
-                        var35 = var25.length();
-                     }
+            this.var_be4 = 0;
+            this.var_c1f = 0;
+            this.var_d88 = PortalRenderer.HALF_SCREEN_WIDTH - 32;
+            this.var_d9b = PortalRenderer.HALF_SCREEN_HEIGHT - 32;
 
-                     String var36 = var25.substring(var33, var35);
-                     var37 = this.sub_5ef(var36);
-                     if (var31 + this.var_75f + var37 > var29) {
-                        var31 = var26;
-                        if (var16[var28] >= var14 - 1) {
-                           this.sub_493(var1, var5, var25, var15[var28], var33 + 1, var26, var27, var30, var10);
+            int[] freeSlots = new int[8];
+            this.accumulatedTime = 0L;
+            this.lastFrameTime = 0L;
+            GameEngine.levelTransitionState = 2;
+
+            while(this.isGameRunning) {
+                if (GameEngine.levelTransitionState == 1) {
+                    return -1;
+                }
+
+                int menuResult;
+                if ((GameEngine.inputRun || GameEngine.inputBack || this.isGamePaused)
+                        && (menuResult = this.showMenuScreen(graphics, false)) != 32) {
+                    return menuResult;
+                }
+
+                long currentTime = System.currentTimeMillis();
+                this.frameDeltaTime = currentTime - this.lastFrameTime;
+                this.lastFrameTime = currentTime;
+                this.accumulatedTime += this.frameDeltaTime;
+
+                if (this.accumulatedTime > 600L) {
+                    this.accumulatedTime = 600L;
+                }
+
+                while(this.accumulatedTime >= 40L) {
+                    ++this.frameCounter;
+                    if (!this.sub_255(enemyStates, enemyTypes, enemyTimers, freeSlots,
+                            enemyPositions, startPositions[level], endPositions[level], enemySpeeds[level])) {
+                        return -1;
+                    }
+                    this.accumulatedTime -= 40L;
+                }
+
+                int totalDamage = 0;
+                for(int i = 0; i < 8; ++i) {
+                    if (enemyStates[i] == 4) {
+                        totalDamage += hitPoints[enemySpeeds[level][i]];
+                    }
+                }
+
+                int[] normalPalette = this.var_b56;
+                int[] regularPalette = this.var_b23;
+
+                if (totalDamage > 0) {
+                    if (totalDamage > var_1329[GameEngine.difficultyLevel]) {
+                        if (totalDamage > var_1358[GameEngine.difficultyLevel]) {
+                            playSound(2, false, 100, 0);
                         } else {
-                           var32 += this.var_6d3;
-                           var18[var28] += this.var_6d3;
-                           var10002 = var16[var28]++;
-                           var15[var28][var16[var28]] = var33 + 1;
+                            playSound(2, false, 80, 0);
                         }
-                     } else {
-                        var31 += this.var_75f;
-                     }
-                  }
-               } else {
-                  int[] var55;
-                  int var56 = (var55 = this.getFontCoordinates(var34))[1] * this.smallFontCharsPerRow + var55[0];
-                  var37 = this.var_6a8[var56];
-                  var38 = this.var_691[var56];
-                  var39 = var55[1] * this.var_6d3;
-                  if (var31 + var37 + 1 > var29) {
-                     var31 = var26;
-                     if (var16[var28] >= var14 - 1) {
-                        this.sub_493(var1, var5, var25, var15[var28], var33, var26, var27, var30, var10);
-                     } else {
-                        var32 += this.var_6d3;
-                        var18[var28] += this.var_6d3;
-                        var10002 = var16[var28]++;
-                        var15[var28][var16[var28]] = var33;
-                     }
-                  }
+                    } else {
+                        playSound(2, false, 60, 0);
+                    }
 
-                  var1.drawRegion(this.smallFontImage, var38, var39, var37, this.var_6d3, 0, var31, var32, 20);
-                  var31 += var37 + 1;
-               }
+                    vibrateDevice(totalDamage * 10);
 
-               this.flushScreenBuffer();
-               delay(var34 == ',' ? 300 : (var34 != '.' && var34 != '?' && var34 != '!' ? 50 : 400));
-               long var57 = System.currentTimeMillis();
+                    if (GameEngine.applyDamage(totalDamage)) {
+                        return -2;
+                    } else {
+                        normalPalette = this.var_b96;
+                        regularPalette = this.var_b60;
+                    }
+                }
 
-               for(var37 = 0; var37 < 3; ++var37) {
-                  if (var23[var37] && var57 > var22[var37]) {
-                     var23[var37] = false;
-                     var1.drawRegion(var5, var20[var37], var19[var37], var10, var21[var37] - var19[var37], 0, var20[var37], var19[var37], 20);
-                     var16[var37] = 0;
-                     var17[var37] = null;
-                  }
-               }
+                int sightX = this.var_d88;
+                int sightY = this.var_d9b;
+                int renderStartY = sightY < 0 ? 0 : sightY;
+                int renderEndY = sightY + 64;
+                if (renderEndY > PortalRenderer.SCREEN_HEIGHT) {
+                    renderEndY = PortalRenderer.SCREEN_HEIGHT;
+                }
 
-               if (GameEngine.inputRun) {
-                  GameEngine.inputRun = false;
-                  var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("pause"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
-                  this.drawLargeString("resume", var1, 3, 320 - this.var_550 - 3);
-                  this.flushScreenBuffer();
+                int renderStartX = sightX < 0 ? 0 : sightX;
+                int renderEndX = sightX + 64;
+                if (renderEndX > PortalRenderer.SCREEN_WIDTH) {
+                    renderEndX = PortalRenderer.SCREEN_WIDTH;
+                }
 
-                  while(!GameEngine.inputRun && !GameEngine.inputBack && !this.isGamePaused && !GameEngine.inputFire) {
-                     yieldToOtherThreads();
-                  }
-               }
+                // Render background
+                for(int y = renderStartY; y < renderEndY; ++y) {
+                    int rowStart = renderStartX + PortalRenderer.SCREEN_WIDTH * y;
+                    int rowEnd = renderEndX + PortalRenderer.SCREEN_WIDTH * y;
+                    for(int idx = rowStart; idx < rowEnd; ++idx) {
+                        PortalRenderer.screenBuffer[idx] = regularPalette[scenePixels[idx] & 255];
+                    }
+                }
 
-               if (GameEngine.inputRun) {
-                  var1.drawRegion(var5, 3, 320 - this.var_550 - 3, this.sub_5d2("resume"), this.var_550, 0, 3, 320 - this.var_550 - 3, 20);
-                  this.drawLargeString("pause", var1, 3, 320 - this.var_550 - 3);
-                  this.flushScreenBuffer();
-                  GameEngine.inputRun = false;
-               }
+                int activeEnemies = level == 0 ? 6 : 8;
 
-               if (GameEngine.inputBack || this.isGamePaused) {
-                  GameEngine.inputRun = false;
-                  GameEngine.inputBack = false;
-                  if ((var37 = this.showMenuScreen(var1, false)) != 32) {
-                     this.smallFontImage = null;
-                     return var37;
-                  }
+                // Render enemies (first pass - behind mask)
+                for(int i = 0; i < activeEnemies; ++i) {
+                    if (enemyStates[i] > 0) {
+                        enemySprites[i] = null;
+                        int enemyX = enemyPositions[i];
+                        int enemyY = yPositions[level][i];
+                        int speedType = enemySpeeds[level][i];
+                        int spriteW = spriteWidths[speedType];
+                        int spriteH = spriteHeights[speedType];
 
-                  var1.drawImage(var5, 0, 0, 20);
-                  this.drawLargeString("back", var1, 240 - this.sub_5d2("back") - 3, 320 - this.var_550 - 3);
-                  this.drawLargeString("pause", var1, 3, 320 - this.var_550 - 3);
-
-                  for(var38 = 0; var38 < 3; ++var38) {
-                     var39 = var38 == var28 ? var33 : (var17[var38] != null ? var17[var38].length() : 0);
-                     if (var15[var38] != null) {
-                        int var40;
-                        int var41;
-                        int var59;
-                        label223: {
-                           var40 = 0;
-                           var41 = 0;
-                           switch(var38) {
-                           case 0:
-                              var40 = var7.getWidth() + 4;
-                              var59 = 2;
-                              break;
-                           case 1:
-                              var40 = 2;
-                              var59 = var12;
-                              break;
-                           case 2:
-                              var40 = 2;
-                              var59 = var13;
-                              break;
-                           default:
-                              break label223;
-                           }
-
-                           var41 = var59;
+                        switch(speedType) {
+                            case 0:
+                                enemySprites[i] = var10[enemyStates[i] - 1];
+                                break;
+                            case 1:
+                                enemySprites[i] = var11[enemyStates[i] - 1];
+                                break;
+                            case 2:
+                                enemySprites[i] = enemyTypes[i] == 0
+                                        ? var12[enemyStates[i] - 1]
+                                        : var13[enemyStates[i] - 1];
+                                break;
                         }
 
-                        for(int var42 = 0; var42 <= var16[var38]; ++var42) {
-                           int var43 = var15[var38][var42];
-                           int var44 = var42 + 1 <= var16[var38] ? var15[var38][var42 + 1] : (var17[var38] != null ? var17[var38].length() : 0);
-                           if (var39 + 1 < var44) {
-                              var44 = var39 + 1;
-                           }
+                        copyToScreenBuffer(enemySprites[i], spriteW, spriteH, enemyX, enemyY, totalDamage > 0);
 
-                           int var45 = var40;
-
-                           for(int var46 = var43; var46 < var44; ++var46) {
-                              char var47;
-                              int var60;
-                              if ((var47 = var17[var38].charAt(var46)) == ' ') {
-                                 var59 = var45;
-                                 var60 = this.var_75f;
-                              } else {
-                                 int[] var48;
-                                 int var49 = (var48 = this.getFontCoordinates(var47))[1] * this.smallFontCharsPerRow + var48[0];
-                                 int var50 = this.var_6a8[var49];
-                                 int var51 = this.var_691[var49];
-                                 int var52 = var48[1] * this.var_6d3;
-                                 var1.drawRegion(this.smallFontImage, var51, var52, var50, this.var_6d3, 0, var45, var41, 20);
-                                 var59 = var45;
-                                 var60 = var50 + 1;
-                              }
-
-                              var45 = var59 + var60;
-                           }
-
-                           var41 += this.var_6d3;
+                        if (enemyStates[i] == 4) {
+                            enemyStates[i] = (enemyPositions[i] & 1) == 1 ? 1 : 5;
+                            int respawnDelay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
+                            enemyTimers[i] = respawnDelay % var_18ad[GameEngine.difficultyLevel]
+                                    + var_18a0[GameEngine.difficultyLevel];
                         }
-                     }
-                  }
+                    }
+                }
 
-                  this.flushScreenBuffer();
-               }
+                // Render mask overlay
+                for(int y = renderStartY; y < renderEndY; ++y) {
+                    int rowStart = renderStartX + PortalRenderer.SCREEN_WIDTH * y;
+                    int rowEnd = renderEndX + PortalRenderer.SCREEN_WIDTH * y;
+                    for(int idx = rowStart; idx < rowEnd; ++idx) {
+                        int maskValue = maskPixels[idx] & 255;
+                        if (maskValue != 255) {
+                            PortalRenderer.screenBuffer[idx] = regularPalette[maskValue];
+                        }
+                    }
+                }
 
-               if (GameEngine.inputFire) {
-                  GameEngine.inputFire = false;
-                  this.smallFontImage = null;
-                  return -1;
-               }
+                // Render enemies (second pass - in front of mask)
+                if (level == 0) {
+                    for(int i = 6; i < 8; ++i) {
+                        if (enemyStates[i] > 0) {
+                            enemySprites[i] = null;
+                            int enemyX = enemyPositions[i];
+                            int enemyY = yPositions[level][i];
+                            int speedType = enemySpeeds[level][i];
+                            int spriteW = spriteWidths[speedType];
+                            int spriteH = spriteHeights[speedType];
 
-               yieldToOtherThreads();
+                            enemySprites[i] = enemyTypes[i] == 0
+                                    ? var12[enemyStates[i] - 1]
+                                    : var13[enemyStates[i] - 1];
+
+                            copyToScreenBuffer(enemySprites[i], spriteW, spriteH, enemyX, enemyY, totalDamage > 0);
+
+                            if (enemyStates[i] == 4) {
+                                enemyStates[i] = (enemyPositions[i] & 1) == 1 ? 1 : 5;
+                                int respawnDelay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
+                                enemyTimers[i] = respawnDelay % var_18ad[GameEngine.difficultyLevel]
+                                        + var_18a0[GameEngine.difficultyLevel];
+                            }
+                        }
+                    }
+                }
+
+                // Render background outside sight
+                int topBufferSize = PortalRenderer.SCREEN_WIDTH * renderStartY;
+                for(int i = 0; i < topBufferSize; ++i) {
+                    PortalRenderer.screenBuffer[i] = normalPalette[scenePixels[i] & 255];
+                }
+
+                int sightOffsetY = renderStartY - sightY;
+                for(int y = renderStartY; y < renderEndY; ++y, ++sightOffsetY) {
+                    int rowStart = PortalRenderer.SCREEN_WIDTH * y;
+                    int leftEnd = rowStart + renderStartX;
+                    for(int idx = rowStart; idx < leftEnd; ++idx) {
+                        PortalRenderer.screenBuffer[idx] = normalPalette[scenePixels[idx] & 255];
+                    }
+
+                    int rightStart = renderEndX + rowStart;
+                    int rowEnd = rowStart + PortalRenderer.SCREEN_WIDTH;
+                    for(int idx = rightStart; idx < rowEnd; ++idx) {
+                        PortalRenderer.screenBuffer[idx] = normalPalette[scenePixels[idx] & 255];
+                    }
+
+                    int sightRowOffset = 64 * sightOffsetY;
+                    int sightOffsetX = renderStartX - sightX;
+                    for(int x = renderStartX; x < renderEndX; ++x, ++sightOffsetX) {
+                        if (sightPixels[sightRowOffset + sightOffsetX] == 0) {
+                            int idx = rowStart + x;
+                            PortalRenderer.screenBuffer[idx] = normalPalette[scenePixels[idx] & 255];
+                        }
+                    }
+                }
+
+                int bottomStart = PortalRenderer.SCREEN_WIDTH * renderEndY;
+                for(int i = bottomStart; i < bufferSize; ++i) {
+                    PortalRenderer.screenBuffer[i] = normalPalette[scenePixels[i] & 255];
+                }
+
+                // Handle shooting
+                if (GameEngine.inputFire) {
+                    int centerX = sightX + 31;
+                    int centerY = sightY + 31;
+                    int hitColor = 16777215;
+                    boolean hitEnemy = false;
+
+                    for(int i = 7; i >= 0; --i) {
+                        int enemyX = enemyPositions[i];
+                        int enemyY = yPositions[level][i];
+                        int speedType = enemySpeeds[level][i];
+                        int spriteW = spriteWidths[speedType];
+                        int spriteH = spriteHeights[speedType];
+
+                        if ((level == 0 && (i >= 6 || speedType == 0)
+                                || maskPixels[centerY * PortalRenderer.SCREEN_WIDTH + centerX] == -1)
+                                && enemyStates[i] > 0
+                                && centerX >= enemyX && centerX <= enemyX + spriteW
+                                && centerY >= enemyY && centerY <= enemyY + spriteH) {
+
+                            int spritePixelX = centerX - enemyX;
+                            int spritePixelY = centerY - enemyY;
+
+                            if (hitEnemy = level == 0 && speedType == 0 ? true
+                                    : enemySprites[i][spriteW * spritePixelY + spritePixelX] != 16711935) {
+                                playSound(7, false, 100, 1);
+                                enemyStates[i] = 0;
+                                hitColor = 16711680;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!hitEnemy) {
+                        playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
+                    }
+
+                    PortalRenderer.screenBuffer[PortalRenderer.SCREEN_WIDTH * centerY + centerX] = hitColor;
+                    GameEngine.inputFire = false;
+                }
+
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                        0, 0, PortalRenderer.SCREEN_WIDTH, PortalRenderer.SCREEN_HEIGHT, false);
+                graphics.drawImage(sightImage, sightX, sightY, 20);
+                graphics.drawImage(this.statusBarImage, 0, PortalRenderer.SCREEN_HEIGHT, 0);
+                this.sub_547(GameEngine.playerHealth, graphics, 58, PortalRenderer.SCREEN_HEIGHT + 6);
+                this.sub_547(GameEngine.playerArmor, graphics, 138, PortalRenderer.SCREEN_HEIGHT + 6);
+                this.flushScreenBuffer();
+
+                yieldToOtherThreads();
             }
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        }
 
-            var18[var28] = 0;
-            var23[var28] = true;
-            var20[var28] = var26;
-            var19[var28] = var27;
-            var21[var28] = var30;
-            var22[var28] = System.currentTimeMillis() + 5000L;
-            delay(500);
-         }
+        return -1;
+    }
 
-         delay(5000);
-         this.smallFontImage = null;
-      } catch (Exception var53) {
-      } catch (OutOfMemoryError var54) {
-      }
+    private static void copyToScreenBuffer(int[] sprite, int width, int height, int x, int y, boolean redTint) {
+        int bufferIdx = PortalRenderer.SCREEN_WIDTH * y + x;
+        int spriteIdx = 0;
 
-      return -1;
-   }
+        if (!redTint) {
+            for(int row = 0; row < height; ++row) {
+                for(int col = 0; col < width; ++col) {
+                    int pixel = sprite[spriteIdx++];
+                    if (pixel != 16711935) {
+                        PortalRenderer.screenBuffer[bufferIdx + col] = pixel;
+                    }
+                }
+                bufferIdx += PortalRenderer.SCREEN_WIDTH;
+            }
+        } else {
+            for(int row = 0; row < height; ++row) {
+                for(int col = 0; col < width; ++col) {
+                    int pixel = sprite[spriteIdx++];
+                    if (pixel != 16711935) {
+                        PortalRenderer.screenBuffer[bufferIdx + col] = pixel | 16711680;
+                    }
+                }
+                bufferIdx += PortalRenderer.SCREEN_WIDTH;
+            }
+        }
+    }
 
-   private void sub_493(Graphics var1, Image var2, String var3, int[] var4, int var5, int var6, int var7, int var8, int var9) {
-      var1.drawRegion(var2, var6, var7, var9, var8 - var7, 0, var6, var7, 20);
-      int var10 = var7;
+    private void sub_2e3(Graphics graphics, String message) {
+        int lineStart = 0;
+        int lineCount = 0;
 
-      for(int var11 = 1; var11 < var4.length; ++var11) {
-         int var12 = var4[var11];
-         var4[var11 - 1] = var12;
-         int var13 = var11 + 1 < var4.length ? var4[var11 + 1] : var5;
-         int var14 = var6;
-
-         for(int var15 = var12; var15 < var13; ++var15) {
-            int var10000;
-            char var16;
-            int var10001;
-            if ((var16 = var3.charAt(var15)) == ' ') {
-               var10000 = var14;
-               var10001 = this.var_75f;
+        int lineEnd;
+        do {
+            lineEnd = message.indexOf(124, lineStart);
+            if (lineEnd == -1) {
+                lineEnd = message.length() - 1;
             } else {
-               int[] var17;
-               int var18 = (var17 = this.getFontCoordinates(var16))[1] * this.smallFontCharsPerRow + var17[0];
-               int var19 = this.var_6a8[var18];
-               int var20 = this.var_691[var18];
-               int var21 = var17[1] * this.var_6d3;
-               var1.drawRegion(this.smallFontImage, var20, var21, var19, this.var_6d3, 0, var14, var10, 20);
-               var10000 = var14;
-               var10001 = var19 + 1;
+                --lineEnd;
+            }
+            ++lineCount;
+        } while((lineStart = lineEnd + 2) < message.length());
+
+        int textY = HALF_UI_HEIGHT - this.var_550 * lineCount / 2;
+        lineStart = 0;
+
+        do {
+            lineEnd = message.indexOf(124, lineStart);
+            if (lineEnd == -1) {
+                lineEnd = message.length() - 1;
+            } else {
+                --lineEnd;
             }
 
-            var14 = var10000 + var10001;
-         }
+            String line = message.substring(lineStart, lineEnd + 1);
+            int textX = (PortalRenderer.SCREEN_WIDTH - this.sub_5d2(line)) / 2;
+            this.drawLargeString(line, graphics, textX, textY);
+            textY += this.var_550;
+        } while((lineStart = lineEnd + 2) < message.length());
+    }
 
-         var10 += this.var_6d3;
-      }
+    public final void stopGame() {
+        if (!this.isGamePaused) {
+            this.isGamePaused = true;
+            if (audioManager != null) {
+                audioManager.stopCurrentSound();
+            }
+        }
+    }
 
-      var4[var4.length - 1] = var5;
-   }
+    public final void resumeGame() {
+        if (this.isGamePaused) {
+            if (audioManager != null && SaveSystem.musicEnabled == 1 && this.areResourcesLoaded) {
+                playSound(0, true, 80, 2);
+            }
+            this.isGamePaused = false;
+        }
+    }
 
-   public static void delay(int var0) {
-      long var1 = System.currentTimeMillis();
+    public void showNotify() {
+        this.resumeGame();
+    }
 
-      do {
-         yieldToOtherThreads();
-      } while(System.currentTimeMillis() - var1 < (long)var0);
+    public void hideNotify() {
+        this.stopGame();
+    }
 
-   }
+    public final void stopGameLoop() {
+        this.isGameRunning = false;
+    }
 
-   private void sub_547(int var1, Graphics var2, int var3, int var4) {
-      String var5 = Integer.toString(var1);
-      int var6 = this.sub_5d2(var5) / 2;
-      this.drawLargeString(var5, var2, var3 - var6, var4);
-   }
+    public final boolean gameLoopTick() {
+        if (GameEngine.updateGameLogic()) {
+            return true;
+        } else {
+            if (!GameEngine.weaponSwitchAnimationActive) {
+                GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
+                if (GameEngine.selectNextWeapon) {
+                    GameEngine.selectNextWeapon = false;
+                    GameEngine.pendingWeaponSwitch = GameEngine.cycleWeaponForward(GameEngine.pendingWeaponSwitch);
+                }
 
-   public static void freeMemory() {
-      System.gc();
-   }
+                GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(GameEngine.pendingWeaponSwitch);
+                if (GameEngine.pendingWeaponSwitch != GameEngine.currentWeapon) {
+                    GameEngine.weaponSwitchAnimationActive = true;
+                    GameEngine.weaponAnimationState = 8;
+                }
+            }
 
-   private int sub_5d2(String var1) {
-      var1 = var1.toLowerCase();
-      int var2 = 0;
+            if (GameEngine.weaponSwitchAnimationActive) {
+                --GameEngine.weaponAnimationState;
+                if (GameEngine.weaponAnimationState == -8) {
+                    GameEngine.weaponSwitchAnimationActive = false;
+                }
 
-      for(int var3 = 0; var3 < var1.length(); ++var3) {
-         int var10000;
-         int var10001;
-         char var4;
-         if ((var4 = var1.charAt(var3)) == ' ') {
-            var10000 = var2;
-            var10001 = this.var_59b;
-         } else {
-            int[] var5 = this.sub_62f(var4);
-            int var6 = this.var_65d[var5[1] * this.var_4db + var5[0]];
-            var10000 = var2;
-            var10001 = var6;
-         }
+                if (GameEngine.weaponAnimationState == 0) {
+                    GameEngine.currentWeapon = GameEngine.pendingWeaponSwitch;
 
-         var2 = var10000 + var10001;
-      }
+                    try {
+                        MainGameCanvas canvas;
+                        boolean centered;
 
-      return var2;
-   }
+                        switch(GameEngine.currentWeapon) {
+                            case 0:
+                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/fist_a.png");
+                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/fist_b.png");
+                                this.weaponSprites[2] = null;
+                                canvas = this;
+                                centered = true;
+                                break;
+                            case 1:
+                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/luger_a.png");
+                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/luger_b.png");
+                                this.weaponSprites[2] = null;
+                                canvas = this;
+                                centered = true;
+                                break;
+                            case 2:
+                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/mauser_a.png");
+                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/mauser_b.png");
+                                this.weaponSprites[2] = null;
+                                canvas = this;
+                                centered = false;
+                                break;
+                            case 3:
+                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/m40_a.png");
+                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/m40_b.png");
+                                this.weaponSprites[2] = null;
+                                canvas = this;
+                                centered = false;
+                                break;
+                            case 4:
+                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/sten_a.png");
+                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/sten_b.png");
+                                this.weaponSprites[2] = null;
+                                canvas = this;
+                                centered = false;
+                                break;
+                            case 5:
+                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/panzerfaust_a.png");
+                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/panzerfaust_b.png");
+                                this.weaponSprites[2] = Image.createImage("/gamedata/sprites/panzerfaust_c.png");
+                                canvas = this;
+                                centered = false;
+                                break;
+                            case 6:
+                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/dynamite.png");
+                                this.weaponSprites[1] = null;
+                                this.weaponSprites[2] = null;
+                                canvas = this;
+                                centered = true;
+                                break;
+                            case 7:
+                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/sonic_a.png");
+                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/sonic_b.png");
+                                this.weaponSprites[2] = null;
+                                canvas = this;
+                                centered = true;
+                                break;
+                            default:
+                                return false;
+                        }
 
-   private int sub_5ef(String var1) {
-      int var2 = 0;
+                        canvas.isWeaponCentered = centered;
+                        this.weaponAnimationState = 0;
+                        weaponSpriteFrame = 0;
+                    } catch (Exception e) {
+                    } catch (OutOfMemoryError e) {
+                    }
+                }
+            }
 
-      for(int var3 = 0; var3 < var1.length(); ++var3) {
-         int var10000;
-         int var10001;
-         char var4;
-         if ((var4 = var1.charAt(var3)) == ' ') {
-            var10000 = var2;
-            var10001 = this.var_75f;
-         } else {
-            int[] var5 = this.getFontCoordinates(var4);
-            int var6 = this.var_6a8[var5[1] * this.smallFontCharsPerRow + var5[0]];
-            var10000 = var2;
-            var10001 = var6 + 1;
-         }
+            if (GameEngine.weaponCooldownTimer > -32768) {
+                --GameEngine.weaponCooldownTimer;
+            }
 
-         var2 = var10000 + var10001;
-      }
+            if (GameEngine.inputFire && !GameEngine.weaponSwitchAnimationActive) {
+                int ammoUsed;
 
-      return var2;
-   }
+                switch(GameEngine.currentWeapon) {
+                    case 0:
+                        if (GameEngine.weaponCooldownTimer < -var_111e[GameEngine.difficultyLevel]) {
+                            LevelLoader.gameWorld.fireWeapon();
+                            this.weaponAnimationState = 1;
+                            weaponSpriteFrame = 1;
+                            GameEngine.weaponCooldownTimer = 1;
+                        }
+                        break;
+                    case 1:
+                        if (GameEngine.weaponCooldownTimer < -var_1128[GameEngine.difficultyLevel]
+                                && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+                            ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
+                            LevelLoader.gameWorld.fireWeapon();
+                            this.weaponAnimationState = 1;
+                            weaponSpriteFrame = 1;
+                            GameEngine.weaponCooldownTimer = 1;
+                        }
+                        break;
+                    case 2:
+                        if (GameEngine.weaponCooldownTimer < -var_1147[GameEngine.difficultyLevel]
+                                && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+                            ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
+                            LevelLoader.gameWorld.fireWeapon();
+                            this.weaponAnimationState = 1;
+                            weaponSpriteFrame = 1;
+                            GameEngine.weaponCooldownTimer = 1;
+                        }
+                        break;
+                    case 3:
+                        if (GameEngine.weaponCooldownTimer <= 0) {
+                            if (this.weaponAnimationState == 0) {
+                                if (GameEngine.ammoCounts[1] > 0) {
+                                    ammoUsed = GameEngine.ammoCounts[1]--;
+                                    LevelLoader.gameWorld.fireWeapon();
+                                    this.weaponAnimationState = 1;
+                                    weaponSpriteFrame = 1;
+                                    GameEngine.weaponCooldownTimer = 1;
+                                }
+                            } else {
+                                this.weaponAnimationState = 0;
+                                GameEngine.weaponCooldownTimer = var_119b[GameEngine.difficultyLevel];
+                            }
+                        }
+                        break;
+                    case 4:
+                        if (GameEngine.weaponCooldownTimer <= 0) {
+                            if (this.weaponAnimationState == 0) {
+                                if (GameEngine.ammoCounts[1] > 0) {
+                                    ammoUsed = GameEngine.ammoCounts[1]--;
+                                    LevelLoader.gameWorld.fireWeapon();
+                                    this.weaponAnimationState = 1;
+                                    weaponSpriteFrame = 1;
+                                    GameEngine.weaponCooldownTimer = 1;
+                                }
+                            } else {
+                                this.weaponAnimationState = 0;
+                                GameEngine.weaponCooldownTimer = var_11e0[GameEngine.difficultyLevel];
+                            }
+                        }
+                        break;
+                    case 5:
+                        if (GameEngine.weaponCooldownTimer <= -1
+                                && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+                            ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
+                            LevelLoader.gameWorld.fireWeapon();
+                            this.weaponAnimationState = 1;
+                            weaponSpriteFrame = 1;
+                            GameEngine.weaponCooldownTimer = 2;
+                        }
+                        break;
+                    case 6:
+                        if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[6] > 0) {
+                            if ((currentLevelId == 4 || currentLevelId == 7 || currentLevelId == 8)
+                                    && (currentLevelId != 4 || GameEngine.currentSector.getSectorType() != 666)
+                                    && GameEngine.ammoCounts[6] == 1) {
+                                GameEngine.messageText = "i'd better use it|to finish my mission";
+                                GameEngine.messageTimer = 50;
+                            } else if (LevelLoader.gameWorld.throwGrenade()) {
+                                ammoUsed = GameEngine.ammoCounts[6]--;
+                                GameEngine.weaponCooldownTimer = 0;
+                                GameEngine.weaponAnimationState = 8;
+                                GameEngine.weaponSwitchAnimationActive = true;
+                                GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(6);
+                            }
+                        }
+                        break;
+                    case 7:
+                        if (GameEngine.weaponCooldownTimer < -var_11f1[GameEngine.difficultyLevel]
+                                && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
+                            ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
+                            LevelLoader.gameWorld.fireWeapon();
+                            this.weaponAnimationState = 1;
+                            weaponSpriteFrame = 1;
+                            GameEngine.weaponCooldownTimer = 1;
+                        }
+                }
+            } else if (GameEngine.weaponCooldownTimer <= 0) {
+                if (GameEngine.currentWeapon == 5) {
+                    if (this.weaponAnimationState == 1) {
+                        this.weaponAnimationState = 2;
+                        weaponSpriteFrame = 2;
+                        GameEngine.weaponAnimationState = 8;
+                        GameEngine.weaponSwitchAnimationActive = true;
+                        GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(5);
+                    }
+                } else {
+                    this.weaponAnimationState = 0;
+                }
+            }
 
-   private int[] sub_62f(char var1) {
-      int[] var2 = new int[]{this.var_4db - 1, 2};
-      int[] var10000;
-      byte var10001;
-      byte var10002;
-      if (var1 >= 'a' && var1 <= 'r') {
-         var2[0] = var1 - 97;
-         var10000 = var2;
-         var10001 = 1;
-         var10002 = 0;
-      } else if (var1 >= 's' && var1 <= 'z') {
-         var2[0] = var1 - 115;
-         var10000 = var2;
-         var10001 = 1;
-         var10002 = 1;
-      } else if (var1 >= '0' && var1 <= '9') {
-         var2[0] = var1 - 48;
-         var10000 = var2;
-         var10001 = 1;
-         var10002 = 2;
-      } else {
-         var2[1] = 1;
-         switch(var1) {
-         case '!':
-            var10000 = var2;
-            var10001 = 0;
-            var10002 = 10;
-            break;
-         case '\'':
-            var10000 = var2;
-            var10001 = 0;
-            var10002 = 15;
-            break;
-         case ',':
-            var10000 = var2;
-            var10001 = 0;
-            var10002 = 9;
-            break;
-         case '.':
-            var10000 = var2;
-            var10001 = 0;
-            var10002 = 8;
-            break;
-         case '/':
-            var10000 = var2;
-            var10001 = 0;
-            var10002 = 14;
-            break;
-         case ':':
-            var10000 = var2;
-            var10001 = 0;
-            var10002 = 12;
-            break;
-         case ';':
-            var10000 = var2;
-            var10001 = 0;
-            var10002 = 13;
-            break;
-         case '?':
-            var10000 = var2;
-            var10001 = 0;
-            var10002 = 11;
-            break;
-         default:
-            return var2;
-         }
-      }
+            if (GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 || GameEngine.inputStrafe) {
+                GameEngine.inputFire = false;
+            }
 
-      var10000[var10001] = var10002;
-      return var2;
-   }
+            return false;
+        }
+    }
 
-   private int[] getFontCoordinates(char character) {
-      int[] coords = new int[]{this.smallFontCharsPerRow - 1, 2};
-      int[] var10000;
-      byte var10001;
-      byte var10002;
-      if (character >= 'A' && character <= 'Z') {
-         coords[0] = character - 65;
-         var10000 = coords;
-         var10001 = 1;
-         var10002 = 0;
-      } else if (character >= 'a' && character <= 'z') {
-         coords[0] = character - 97;
-         var10000 = coords;
-         var10001 = 1;
-         var10002 = 1;
-      } else if (character >= '0' && character <= '9') {
-         coords[0] = character - 48;
-         var10000 = coords;
-         var10001 = 1;
-         var10002 = 2;
-      } else {
-         coords[1] = 2;
-         switch(character) {
-         case '!':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 12;
-            break;
-         case '"':
-         case '#':
-         case '$':
-         case '%':
-         case '&':
-         case '(':
-         case ')':
-         case '*':
-         case '+':
-         case '0':
-         case '1':
-         case '2':
-         case '3':
-         case '4':
-         case '5':
-         case '6':
-         case '7':
-         case '8':
-         case '9':
-         case '<':
-         case '=':
-         case '>':
-         default:
-            return coords;
-         case '\'':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 18;
-            break;
-         case ',':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 11;
-            break;
-         case '-':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 17;
-            break;
-         case '.':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 10;
-            break;
-         case '/':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 16;
-            break;
-         case ':':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 14;
-            break;
-         case ';':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 15;
-            break;
-         case '?':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 13;
-            break;
-         case '@':
-            var10000 = coords;
-            var10001 = 0;
-            var10002 = 19;
-         }
-      }
+    private static void sub_3bc(GameObject object, byte[] sprites1, byte[] sprites2) {
+        for(int i = 0; i < sprites1.length; ++i) {
+            byte sprite1 = sprites1[i];
+            byte sprite2 = sprites2[i];
+            object.addSpriteFrame(sprite1, sprite2);
+            if (sprite1 != 0) {
+                LevelLoader.preloadTexture(sprite1);
+            }
+            if (sprite2 != 0) {
+                LevelLoader.preloadTexture(sprite2);
+            }
+        }
+    }
 
-      var10000[var10001] = var10002;
-      return coords;
-   }
+    private void initializeGameResources() {
+        try {
+            this.statusBarImage = Image.createImage("/gamedata/sprites/bar.png");
+            this.weaponSprites[0] = Image.createImage("/gamedata/sprites/fist_a.png");
+            this.weaponSprites[1] = Image.createImage("/gamedata/sprites/fist_b.png");
+            this.weaponSprites[2] = null;
+            this.crosshairImage = Image.createImage("/gamedata/sprites/aim.png");
+            this.largeFontImage = Image.createImage("/gamedata/sprites/font.png");
+            MathUtils.initializeMathTables();
+            GameEngine.initializeEngine();
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        }
+    }
 
-   private void drawLargeString(String var1, Graphics var2, int var3, int var4) {
-      var1 = var1.toLowerCase();
+    private void loadLevelResources() {
+        try {
+            freeMemory();
 
-      for(int var5 = 0; var5 < var1.length(); ++var5) {
-         char var6;
-         int var10000;
-         int var10001;
-         if ((var6 = var1.charAt(var5)) == ' ') {
-            var10000 = var3;
-            var10001 = this.var_59b;
-         } else {
-            int[] var7;
-            int var8 = (var7 = this.sub_62f(var6))[1] * this.var_4db + var7[0];
-            int var9 = this.var_65d[var8];
-            int var10 = this.var_5fa[var8];
-            int var11 = var7[1] * this.var_550;
-            var2.drawRegion(this.largeFontImage, var10, var11, var9, this.var_550, 0, var3, var4, 20);
-            var10000 = var3;
-            var10001 = var9;
-         }
+            if (previousLevelId < currentLevelId) {
+                if (previousLevelId > -1) {
+                    this.cachedStaticObjects = LevelLoader.gameWorld.staticObjects;
+                }
 
-         var3 = var10000 + var10001;
-      }
+                if (!LevelLoader.loadMapData("/gamedata/levels/level_" + levelFileNames[currentLevelId],
+                        this.nextLevelObjects == null)) {
+                    CovertOps3D.exitApplication();
+                }
 
-   }
+                if (this.nextLevelObjects != null) {
+                    LevelLoader.gameWorld.staticObjects = this.nextLevelObjects;
+                    this.nextLevelObjects = null;
+                } else {
+                    GameEngine.keysCollected[0] = false;
+                    GameEngine.keysCollected[1] = false;
+                }
+            } else {
+                this.nextLevelObjects = LevelLoader.gameWorld.staticObjects;
+                if (!LevelLoader.loadMapData("/level_" + levelFileNames[currentLevelId],
+                        this.cachedStaticObjects == null)) {
+                    CovertOps3D.exitApplication();
+                }
 
-   private void drawSmallString(String var1, Graphics var2, int var3, int var4) {
-      for(int var5 = 0; var5 < var1.length(); ++var5) {
-         char var6;
-         int var10000;
-         int var10001;
-         if ((var6 = var1.charAt(var5)) == ' ') {
-            var10000 = var3;
-            var10001 = this.var_75f;
-         } else {
-            int[] var7;
-            int var8 = (var7 = this.getFontCoordinates(var6))[1] * this.smallFontCharsPerRow + var7[0];
-            int var9 = this.var_6a8[var8];
-            int var10 = this.var_691[var8];
-            int var11 = var7[1] * this.var_6d3;
-            var2.drawRegion(this.smallFontImage, var10, var11, var9, this.var_6d3, 0, var3, var4, 20);
-            var10000 = var3;
-            var10001 = var9 + 1;
-         }
+                if (this.cachedStaticObjects != null) {
+                    LevelLoader.gameWorld.staticObjects = this.cachedStaticObjects;
+                    this.cachedStaticObjects = null;
+                }
+            }
 
-         var3 = var10000 + var10001;
-      }
+            freeMemory();
+            GameEngine.resetLevelState();
 
-   }
+            LevelLoader.preloadTexture((byte)25);
 
-    public static void playSound(int var0, boolean var1, int var2, int var3) {
-      boolean var4;
-      if (!(var4 = var0 > 0) || SaveSystem.soundEnabled != 0) {
-         int var5 = var1 ? -1 : 1;
-         audioManager.setVolume(var2);
-         audioManager.playSound(var0, var5, var3);
-      }
-   }
+            byte[] var2 = new byte[]{-23, -25, -28, -30, -32, 0, 0};
+            byte[] var3 = new byte[]{-24, -26, -29, -31, -33, -34, -27};
+            byte[] var4 = new byte[]{-35, -36, -38, -39, -40, 0, 0};
+            byte[] var5 = new byte[]{-86, -88, -91, -93, -95, 0, 0};
+            byte[] var6 = new byte[]{-87, -89, -92, -94, -96, -97, -90};
+            byte[] var7 = new byte[]{-73, -75, -78, -80, -82, 0, 0};
+            byte[] var8 = new byte[]{-74, -76, -79, -81, -83, -84, -77};
+            byte[] var9 = new byte[]{-2, -1};
+            byte[] var10 = new byte[]{-3, 0};
+            byte[] var11 = new byte[]{-59, -61, -64, -66, -68, 0, 0};
+            byte[] var12 = new byte[]{-60, -62, -65, -67, -69, -70, -63};
+            byte[] var13 = new byte[]{-9};
+            byte[] var14 = new byte[]{-10};
+            byte[] var15 = new byte[]{-4, -6, -11, -13, 0, 0};
+            byte[] var16 = new byte[]{-5, -7, -12, -14, -15, -8};
 
-   public static void stopCurrentSound() {
-      audioManager.stopCurrentSound();
-   }
+            GameObject[] objects = LevelLoader.gameWorld.staticObjects;
 
-   public static void vibrateDevice(int var0) {
-      if (SaveSystem.vibrationEnabled != 0) {
-         try {
-            CovertOps3D.display.vibrate(var0);
-         } catch (Exception var1) {
-         } catch (OutOfMemoryError var2) {
-         }
-      }
-   }
+            for(int i = 0; i < objects.length; ++i) {
+                GameObject obj = objects[i];
+                if (obj != null) {
+                    GameObject target;
 
-   private void flushScreenBuffer() {
-      this.flushGraphics();
-   }
+                    switch(obj.objectType) {
+                        case 5:
+                        case 13:
+                            obj.addSpriteFrame((byte)0, (byte)-53);
+                            LevelLoader.preloadTexture((byte)-53);
+                            continue;
+                        case 10:
+                            sub_3bc(obj, var9, var10);
+                            if (levelFileNames[currentLevelId] == "06c") {
+                                obj.currentState = 1;
+                            }
+                            continue;
+                        case 12:
+                            sub_3bc(obj, var13, var14);
+                            continue;
+                        case 26:
+                            obj.addSpriteFrame((byte)0, (byte)-16);
+                            LevelLoader.preloadTexture((byte)-16);
+                            continue;
+                        case 60:
+                            obj.addSpriteFrame((byte)0, (byte)-18);
+                            LevelLoader.preloadTexture((byte)-18);
+                            continue;
+                        case 61:
+                            obj.addSpriteFrame((byte)0, (byte)-17);
+                            LevelLoader.preloadTexture((byte)-17);
+                            continue;
+                        case 82:
+                            obj.addSpriteFrame((byte)0, (byte)-21);
+                            LevelLoader.preloadTexture((byte)-21);
+                            continue;
+                        case 2001:
+                            obj.addSpriteFrame((byte)0, (byte)-19);
+                            LevelLoader.preloadTexture((byte)-19);
+                            continue;
+                        case 2002:
+                            obj.addSpriteFrame((byte)0, (byte)-20);
+                            LevelLoader.preloadTexture((byte)-20);
+                            continue;
+                        case 2003:
+                            obj.addSpriteFrame((byte)0, (byte)-22);
+                            LevelLoader.preloadTexture((byte)-22);
+                            continue;
+                        case 2004:
+                            obj.addSpriteFrame((byte)0, (byte)-43);
+                            LevelLoader.preloadTexture((byte)-43);
+                            continue;
+                        case 2005:
+                            obj.addSpriteFrame((byte)0, (byte)-50);
+                            LevelLoader.preloadTexture((byte)-50);
+                            continue;
+                        case 2006:
+                            obj.addSpriteFrame((byte)0, (byte)-72);
+                            LevelLoader.preloadTexture((byte)-72);
+                            continue;
+                        case 2007:
+                            target = obj;
+                            break;
+                        case 2008:
+                            obj.addSpriteFrame((byte)0, (byte)-54);
+                            LevelLoader.preloadTexture((byte)-54);
+                            continue;
+                        case 2010:
+                            obj.addSpriteFrame((byte)0, (byte)-57);
+                            LevelLoader.preloadTexture((byte)-57);
+                            continue;
+                        case 2012:
+                            obj.addSpriteFrame((byte)0, (byte)-55);
+                            LevelLoader.preloadTexture((byte)-55);
+                            continue;
+                        case 2013:
+                            obj.addSpriteFrame((byte)0, (byte)-49);
+                            LevelLoader.preloadTexture((byte)-49);
+                            continue;
+                        case 2014:
+                            obj.addSpriteFrame((byte)0, (byte)-52);
+                            LevelLoader.preloadTexture((byte)-52);
+                            continue;
+                        case 2015:
+                            obj.addSpriteFrame((byte)0, (byte)-58);
+                            LevelLoader.preloadTexture((byte)-58);
+                            continue;
+                        case 2024:
+                            obj.addSpriteFrame((byte)0, (byte)-85);
+                            LevelLoader.preloadTexture((byte)-85);
+                            continue;
+                        case 2047:
+                            obj.addSpriteFrame((byte)0, (byte)-56);
+                            LevelLoader.preloadTexture((byte)-56);
+                            continue;
+                        case 3001:
+                            sub_3bc(obj, var11, var12);
+                            LevelLoader.preloadTexture((byte)-57);
+                            continue;
+                        case 3002:
+                            sub_3bc(obj, var15, var16);
+                            LevelLoader.preloadTexture((byte)-56);
+                            continue;
+                        case 3003:
+                            sub_3bc(obj, var2, var3);
+                            LevelLoader.preloadTexture((byte)-48);
+                            continue;
+                        case 3004:
+                            sub_3bc(obj, var5, var6);
+                            LevelLoader.preloadTexture((byte)-54);
+                            continue;
+                        case 3005:
+                            sub_3bc(obj, var4, var6);
+                            LevelLoader.preloadTexture((byte)-48);
+                            continue;
+                        case 3006:
+                            sub_3bc(obj, var7, var8);
+                            LevelLoader.preloadTexture((byte)-54);
+                            continue;
+                        default:
+                            target = obj;
+                    }
 
-   private static void yieldToOtherThreads() {
-      Thread.yield();
-   }
+                    target.addSpriteFrame((byte)0, (byte)-48);
+                    LevelLoader.preloadTexture((byte)-48);
+                }
+            }
+
+            LevelLoader.preloadTexture((byte)-44);
+            LevelLoader.preloadTexture((byte)-45);
+            LevelLoader.preloadTexture((byte)-46);
+            LevelLoader.preloadTexture((byte)-47);
+            LevelLoader.preloadTexture((byte)-71);
+            LevelLoader.preloadTexture((byte)-51);
+            LevelLoader.preloadTexture((byte)-43);
+
+            if (currentLevelId == 10) {
+                LevelLoader.preloadTexture((byte)-72);
+            }
+
+            freeMemory();
+
+            if (!LevelLoader.loadGameAssets("/gamedata/textures/tx", 4, "/gamedata/textures/sp", 4)) {
+                CovertOps3D.exitApplication();
+            }
+
+            GameEngine.handleWeaponChange((byte)25);
+            freeMemory();
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        }
+    }
+
+    private void drawPleaseWait(Graphics graphics) {
+        String text = "please wait...";
+        int textX = (PortalRenderer.SCREEN_WIDTH - this.sub_5d2(text)) / 2;
+        int textY = HALF_UI_HEIGHT - this.var_550 / 2;
+
+        int halfScreenBuffer = PortalRenderer.SCREEN_WIDTH * HALF_UI_HEIGHT;
+        PortalRenderer.screenBuffer[0] = Integer.MIN_VALUE;
+        sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+
+        graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+        graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
+                0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+
+        this.drawLargeString(text, graphics, textX, textY);
+        this.flushScreenBuffer();
+    }
+
+    private int drawDialogOverlay(Graphics graphics, int dialogId) {
+        try {
+            int menuHeight = this.var_550 + 6;
+            Image frameBuffer = Image.createImage(PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+            Image background = Image.createImage("/gamedata/sprites/bkg_cut.png");
+            Image playerPortrait = Image.createImage("/gamedata/sprites/player.png");
+            Image agentPortrait = dialogId != 0 && dialogId != 9
+                    ? Image.createImage(dialogId == 8
+                    ? "/gamedata/sprites/ag_hurt.png"
+                    : "/gamedata/sprites/ag.png")
+                    : null;
+            Image doctorPortrait = dialogId == 7
+                    ? Image.createImage("/gamedata/sprites/doctor.png")
+                    : null;
+
+            this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
+
+            int textAreaWidth = PortalRenderer.SCREEN_WIDTH - playerPortrait.getWidth() - 6;
+            Graphics fbGraphics = frameBuffer.getGraphics();
+            fbGraphics.setColor(16711680);
+            fbGraphics.drawImage(background, 0, 0, 20);
+            fbGraphics.drawImage(playerPortrait, 2, 2, 20);
+
+            int agentY = HALF_UI_HEIGHT + 2;
+            int doctorY = 2 * (UI_HEIGHT - menuHeight) / 3 + 2;
+            int linesPerBox = (316 - menuHeight) / this.var_6d3;
+
+            int[][] lineBuffers = new int[3][];
+            int[] lineIndices = new int[]{0, 0, 0};
+            String[] currentText = new String[3];
+
+            if (agentPortrait != null) {
+                if (doctorPortrait != null) {
+                    agentY = (UI_HEIGHT - menuHeight) / 3 + 2;
+                    fbGraphics.drawImage(agentPortrait,
+                            PortalRenderer.SCREEN_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
+                    fbGraphics.drawImage(doctorPortrait,
+                            PortalRenderer.SCREEN_WIDTH - 2 - doctorPortrait.getWidth(), doctorY, 20);
+                    linesPerBox = (316 - menuHeight) / (this.var_6d3 * 3);
+                    lineBuffers[1] = new int[linesPerBox];
+                    lineBuffers[2] = new int[linesPerBox];
+                } else {
+                    fbGraphics.drawImage(agentPortrait,
+                            PortalRenderer.SCREEN_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
+                    linesPerBox = (316 - menuHeight) / (this.var_6d3 * 2);
+                    lineBuffers[1] = new int[linesPerBox];
+                }
+            }
+
+            lineBuffers[0] = new int[linesPerBox];
+            this.sub_1e3(graphics, frameBuffer);
+            this.drawLargeString("back", graphics,
+                    PortalRenderer.SCREEN_WIDTH - this.sub_5d2("back") - 3, UI_HEIGHT - this.var_550 - 3);
+            this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
+
+            int[] charIndices = new int[]{0, 0, 0};
+            int[] boxStartY = new int[]{0, 0, 0};
+            int[] boxEndY = new int[]{0, 0, 0};
+            long[] fadeTimers = new long[]{0L, 0L, 0L};
+            boolean[] needsFade = new boolean[]{false, false, false};
+
+            for(int lineNum = 0; lineNum < MenuSystem.storyText[dialogId].length; ++lineNum) {
+                String line = MenuSystem.storyText[dialogId][lineNum];
+                int textX = playerPortrait.getWidth() + 4;
+                int textY = 2;
+                byte boxId = 0;
+
+                if (line.startsWith("A")) {
+                    textX = 2;
+                    textY = agentY;
+                    boxId = 1;
+                } else if (line.startsWith("M")) {
+                    textX = 2;
+                    textY = doctorY;
+                    boxId = 2;
+                }
+
+                int maxX = textX + textAreaWidth;
+                int maxY = textY + linesPerBox * this.var_6d3;
+                int currentX = textX;
+                int currentY = textY;
+
+                charIndices[boxId] = 0;
+                currentText[boxId] = line;
+                delay(500);
+
+                if (needsFade[boxId]) {
+                    needsFade[boxId] = false;
+                    graphics.drawRegion(frameBuffer, boxStartY[boxId], boxEndY[boxId],
+                            textAreaWidth, boxEndY[boxId] - boxEndY[boxId],
+                            0, boxStartY[boxId], boxEndY[boxId], 20);
+                }
+
+                lineIndices[boxId] = 0;
+                lineBuffers[boxId][lineIndices[boxId]] = 1;
+
+                for(int charPos = 1; charPos < line.length(); ++charPos) {
+                    char c = line.charAt(charPos);
+
+                    if (c == ' ') {
+                        if (currentX + this.var_75f > maxX) {
+                            currentX = textX;
+                            if (lineIndices[boxId] >= linesPerBox - 1) {
+                                this.sub_493(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
+                                        textX, textY, maxY, textAreaWidth);
+                            } else {
+                                currentY += this.var_6d3;
+                                ++lineIndices[boxId];
+                                lineBuffers[boxId][lineIndices[boxId]] = charPos + 1;
+                            }
+                        } else {
+                            int nextSpace = line.indexOf(32, charPos + 1);
+                            if (nextSpace == -1) {
+                                nextSpace = line.length();
+                            }
+
+                            String word = line.substring(charPos, nextSpace);
+                            int wordWidth = this.sub_5ef(word);
+
+                            if (currentX + this.var_75f + wordWidth > maxX) {
+                                currentX = textX;
+                                if (lineIndices[boxId] >= linesPerBox - 1) {
+                                    this.sub_493(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
+                                            textX, textY, maxY, textAreaWidth);
+                                } else {
+                                    currentY += this.var_6d3;
+                                    ++lineIndices[boxId];
+                                    lineBuffers[boxId][lineIndices[boxId]] = charPos + 1;
+                                }
+                            } else {
+                                currentX += this.var_75f;
+                            }
+                        }
+                    } else {
+                        int[] fontCoords = this.getFontCoordinates(c);
+                        int fontIdx = fontCoords[1] * this.smallFontCharsPerRow + fontCoords[0];
+                        int charWidth = this.var_6a8[fontIdx];
+                        int charX = this.var_691[fontIdx];
+                        int charY = fontCoords[1] * this.var_6d3;
+
+                        if (currentX + charWidth + 1 > maxX) {
+                            currentX = textX;
+                            if (lineIndices[boxId] >= linesPerBox - 1) {
+                                this.sub_493(graphics, frameBuffer, line, lineBuffers[boxId], charPos,
+                                        textX, textY, maxY, textAreaWidth);
+                            } else {
+                                currentY += this.var_6d3;
+                                ++lineIndices[boxId];
+                                lineBuffers[boxId][lineIndices[boxId]] = charPos;
+                            }
+                        }
+
+                        graphics.drawRegion(this.smallFontImage, charX, charY, charWidth, this.var_6d3,
+                                0, currentX, currentY, 20);
+                        currentX += charWidth + 1;
+                    }
+
+                    this.flushScreenBuffer();
+                    delay(c == ',' ? 300 : (c != '.' && c != '?' && c != '!' ? 50 : 400));
+
+                    long currentTime = System.currentTimeMillis();
+                    for(int b = 0; b < 3; ++b) {
+                        if (needsFade[b] && currentTime > fadeTimers[b]) {
+                            needsFade[b] = false;
+                            graphics.drawRegion(frameBuffer, boxStartY[b], boxEndY[b],
+                                    textAreaWidth, boxEndY[b] - boxEndY[b],
+                                    0, boxStartY[b], boxEndY[b], 20);
+                            lineIndices[b] = 0;
+                            currentText[b] = null;
+                        }
+                    }
+
+                    if (GameEngine.inputRun) {
+                        GameEngine.inputRun = false;
+                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.var_550 - 3,
+                                this.sub_5d2("pause"), this.var_550,
+                                0, 3, UI_HEIGHT - this.var_550 - 3, 20);
+                        this.drawLargeString("resume", graphics, 3, UI_HEIGHT - this.var_550 - 3);
+                        this.flushScreenBuffer();
+
+                        while(!GameEngine.inputRun && !GameEngine.inputBack
+                                && !this.isGamePaused && !GameEngine.inputFire) {
+                            yieldToOtherThreads();
+                        }
+                    }
+
+                    if (GameEngine.inputRun) {
+                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.var_550 - 3,
+                                this.sub_5d2("resume"), this.var_550,
+                                0, 3, UI_HEIGHT - this.var_550 - 3, 20);
+                        this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
+                        this.flushScreenBuffer();
+                        GameEngine.inputRun = false;
+                    }
+
+                    if (GameEngine.inputBack || this.isGamePaused) {
+                        GameEngine.inputRun = false;
+                        GameEngine.inputBack = false;
+                        int menuResult = this.showMenuScreen(graphics, false);
+                        if (menuResult != 32) {
+                            this.smallFontImage = null;
+                            return menuResult;
+                        }
+
+                        graphics.drawImage(frameBuffer, 0, 0, 20);
+                        this.drawLargeString("back", graphics,
+                                PortalRenderer.SCREEN_WIDTH - this.sub_5d2("back") - 3,
+                                UI_HEIGHT - this.var_550 - 3);
+                        this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
+
+                        for(int b = 0; b < 3; ++b) {
+                            int endChar = b == boxId ? charPos :
+                                    (currentText[b] != null ? currentText[b].length() : 0);
+
+                            if (lineBuffers[b] != null) {
+                                int startX = 0;
+                                int startY = 0;
+
+                                switch(b) {
+                                    case 0:
+                                        startX = playerPortrait.getWidth() + 4;
+                                        startY = 2;
+                                        break;
+                                    case 1:
+                                        startX = 2;
+                                        startY = agentY;
+                                        break;
+                                    case 2:
+                                        startX = 2;
+                                        startY = doctorY;
+                                        break;
+                                }
+
+                                for(int lineIdx = 0; lineIdx <= lineIndices[b]; ++lineIdx) {
+                                    int lineStart = lineBuffers[b][lineIdx];
+                                    int lineEnd = lineIdx + 1 <= lineIndices[b]
+                                            ? lineBuffers[b][lineIdx + 1]
+                                            : (currentText[b] != null ? currentText[b].length() : 0);
+
+                                    if (endChar + 1 < lineEnd) {
+                                        lineEnd = endChar + 1;
+                                    }
+
+                                    int renderX = startX;
+                                    for(int pos = lineStart; pos < lineEnd; ++pos) {
+                                        char ch = currentText[b].charAt(pos);
+
+                                        if (ch == ' ') {
+                                            renderX += this.var_75f;
+                                        } else {
+                                            int[] fCoords = this.getFontCoordinates(ch);
+                                            int fIdx = fCoords[1] * this.smallFontCharsPerRow + fCoords[0];
+                                            int cWidth = this.var_6a8[fIdx];
+                                            int cX = this.var_691[fIdx];
+                                            int cY = fCoords[1] * this.var_6d3;
+                                            graphics.drawRegion(this.smallFontImage, cX, cY, cWidth, this.var_6d3,
+                                                    0, renderX, startY, 20);
+                                            renderX += cWidth + 1;
+                                        }
+                                    }
+                                    startY += this.var_6d3;
+                                }
+                            }
+                        }
+
+                        this.flushScreenBuffer();
+                    }
+
+                    if (GameEngine.inputFire) {
+                        GameEngine.inputFire = false;
+                        this.smallFontImage = null;
+                        return -1;
+                    }
+
+                    yieldToOtherThreads();
+                }
+
+                charIndices[boxId] = 0;
+                needsFade[boxId] = true;
+                boxStartY[boxId] = textX;
+                boxEndY[boxId] = textY;
+                boxEndY[boxId] = maxY;
+                fadeTimers[boxId] = System.currentTimeMillis() + 5000L;
+                delay(500);
+            }
+
+            delay(5000);
+            this.smallFontImage = null;
+        } catch (Exception e) {
+        } catch (OutOfMemoryError e) {
+        }
+
+        return -1;
+    }
+
+    private void sub_493(Graphics graphics, Image frameBuffer, String text, int[] lineStarts,
+                         int startChar, int startX, int startY, int maxY, int width) {
+
+        graphics.drawRegion(frameBuffer, startX, startY, width, maxY - startY, 0, startX, startY, 20);
+        int renderY = startY;
+
+        for(int lineIdx = 1; lineIdx < lineStarts.length; ++lineIdx) {
+            int lineStart = lineStarts[lineIdx];
+            lineStarts[lineIdx - 1] = lineStart;
+            int lineEnd = lineIdx + 1 < lineStarts.length
+                    ? lineStarts[lineIdx + 1]
+                    : startChar;
+
+            int renderX = startX;
+            for(int charIdx = lineStart; charIdx < lineEnd; ++charIdx) {
+                char c = text.charAt(charIdx);
+
+                if (c == ' ') {
+                    renderX += this.var_75f;
+                } else {
+                    int[] coords = this.getFontCoordinates(c);
+                    int fontIdx = coords[1] * this.smallFontCharsPerRow + coords[0];
+                    int charW = this.var_6a8[fontIdx];
+                    int charX = this.var_691[fontIdx];
+                    int charY = coords[1] * this.var_6d3;
+                    graphics.drawRegion(this.smallFontImage, charX, charY, charW, this.var_6d3,
+                            0, renderX, renderY, 20);
+                    renderX += charW + 1;
+                }
+            }
+            renderY += this.var_6d3;
+        }
+
+        lineStarts[lineStarts.length - 1] = startChar;
+    }
+
+    public static void delay(int milliseconds) {
+        long start = System.currentTimeMillis();
+        do {
+            yieldToOtherThreads();
+        } while(System.currentTimeMillis() - start < (long)milliseconds);
+    }
+
+    private void sub_547(int value, Graphics graphics, int x, int y) {
+        String text = Integer.toString(value);
+        int centerOffset = this.sub_5d2(text) / 2;
+        this.drawLargeString(text, graphics, x - centerOffset, y);
+    }
+
+    public static void freeMemory() {
+        System.gc();
+    }
+
+    private int sub_5d2(String text) {
+        text = text.toLowerCase();
+        int width = 0;
+
+        for(int i = 0; i < text.length(); ++i) {
+            char c = text.charAt(i);
+            if (c == ' ') {
+                width += this.var_59b;
+            } else {
+                int[] coords = this.sub_62f(c);
+                int charWidth = this.var_65d[coords[1] * this.var_4db + coords[0]];
+                width += charWidth;
+            }
+        }
+
+        return width;
+    }
+
+    private int sub_5ef(String text) {
+        int width = 0;
+
+        for(int i = 0; i < text.length(); ++i) {
+            char c = text.charAt(i);
+            if (c == ' ') {
+                width += this.var_75f;
+            } else {
+                int[] coords = this.getFontCoordinates(c);
+                int charWidth = this.var_6a8[coords[1] * this.smallFontCharsPerRow + coords[0]];
+                width += charWidth + 1;
+            }
+        }
+
+        return width;
+    }
+
+    private int[] sub_62f(char c) {
+        int[] coords = new int[]{this.var_4db - 1, 2};
+
+        if (c >= 'a' && c <= 'r') {
+            coords[0] = c - 97;
+            coords[1] = 0;
+        } else if (c >= 's' && c <= 'z') {
+            coords[0] = c - 115;
+            coords[1] = 1;
+        } else if (c >= '0' && c <= '9') {
+            coords[0] = c - 48;
+            coords[1] = 2;
+        } else {
+            coords[1] = 1;
+            switch(c) {
+                case '!':
+                    coords[0] = 10;
+                    break;
+                case '\'':
+                    coords[0] = 15;
+                    break;
+                case ',':
+                    coords[0] = 9;
+                    break;
+                case '.':
+                    coords[0] = 8;
+                    break;
+                case '/':
+                    coords[0] = 14;
+                    break;
+                case ':':
+                    coords[0] = 12;
+                    break;
+                case ';':
+                    coords[0] = 13;
+                    break;
+                case '?':
+                    coords[0] = 11;
+                    break;
+                default:
+                    return coords;
+            }
+        }
+
+        return coords;
+    }
+
+    private int[] getFontCoordinates(char character) {
+        int[] coords = new int[]{this.smallFontCharsPerRow - 1, 2};
+
+        if (character >= 'A' && character <= 'Z') {
+            coords[0] = character - 65;
+            coords[1] = 0;
+        } else if (character >= 'a' && character <= 'z') {
+            coords[0] = character - 97;
+            coords[1] = 1;
+        } else if (character >= '0' && character <= '9') {
+            coords[0] = character - 48;
+            coords[1] = 2;
+        } else {
+            coords[1] = 2;
+            switch(character) {
+                case '!':
+                    coords[0] = 12;
+                    break;
+                case '\'':
+                    coords[0] = 18;
+                    break;
+                case ',':
+                    coords[0] = 11;
+                    break;
+                case '-':
+                    coords[0] = 17;
+                    break;
+                case '.':
+                    coords[0] = 10;
+                    break;
+                case '/':
+                    coords[0] = 16;
+                    break;
+                case ':':
+                    coords[0] = 14;
+                    break;
+                case ';':
+                    coords[0] = 15;
+                    break;
+                case '?':
+                    coords[0] = 13;
+                    break;
+                case '@':
+                    coords[0] = 19;
+                    break;
+                default:
+                    return coords;
+            }
+        }
+
+        return coords;
+    }
+
+    private void drawLargeString(String text, Graphics graphics, int x, int y) {
+        text = text.toLowerCase();
+
+        for(int i = 0; i < text.length(); ++i) {
+            char c = text.charAt(i);
+
+            if (c == ' ') {
+                x += this.var_59b;
+            } else {
+                int[] coords = this.sub_62f(c);
+                int fontIdx = coords[1] * this.var_4db + coords[0];
+                int charWidth = this.var_65d[fontIdx];
+                int charX = this.var_5fa[fontIdx];
+                int charY = coords[1] * this.var_550;
+                graphics.drawRegion(this.largeFontImage, charX, charY, charWidth, this.var_550,
+                        0, x, y, 20);
+                x += charWidth;
+            }
+        }
+    }
+
+    private void drawSmallString(String text, Graphics graphics, int x, int y) {
+        for(int i = 0; i < text.length(); ++i) {
+            char c = text.charAt(i);
+
+            if (c == ' ') {
+                x += this.var_75f;
+            } else {
+                int[] coords = this.getFontCoordinates(c);
+                int fontIdx = coords[1] * this.smallFontCharsPerRow + coords[0];
+                int charWidth = this.var_6a8[fontIdx];
+                int charX = this.var_691[fontIdx];
+                int charY = coords[1] * this.var_6d3;
+                graphics.drawRegion(this.smallFontImage, charX, charY, charWidth, this.var_6d3,
+                        0, x, y, 20);
+                x += charWidth + 1;
+            }
+        }
+    }
+
+    public static void playSound(int soundId, boolean loop, int volume, int priority) {
+        boolean isMusic = soundId > 0;
+        if (!isMusic || SaveSystem.soundEnabled != 0) {
+            int loopCount = loop ? -1 : 1;
+            audioManager.setVolume(volume);
+            audioManager.playSound(soundId, loopCount, priority);
+        }
+    }
+
+    public static void stopCurrentSound() {
+        audioManager.stopCurrentSound();
+    }
+
+    public static void vibrateDevice(int duration) {
+        if (SaveSystem.vibrationEnabled != 0) {
+            try {
+                CovertOps3D.display.vibrate(duration);
+            } catch (Exception e) {
+            } catch (OutOfMemoryError e) {
+            }
+        }
+    }
+
+    private void flushScreenBuffer() {
+        this.flushGraphics();
+    }
+
+    private static void yieldToOtherThreads() {
+        Thread.yield();
+    }
 }
