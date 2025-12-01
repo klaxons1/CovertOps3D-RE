@@ -1,25 +1,29 @@
 /**
- * Render span management system for efficient surface rendering
- * Handles span merging and optimization for floor/ceiling rendering
+ * Render span management system for efficient surface rendering.
+ * Handles span merging and optimization for floor/ceiling rendering.
  */
 public final class RenderUtils {
-    private RenderSpan[] renderSpans = new RenderSpan[288]; // 144 floor + 144 ceiling spans
-    private RenderSpan freeList = null; // Free list for span reuse
+
+    private RenderSpan[] renderSpans;
+    private RenderSpan freeList = null;
 
     public RenderUtils() {
+        this.renderSpans = new RenderSpan[PortalRenderer.SCREEN_HEIGHT];
         this.resetRenderer();
     }
 
     /**
-     * Resets the renderer and rebuilds the free list
+     * Resets the renderer and rebuilds the free list.
      */
     public final void resetRenderer() {
-        for(int scanline = 0; scanline < 288; ++scanline) {
+        int screenHeight = PortalRenderer.SCREEN_HEIGHT;
+
+        for (int scanline = 0; scanline < screenHeight; ++scanline) {
             if (this.renderSpans[scanline] != null) {
                 RenderSpan currentSpan = this.renderSpans[scanline];
 
                 // Add all spans from this scanline to free list
-                while(true) {
+                while (true) {
                     RenderSpan span = currentSpan;
                     if (currentSpan.next == null) {
                         span.next = this.freeList;
@@ -35,16 +39,17 @@ public final class RenderUtils {
     }
 
     /**
-     * Adds a render span, merging with adjacent spans when possible
-     * @param startX Starting X coordinate of the span
-     * @param endX Ending X coordinate of the span  
+     * Adds a render span, merging with adjacent spans when possible.
+     *
+     * @param startX   Starting X coordinate of the span
+     * @param endX     Ending X coordinate of the span
      * @param sectorId ID of the sector this span belongs to
-     * @param scanline The scanline (0-287) where this span is rendered
+     * @param scanline The scanline where this span is rendered
      */
     public final void addRenderSpan(short startX, short endX, short sectorId, int scanline) {
         RenderSpan currentSpan = this.renderSpans[scanline];
 
-        while(true) {
+        while (true) {
             RenderSpan span = currentSpan;
             RenderSpan newSpan;
 
@@ -77,7 +82,7 @@ public final class RenderUtils {
                     RenderSpan searchSpan = this.renderSpans[scanline];
 
                     // Check if we can merge with next span to the right
-                    for(prevSpan = null; searchSpan != null; searchSpan = searchSpan.next) {
+                    for (prevSpan = null; searchSpan != null; searchSpan = searchSpan.next) {
                         if (searchSpan.sectorId == sectorId && searchSpan.startX == endX + 1) {
                             span.endX = searchSpan.endX;
 
@@ -98,13 +103,13 @@ public final class RenderUtils {
                     return;
                 }
 
-                // Merge with left side: current span starts where new span ends  
+                // Merge with left side: current span starts where new span ends
                 if (span.startX == endX + 1) {
                     span.startX = startX;
                     RenderSpan searchSpan = this.renderSpans[scanline];
 
                     // Check if we can merge with previous span to the left
-                    for(prevSpan = null; searchSpan != null; searchSpan = searchSpan.next) {
+                    for (prevSpan = null; searchSpan != null; searchSpan = searchSpan.next) {
                         if (searchSpan.sectorId == sectorId && searchSpan.endX == startX - 1) {
                             span.startX = searchSpan.startX;
 
@@ -131,23 +136,26 @@ public final class RenderUtils {
     }
 
     /**
-     * Renders all accumulated spans for floor and ceiling surfaces
-     * @param cameraX Camera X position for texture mapping
-     * @param cameraY Camera Y position for texture mapping  
-     * @param cameraZ Camera Z position for texture mapping
+     * Renders all accumulated spans for floor and ceiling surfaces.
+     *
+     * @param cameraX     Camera X position for texture mapping
+     * @param cameraY     Camera Y position for texture mapping
+     * @param cameraZ     Camera Z position for texture mapping
      * @param cameraAngle Camera angle for texture mapping
      */
     public final void renderAllSpans(int cameraX, int cameraY, int cameraZ, int cameraAngle) {
         RenderSpan currentSpan;
-        int scanline;
         RenderSpan span;
         SectorData sector;
 
-        // Render floor spans (scanlines 0-143)
-        for(scanline = 0; scanline < 144; ++scanline) {
+        int halfScreenHeight = PortalRenderer.HALF_SCREEN_HEIGHT;
+        int screenHeight = PortalRenderer.SCREEN_HEIGHT;
+
+        // Render floor spans (scanlines 0 to halfScreenHeight-1)
+        for (int scanline = 0; scanline < halfScreenHeight; ++scanline) {
             currentSpan = this.renderSpans[scanline];
 
-            while(true) {
+            while (true) {
                 span = currentSpan;
                 if (currentSpan == null) {
                     break;
@@ -167,11 +175,11 @@ public final class RenderUtils {
             }
         }
 
-        // Render ceiling spans (scanlines 144-287)
-        for(scanline = 144; scanline < 288; ++scanline) {
+        // Render ceiling spans (scanlines halfScreenHeight to screenHeight-1)
+        for (int scanline = halfScreenHeight; scanline < screenHeight; ++scanline) {
             currentSpan = this.renderSpans[scanline];
 
-            while(true) {
+            while (true) {
                 span = currentSpan;
                 if (currentSpan == null) {
                     break;
@@ -192,4 +200,3 @@ public final class RenderUtils {
         }
     }
 }
-

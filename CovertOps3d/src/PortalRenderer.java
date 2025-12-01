@@ -9,6 +9,8 @@ public class PortalRenderer {
 
     // ==================== Screen Resolution Constants ====================
 
+// ==================== Screen Resolution Constants ====================
+
     /** Screen width in pixels */
     public static final int SCREEN_WIDTH = 240;
 
@@ -16,30 +18,36 @@ public class PortalRenderer {
     public static final int SCREEN_HEIGHT = 288;
 
     /** Half of screen width (horizontal center) */
-    public static final int HALF_SCREEN_WIDTH = SCREEN_WIDTH / 2;
+    public static final int HALF_SCREEN_WIDTH = SCREEN_WIDTH / 2;  // 88
 
     /** Half of screen height (vertical center) */
-    public static final int HALF_SCREEN_HEIGHT = SCREEN_HEIGHT / 2;
+    public static final int HALF_SCREEN_HEIGHT = SCREEN_HEIGHT / 2;  // 104
 
     /** Maximum valid X coordinate */
-    public static final int MAX_SCREEN_X = SCREEN_WIDTH - 1;
+    public static final int MAX_SCREEN_X = SCREEN_WIDTH - 1;  // 175
 
     /** Maximum valid Y coordinate */
-    public static final int MAX_SCREEN_Y = SCREEN_HEIGHT - 1;
+    public static final int MAX_SCREEN_Y = SCREEN_HEIGHT - 1;  // 207
+
+    /** Total number of pixels in screen buffer */
+    public static final int SCREEN_BUFFER_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;  // 36608
 
     /** Half screen width in fixed-point 16.16 format */
-    private static final int HALF_SCREEN_WIDTH_FP = HALF_SCREEN_WIDTH << 16;
+    public static final int HALF_SCREEN_WIDTH_FP = HALF_SCREEN_WIDTH << 16;
 
     /** Half screen height in fixed-point 16.16 format */
     private static final int HALF_SCREEN_HEIGHT_FP = HALF_SCREEN_HEIGHT << 16;
 
-    // ==================== Rendering Constants ====================
+// ==================== Rendering Constants ====================
 
     /** Near clipping plane distance in fixed-point (5.0) */
     private static final int NEAR_CLIP_DISTANCE = 327680;
 
-    /** Projection constant for perspective transformation */
-    private static final long PROJECTION_CONSTANT = 33776997205278720L;
+    /**
+     * Projection constant for perspective transformation.
+     * Calculated as HALF_SCREEN_WIDTH << 48 for 90° horizontal FOV.
+     */
+    private static final long PROJECTION_CONSTANT = (long)HALF_SCREEN_WIDTH << 48;
 
     /** Fixed-point rounding constant (0.5 in 16.16 format) */
     private static final int FP_HALF = 32768;

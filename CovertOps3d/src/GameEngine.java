@@ -2,863 +2,983 @@ import java.util.Random;
 import java.util.Vector;
 import javax.microedition.lcdui.Graphics;
 
+/**
+ * Core game engine managing game logic, physics, AI, and rendering coordination.
+ */
 public final class GameEngine {
+
+    // ==================== Input State ====================
+
     public static boolean inputForward;
-   public static boolean inputBackward;
-   public static boolean inputLeft;
-   public static boolean inputRight;
-   public static boolean inputLookUp;
-   public static boolean inputLookDown;
-   public static boolean inputFire;
-   public static boolean inputStrafe;
-   public static boolean inputRun;
-   public static boolean inputBack;
-   public static boolean selectNextWeapon;
-   public static boolean useKey;
-   public static boolean toggleMapInput;
-   public static int levelTransitionState;
-   public static int weaponCooldownTimer = 0;
+    public static boolean inputBackward;
+    public static boolean inputLeft;
+    public static boolean inputRight;
+    public static boolean inputLookUp;
+    public static boolean inputLookDown;
+    public static boolean inputFire;
+    public static boolean inputStrafe;
+    public static boolean inputRun;
+    public static boolean inputBack;
+    public static boolean selectNextWeapon;
+    public static boolean useKey;
+    public static boolean toggleMapInput;
+
+    // ==================== Player State ====================
+
     public static PhysicsBody player;
-   public static Transform3D tempTransform;
-   public static SectorData currentSector;
+    public static int playerHealth = 100;
+    public static int playerArmor = 0;
+    public static int cameraHeight;
+
+    // ==================== Weapon State ====================
+
+    public static boolean[] weaponsAvailable = new boolean[]{
+            true, false, false, false, false, false, true, false, false
+    };
+    public static int[] ammoCounts = new int[9];
+    public static int currentWeapon = 0;
+    public static int pendingWeaponSwitch = 0;
+    public static int weaponCooldownTimer = 0;
+    public static boolean weaponSwitchAnimationActive = false;
+    public static int weaponAnimationState = 0;
+
+    // ==================== World State ====================
+
+    public static Transform3D tempTransform;
+    public static SectorData currentSector;
     public static Vector doorControllers;
-   public static Vector elevatorControllers;
-   public static int playerHealth = 100;
-   public static int playerArmor = 0;
-   public static int difficultyLevel = 1;
-   public static boolean[] weaponsAvailable = new boolean[]{true, false, false, false, false, false, true, false, false};
-   public static int[] ammoCounts = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
-   public static int currentWeapon = 0;
-   public static int pendingWeaponSwitch = 0;
-   public static boolean[] keysCollected = new boolean[]{false, false};
-   public static String messageText = "";
-   public static int messageTimer = 0;
-   public static int interactionTimer = 0;
-   public static WallDefinition activeInteractable = null;
-   public static Random random = new Random();
-   public static boolean damageFlash = false;
-   public static byte screenShake = 0;
-   public static int cameraHeight;
-   private static int enemyAggroDistance = MathUtils.fixedPointMultiply(1310720, 92682);
-   private static int cameraBobTimer = 0;
-   private static int lastGameLogicTime = 0;
-   public static boolean weaponSwitchAnimationActive = false;
-   public static int weaponAnimationState = 0;
+    public static Vector elevatorControllers;
 
+    // ==================== UI State ====================
+
+    public static String messageText = "";
+    public static int messageTimer = 0;
+    public static int interactionTimer = 0;
+    public static WallDefinition activeInteractable = null;
+    public static boolean[] keysCollected = new boolean[]{false, false};
+
+    // ==================== Level State ====================
+
+    public static int levelTransitionState;
+    public static int difficultyLevel = 1;
+
+    // ==================== Effects ====================
+
+    public static boolean damageFlash = false;
+    public static byte screenShake = 0;
+
+    // ==================== Internal State ====================
+
+    public static Random random = new Random();
+
+    private static int enemyAggroDistance = MathUtils.fixedPointMultiply(1310720, 92682);
+    private static int cameraBobTimer = 0;
+    private static int lastGameLogicTime = 0;
+
+    /**
+     * Initializes the game engine and all rendering subsystems.
+     * Must be called once before game starts.
+     */
     public static void initializeEngine() {
-      MainGameCanvas.freeMemory();
-      LevelLoader.initResourceArrays();
-      player = new PhysicsBody(0, 1572864, 0, 65536);
-      tempTransform = new Transform3D(0, 0, 0, 0);
-      PortalRenderer.floorClipHistory = new Vector();
-      PortalRenderer.ceilingClipHistory = new Vector();
-      doorControllers = new Vector();
-      elevatorControllers = new Vector();
-      PortalRenderer.visibleGameObjects = new GameObject[64];
-      PortalRenderer.visibleObjectsCount = 0;
-      BSPNode.visibleSectorsCount = 0;
-      LevelLoader.defaultErrorTexture = new Texture((byte)0, 8, 8, 0, 0, new int[]{16777215, 16711680});
-      byte[] var0 = new byte[]{17, 17, 17, 17, 17, 17, 17, 17};
-      byte[] var1 = new byte[]{17, 16, 16, 16, 16, 17, 16, 17};
-      byte[] var2 = new byte[]{17, 1, 1, 1, 1, 17, 1, 17};
-      LevelLoader.defaultErrorTexture.setPixelData(0, var0);
-      LevelLoader.defaultErrorTexture.setPixelData(2, var1);
-      LevelLoader.defaultErrorTexture.setPixelData(4, var2);
-      LevelLoader.defaultErrorTexture.setPixelData(6, var0);
-      PortalRenderer.screenBuffer = new int[69120];
-      PortalRenderer.depthBuffer = new short[288];
-      PortalRenderer.renderUtils = new RenderUtils();
-      PortalRenderer.angleCorrectionTable = new int[240];
+        MainGameCanvas.freeMemory();
+        LevelLoader.initResourceArrays();
 
-      for(int var3 = 0; var3 < 240; ++var3) {
-         PortalRenderer.angleCorrectionTable[var3] = MathUtils.fixedPointDivide(var3 - 120 << 16, 7864320) >> 2;
-      }
+        player = new PhysicsBody(0, 1572864, 0, 65536);
+        tempTransform = new Transform3D(0, 0, 0, 0);
 
-      PortalRenderer.reciprocalTable = new int[289];
-      PortalRenderer.reciprocalTable[0] = 0;
+        PortalRenderer.floorClipHistory = new Vector();
+        PortalRenderer.ceilingClipHistory = new Vector();
+        doorControllers = new Vector();
+        elevatorControllers = new Vector();
 
-      for(int var4 = 1; var4 < 289; ++var4) {
-         PortalRenderer.reciprocalTable[var4] = 65536 / var4;
-      }
+        PortalRenderer.visibleGameObjects = new GameObject[64];
+        PortalRenderer.visibleObjectsCount = 0;
+        BSPNode.visibleSectorsCount = 0;
 
-      PortalRenderer.skyboxScaleX = MathUtils.fixedPointDivide(65536, 17301600);
-      PortalRenderer.skyboxAngleFactor = MathUtils.fixedPointMultiply(MathUtils.fixedPointDivide(65536, 15794176), 102943);
-      PortalRenderer.skyboxScaleY = MathUtils.fixedPointDivide(65536, 18874368);
-      PortalRenderer.skyboxOffsetFactor = MathUtils.fixedPointDivide(65536, 411775);
-      MainGameCanvas.freeMemory();
-   }
+        // Create default error texture (checkerboard pattern)
+        LevelLoader.defaultErrorTexture = new Texture(
+                (byte)0, 8, 8, 0, 0,
+                new int[]{16777215, 16711680}
+        );
+        byte[] row0 = new byte[]{17, 17, 17, 17, 17, 17, 17, 17};
+        byte[] row1 = new byte[]{17, 16, 16, 16, 16, 17, 16, 17};
+        byte[] row2 = new byte[]{17, 1, 1, 1, 1, 17, 1, 17};
+        LevelLoader.defaultErrorTexture.setPixelData(0, row0);
+        LevelLoader.defaultErrorTexture.setPixelData(2, row1);
+        LevelLoader.defaultErrorTexture.setPixelData(4, row2);
+        LevelLoader.defaultErrorTexture.setPixelData(6, row0);
 
-   public static void resetLevelState() {
-      clearInputState();
-      LevelLoader.gameWorld.initializeWorld();
-      player.copyFrom(LevelLoader.gameWorld.worldOrigin);
-      currentSector = LevelLoader.gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
-      doorControllers.removeAllElements();
-      elevatorControllers.removeAllElements();
-      PortalRenderer.visibleObjectsCount = 0;
-      BSPNode.visibleSectorsCount = 0;
-      messageText = "";
-      messageTimer = 0;
-      interactionTimer = 0;
-      activeInteractable = null;
-   }
+        // Initialize rendering buffers using constants
+        PortalRenderer.screenBuffer = new int[PortalRenderer.SCREEN_BUFFER_SIZE];
+        PortalRenderer.depthBuffer = new short[PortalRenderer.SCREEN_HEIGHT];
+        PortalRenderer.renderUtils = new RenderUtils();
 
-   public static void handleWeaponChange(byte var0) {
-      PortalRenderer.setSkyboxTexture(LevelLoader.getTexture(var0));
-   }
+        // Initialize angle correction table for perspective projection
+        PortalRenderer.angleCorrectionTable = new int[PortalRenderer.SCREEN_WIDTH];
+        for (int x = 0; x < PortalRenderer.SCREEN_WIDTH; x++) {
+            int offsetFromCenter = (x - PortalRenderer.HALF_SCREEN_WIDTH) << 16;
+            PortalRenderer.angleCorrectionTable[x] =
+                    MathUtils.fixedPointDivide(offsetFromCenter, PortalRenderer.HALF_SCREEN_WIDTH_FP) >> 2;
+        }
 
-    public static int renderFrame(Graphics var0, int var1) {
-      currentSector = LevelLoader.gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
-      boolean var2 = false;
-      int var3 = var1 - lastGameLogicTime;
-      lastGameLogicTime = var1;
-      int var4 = MathUtils.fastHypot(player.velocityX, player.velocityY);
-      cameraBobTimer += var3 * var4 >> 2;
-      int var8 = MathUtils.fastSin(cameraBobTimer);
-      int var5 = screenShake << 15;
-      if ((screenShake & 1) > 0) {
-         var5 = -var5;
-      }
+        // Initialize reciprocal lookup table (1/x) for fast division
+        PortalRenderer.reciprocalTable = new int[PortalRenderer.SCREEN_HEIGHT + 1];
+        PortalRenderer.reciprocalTable[0] = 0;
+        for (int i = 1; i <= PortalRenderer.SCREEN_HEIGHT; i++) {
+            PortalRenderer.reciprocalTable[i] = 65536 / i;
+        }
 
-      cameraHeight = (currentSector.floorHeight + GameWorld.PLAYER_HEIGHT_OFFSET << 16) + var8 + var5;
-      PortalRenderer.renderWorld(player.x, -cameraHeight, player.z, player.rotation);
-      if (damageFlash) {
-         int var6 = 69120;
+        // Initialize skybox scaling parameters
+        PortalRenderer.skyboxScaleX = MathUtils.fixedPointDivide(65536, 17301600);
+        PortalRenderer.skyboxAngleFactor = MathUtils.fixedPointMultiply(
+                MathUtils.fixedPointDivide(65536, 15794176), 102943
+        );
+        PortalRenderer.skyboxScaleY = MathUtils.fixedPointDivide(65536, 18874368);
+        PortalRenderer.skyboxOffsetFactor = MathUtils.fixedPointDivide(65536, 411775);
 
-         for(int var7 = 0; var7 < var6; ++var7) {
-            int[] var10000 = PortalRenderer.screenBuffer;
-            var10000[var7] |= 16711680;
-         }
+        MainGameCanvas.freeMemory();
+    }
 
-         damageFlash = false;
-      }
+    /**
+     * Resets level state when loading a new level or restarting.
+     */
+    public static void resetLevelState() {
+        clearInputState();
+        LevelLoader.gameWorld.initializeWorld();
+        player.copyFrom(LevelLoader.gameWorld.worldOrigin);
+        currentSector = LevelLoader.gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
 
-      if (screenShake == 16) {
-         --screenShake;
-      }
+        doorControllers.removeAllElements();
+        elevatorControllers.removeAllElements();
 
-      var0.drawRGB(PortalRenderer.screenBuffer, 0, 240, 0, 0, 240, 288, false);
-      if (currentSector.getSectorType() == 666) {
-         switch(MainGameCanvas.currentLevelId) {
-         case 3:
-            if (!weaponsAvailable[8]) {
-               messageText = "get the sniper rifle!";
-               messageTimer = 30;
-               break;
+        PortalRenderer.visibleObjectsCount = 0;
+        BSPNode.visibleSectorsCount = 0;
+
+        messageText = "";
+        messageTimer = 0;
+        interactionTimer = 0;
+        activeInteractable = null;
+    }
+
+    /**
+     * Changes the skybox texture.
+     *
+     * @param textureId ID of the new skybox texture
+     */
+    public static void handleWeaponChange(byte textureId) {
+        PortalRenderer.setSkyboxTexture(LevelLoader.getTexture(textureId));
+    }
+
+    /**
+     * Renders a single frame to the screen.
+     *
+     * @param graphics Graphics context to draw to
+     * @param currentTime Current game time in milliseconds
+     * @return Camera vertical offset due to head bob
+     */
+    public static int renderFrame(Graphics graphics, int currentTime) {
+        currentSector = LevelLoader.gameWorld.getRootBSPNode().findSectorAtPoint(player.x, player.z);
+
+        int deltaTime = currentTime - lastGameLogicTime;
+        lastGameLogicTime = currentTime;
+
+        // Calculate head bob based on movement speed
+        int movementSpeed = MathUtils.fastHypot(player.velocityX, player.velocityY);
+        cameraBobTimer += (deltaTime * movementSpeed) >> 2;
+        int headBobOffset = MathUtils.fastSin(cameraBobTimer);
+
+        // Apply screen shake effect
+        int shakeOffset = screenShake << 15;
+        if ((screenShake & 1) > 0) {
+            shakeOffset = -shakeOffset;
+        }
+
+        cameraHeight = ((currentSector.floorHeight + GameWorld.PLAYER_HEIGHT_OFFSET) << 16)
+                + headBobOffset + shakeOffset;
+
+        // Render the 3D world
+        PortalRenderer.renderWorld(player.x, -cameraHeight, player.z, player.rotation);
+
+        // Apply damage flash effect
+        if (damageFlash) {
+            int pixelCount = PortalRenderer.SCREEN_BUFFER_SIZE;
+            for (int i = 0; i < pixelCount; i++) {
+                PortalRenderer.screenBuffer[i] |= 0xFF0000;
             }
-         default:
-            MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
-            LevelLoader.levelVariant = 0;
-            levelTransitionState = 1;
-            break;
-         case 4:
-            messageText = "i think that's the wall|she mentioned";
+            damageFlash = false;
+        }
+
+        // Decay screen shake
+        if (screenShake == 16) {
+            screenShake--;
+        }
+
+        // Draw framebuffer to screen
+        graphics.drawRGB(
+                PortalRenderer.screenBuffer,
+                0,
+                PortalRenderer.SCREEN_WIDTH,
+                0, 0,
+                PortalRenderer.SCREEN_WIDTH,
+                PortalRenderer.SCREEN_HEIGHT,
+                false
+        );
+
+        // Check level exit trigger
+        if (currentSector.getSectorType() == 666) {
+            switch (MainGameCanvas.currentLevelId) {
+                case 3:
+                    if (!weaponsAvailable[8]) {
+                        messageText = "get the sniper rifle!";
+                        messageTimer = 30;
+                        break;
+                    }
+                default:
+                    MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
+                    LevelLoader.levelVariant = 0;
+                    levelTransitionState = 1;
+                    break;
+                case 4:
+                    messageText = "i think that's the wall|she mentioned";
+                    messageTimer = 30;
+                    break;
+            }
+        }
+
+        // Tutorial hint
+        if ((SaveSystem.gameProgressFlags & 1) == 0
+                && MainGameCanvas.currentLevelId == 0
+                && currentSector.sectorId == 31) {
+            messageText = "press 1 to open the door";
             messageTimer = 30;
-         }
-      }
+        }
 
-      if ((SaveSystem.gameProgressFlags & 1) == 0 && MainGameCanvas.currentLevelId == 0 && currentSector.sectorId == 31) {
-         messageText = "press 1 to open the door";
-         messageTimer = 30;
-      }
+        return headBobOffset;
+    }
 
-      return var8;
-   }
+    /**
+     * Updates game logic including physics, AI, and interactions.
+     *
+     * @return true if player died, false otherwise
+     */
+    public static boolean updateGameLogic() {
+        if (messageTimer > 0) {
+            messageTimer--;
+        }
 
-   public static boolean updateGameLogic() {
-      if (messageTimer > 0) {
-         --messageTimer;
-      }
+        // Apply player input forces
+        if (inputForward) {
+            player.applyHorizontalForce(0, -196608);
+        }
+        if (inputLeft) {
+            player.applyHorizontalForce(-196608, 0);
+        }
+        if (inputBackward) {
+            player.applyHorizontalForce(0, 131072);
+        }
+        if (inputRight) {
+            player.applyHorizontalForce(196608, 0);
+        }
+        if (inputLookUp) {
+            player.applyForce(0, 0, -4500);
+        }
+        if (inputLookDown) {
+            player.applyForce(0, 0, 4500);
+        }
 
-      if (inputForward) {
-         player.applyHorizontalForce(0, -196608);
-      }
+        // Handle player movement with collision detection
+        int movementSpeed = MathUtils.fastHypot(player.velocityX, player.velocityY);
+        WallDefinition hitWall = null;
 
-      if (inputLeft) {
-         player.applyHorizontalForce(-196608, 0);
-      }
+        if (movementSpeed > 262144) {
+            player.applyDampedVelocity();
+            hitWall = LevelLoader.gameWorld.handlePlayerMovement(player, currentSector);
+            player.applyDampedVelocity();
+            WallDefinition hitWall2 = LevelLoader.gameWorld.handlePlayerMovement(player, currentSector);
+            if (hitWall == null) {
+                hitWall = hitWall2;
+            }
+        } else {
+            player.applyVelocity();
+            hitWall = LevelLoader.gameWorld.handlePlayerMovement(player, currentSector);
+        }
 
-      if (inputBackward) {
-         player.applyHorizontalForce(0, 131072);
-      }
-
-      if (inputRight) {
-         player.applyHorizontalForce(196608, 0);
-      }
-
-      if (inputLookUp) {
-         player.applyForce(0, 0, -4500);
-      }
-
-      if (inputLookDown) {
-         player.applyForce(0, 0, 4500);
-      }
-
-      int var0 = MathUtils.fastHypot(player.velocityX, player.velocityY);
-      WallDefinition var1 = null;
-      if (var0 > 262144) {
-         player.applyDampedVelocity();
-         var1 = LevelLoader.gameWorld.handlePlayerMovement(player, currentSector);
-         player.applyDampedVelocity();
-         WallDefinition var2 = LevelLoader.gameWorld.handlePlayerMovement(player, currentSector);
-         if (var1 == null) {
-            var1 = var2;
-         }
-      } else {
-         player.applyVelocity();
-         var1 = LevelLoader.gameWorld.handlePlayerMovement(player, currentSector);
-      }
-
-      int var21;
-      if (!useKey) {
-         if (var1 != null) {
-            activeInteractable = (var21 = var1.getWallType()) != 1 && var21 != 11 && var21 != 26 && var21 != 28 && var21 != 51 && var21 != 62 ? null : var1;
-         }
-      } else {
-         activeInteractable = null;
-      }
-
-      int var3;
-      int var4;
-      int var5;
-      int var6;
-      int var7;
-      int var10000;
-      if (activeInteractable != null) {
-         var21 = player.rotation;
-         var3 = MathUtils.fastSin(102943 - var21);
-         var4 = MathUtils.fastCos(102943 - var21);
-         var5 = 1310720;
-         var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
-         var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
-         Point2D[] var8;
-         Point2D var9 = (var8 = LevelLoader.gameWorld.vertices)[activeInteractable.startVertexId & '\uffff'];
-         Point2D var10 = var8[activeInteractable.endVertexId & '\uffff'];
-         if (GameWorld.doLineSegmentsIntersect(player.x, player.z, var6, var7, var9.x, var9.y, var10.x, var10.y)) {
-            var10000 = interactionTimer + 1;
-         } else {
+        // Track interactable wall
+        int wallType;
+        if (!useKey) {
+            if (hitWall != null) {
+                wallType = hitWall.getWallType();
+                if (wallType == 1 || wallType == 11 || wallType == 26
+                        || wallType == 28 || wallType == 51 || wallType == 62) {
+                    activeInteractable = hitWall;
+                } else {
+                    activeInteractable = null;
+                }
+            }
+        } else {
             activeInteractable = null;
-            var10000 = 0;
-         }
+        }
 
-         interactionTimer = var10000;
-         if (interactionTimer >= 50) {
-            messageText = activeInteractable.getWallType() == 62 ? "press 1 to move the lift" : "press 1 to open the door";
-            messageTimer = 10;
-         }
-      } else {
-         interactionTimer = 0;
-      }
+        // Check if player is looking at interactable wall
+        if (activeInteractable != null) {
+            int playerAngle = player.rotation;
+            int sinAngle = MathUtils.fastSin(102943 - playerAngle);
+            int cosAngle = MathUtils.fastCos(102943 - playerAngle);
+            int rayLength = 1310720;
+            int rayEndX = player.x + MathUtils.fixedPointMultiply(rayLength, cosAngle);
+            int rayEndZ = player.z + MathUtils.fixedPointMultiply(rayLength, sinAngle);
 
-      if (toggleMapInput) {
-         MainGameCanvas.mapEnabled = !MainGameCanvas.mapEnabled;
-         toggleMapInput = false;
-      }
+            Point2D[] vertices = LevelLoader.gameWorld.vertices;
+            Point2D wallStart = vertices[activeInteractable.startVertexId & 0xFFFF];
+            Point2D wallEnd = vertices[activeInteractable.endVertexId & 0xFFFF];
 
-      int var12;
-      byte var10001;
-      int var35;
-      if (useKey) {
-         ElevatorController var22;
-         ElevatorController var41;
-         if (currentSector.getSectorType() == 10 && (var22 = getElevatorController(currentSector)).elevatorState == 0) {
-            if (currentSector.floorHeight == var22.minHeight) {
-               var41 = var22;
-               var10001 = 1;
+            if (GameWorld.doLineSegmentsIntersect(
+                    player.x, player.z, rayEndX, rayEndZ,
+                    wallStart.x, wallStart.y, wallEnd.x, wallEnd.y)) {
+                interactionTimer++;
             } else {
-               var41 = var22;
-               var10001 = 2;
+                activeInteractable = null;
+                interactionTimer = 0;
             }
 
-            var41.elevatorState = var10001;
-         }
+            if (interactionTimer >= 50) {
+                messageText = (activeInteractable.getWallType() == 62)
+                        ? "press 1 to move the lift"
+                        : "press 1 to open the door";
+                messageTimer = 10;
+            }
+        } else {
+            interactionTimer = 0;
+        }
 
-         var21 = player.rotation;
-         var3 = MathUtils.fastSin(102943 - var21);
-         var4 = MathUtils.fastCos(102943 - var21);
-         var5 = 1310720;
-         var6 = player.x + MathUtils.fixedPointMultiply(var5, var4);
-         var7 = player.z + MathUtils.fixedPointMultiply(var5, var3);
-         WallDefinition[] var30 = LevelLoader.gameWorld.wallDefinitions;
-         Point2D[] var32 = LevelLoader.gameWorld.vertices;
+        // Toggle map
+        if (toggleMapInput) {
+            MainGameCanvas.mapEnabled = !MainGameCanvas.mapEnabled;
+            toggleMapInput = false;
+        }
 
-         label389:
-         for(var35 = 0; var35 < var30.length; ++var35) {
-            WallDefinition var11;
-            if ((var12 = (var11 = var30[var35]).getWallType()) == 1 || var12 == 11 || var12 == 26 || var12 == 28 || var12 == 51 || var12 == 62) {
-               Point2D var13 = var32[var11.startVertexId & '\uffff'];
-               Point2D var14 = var32[var11.endVertexId & '\uffff'];
-               if (GameWorld.doLineSegmentsIntersect(player.x, player.z, var6, var7, var13.x, var13.y, var14.x, var14.y)) {
-                  if ((SaveSystem.gameProgressFlags & 1) == 0) {
-                     SaveSystem.gameProgressFlags = (byte)(SaveSystem.gameProgressFlags | 1);
-                  }
+        // Handle use key interactions
+        if (useKey) {
+            // Check if standing on elevator
+            if (currentSector.getSectorType() == 10) {
+                ElevatorController elevator = getElevatorController(currentSector);
+                if (elevator.elevatorState == 0) {
+                    elevator.elevatorState = (short) ((currentSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                }
+            }
 
-                  DoorController var38;
-                  byte var42;
-                  switch(var12) {
-                  case 1:
-                     (var38 = getDoorController(var11.backSurface.linkedSector)).doorState = 1;
-                     var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
-                     break label389;
-                  case 11:
-                     if (MainGameCanvas.currentLevelId == 7 && ammoCounts[6] == 0) {
-                        messageText = "we'll need some dynamite|maybe i should look for some";
-                        messageTimer = 50;
-                        break label389;
-                     }
+            // Cast ray to find interactable walls
+            int playerAngle = player.rotation;
+            int sinAngle = MathUtils.fastSin(102943 - playerAngle);
+            int cosAngle = MathUtils.fastCos(102943 - playerAngle);
+            int rayLength = 1310720;
+            int rayEndX = player.x + MathUtils.fixedPointMultiply(rayLength, cosAngle);
+            int rayEndZ = player.z + MathUtils.fixedPointMultiply(rayLength, sinAngle);
 
-                     MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
-                     LevelLoader.levelVariant = var11.getSpecialType();
-                     var42 = 1;
-                     break;
-                  case 26:
-                     if (keysCollected[0]) {
-                        (var38 = getDoorController(var11.backSurface.linkedSector)).doorState = 1;
-                        var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
-                     } else {
-                        messageText = keysCollected[1] ? "oops, i need another key..." : "oh, i need a key...";
-                        messageTimer = 50;
-                     }
-                     break label389;
-                  case 28:
-                     if (keysCollected[1]) {
-                        (var38 = getDoorController(var11.backSurface.linkedSector)).doorState = 1;
-                        var38.targetCeilingHeight = var11.frontSurface.linkedSector.ceilingHeight;
-                     } else {
-                        messageText = keysCollected[0] ? "oops, i need another key..." : "oh, i need a key...";
-                        messageTimer = 50;
-                     }
-                     break label389;
-                  case 51:
-                     MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId--;
-                     LevelLoader.levelVariant = var11.getSpecialType();
-                     var42 = -1;
-                     break;
-                  case 62:
-                     SectorData var15;
-                     ElevatorController var16;
-                     if ((var16 = getElevatorController(var15 = var11.backSurface.linkedSector)).elevatorState == 0) {
-                        if (var15.floorHeight == var16.minHeight) {
-                           var41 = var16;
-                           var10001 = 1;
+            WallDefinition[] walls = LevelLoader.gameWorld.wallDefinitions;
+            Point2D[] vertices = LevelLoader.gameWorld.vertices;
+
+            for (int i = 0; i < walls.length; i++) {
+                WallDefinition wall = walls[i];
+                wallType = wall.getWallType();
+
+                if (wallType == 1 || wallType == 11 || wallType == 26
+                        || wallType == 28 || wallType == 51 || wallType == 62) {
+
+                    Point2D wallStart = vertices[wall.startVertexId & 0xFFFF];
+                    Point2D wallEnd = vertices[wall.endVertexId & 0xFFFF];
+
+                    if (GameWorld.doLineSegmentsIntersect(
+                            player.x, player.z, rayEndX, rayEndZ,
+                            wallStart.x, wallStart.y, wallEnd.x, wallEnd.y)) {
+
+                        if ((SaveSystem.gameProgressFlags & 1) == 0) {
+                            SaveSystem.gameProgressFlags = (byte)(SaveSystem.gameProgressFlags | 1);
+                        }
+
+                        DoorController door;
+
+                        switch (wallType) {
+                            case 1:
+                                door = getDoorController(wall.backSurface.linkedSector);
+                                door.doorState = 1;
+                                door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
+                                break;
+
+                            case 11:
+                                if (MainGameCanvas.currentLevelId == 7 && ammoCounts[6] == 0) {
+                                    messageText = "we'll need some dynamite|maybe i should look for some";
+                                    messageTimer = 50;
+                                    break;
+                                }
+                                MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
+                                LevelLoader.levelVariant = wall.getSpecialType();
+                                levelTransitionState = 1;
+                                break;
+
+                            case 26:
+                                if (keysCollected[0]) {
+                                    door = getDoorController(wall.backSurface.linkedSector);
+                                    door.doorState = 1;
+                                    door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
+                                } else {
+                                    messageText = keysCollected[1]
+                                            ? "oops, i need another key..."
+                                            : "oh, i need a key...";
+                                    messageTimer = 50;
+                                }
+                                break;
+
+                            case 28:
+                                if (keysCollected[1]) {
+                                    door = getDoorController(wall.backSurface.linkedSector);
+                                    door.doorState = 1;
+                                    door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
+                                } else {
+                                    messageText = keysCollected[0]
+                                            ? "oops, i need another key..."
+                                            : "oh, i need a key...";
+                                    messageTimer = 50;
+                                }
+                                break;
+
+                            case 51:
+                                MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId--;
+                                LevelLoader.levelVariant = wall.getSpecialType();
+                                levelTransitionState = -1;
+                                break;
+
+                            case 62:
+                                SectorData elevatorSector = wall.backSurface.linkedSector;
+                                ElevatorController elevator = getElevatorController(elevatorSector);
+                                if (elevator.elevatorState == 0) {
+                                    elevator.elevatorState =
+                                            (short) ((elevatorSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                                }
+                                break;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            useKey = false;
+        }
+
+        // Update door controllers
+        for (int i = 0; i < doorControllers.size(); i++) {
+            DoorController door = (DoorController)doorControllers.elementAt(i);
+
+            if (door.controlledSector == currentSector && door.doorState == 2) {
+                door.doorState = 1;
+            }
+
+            SectorData controlledSector;
+
+            switch (door.doorState) {
+                case 0:
+                    break;
+
+                case 1:
+                    controlledSector = door.controlledSector;
+                    controlledSector.ceilingHeight = (short)(controlledSector.ceilingHeight + 2);
+                    if (door.controlledSector.ceilingHeight >= door.targetCeilingHeight) {
+                        door.controlledSector.ceilingHeight = door.targetCeilingHeight;
+                        door.doorState = 100;
+                    }
+                    break;
+
+                case 2:
+                    controlledSector = door.controlledSector;
+                    controlledSector.ceilingHeight = (short)(controlledSector.ceilingHeight - 2);
+                    if (door.controlledSector.ceilingHeight <= door.controlledSector.floorHeight) {
+                        door.controlledSector.ceilingHeight = door.controlledSector.floorHeight;
+                        door.doorState = 0;
+                    }
+                    break;
+
+                default:
+                    door.doorState++;
+                    if (door.doorState >= 200) {
+                        door.doorState = 2;
+                    }
+                    break;
+            }
+        }
+
+        // Update elevator controllers
+        for (int i = 0; i < elevatorControllers.size(); i++) {
+            ElevatorController elevator = (ElevatorController)elevatorControllers.elementAt(i);
+            SectorData controlledSector;
+
+            switch (elevator.elevatorState) {
+                case 0:
+                    break;
+
+                case 1:
+                    controlledSector = elevator.controlledSector;
+                    controlledSector.ceilingHeight = (short)(controlledSector.ceilingHeight + 2);
+                    controlledSector.floorHeight = (short)(controlledSector.floorHeight + 2);
+
+                    if (elevator.controlledSector.floorHeight >= elevator.maxHeight) {
+                        short heightDifference = (short)(elevator.controlledSector.ceilingHeight
+                                - elevator.controlledSector.floorHeight);
+                        elevator.controlledSector.floorHeight = elevator.maxHeight;
+                        elevator.controlledSector.ceilingHeight =
+                                (short)(elevator.maxHeight + heightDifference);
+                        elevator.elevatorState = 0;
+                    }
+                    break;
+
+                case 2:
+                    controlledSector = elevator.controlledSector;
+                    controlledSector.ceilingHeight = (short)(controlledSector.ceilingHeight - 2);
+                    controlledSector.floorHeight = (short)(controlledSector.floorHeight - 2);
+
+                    if (elevator.controlledSector.floorHeight <= elevator.minHeight) {
+                        short heightDifference = (short)(elevator.controlledSector.ceilingHeight
+                                - elevator.controlledSector.floorHeight);
+                        elevator.controlledSector.floorHeight = elevator.minHeight;
+                        elevator.controlledSector.ceilingHeight =
+                                (short)(elevator.minHeight + heightDifference);
+                        elevator.elevatorState = 0;
+                    }
+                    break;
+            }
+        }
+
+        // Update projectiles
+        if (LevelLoader.gameWorld.updateProjectiles()) {
+            return true;
+        }
+
+        // Update enemy AI
+        GameObject[] enemies = LevelLoader.gameWorld.staticObjects;
+
+        for (int i = 0; i < enemies.length; i++) {
+            GameObject enemy = enemies[i];
+
+            if (enemy == null || enemy.aiState == -1) {
+                continue;
+            }
+
+            Transform3D enemyTransform = enemy.transform;
+
+            // Check if enemy should wake up
+            if (enemy.aiState == 0) {
+                if (LevelLoader.gameWorld.getSectorDataAtPoint(enemyTransform.x, enemyTransform.z)
+                        .isSectorVisible(currentSector)) {
+
+                    int distX = enemyTransform.x - player.x;
+                    int distZ = enemyTransform.z - player.z;
+                    if (distX < 0) distX = -distX;
+                    if (distZ < 0) distZ = -distZ;
+
+                    if (distX + distZ <= 67108864
+                            && LevelLoader.gameWorld.checkLineOfSight(player, enemyTransform)) {
+                        enemy.aiState = 1;
+                    }
+                }
+            } else {
+                int distX = enemyTransform.x - player.x;
+                int distZ = enemyTransform.z - player.z;
+                if (distX < 0) distX = -distX;
+                if (distZ < 0) distZ = -distZ;
+
+                if (distX + distZ > 67108864) {
+                    enemy.aiState = 0;
+                }
+            }
+
+            if (enemy.stateTimer > 0) {
+                enemy.stateTimer--;
+            }
+
+            int enemyType = enemy.objectType;
+
+            if (enemyType != 3001 && enemyType != 3002 && enemyType != 3003
+                    && enemyType != 3004 && enemyType != 3005 && enemyType != 3006) {
+                continue;
+            }
+
+            // Update AI state machine
+            if (enemy.stateTimer == 0) {
+                int randValue;
+
+                switch (enemy.aiState) {
+                    case 1:
+                        enemy.aiState = 2;
+                        enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
+                                % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                        enemy.currentState = 0;
+                        break;
+
+                    case 2:
+                        randValue = random.nextInt() & Integer.MAX_VALUE;
+                        if ((randValue & 1) == 0) {
+                            enemy.aiState = 3;
+                            enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
+                                    + MainGameCanvas.var_17b5[difficultyLevel];
+                            enemy.currentState = 2;
                         } else {
-                           var41 = var16;
-                           var10001 = 2;
+                            enemy.aiState = 1;
+                            enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
+                                    % MainGameCanvas.var_1851[difficultyLevel];
+                            enemy.currentState = 0;
                         }
+                        break;
 
-                        var41.elevatorState = var10001;
-                     }
-                  default:
-                     break label389;
-                  }
+                    case 3:
+                        SectorData enemySector = LevelLoader.gameWorld.getSectorDataAtPoint(
+                                enemyTransform.x, enemyTransform.z);
 
-                  levelTransitionState = var42;
-                  break;
-               }
-            }
-         }
+                        if (LevelLoader.gameWorld.checkLineOfSight(player, enemyTransform)) {
+                            enemy.aiState = 4;
+                            enemy.stateTimer = 2;
 
-         useKey = false;
-      }
+                            if (enemyType != 3002) {
+                                enemy.currentState = 3;
+                            }
 
-      SectorData var43;
-      for(var21 = 0; var21 < doorControllers.size(); ++var21) {
-         DoorController var23;
-         if ((var23 = (DoorController) doorControllers.elementAt(var21)).controlledSector == currentSector && var23.doorState == 2) {
-            var23.doorState = 1;
-         }
+                            if (enemyType == 3001) {
+                                MainGameCanvas.playSound(4, false, 100, 1);
+                                LevelLoader.gameWorld.shootProjectile(enemyTransform, enemySector);
+                            } else if (enemyType == 3002) {
+                                MainGameCanvas.playSound(5, false, 80, 1);
+                                LevelLoader.gameWorld.shootSpreadWeapon(enemyTransform, enemySector);
+                            } else {
+                                int damage = 0;
+                                int[] damageTable = null;
 
-         DoorController var44;
-         switch(var23.doorState) {
-         case 0:
-            continue;
-         case 1:
-            var43 = var23.controlledSector;
-            var43.ceilingHeight = (short)(var43.ceilingHeight + 2);
-            if (var23.controlledSector.ceilingHeight < var23.targetCeilingHeight) {
-               continue;
-            }
+                                switch (enemyType) {
+                                    case 3003:
+                                        MainGameCanvas.playSound(2, false, 80, 0);
+                                        damageTable = MainGameCanvas.enemyDamageEasy;
+                                        break;
+                                    case 3004:
+                                        MainGameCanvas.playSound(2, false, 80, 0);
+                                        damageTable = MainGameCanvas.enemyDamageNormal;
+                                        break;
+                                    case 3005:
+                                        MainGameCanvas.playSound(2, false, 80, 0);
+                                        damageTable = MainGameCanvas.enemyDamageHard;
+                                        break;
+                                    case 3006:
+                                        MainGameCanvas.playSound(3, false, 80, 0);
+                                        damageTable = MainGameCanvas.var_12d2;
+                                        break;
+                                }
 
-            var23.controlledSector.ceilingHeight = var23.targetCeilingHeight;
-            var44 = var23;
-            var10001 = 100;
-            break;
-         case 2:
-            var43 = var23.controlledSector;
-            var43.ceilingHeight = (short)(var43.ceilingHeight - 2);
-            if (var23.controlledSector.ceilingHeight > var23.controlledSector.floorHeight) {
-               continue;
-            }
+                                if (damageTable != null) {
+                                    damage = damageTable[difficultyLevel];
+                                }
 
-            var23.controlledSector.ceilingHeight = var23.controlledSector.floorHeight;
-            var44 = var23;
-            var10001 = 0;
-            break;
-         default:
-            ++var23.doorState;
-            if (var23.doorState < 200) {
-               continue;
-            }
+                                if (damage > 0) {
+                                    MainGameCanvas.vibrateDevice(damage * 10);
+                                }
 
-            var44 = var23;
-            var10001 = 2;
-         }
-
-         var44.doorState = var10001;
-      }
-
-      for(var21 = 0; var21 < elevatorControllers.size(); ++var21) {
-         ElevatorController var24;
-         short var25;
-         short var45;
-         switch((var24 = (ElevatorController) elevatorControllers.elementAt(var21)).elevatorState) {
-         case 0:
-         default:
-            continue;
-         case 1:
-            var43 = var24.controlledSector;
-            var43.ceilingHeight = (short)(var43.ceilingHeight + 2);
-            var43 = var24.controlledSector;
-            var43.floorHeight = (short)(var43.floorHeight + 2);
-            if (var24.controlledSector.floorHeight < var24.maxHeight) {
-               continue;
-            }
-
-            var25 = (short)(var24.controlledSector.ceilingHeight - var24.controlledSector.floorHeight);
-            var24.controlledSector.floorHeight = var24.maxHeight;
-            var43 = var24.controlledSector;
-            var45 = var24.maxHeight;
-            break;
-         case 2:
-            var43 = var24.controlledSector;
-            var43.ceilingHeight = (short)(var43.ceilingHeight - 2);
-            var43 = var24.controlledSector;
-            var43.floorHeight = (short)(var43.floorHeight - 2);
-            if (var24.controlledSector.floorHeight > var24.minHeight) {
-               continue;
-            }
-
-            var25 = (short)(var24.controlledSector.ceilingHeight - var24.controlledSector.floorHeight);
-            var24.controlledSector.floorHeight = var24.minHeight;
-            var43 = var24.controlledSector;
-            var45 = var24.minHeight;
-         }
-
-         var43.ceilingHeight = (short)(var45 + var25);
-         var24.elevatorState = 0;
-      }
-
-      if (LevelLoader.gameWorld.updateProjectiles()) {
-         return true;
-      } else {
-         GameObject[] var26 = LevelLoader.gameWorld.staticObjects;
-
-         for(var3 = 0; var3 < var26.length; ++var3) {
-            GameObject var27;
-            if ((var27 = var26[var3]) != null && var27.aiState != -1) {
-               Transform3D var28;
-               int var31;
-               if (var27.aiState == 0) {
-                  var28 = var27.transform;
-                  if (LevelLoader.gameWorld.getSectorDataAtPoint(var28.x, var28.z).isSectorVisible(currentSector)) {
-                     if ((var7 = var28.x - player.x) < 0) {
-                        var7 = -var7;
-                     }
-
-                     if ((var31 = var28.z - player.z) < 0) {
-                        var31 = -var31;
-                     }
-
-                     if (var7 + var31 <= 67108864 && LevelLoader.gameWorld.checkLineOfSight(player, var28)) {
-                        var27.aiState = 1;
-                     }
-                  }
-               } else {
-                  if ((var6 = (var28 = var27.transform).x - player.x) < 0) {
-                     var6 = -var6;
-                  }
-
-                  if ((var7 = var28.z - player.z) < 0) {
-                     var7 = -var7;
-                  }
-
-                  if (var6 + var7 > 67108864) {
-                     var27.aiState = 0;
-                  }
-               }
-
-               if (var27.stateTimer > 0) {
-                  --var27.stateTimer;
-               }
-
-               switch(var5 = var27.objectType) {
-               case 10:
-               case 12:
-               default:
-                  continue;
-               case 3001:
-               case 3002:
-               case 3003:
-               case 3004:
-               case 3005:
-               case 3006:
-               }
-
-               Transform3D var29;
-               SectorData var33;
-               GameObject var46;
-               if (var27.stateTimer == 0) {
-                  switch(var27.aiState) {
-                  case 1:
-                     var27.aiState = 2;
-                     var27.stateTimer = (random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
-                     var27.currentState = 0;
-                     break;
-                  case 2:
-                     if (((var6 = random.nextInt() & Integer.MAX_VALUE) & 1) == 0) {
-                        var27.aiState = 3;
-                        var27.stateTimer = var6 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
-                        var46 = var27;
-                        var10001 = 2;
-                     } else {
-                        var27.aiState = 1;
-                        var27.stateTimer = (random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_1851[difficultyLevel];
-                        var46 = var27;
-                        var10001 = 0;
-                     }
-
-                     var46.currentState = var10001;
-                     break;
-                  case 3:
-                     var29 = var27.transform;
-                     var33 = LevelLoader.gameWorld.getSectorDataAtPoint(var29.x, var29.z);
-                     if (LevelLoader.gameWorld.checkLineOfSight(player, var29)) {
-                        var27.aiState = 4;
-                        var27.stateTimer = 2;
-                        if (var5 != 3002) {
-                           var27.currentState = 3;
-                        }
-
-                        if (var5 == 3001) {
-                           MainGameCanvas.playSound(4, false, 100, 1);
-                           LevelLoader.gameWorld.shootProjectile(var29, var33);
-                        } else if (var5 == 3002) {
-                           MainGameCanvas.playSound(5, false, 80, 1);
-                           LevelLoader.gameWorld.shootSpreadWeapon(var29, var33);
+                                if (applyDamage(damage)) {
+                                    return true;
+                                }
+                            }
                         } else {
-                           label320: {
-                              var31 = 0;
-                              int[] var48;
-                              switch(var5) {
-                              case 3003:
-                                 MainGameCanvas.playSound(2, false, 80, 0);
-                                 var48 = MainGameCanvas.enemyDamageEasy;
-                                 break;
-                              case 3004:
-                                 MainGameCanvas.playSound(2, false, 80, 0);
-                                 var48 = MainGameCanvas.enemyDamageNormal;
-                                 break;
-                              case 3005:
-                                 MainGameCanvas.playSound(2, false, 80, 0);
-                                 var48 = MainGameCanvas.enemyDamageHard;
-                                 break;
-                              case 3006:
-                                 MainGameCanvas.playSound(3, false, 80, 0);
-                                 var48 = MainGameCanvas.var_12d2;
-                                 break;
-                              default:
-                                 break label320;
-                              }
-
-                              var31 = var48[difficultyLevel];
-                           }
-
-                           if (var31 > 0) {
-                              MainGameCanvas.vibrateDevice(var31 * 10);
-                           }
-
-                           if (applyDamage(var31)) {
-                              return true;
-                           }
+                            enemy.aiState = 2;
+                            enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
+                                    % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                            enemy.currentState = 0;
                         }
-                     } else {
-                        var27.aiState = 2;
-                        var27.stateTimer = (random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
-                        var27.currentState = 0;
-                     }
-                     break;
-                  case 4:
-                     var27.aiState = 2;
-                     var27.stateTimer = (random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.enemyReactionTime[difficultyLevel];
-                     var27.currentState = 0;
-                     break;
-                  case 5:
-                     var6 = random.nextInt() & Integer.MAX_VALUE;
-                     var27.aiState = 3;
-                     var27.stateTimer = var6 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
-                     var27.currentState = 2;
-                     break;
-                  case 6:
-                     var27.aiState = -1;
-                     if (var5 == 3002) {
-                        var46 = var27;
-                        var10001 = 5;
-                     } else {
-                        var46 = var27;
-                        var10001 = 6;
-                     }
+                        break;
 
-                     var46.currentState = var10001;
-                     LevelLoader.gameWorld.spawnPickUp(var27);
-                  }
-               }
+                    case 4:
+                        enemy.aiState = 2;
+                        enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
+                                % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                        enemy.currentState = 0;
+                        break;
 
-               if (var27.aiState == 2) {
-                  if ((var27.stateTimer & 3) == 0) {
-                     if (var27.currentState == 0) {
-                        var46 = var27;
-                        var10001 = 1;
-                     } else {
-                        var46 = var27;
-                        var10001 = 0;
-                     }
+                    case 5:
+                        randValue = random.nextInt() & Integer.MAX_VALUE;
+                        enemy.aiState = 3;
+                        enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
+                                + MainGameCanvas.var_17b5[difficultyLevel];
+                        enemy.currentState = 2;
+                        break;
 
-                     var46.currentState = var10001;
-                  }
+                    case 6:
+                        enemy.aiState = -1;
+                        enemy.currentState = (enemyType == 3002) ? 5 : 6;
+                        LevelLoader.gameWorld.spawnPickUp(enemy);
+                        break;
+                }
+            }
 
-                  var29 = var27.transform;
-                  var33 = LevelLoader.gameWorld.getSectorDataAtPoint(var29.x, var29.z);
-                  var31 = var29.x - player.x;
-                  int var34 = var29.z - player.z;
-                  int var36;
-                  if ((var35 = MathUtils.fastHypot(var31, var34)) > enemyAggroDistance) {
-                     var36 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var31, var35), var27.getMovementSpeed());
-                     var12 = MathUtils.fixedPointMultiply(MathUtils.preciseDivide(var34, var35), var27.getMovementSpeed());
-                     int var37;
-                     if ((random.nextInt() & Integer.MAX_VALUE) % MainGameCanvas.var_1ad2[difficultyLevel] == 0) {
-                        int var47;
+            // Chase AI
+            if (enemy.aiState == 2) {
+                if ((enemy.stateTimer & 3) == 0) {
+                    enemy.currentState = (enemy.currentState == 0) ? 1 : 0;
+                }
+
+                SectorData enemySector = LevelLoader.gameWorld.getSectorDataAtPoint(
+                        enemyTransform.x, enemyTransform.z);
+
+                int deltaX = enemyTransform.x - player.x;
+                int deltaZ = enemyTransform.z - player.z;
+                int distance = MathUtils.fastHypot(deltaX, deltaZ);
+
+                if (distance > enemyAggroDistance) {
+                    int velocityX = MathUtils.fixedPointMultiply(
+                            MathUtils.preciseDivide(deltaX, distance), enemy.getMovementSpeed());
+                    int velocityZ = MathUtils.fixedPointMultiply(
+                            MathUtils.preciseDivide(deltaZ, distance), enemy.getMovementSpeed());
+
+                    if ((random.nextInt() & Integer.MAX_VALUE)
+                            % MainGameCanvas.var_1ad2[difficultyLevel] == 0) {
+                        int tempVelX = velocityX;
                         if ((random.nextInt() & 1) == 0) {
-                           var37 = var36;
-                           var36 += -var12;
-                           var10000 = var12;
-                           var47 = var37;
+                            velocityX += -velocityZ;
+                            velocityZ += tempVelX;
                         } else {
-                           var37 = var36;
-                           var36 += var12;
-                           var10000 = var12;
-                           var47 = -var37;
+                            velocityX += velocityZ;
+                            velocityZ += -tempVelX;
+                        }
+                    }
+
+                    int absVelX = velocityX > 0 ? velocityX : -velocityX;
+                    int absVelZ = velocityZ > 0 ? velocityZ : -velocityZ;
+                    int maxAbsVel = (absVelX >> 18) > (absVelZ >> 18) ? (absVelX >> 18) : (absVelZ >> 18);
+                    int steps = maxAbsVel + 1;
+
+                    int stepX = velocityX / steps;
+                    int stepZ = velocityZ / steps;
+
+                    for (int step = 0; step < steps; step++) {
+                        tempTransform.x = enemyTransform.x - stepX;
+                        tempTransform.z = enemyTransform.z - stepZ;
+
+                        if (!LevelLoader.gameWorld.checkCollision(enemy, tempTransform, enemySector)) {
+                            break;
                         }
 
-                        var12 = var10000 + var47;
-                     }
-
-                     var37 = var36 > 0 ? var36 : -var36;
-                     int var39 = var12 > 0 ? var12 : -var12;
-                     int var40 = var37 >> 18;
-                     int var17;
-                     if ((var17 = var39 >> 18) > var40) {
-                        var40 = var17;
-                     }
-
-                     ++var40;
-                     int var18 = var36 / var40;
-                     int var19 = var12 / var40;
-
-                     for(int var20 = 0; var20 < var40; ++var20) {
-                        tempTransform.x = var29.x - var18;
-                        tempTransform.z = var29.z - var19;
-                        if (!LevelLoader.gameWorld.checkCollision(var27, tempTransform, var33)) {
-                           break;
-                        }
-
-                        var29.x = tempTransform.x;
-                        var29.z = tempTransform.z;
-                     }
-                  } else {
-                     var36 = random.nextInt() & Integer.MAX_VALUE;
-                     var27.aiState = 3;
-                     var27.stateTimer = var36 % MainGameCanvas.var_180b[difficultyLevel] + MainGameCanvas.var_17b5[difficultyLevel];
-                     var27.currentState = 2;
-                  }
-               }
+                        enemyTransform.x = tempTransform.x;
+                        enemyTransform.z = tempTransform.z;
+                    }
+                } else {
+                    int randValue = random.nextInt() & Integer.MAX_VALUE;
+                    enemy.aiState = 3;
+                    enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
+                            + MainGameCanvas.var_17b5[difficultyLevel];
+                    enemy.currentState = 2;
+                }
             }
-         }
+        }
 
-         if (currentSector.getSectorType() == 555) {
+        // Damage floor
+        if (currentSector.getSectorType() == 555) {
             MainGameCanvas.vibrateDevice(10);
             if (applyDamage(1)) {
-               return true;
+                return true;
             }
-         }
+        }
 
-         if (screenShake < 16 && screenShake > 0) {
-            --screenShake;
-         }
+        // Decay screen shake
+        if (screenShake < 16 && screenShake > 0) {
+            screenShake--;
+        }
 
-         player.scaleVelocity(39322, 65536, 39322, 26214);
-         return false;
-      }
-   }
+        // Apply velocity damping
+        player.scaleVelocity(39322, 65536, 39322, 26214);
 
-   private static DoorController getDoorController(SectorData var0) {
-      for(int var1 = 0; var1 < doorControllers.size(); ++var1) {
-         DoorController var2;
-         if ((var2 = (DoorController) doorControllers.elementAt(var1)).controlledSector == var0) {
-            return var2;
-         }
-      }
+        return false;
+    }
 
-      DoorController var3;
-      (var3 = new DoorController()).controlledSector = var0;
-      doorControllers.addElement(var3);
-      return var3;
-   }
-
-   private static ElevatorController getElevatorController(SectorData var0) {
-      for(int var1 = 0; var1 < elevatorControllers.size(); ++var1) {
-         ElevatorController var2;
-         if ((var2 = (ElevatorController) elevatorControllers.elementAt(var1)).controlledSector == var0) {
-            return var2;
-         }
-      }
-
-      ElevatorController var6;
-      (var6 = new ElevatorController()).elevatorState = 0;
-      var6.minHeight = 32767;
-      var6.maxHeight = -32768;
-      WallDefinition[] var7 = LevelLoader.gameWorld.wallDefinitions;
-
-      for(int var3 = 0; var3 < var7.length; ++var3) {
-         WallDefinition var4;
-         if ((var4 = var7[var3]).getWallType() == 62 && var4.backSurface.linkedSector == var0) {
-            SectorData var5;
-            if ((var5 = var4.frontSurface.linkedSector).floorHeight > var6.maxHeight) {
-               var6.maxHeight = var5.floorHeight;
+    /**
+     * Gets or creates a door controller for a sector.
+     */
+    private static DoorController getDoorController(SectorData sector) {
+        for (int i = 0; i < doorControllers.size(); i++) {
+            DoorController door = (DoorController)doorControllers.elementAt(i);
+            if (door.controlledSector == sector) {
+                return door;
             }
+        }
 
-            if (var5.floorHeight < var6.minHeight) {
-               var6.minHeight = var5.floorHeight;
+        DoorController newDoor = new DoorController();
+        newDoor.controlledSector = sector;
+        doorControllers.addElement(newDoor);
+        return newDoor;
+    }
+
+    /**
+     * Gets or creates an elevator controller for a sector.
+     */
+    private static ElevatorController getElevatorController(SectorData sector) {
+        for (int i = 0; i < elevatorControllers.size(); i++) {
+            ElevatorController elevator = (ElevatorController)elevatorControllers.elementAt(i);
+            if (elevator.controlledSector == sector) {
+                return elevator;
             }
-         }
-      }
+        }
 
-      var6.controlledSector = var0;
-      elevatorControllers.addElement(var6);
-      return var6;
-   }
+        ElevatorController newElevator = new ElevatorController();
+        newElevator.elevatorState = 0;
+        newElevator.minHeight = 32767;
+        newElevator.maxHeight = -32768;
 
-   private static void clearInputState() {
-      inputForward = false;
-      inputLeft = false;
-      inputBackward = false;
-      inputRight = false;
-      inputForward = false;
-      inputLookUp = false;
-      inputBackward = false;
-      inputLookDown = false;
-      inputFire = false;
-      inputStrafe = false;
-      inputRun = false;
-      inputBack = false;
-      useKey = false;
-      toggleMapInput = false;
-      selectNextWeapon = false;
-      levelTransitionState = 0;
-      weaponCooldownTimer = 0;
-   }
+        WallDefinition[] walls = LevelLoader.gameWorld.wallDefinitions;
+        for (int i = 0; i < walls.length; i++) {
+            WallDefinition wall = walls[i];
 
-    public static int cycleWeaponForward(int var0) {
-      ++var0;
-      int var1 = var0;
-      if (var0 > 7) {
-         var0 = 0;
-      } else {
-         var0 = 0;
+            if (wall.getWallType() == 62 && wall.backSurface.linkedSector == sector) {
+                SectorData targetSector = wall.frontSurface.linkedSector;
 
-         for(int var2 = var1; var2 <= 7; ++var2) {
-            int var3 = var2 != 3 && var2 != 4 ? var2 : 1;
-            if (weaponsAvailable[var2] && ammoCounts[var3] > 0) {
-               var0 = var2;
-               break;
+                if (targetSector.floorHeight > newElevator.maxHeight) {
+                    newElevator.maxHeight = targetSector.floorHeight;
+                }
+                if (targetSector.floorHeight < newElevator.minHeight) {
+                    newElevator.minHeight = targetSector.floorHeight;
+                }
             }
-         }
-      }
+        }
 
-      return var0;
-   }
+        newElevator.controlledSector = sector;
+        elevatorControllers.addElement(newElevator);
+        return newElevator;
+    }
 
-   public static int findNextAvailableWeapon(int var0) {
-      if (var0 == 0) {
-         return var0;
-      } else {
-         int var1 = var0 != 3 && var0 != 4 ? var0 : 1;
-         if (ammoCounts[var1] > 0) {
-            return var0;
-         } else {
-            int var2 = 0;
+    /**
+     * Clears all input flags.
+     */
+    private static void clearInputState() {
+        inputForward = false;
+        inputLeft = false;
+        inputBackward = false;
+        inputRight = false;
+        inputLookUp = false;
+        inputLookDown = false;
+        inputFire = false;
+        inputStrafe = false;
+        inputRun = false;
+        inputBack = false;
+        useKey = false;
+        toggleMapInput = false;
+        selectNextWeapon = false;
+        levelTransitionState = 0;
+        weaponCooldownTimer = 0;
+    }
 
-            for(int var3 = 7; var3 > 0; --var3) {
-               if (var3 != 6) {
-                  var1 = var3 != 3 && var3 != 4 ? var3 : 1;
-                  if (weaponsAvailable[var3] && ammoCounts[var1] > 0) {
-                     var2 = var3;
-                     break;
-                  }
-               }
+    /**
+     * Cycles to the next available weapon with ammo.
+     */
+    public static int cycleWeaponForward(int currentWeapon) {
+        currentWeapon++;
+        int startWeapon = currentWeapon;
+
+        if (currentWeapon > 7) {
+            currentWeapon = 0;
+        } else {
+            currentWeapon = 0;
+
+            for (int weaponId = startWeapon; weaponId <= 7; weaponId++) {
+                int ammoType = (weaponId != 3 && weaponId != 4) ? weaponId : 1;
+
+                if (weaponsAvailable[weaponId] && ammoCounts[ammoType] > 0) {
+                    currentWeapon = weaponId;
+                    break;
+                }
             }
+        }
 
-            if (var2 == 0 && weaponsAvailable[6] && ammoCounts[6] > 0) {
-               var2 = 6;
+        return currentWeapon;
+    }
+
+    /**
+     * Finds the next available weapon with ammo, or returns fists.
+     */
+    public static int findNextAvailableWeapon(int preferredWeapon) {
+        if (preferredWeapon == 0) {
+            return preferredWeapon;
+        }
+
+        int ammoType = (preferredWeapon != 3 && preferredWeapon != 4) ? preferredWeapon : 1;
+        if (ammoCounts[ammoType] > 0) {
+            return preferredWeapon;
+        }
+
+        int fallbackWeapon = 0;
+        for (int weaponId = 7; weaponId > 0; weaponId--) {
+            if (weaponId == 6) continue;
+
+            ammoType = (weaponId != 3 && weaponId != 4) ? weaponId : 1;
+            if (weaponsAvailable[weaponId] && ammoCounts[ammoType] > 0) {
+                fallbackWeapon = weaponId;
+                break;
             }
+        }
 
-            return var2;
-         }
-      }
-   }
+        if (fallbackWeapon == 0 && weaponsAvailable[6] && ammoCounts[6] > 0) {
+            fallbackWeapon = 6;
+        }
 
-   public static boolean applyDamage(int var0) {
-      playerArmor -= var0;
-      if (playerArmor < 0) {
-         var0 = -playerArmor;
-         playerArmor = 0;
-      } else {
-         var0 = 0;
-      }
+        return fallbackWeapon;
+    }
 
-      damageFlash = true;
-      playerHealth -= var0;
-      if (playerHealth <= 0) {
-         playerHealth = 0;
-         return true;
-      } else {
-         return false;
-      }
-   }
+    /**
+     * Applies damage to player, reducing armor first then health.
+     *
+     * @return true if player died, false otherwise
+     */
+    public static boolean applyDamage(int damage) {
+        playerArmor -= damage;
+        if (playerArmor < 0) {
+            damage = -playerArmor;
+            playerArmor = 0;
+        } else {
+            damage = 0;
+        }
 
+        damageFlash = true;
+        playerHealth -= damage;
+
+        if (playerHealth <= 0) {
+            playerHealth = 0;
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Resets all player progress (health, weapons, keys, etc).
+     */
     public static void resetPlayerProgress() {
-      playerHealth = 100;
-      playerArmor = 0;
+        playerHealth = 100;
+        playerArmor = 0;
 
-      for(int var0 = 0; var0 < weaponsAvailable.length; ++var0) {
-         weaponsAvailable[var0] = false;
-         ammoCounts[var0] = 0;
-      }
+        for (int i = 0; i < weaponsAvailable.length; i++) {
+            weaponsAvailable[i] = false;
+            ammoCounts[i] = 0;
+        }
 
-      weaponsAvailable[0] = true;
-      weaponsAvailable[6] = true;
-      currentWeapon = 0;
-      pendingWeaponSwitch = 0;
-      messageText = "";
-      messageTimer = 0;
-      interactionTimer = 0;
-      activeInteractable = null;
-      damageFlash = false;
-      screenShake = 0;
-      cameraBobTimer = 0;
-      lastGameLogicTime = 0;
-      weaponSwitchAnimationActive = true;
-      weaponAnimationState = 1;
-      SaveSystem.gameProgressFlags = 0;
-      LevelLoader.levelVariant = 0;
-   }
+        weaponsAvailable[0] = true;
+        weaponsAvailable[6] = true;
+
+        currentWeapon = 0;
+        pendingWeaponSwitch = 0;
+
+        messageText = "";
+        messageTimer = 0;
+        interactionTimer = 0;
+        activeInteractable = null;
+
+        damageFlash = false;
+        screenShake = 0;
+        cameraBobTimer = 0;
+        lastGameLogicTime = 0;
+
+        weaponSwitchAnimationActive = true;
+        weaponAnimationState = 1;
+
+        SaveSystem.gameProgressFlags = 0;
+        LevelLoader.levelVariant = 0;
+    }
 }
