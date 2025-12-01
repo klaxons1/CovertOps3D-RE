@@ -21,12 +21,12 @@ public class PortalRenderer {
     private static int clippedTextureEndU;
     private static Texture skyboxTexture;
     static short[] depthBuffer;
-    private static int playerViewHeight;
-    private static int var_9b4;
-    private static int var_9e4;
-    private static int var_9fa;
-    private static int var_a27;
-    private static int var_a34;
+    private static int floorSpanStart;
+    private static int floorSpanEnd;
+    private static int ceilingSpanStart;
+    private static int ceilingSpanEnd;
+    private static int lastFloorColumnX;
+    private static int lastCeilingColumnX;
     static RenderUtils renderUtils;
     static int[] angleCorrectionTable;
     static int[] reciprocalTable;
@@ -442,12 +442,12 @@ public class PortalRenderer {
           int var39 = (var6 << 16) + var33 * var38 + '耀';
           int var40 = (var13 - var7 << 16) / var32;
           int var41 = (var7 << 16) + var33 * var40 + '耀';
-          var_9fa = Integer.MIN_VALUE;
-          var_9e4 = Integer.MIN_VALUE;
-          var_9b4 = Integer.MIN_VALUE;
-          playerViewHeight = Integer.MIN_VALUE;
-          var_a34 = Integer.MIN_VALUE;
-          var_a27 = Integer.MIN_VALUE;
+          ceilingSpanEnd = Integer.MIN_VALUE;
+          ceilingSpanStart = Integer.MIN_VALUE;
+          floorSpanEnd = Integer.MIN_VALUE;
+          floorSpanStart = Integer.MIN_VALUE;
+          lastCeilingColumnX = Integer.MIN_VALUE;
+          lastFloorColumnX = Integer.MIN_VALUE;
           short var42 = (short)var0.sectorId;
           Sprite var43 = var0.floorTexture;
           Sprite var44 = var0.ceilingTexture;
@@ -561,18 +561,18 @@ public class PortalRenderer {
 
           short var67;
           int var68;
-          if (var_9e4 >= 0) {
-             var67 = (short)var_a34;
+          if (ceilingSpanStart >= 0) {
+             var67 = (short) lastCeilingColumnX;
 
-             for(var68 = var_9e4; var68 <= var_9fa; ++var68) {
+             for(var68 = ceilingSpanStart; var68 <= ceilingSpanEnd; ++var68) {
                 renderUtils.addRenderSpan(depthBuffer[var68], var67, var42, var68);
              }
           }
 
-          if (playerViewHeight >= 0) {
-             var67 = (short)var_a27;
+          if (floorSpanStart >= 0) {
+             var67 = (short) lastFloorColumnX;
 
-             for(var68 = playerViewHeight; var68 <= var_9b4; ++var68) {
+             for(var68 = floorSpanStart; var68 <= floorSpanEnd; ++var68) {
                 renderUtils.addRenderSpan(depthBuffer[var68], var67, var42, var68);
              }
           }
@@ -636,12 +636,12 @@ public class PortalRenderer {
           short var8 = (short)var1;
           short var9;
           int var10;
-          if (var_a34 == var1 - 1) {
-             var9 = (short)var_a34;
-             var10 = var6 > var_9fa + 1 ? var6 : var_9fa + 1;
-             int var11 = var5 < var_9e4 - 1 ? var5 : var_9e4 - 1;
-             int var12 = var_9e4 > var5 + 1 ? var_9e4 : var5 + 1;
-             int var13 = var_9fa < var6 - 1 ? var_9fa : var6 - 1;
+          if (lastCeilingColumnX == var1 - 1) {
+             var9 = (short) lastCeilingColumnX;
+             var10 = var6 > ceilingSpanEnd + 1 ? var6 : ceilingSpanEnd + 1;
+             int var11 = var5 < ceilingSpanStart - 1 ? var5 : ceilingSpanStart - 1;
+             int var12 = ceilingSpanStart > var5 + 1 ? ceilingSpanStart : var5 + 1;
+             int var13 = ceilingSpanEnd < var6 - 1 ? ceilingSpanEnd : var6 - 1;
 
              int var14;
              for(var14 = var6; var14 <= var11; ++var14) {
@@ -652,18 +652,18 @@ public class PortalRenderer {
                 depthBuffer[var14] = var8;
              }
 
-             for(var14 = var_9e4; var14 <= var13; ++var14) {
+             for(var14 = ceilingSpanStart; var14 <= var13; ++var14) {
                 renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
              }
 
-             for(var14 = var12; var14 <= var_9fa; ++var14) {
+             for(var14 = var12; var14 <= ceilingSpanEnd; ++var14) {
                 renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
              }
           } else {
-             if (var_9e4 >= 0) {
-                var9 = (short)var_a34;
+             if (ceilingSpanStart >= 0) {
+                var9 = (short) lastCeilingColumnX;
 
-                for(var10 = var_9e4; var10 <= var_9fa; ++var10) {
+                for(var10 = ceilingSpanStart; var10 <= ceilingSpanEnd; ++var10) {
                    renderUtils.addRenderSpan(depthBuffer[var10], var9, var0, var10);
                 }
              }
@@ -673,9 +673,9 @@ public class PortalRenderer {
              }
           }
 
-          var_a34 = var1;
-          var_9e4 = var6;
-          var_9fa = var7;
+          lastCeilingColumnX = var1;
+          ceilingSpanStart = var6;
+          ceilingSpanEnd = var7;
        }
     }
 
@@ -691,12 +691,12 @@ public class PortalRenderer {
           short var8 = (short)var1;
           short var9;
           int var10;
-          if (var_a27 == var1 - 1) {
-             var9 = (short)var_a27;
-             var10 = var4 > var_9b4 + 1 ? var4 : var_9b4 + 1;
-             int var11 = var7 < playerViewHeight - 1 ? var7 : playerViewHeight - 1;
-             int var12 = playerViewHeight > var7 + 1 ? playerViewHeight : var7 + 1;
-             int var13 = var_9b4 < var4 - 1 ? var_9b4 : var4 - 1;
+          if (lastFloorColumnX == var1 - 1) {
+             var9 = (short) lastFloorColumnX;
+             var10 = var4 > floorSpanEnd + 1 ? var4 : floorSpanEnd + 1;
+             int var11 = var7 < floorSpanStart - 1 ? var7 : floorSpanStart - 1;
+             int var12 = floorSpanStart > var7 + 1 ? floorSpanStart : var7 + 1;
+             int var13 = floorSpanEnd < var4 - 1 ? floorSpanEnd : var4 - 1;
 
              int var14;
              for(var14 = var4; var14 <= var11; ++var14) {
@@ -707,18 +707,18 @@ public class PortalRenderer {
                 depthBuffer[var14] = var8;
              }
 
-             for(var14 = playerViewHeight; var14 <= var13; ++var14) {
+             for(var14 = floorSpanStart; var14 <= var13; ++var14) {
                 renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
              }
 
-             for(var14 = var12; var14 <= var_9b4; ++var14) {
+             for(var14 = var12; var14 <= floorSpanEnd; ++var14) {
                 renderUtils.addRenderSpan(depthBuffer[var14], var9, var0, var14);
              }
           } else {
-             if (playerViewHeight >= 0) {
-                var9 = (short)var_a27;
+             if (floorSpanStart >= 0) {
+                var9 = (short) lastFloorColumnX;
 
-                for(var10 = playerViewHeight; var10 <= var_9b4; ++var10) {
+                for(var10 = floorSpanStart; var10 <= floorSpanEnd; ++var10) {
                    renderUtils.addRenderSpan(depthBuffer[var10], var9, var0, var10);
                 }
              }
@@ -728,9 +728,9 @@ public class PortalRenderer {
              }
           }
 
-          var_a27 = var1;
-          playerViewHeight = var4;
-          var_9b4 = var7;
+          lastFloorColumnX = var1;
+          floorSpanStart = var4;
+          floorSpanEnd = var7;
        }
     }
 
