@@ -12,10 +12,10 @@ public class PortalRenderer {
 // ==================== Screen Resolution Constants ====================
 
     /** Screen width in pixels */
-    public static final int SCREEN_WIDTH = 176;
+    public static final int SCREEN_WIDTH = 240;
 
     /** Screen height in pixels */
-    public static final int SCREEN_HEIGHT = 208;
+    public static final int SCREEN_HEIGHT = 288;
 
     /** Half of screen width (horizontal center) */
     public static final int HALF_SCREEN_WIDTH = SCREEN_WIDTH / 2;  // 88
