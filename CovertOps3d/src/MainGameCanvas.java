@@ -301,7 +301,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private void sub_47(Graphics graphics) {
+    private void renderHUDAndWeapon(Graphics graphics) {
         try {
             int headBob = GameEngine.renderFrame(graphics, this.frameCounter) >> 15;
             int weaponHeight = this.weaponSprites[weaponSpriteFrame].getHeight();
@@ -331,12 +331,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             weaponSpriteFrame = this.weaponAnimationState;
 
             graphics.drawImage(this.statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
-            this.sub_547(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
-            this.sub_547(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
+            this.drawHUDNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
+            this.drawHUDNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
 
             int ammoType = GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4
                     ? GameEngine.currentWeapon : 1;
-            this.sub_547(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.VIEWPORT_HEIGHT + 6);
+            this.drawHUDNumber(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.VIEWPORT_HEIGHT + 6);
 
             if (GameEngine.currentWeapon > 0 && GameEngine.messageTimer == 0 && !mapEnabled) {
                 graphics.drawImage(this.crosshairImage,
@@ -563,7 +563,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         ++this.frameCounter;
                         if (this.gameLoopTick()) {
                             GameEngine.damageFlash = false;
-                            this.sub_47(graphics);
+                            this.renderHUDAndWeapon(graphics);
                             this.flushScreenBuffer();
                             this.drawGameOver(graphics);
                             menuResult = this.showMenuScreen(graphics, true);
@@ -573,9 +573,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         this.accumulatedTime -= 80L;
                     }
 
-                    this.sub_47(graphics);
+                    this.renderHUDAndWeapon(graphics);
                     if (GameEngine.messageTimer > 0) {
-                        this.sub_2e3(graphics, GameEngine.messageText);
+                        this.drawMultiLineMessage(graphics, GameEngine.messageText);
                     }
 
                     this.flushScreenBuffer();
@@ -587,7 +587,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private static int[] sub_d3(String path, boolean flip) {
+    private static int[] loadSpriteRaw(String path, boolean flip) {
         int[] result = null;
 
         try {
@@ -707,7 +707,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private static void sub_159(Object buffer, int offset, int length) {
+    private static void fastArrayFill(Object buffer, int offset, int length) {
         int step = 1;
 
         while(step < length) {
@@ -756,7 +756,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
 
                         fadeBuffer[0] = fadeColor;
-                        sub_159(fadeBuffer, 0, pixelCount);
+                        fastArrayFill(fadeBuffer, 0, pixelCount);
                         graphics.drawImage(splash, 0, 0, 20);
                         graphics.drawRGB(fadeBuffer, 0, splash.getWidth(), 0, 0,
                                 splash.getWidth(), splash.getHeight(), true);
@@ -766,7 +766,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 fadeBuffer[0] = fadeColor;
-                sub_159(fadeBuffer, 0, pixelCount);
+                fastArrayFill(fadeBuffer, 0, pixelCount);
                 graphics.drawImage(logo, logoX, logoY, 20);
                 graphics.drawRGB(fadeBuffer, 0, logo.getWidth(), logoX, logoY,
                         logo.getWidth(), logo.getHeight(), true);
@@ -784,7 +784,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
             PortalRenderer.screenBuffer[0] = -2130771968;
-            sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+            fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
 
             graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                     0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
@@ -792,7 +792,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
             String message = "mission failed|game over";
-            this.sub_2e3(graphics, message);
+            this.drawMultiLineMessage(graphics, message);
             this.flushScreenBuffer();
             delay(2000);
 
@@ -812,13 +812,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 PortalRenderer.screenBuffer[0] = fadeColor;
-                sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(splash, 0, 0, 20);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
-                this.sub_2e3(graphics, message);
+                this.drawMultiLineMessage(graphics, message);
                 this.flushScreenBuffer();
                 yieldToOtherThreads();
             }
@@ -828,7 +828,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private void sub_1e3(Graphics graphics, Image background) {
+    private void drawStripedBackground(Graphics graphics, Image background) {
         this.accumulatedTime = 0L;
         this.lastFrameTime = System.currentTimeMillis();
         int progress = 0;
@@ -885,7 +885,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             int firstItem = 0;
             int lastItem = menuItems.length - 2;
-            this.sub_1e3(graphics, background);
+            this.drawStripedBackground(graphics, background);
 
             if (SaveSystem.musicEnabled == 1 && !this.isGamePaused) {
                 playSound(0, true, 80, 2);
@@ -915,7 +915,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
 
                     String itemText = menuItems[itemIndex];
-                    int textX = (PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(itemText)) / 2;
+                    int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(itemText)) / 2;
 
                     if ((menuMode & 15) == itemIndex) {
                         int boxWidth = this.var_59b * 30;
@@ -937,7 +937,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         (menuItems == MenuSystem.CONFIRMATION_MENU_ITEMS ? "yes" : "select");
                 this.drawLargeString(actionText, graphics, 3, UI_HEIGHT - this.var_550 - 3);
                 this.drawLargeString(menuItems[totalItems], graphics,
-                        PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(menuItems[totalItems]) - 3,
+                        PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(menuItems[totalItems]) - 3,
                         UI_HEIGHT - this.var_550 - 3);
                 this.flushScreenBuffer();
                 yieldToOtherThreads();
@@ -986,12 +986,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 2:
                         case 35:
-                            this.sub_24b(graphics, background, "help", MenuSystem.HELP_MENU_ITEMS, false);
+                            this.showScrollingText(graphics, background, "help", MenuSystem.HELP_MENU_ITEMS, false);
                             break;
 
                         case 3:
                         case 36:
-                            this.sub_24b(graphics, background, "about", MenuSystem.ABOUT_MENU_TEXT, true);
+                            this.showScrollingText(graphics, background, "about", MenuSystem.ABOUT_MENU_TEXT, true);
                             break;
 
                         case 4:
@@ -1198,7 +1198,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private void sub_24b(Graphics graphics, Image background, String title, String[] content, boolean scrolling) {
+    private void showScrollingText(Graphics graphics, Image background, String title, String[] content, boolean scrolling) {
         GameEngine.inputRun = false;
         GameEngine.inputBack = false;
         GameEngine.inputFire = false;
@@ -1216,7 +1216,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             for(int fadeStep = 1; fadeStep <= 8; ++fadeStep) {
                 PortalRenderer.screenBuffer[0] = 16777215 | (fadeStep * 268435456);
-                sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(background, 0, 0, 20);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
@@ -1240,10 +1240,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                     String backText = "back";
                     this.drawLargeString(backText, graphics,
-                            PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(backText) - 3,
+                            PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(backText) - 3,
                             UI_HEIGHT - this.var_550 - 3);
                     this.drawLargeString(title, graphics,
-                            (PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(title)) / 2, 3);
+                            (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(title)) / 2, 3);
 
                     graphics.setClip(0, this.var_550 + 6, PortalRenderer.VIEWPORT_WIDTH,
                             UI_HEIGHT - 2 * this.var_550 - 12);
@@ -1275,7 +1275,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             line = line + " " + version;
                         }
                         this.drawSmallString(line, graphics,
-                                (PortalRenderer.VIEWPORT_WIDTH - this.sub_5ef(line)) / 2, displayY);
+                                (PortalRenderer.VIEWPORT_WIDTH - this.getSmallTextWidth(line)) / 2, displayY);
                         displayY += this.var_6d3 + 2;
                     }
 
@@ -1291,7 +1291,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             for(int fadeStep = 8; fadeStep >= 1; --fadeStep) {
                 PortalRenderer.screenBuffer[0] = 16777215 | (fadeStep * 268435456);
-                sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(background, 0, 0, 20);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
@@ -1314,8 +1314,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
     }
 
-    private boolean sub_255(int[] states, int[] types, int[] timers, int[] freeSlots,
-                            int[] positions, int[] starts, int[] ends, int[] speeds) {
+    private boolean updateSniperMiniGameLogic(int[] states, int[] types, int[] timers, int[] freeSlots,
+                                              int[] positions, int[] starts, int[] ends, int[] speeds) {
 
         if (this.enemySpawnTimer >= 200) {
             this.enemySpawnTimer = 0;
@@ -1552,10 +1552,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             for(int i = 0; i < 6; ++i) {
                 boolean flip = i > 3;
                 int spriteNum = flip ? i - 3 : i + 1;
-                var10[i] = sub_d3("/gamedata/sniperminigame/ot8" + Integer.toString(spriteNum), flip);
-                var11[i] = sub_d3("/gamedata/sniperminigame/ot18" + Integer.toString(spriteNum), flip);
-                var12[i] = sub_d3("/gamedata/sniperminigame/ot30" + Integer.toString(spriteNum), flip);
-                var13[i] = sub_d3("/gamedata/sniperminigame/ss30" + Integer.toString(spriteNum), flip);
+                var10[i] = loadSpriteRaw("/gamedata/sniperminigame/ot8" + Integer.toString(spriteNum), flip);
+                var11[i] = loadSpriteRaw("/gamedata/sniperminigame/ot18" + Integer.toString(spriteNum), flip);
+                var12[i] = loadSpriteRaw("/gamedata/sniperminigame/ot30" + Integer.toString(spriteNum), flip);
+                var13[i] = loadSpriteRaw("/gamedata/sniperminigame/ss30" + Integer.toString(spriteNum), flip);
             }
 
             Image sightImage = Image.createImage("/gamedata/sniperminigame/sight.png");
@@ -1594,7 +1594,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 while(this.accumulatedTime >= 40L) {
                     ++this.frameCounter;
-                    if (!this.sub_255(enemyStates, enemyTypes, enemyTimers, freeSlots,
+                    if (!this.updateSniperMiniGameLogic(enemyStates, enemyTypes, enemyTimers, freeSlots,
                             enemyPositions, startPositions[level], endPositions[level], enemySpeeds[level])) {
                         return -1;
                     }
@@ -1811,8 +1811,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT, false);
                 graphics.drawImage(sightImage, sightX, sightY, 20);
                 graphics.drawImage(this.statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
-                this.sub_547(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
-                this.sub_547(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
+                this.drawHUDNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
+                this.drawHUDNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
                 this.flushScreenBuffer();
 
                 yieldToOtherThreads();
@@ -1851,7 +1851,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private void sub_2e3(Graphics graphics, String message) {
+    private void drawMultiLineMessage(Graphics graphics, String message) {
         int lineStart = 0;
         int lineCount = 0;
 
@@ -1878,7 +1878,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             String line = message.substring(lineStart, lineEnd + 1);
-            int textX = (PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(line)) / 2;
+            int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(line)) / 2;
             this.drawLargeString(line, graphics, textX, textY);
             textY += this.var_550;
         } while((lineStart = lineEnd + 2) < message.length());
@@ -2141,7 +2141,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private static void sub_3bc(GameObject object, byte[] sprites1, byte[] sprites2) {
+    private static void preloadObjectTextures(GameObject object, byte[] sprites1, byte[] sprites2) {
         for(int i = 0; i < sprites1.length; ++i) {
             byte sprite1 = sprites1[i];
             byte sprite2 = sprites2[i];
@@ -2239,13 +2239,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             LevelLoader.preloadTexture((byte)-53);
                             continue;
                         case 10:
-                            sub_3bc(obj, var9, var10);
+                            preloadObjectTextures(obj, var9, var10);
                             if (levelFileNames[currentLevelId] == "06c") {
                                 obj.currentState = 1;
                             }
                             continue;
                         case 12:
-                            sub_3bc(obj, var13, var14);
+                            preloadObjectTextures(obj, var13, var14);
                             continue;
                         case 26:
                             obj.addSpriteFrame((byte)0, (byte)-16);
@@ -2323,27 +2323,27 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             LevelLoader.preloadTexture((byte)-56);
                             continue;
                         case 3001:
-                            sub_3bc(obj, var11, var12);
+                            preloadObjectTextures(obj, var11, var12);
                             LevelLoader.preloadTexture((byte)-57);
                             continue;
                         case 3002:
-                            sub_3bc(obj, var15, var16);
+                            preloadObjectTextures(obj, var15, var16);
                             LevelLoader.preloadTexture((byte)-56);
                             continue;
                         case 3003:
-                            sub_3bc(obj, var2, var3);
+                            preloadObjectTextures(obj, var2, var3);
                             LevelLoader.preloadTexture((byte)-48);
                             continue;
                         case 3004:
-                            sub_3bc(obj, var5, var6);
+                            preloadObjectTextures(obj, var5, var6);
                             LevelLoader.preloadTexture((byte)-54);
                             continue;
                         case 3005:
-                            sub_3bc(obj, var4, var6);
+                            preloadObjectTextures(obj, var4, var6);
                             LevelLoader.preloadTexture((byte)-48);
                             continue;
                         case 3006:
-                            sub_3bc(obj, var7, var8);
+                            preloadObjectTextures(obj, var7, var8);
                             LevelLoader.preloadTexture((byte)-54);
                             continue;
                         default:
@@ -2382,12 +2382,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private void drawPleaseWait(Graphics graphics) {
         String text = "please wait...";
-        int textX = (PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(text)) / 2;
+        int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(text)) / 2;
         int textY = HALF_UI_HEIGHT - this.var_550 / 2;
 
         int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
         PortalRenderer.screenBuffer[0] = Integer.MIN_VALUE;
-        sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+        fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
 
         graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                 0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
@@ -2448,9 +2448,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             lineBuffers[0] = new int[linesPerBox];
-            this.sub_1e3(graphics, frameBuffer);
+            this.drawStripedBackground(graphics, frameBuffer);
             this.drawLargeString("back", graphics,
-                    PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2("back") - 3, UI_HEIGHT - this.var_550 - 3);
+                    PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth("back") - 3, UI_HEIGHT - this.var_550 - 3);
             this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
 
             int[] charIndices = new int[]{0, 0, 0};
@@ -2501,7 +2501,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         if (currentX + this.var_75f > maxX) {
                             currentX = textX;
                             if (lineIndices[boxId] >= linesPerBox - 1) {
-                                this.sub_493(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
+                                this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
                                         textX, textY, maxY, textAreaWidth);
                             } else {
                                 currentY += this.var_6d3;
@@ -2515,12 +2515,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             }
 
                             String word = line.substring(charPos, nextSpace);
-                            int wordWidth = this.sub_5ef(word);
+                            int wordWidth = this.getSmallTextWidth(word);
 
                             if (currentX + this.var_75f + wordWidth > maxX) {
                                 currentX = textX;
                                 if (lineIndices[boxId] >= linesPerBox - 1) {
-                                    this.sub_493(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
+                                    this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
                                             textX, textY, maxY, textAreaWidth);
                                 } else {
                                     currentY += this.var_6d3;
@@ -2541,7 +2541,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         if (currentX + charWidth + 1 > maxX) {
                             currentX = textX;
                             if (lineIndices[boxId] >= linesPerBox - 1) {
-                                this.sub_493(graphics, frameBuffer, line, lineBuffers[boxId], charPos,
+                                this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos,
                                         textX, textY, maxY, textAreaWidth);
                             } else {
                                 currentY += this.var_6d3;
@@ -2573,7 +2573,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     if (GameEngine.inputRun) {
                         GameEngine.inputRun = false;
                         graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.var_550 - 3,
-                                this.sub_5d2("pause"), this.var_550,
+                                this.getLargeTextWidth("pause"), this.var_550,
                                 0, 3, UI_HEIGHT - this.var_550 - 3, 20);
                         this.drawLargeString("resume", graphics, 3, UI_HEIGHT - this.var_550 - 3);
                         this.flushScreenBuffer();
@@ -2586,7 +2586,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                     if (GameEngine.inputRun) {
                         graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.var_550 - 3,
-                                this.sub_5d2("resume"), this.var_550,
+                                this.getLargeTextWidth("resume"), this.var_550,
                                 0, 3, UI_HEIGHT - this.var_550 - 3, 20);
                         this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
                         this.flushScreenBuffer();
@@ -2604,7 +2604,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         graphics.drawImage(frameBuffer, 0, 0, 20);
                         this.drawLargeString("back", graphics,
-                                PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2("back") - 3,
+                                PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth("back") - 3,
                                 UI_HEIGHT - this.var_550 - 3);
                         this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
 
@@ -2693,8 +2693,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         return -1;
     }
 
-    private void sub_493(Graphics graphics, Image frameBuffer, String text, int[] lineStarts,
-                         int startChar, int startX, int startY, int maxY, int width) {
+    private void drawWrappedLine(Graphics graphics, Image frameBuffer, String text, int[] lineStarts,
+                                 int startChar, int startX, int startY, int maxY, int width) {
 
         graphics.drawRegion(frameBuffer, startX, startY, width, maxY - startY, 0, startX, startY, 20);
         int renderY = startY;
@@ -2736,9 +2736,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         } while(System.currentTimeMillis() - start < (long)milliseconds);
     }
 
-    private void sub_547(int value, Graphics graphics, int x, int y) {
+    private void drawHUDNumber(int value, Graphics graphics, int x, int y) {
         String text = Integer.toString(value);
-        int centerOffset = this.sub_5d2(text) / 2;
+        int centerOffset = this.getLargeTextWidth(text) / 2;
         this.drawLargeString(text, graphics, x - centerOffset, y);
     }
 
@@ -2746,7 +2746,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         System.gc();
     }
 
-    private int sub_5d2(String text) {
+    private int getLargeTextWidth(String text) {
         text = text.toLowerCase();
         int width = 0;
 
@@ -2764,7 +2764,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         return width;
     }
 
-    private int sub_5ef(String text) {
+    private int getSmallTextWidth(String text) {
         int width = 0;
 
         for(int i = 0; i < text.length(); ++i) {
