@@ -8,7 +8,7 @@ public final class GameWorld {
    private Point2D collisionTestPoint = new Point2D(0, 0);
    private int lastWallIndex;
    public Point2D[] vertices;
-   private Point2D[] transformedVerticles;
+   private Point2D[] transformedVertices;
    public WallDefinition[] wallDefinitions;
    public GameObject[] staticObjects;
    private Vector projectiles;
@@ -33,10 +33,10 @@ public final class GameWorld {
 
    public final void setVertices(Point2D[] var1) {
       this.vertices = var1;
-      this.transformedVerticles = new Point2D[var1.length];
+      this.transformedVertices = new Point2D[var1.length];
 
-      for(int var2 = 0; var2 < this.transformedVerticles.length; ++var2) {
-         this.transformedVerticles[var2] = new Point2D(0, 0);
+      for(int var2 = 0; var2 < this.transformedVertices.length; ++var2) {
+         this.transformedVertices[var2] = new Point2D(0, 0);
       }
 
    }
@@ -48,11 +48,11 @@ public final class GameWorld {
       for(int var8 = 0; var8 < this.vertices.length; ++var8) {
          int var9 = this.vertices[var8].x - var1;
          int var10 = this.vertices[var8].y - var2;
-         this.transformedVerticles[var8].x = (int)(var6 * (long)var9 - var4 * (long)var10 >> 16);
-         this.transformedVerticles[var8].y = (int)(var4 * (long)var9 + var6 * (long)var10 >> 16);
+         this.transformedVertices[var8].x = (int)(var6 * (long)var9 - var4 * (long)var10 >> 16);
+         this.transformedVertices[var8].y = (int)(var4 * (long)var9 + var6 * (long)var10 >> 16);
       }
 
-      return this.transformedVerticles;
+      return this.transformedVertices;
    }
 
    public final Sector getSectorAtPoint(int var1, int var2) {
@@ -546,7 +546,7 @@ public final class GameWorld {
       }
    }
 
-   private static boolean sub_2bb(int var0, WallDefinition var1) {
+   private static boolean isWallHeightBlocking(int var0, WallDefinition var1) {
       SectorData var2 = var1.backSurface.linkedSector;
       SectorData var3 = var1.frontSurface.linkedSector;
       return var2.ceilingHeight <= var0 || var2.floorHeight >= var0 || var3.ceilingHeight <= var0 || var3.floorHeight >= var0;
@@ -739,7 +739,7 @@ public final class GameWorld {
 
       for(int var7 = 0; var7 < this.wallDefinitions.length; ++var7) {
          WallDefinition var8;
-         if ((var8 = this.wallDefinitions[var7]).isSolid() || sub_2bb(var6, var8)) {
+         if ((var8 = this.wallDefinitions[var7]).isSolid() || isWallHeightBlocking(var6, var8)) {
             Point2D var9 = this.vertices[var8.startVertexId & '\uffff'];
             Point2D var10 = this.vertices[var8.endVertexId & '\uffff'];
             if (doLineSegmentsIntersect(var1, var2, var3, var4, var9.x, var9.y, var10.x, var10.y)) {
@@ -1019,7 +1019,7 @@ public final class GameWorld {
 
                for(int var19 = 0; var19 < this.wallDefinitions.length; ++var19) {
                   WallDefinition var20;
-                  if ((var20 = this.wallDefinitions[var19]).isSolid() || sub_2bb(var10, var20)) {
+                  if ((var20 = this.wallDefinitions[var19]).isSolid() || isWallHeightBlocking(var10, var20)) {
                      Point2D var21 = this.vertices[var20.startVertexId & '\uffff'];
                      Point2D var14 = this.vertices[var20.endVertexId & '\uffff'];
                      if (doLineSegmentsIntersect(var4, var5, var6, var7, var21.x, var21.y, var14.x, var14.y)) {
@@ -1127,8 +1127,8 @@ public final class GameWorld {
          if (((var3 = this.wallDefinitions[var2]).getWallType() != 0 || !var3.isTransparent()) && var3.isRendered()) {
             int var4 = var3.startVertexId & '\uffff';
             int var5 = var3.endVertexId & '\uffff';
-            Point2D var6 = this.transformedVerticles[var4];
-            Point2D var7 = this.transformedVerticles[var5];
+            Point2D var6 = this.transformedVertices[var4];
+            Point2D var7 = this.transformedVertices[var5];
             Graphics var10000;
             int var10001;
             if (var3.getWallType() != 0) {
