@@ -63,19 +63,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private GameObject[] cachedStaticObjects;
     private GameObject[] nextLevelObjects;
-    private int[] var_b23;
-    private int[] var_b56;
-    private int[] var_b60;
-    private int[] var_b96;
-    private int var_be4;
-    private int var_c1f;
-    private int var_c2f;
+    private int[] paletteRegular;
+    private int[] paletteGray;
+    private int[] paletteRedTint;
+    private int[] paletteGrayRed;
+    private int scopeVelocityX;
+    private int scopeVelocityY;
+    private int scopeWobbleIndex;
     private int enemyUpdateCounter;
     private int enemySpawnTimer;
     private int activeEnemyCount;
-    private int var_d2a;
-    private int var_d88;
-    private int var_d9b;
+    private int lastInputDirection;
+    private int scopePositionX;
+    private int scopePositionY;
 
     public static boolean mapEnabled = false;
 
@@ -159,19 +159,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         this.weaponAnimationState = 0;
         this.cachedStaticObjects = null;
         this.nextLevelObjects = null;
-        this.var_b23 = null;
-        this.var_b56 = null;
-        this.var_b60 = null;
-        this.var_b96 = null;
-        this.var_be4 = 0;
-        this.var_c1f = 0;
-        this.var_c2f = 0;
+        this.paletteRegular = null;
+        this.paletteGray = null;
+        this.paletteRedTint = null;
+        this.paletteGrayRed = null;
+        this.scopeVelocityX = 0;
+        this.scopeVelocityY = 0;
+        this.scopeWobbleIndex = 0;
         this.enemyUpdateCounter = 0;
         this.enemySpawnTimer = 0;
         this.activeEnemyCount = 0;
-        this.var_d2a = 0;
-        this.var_d88 = 0;
-        this.var_d9b = 0;
+        this.lastInputDirection = 0;
+        this.scopePositionX = 0;
+        this.scopePositionY = 0;
         keyMappingOffset = Math.abs(this.getKeyCode(8)) == 53 ? 5 : Math.abs(this.getKeyCode(8));
         this.setFullScreenMode(true);
     }
@@ -637,7 +637,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         return result;
     }
 
-    private void sub_10f(int level, int width, int height, byte[] pixels, byte[] mask, byte[] sight) {
+    private void loadSniperMiniGameResources(int level, int width, int height, byte[] pixels, byte[] mask, byte[] sight) {
         try {
             String basePath = "/" + (level == 0 ? "gamedata/sniperminigame/ss1" : "gamedata/sniperminigame/ss2");
             InputStream stream = (new Object()).getClass().getResourceAsStream(basePath);
@@ -656,25 +656,25 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 dataInput.readFully(compressed, 0, compressedSize);
                 LevelLoader.decompressSprite(compressed, 0, pixels, 0, pixelCount, compression);
 
-                this.var_b23 = new int[paletteSize];
-                this.var_b56 = new int[paletteSize];
-                this.var_b60 = new int[paletteSize];
-                this.var_b96 = new int[paletteSize];
+                this.paletteRegular = new int[paletteSize];
+                this.paletteGray = new int[paletteSize];
+                this.paletteRedTint = new int[paletteSize];
+                this.paletteGrayRed = new int[paletteSize];
 
                 for(int i = 0; i < paletteSize; ++i) {
                     int r = dataInput.readByte() & 255;
                     int g = dataInput.readByte() & 255;
                     int b = dataInput.readByte() & 255;
-                    this.var_b23[i] = r << 16 | g << 8 | b;
-                    this.var_b60[i] = this.var_b23[i] | 16711680;
+                    this.paletteRegular[i] = r << 16 | g << 8 | b;
+                    this.paletteRedTint[i] = this.paletteRegular[i] | 16711680;
 
                     int gray = (r + g + b) / 3;
                     gray = gray + (96 - (gray >> 2));
                     if (gray > 255) {
                         gray = 255;
                     }
-                    this.var_b56[i] = gray << 16 | gray << 8 | gray;
-                    this.var_b96[i] = this.var_b56[i] | 16711680;
+                    this.paletteGray[i] = gray << 16 | gray << 8 | gray;
+                    this.paletteGrayRed[i] = this.paletteGray[i] | 16711680;
                 }
 
                 dataInput.close();
@@ -1415,80 +1415,80 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
         int[] deltaX = new int[]{0, 0, -1, 1, -1, 1, -1, 1};
         int[] deltaY = new int[]{-1, 1, 0, 0, -1, 1, 1, -1};
-        int direction = this.var_c2f;
-        this.var_c2f = (direction + 1) & 7;
-        this.var_d88 += deltaX[direction];
-        this.var_d9b += deltaY[direction];
+        int direction = this.scopeWobbleIndex;
+        this.scopeWobbleIndex = (direction + 1) & 7;
+        this.scopePositionX += deltaX[direction];
+        this.scopePositionY += deltaY[direction];
 
         byte inputDirection = 0;
         if (GameEngine.inputLookUp) {
-            if (this.var_d2a == 3) {
-                --this.var_be4;
+            if (this.lastInputDirection == 3) {
+                --this.scopeVelocityX;
             }
             inputDirection = 3;
         }
 
         if (GameEngine.inputLookDown) {
-            if (this.var_d2a == 4) {
-                ++this.var_be4;
+            if (this.lastInputDirection == 4) {
+                ++this.scopeVelocityX;
             }
             inputDirection = 4;
         }
 
         if (GameEngine.inputForward) {
-            if (this.var_d2a == 1) {
-                --this.var_c1f;
+            if (this.lastInputDirection == 1) {
+                --this.scopeVelocityY;
             }
             inputDirection = 1;
         }
 
         if (GameEngine.inputBackward) {
-            if (this.var_d2a == 2) {
-                ++this.var_c1f;
+            if (this.lastInputDirection == 2) {
+                ++this.scopeVelocityY;
             }
             inputDirection = 2;
         }
 
-        this.var_d88 += this.var_be4 >> 2;
-        this.var_d9b += this.var_c1f >> 2;
+        this.scopePositionX += this.scopeVelocityX >> 2;
+        this.scopePositionY += this.scopeVelocityY >> 2;
 
         int maxSightX = PortalRenderer.VIEWPORT_WIDTH - 32;
         int maxSightY = PortalRenderer.VIEWPORT_HEIGHT - 32;
 
-        if (this.var_d88 > maxSightX) {
-            this.var_d88 = maxSightX;
-            this.var_be4 = 0;
+        if (this.scopePositionX > maxSightX) {
+            this.scopePositionX = maxSightX;
+            this.scopeVelocityX = 0;
         }
 
-        if (this.var_d88 < -31) {
-            this.var_d88 = -31;
-            this.var_be4 = 0;
+        if (this.scopePositionX < -31) {
+            this.scopePositionX = -31;
+            this.scopeVelocityX = 0;
         }
 
-        if (this.var_d9b > maxSightY) {
-            this.var_d9b = maxSightY;
-            this.var_c1f = 0;
+        if (this.scopePositionY > maxSightY) {
+            this.scopePositionY = maxSightY;
+            this.scopeVelocityY = 0;
         }
 
-        if (this.var_d9b < -31) {
-            this.var_d9b = -31;
-            this.var_c1f = 0;
+        if (this.scopePositionY < -31) {
+            this.scopePositionY = -31;
+            this.scopeVelocityY = 0;
         }
 
-        this.var_d2a = inputDirection;
+        this.lastInputDirection = inputDirection;
 
-        if (this.var_d2a == 0) {
-            if (this.var_be4 > 0) {
-                --this.var_be4;
+        if (this.lastInputDirection == 0) {
+            if (this.scopeVelocityX > 0) {
+                --this.scopeVelocityX;
             }
-            if (this.var_be4 < 0) {
-                ++this.var_be4;
+            if (this.scopeVelocityX < 0) {
+                ++this.scopeVelocityX;
             }
-            if (this.var_c1f > 0) {
-                --this.var_c1f;
+            if (this.scopeVelocityY > 0) {
+                --this.scopeVelocityY;
             }
-            if (this.var_c1f < 0) {
-                ++this.var_c1f;
+            if (this.scopeVelocityY < 0) {
+                ++this.scopeVelocityY;
             }
         }
 
@@ -1559,13 +1559,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             Image sightImage = Image.createImage("/gamedata/sniperminigame/sight.png");
-            this.sub_10f(level, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT,
+            this.loadSniperMiniGameResources(level, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT,
                     scenePixels, maskPixels, sightPixels);
 
-            this.var_be4 = 0;
-            this.var_c1f = 0;
-            this.var_d88 = PortalRenderer.HALF_VIEWPORT_WIDTH - 32;
-            this.var_d9b = PortalRenderer.HALF_VIEWPORT_HEIGHT - 32;
+            this.scopeVelocityX = 0;
+            this.scopeVelocityY = 0;
+            this.scopePositionX = PortalRenderer.HALF_VIEWPORT_WIDTH - 32;
+            this.scopePositionY = PortalRenderer.HALF_VIEWPORT_HEIGHT - 32;
 
             int[] freeSlots = new int[8];
             this.accumulatedTime = 0L;
@@ -1608,8 +1608,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
                 }
 
-                int[] normalPalette = this.var_b56;
-                int[] regularPalette = this.var_b23;
+                int[] normalPalette = this.paletteGray;
+                int[] regularPalette = this.paletteRegular;
 
                 if (totalDamage > 0) {
                     if (totalDamage > var_1329[GameEngine.difficultyLevel]) {
@@ -1627,13 +1627,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     if (GameEngine.applyDamage(totalDamage)) {
                         return -2;
                     } else {
-                        normalPalette = this.var_b96;
-                        regularPalette = this.var_b60;
+                        normalPalette = this.paletteGrayRed;
+                        regularPalette = this.paletteRedTint;
                     }
                 }
 
-                int sightX = this.var_d88;
-                int sightY = this.var_d9b;
+                int sightX = this.scopePositionX;
+                int sightY = this.scopePositionY;
                 int renderStartY = sightY < 0 ? 0 : sightY;
                 int renderEndY = sightY + 64;
                 if (renderEndY > PortalRenderer.VIEWPORT_HEIGHT) {
