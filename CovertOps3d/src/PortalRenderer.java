@@ -1256,7 +1256,7 @@ public class PortalRenderer {
             clippedBottomY = ceilingClipY;
         }
 
-        // Используем константы вместо "магических чисел"
+
         int columnAngle = MathUtils.fixedPointMultiply((column - HALF_SCREEN_WIDTH) << 16, skyboxAngleFactor);
         int angleCos = MathUtils.fastCos(columnAngle);
         int scaledX = MathUtils.fixedPointMultiply(column - HALF_SCREEN_WIDTH, skyboxScaleX);
