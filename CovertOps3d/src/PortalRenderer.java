@@ -1256,6 +1256,7 @@ public class PortalRenderer {
             clippedBottomY = ceilingClipY;
         }
 
+        // Используем константы вместо "магических чисел"
         int columnAngle = MathUtils.fixedPointMultiply((column - HALF_SCREEN_WIDTH) << 16, skyboxAngleFactor);
         int angleCos = MathUtils.fastCos(columnAngle);
         int scaledX = MathUtils.fixedPointMultiply(column - HALF_SCREEN_WIDTH, skyboxScaleX);
@@ -1271,7 +1272,7 @@ public class PortalRenderer {
         int startPixelIndex = clippedTopY * SCREEN_WIDTH + column;
         int endPixelIndex = clippedBottomY * SCREEN_WIDTH + column;
 
-        int textureStepV = -MathUtils.fixedPointMultiply(angleCos * 200, skyboxScaleY);
+        int textureStepV = MathUtils.fixedPointMultiply(angleCos * 200, skyboxScaleY);
         int textureV = -textureStepV * (HALF_SCREEN_HEIGHT - clippedTopY) + 6553600;
 
         int[] buffer = screenBuffer;
