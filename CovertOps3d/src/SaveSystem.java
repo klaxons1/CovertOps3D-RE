@@ -2,155 +2,206 @@ import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException;
 
 public class SaveSystem {
+
+    // ==================== Settings Fields ====================
     public static byte soundEnabled = 1;
     public static byte musicEnabled = 1;
     public static byte vibrationEnabled = 1;
     public static byte gameProgressFlags = 0;
+
+    // ==================== Save Data Fields ====================
+    /**
+     * Array holding save data for each level/chapter.
+     * Index corresponds to chapter ID.
+     */
     public static byte[][] saveData;
 
+    // ==================== Constants ====================
+    private static final String STORE_SETTINGS = "settings";
+    private static final String STORE_DATA_PREFIX = "data";
+
+    private static final int SAVE_SLOTS_COUNT = 9;
+    private static final int SAVE_RECORD_SIZE = 30;
+    private static final int SETTINGS_RECORD_SIZE = 16;
+
+    // Byte Offsets in Save Record
+    private static final int OFF_HEALTH = 0;
+    private static final int OFF_ARMOR = 1;
+    private static final int OFF_WEAPONS = 2;       // 9 bytes (1 per weapon)
+    private static final int OFF_AMMO_LOW = 11;     // 9 bytes (Low byte of ammo count)
+    private static final int OFF_AMMO_HIGH = 20;    // 9 bytes (High byte of ammo count)
+    private static final int OFF_CURRENT_WEAPON = 29;
+
+    /**
+     * Loads save data for the current difficulty level from RMS.
+     */
     public static void loadSaveData() {
-       try {
-          String var0;
-          label33: {
-             var0 = "data";
-             StringBuffer var10000;
-             String var10001;
-             if (GameEngine.difficultyLevel == 0) {
-                var10000 = (new StringBuffer()).append(var0);
-                var10001 = "e";
-             } else {
-                if (GameEngine.difficultyLevel != 2) {
-                   break label33;
+        try {
+            String storeName = getRecordStoreName();
+            RecordStore store = RecordStore.openRecordStore(storeName, true);
+
+            saveData = new byte[SAVE_SLOTS_COUNT][];
+            int recordsFound = store.getNumRecords();
+
+            if (recordsFound > SAVE_SLOTS_COUNT) {
+                recordsFound = SAVE_SLOTS_COUNT;
+            }
+
+            for (int i = 0; i < recordsFound; ++i) {
+                // Record IDs start at 1
+                saveData[i] = store.getRecord(i + 1);
+            }
+
+            store.closeRecordStore();
+        } catch (RecordStoreException e) {
+            // Log or handle error silently
+        } catch (OutOfMemoryError e) {
+            // Handle OOM
+        }
+    }
+
+    /**
+     * Restores game state (Health, Ammo, Weapons) from the loaded save data buffer.
+     * @param slotIndex The chapter/level index to load from.
+     */
+    public static void loadGameState(int slotIndex) {
+        if (saveData[slotIndex] == null) return;
+
+        byte[] data = saveData[slotIndex];
+
+        GameEngine.playerHealth = data[OFF_HEALTH];
+        GameEngine.playerArmor = data[OFF_ARMOR];
+
+        for (int i = 0; i < 9; ++i) {
+            // Restore available weapons
+            GameEngine.weaponsAvailable[i] = data[OFF_WEAPONS + i] == 1;
+
+            // Restore ammo (combine Low and High bytes)
+            int lowByte = data[OFF_AMMO_LOW + i] & 0xFF;
+            int highByte = data[OFF_AMMO_HIGH + i] & 0xFF;
+            GameEngine.ammoCounts[i] = lowByte + (highByte << 8);
+        }
+
+        GameEngine.currentWeapon = data[OFF_CURRENT_WEAPON];
+        GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
+    }
+
+    /**
+     * Captures current game state and saves it to memory buffer and RMS.
+     * @param slotIndex The chapter/level index to save to.
+     */
+    public static void saveGameState(int slotIndex) {
+        saveData[slotIndex] = new byte[SAVE_RECORD_SIZE];
+        byte[] data = saveData[slotIndex];
+
+        data[OFF_HEALTH] = (byte) GameEngine.playerHealth;
+        data[OFF_ARMOR] = (byte) GameEngine.playerArmor;
+
+        for (int i = 0; i < 9; ++i) {
+            data[OFF_WEAPONS + i] = (byte) (GameEngine.weaponsAvailable[i] ? 1 : 0);
+
+            // Split ammo count (int) into two bytes
+            int ammo = GameEngine.ammoCounts[i];
+            data[OFF_AMMO_LOW + i] = (byte) (ammo & 0xFF);
+            data[OFF_AMMO_HIGH + i] = (byte) ((ammo >> 8) & 0xFF);
+        }
+
+        data[OFF_CURRENT_WEAPON] = (byte) GameEngine.currentWeapon;
+
+        writeSaveDataToRMS();
+    }
+
+    /**
+     * Writes the in-memory save buffers to persistent storage (RMS).
+     */
+    public static void writeSaveDataToRMS() {
+        try {
+            String storeName = getRecordStoreName();
+            RecordStore store = RecordStore.openRecordStore(storeName, true);
+            int existingRecords = store.getNumRecords();
+
+            for (int i = 0; i < SAVE_SLOTS_COUNT; ++i) {
+                byte[] data = saveData[i];
+                int length = (data == null) ? 0 : data.length;
+
+                // Update existing record or add new one
+                if (existingRecords > i) {
+                    store.setRecord(i + 1, data, 0, length);
+                } else if (length > 0) {
+                    store.addRecord(data, 0, length);
                 }
+            }
 
-                var10000 = (new StringBuffer()).append(var0);
-                var10001 = "h";
-             }
-
-             var0 = var10000.append(var10001).toString();
-          }
-
-          RecordStore var1 = RecordStore.openRecordStore(var0, true);
-          saveData = new byte[9][];
-          int var2;
-          if ((var2 = var1.getNumRecords()) > 9) {
-             var2 = 9;
-          }
-
-          for(int var3 = 0; var3 < var2; ++var3) {
-             saveData[var3] = var1.getRecord(var3 + 1);
-          }
-
-          var1.closeRecordStore();
-       } catch (RecordStoreException var4) {
-       } catch (OutOfMemoryError var5) {
-       }
+            store.closeRecordStore();
+        } catch (RecordStoreException e) {
+            e.printStackTrace();
+        } catch (OutOfMemoryError e) {
+            e.printStackTrace();
+        }
     }
 
-    public static void loadGameState(int var0) {
-       GameEngine.playerHealth = saveData[var0][0];
-       GameEngine.playerArmor = saveData[var0][1];
-
-       for(int var1 = 0; var1 < 9; ++var1) {
-          GameEngine.weaponsAvailable[var1] = saveData[var0][2 + var1] == 1;
-          GameEngine.ammoCounts[var1] = (saveData[var0][11 + var1] & 255) + ((saveData[var0][20 + var1] & 255) << 8);
-       }
-
-       GameEngine.currentWeapon = saveData[var0][29];
-       GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
-    }
-
-    public static void saveGameState(int var0) {
-       saveData[var0] = new byte[30];
-       saveData[var0][0] = (byte) GameEngine.playerHealth;
-       saveData[var0][1] = (byte) GameEngine.playerArmor;
-
-       for(int var1 = 0; var1 < 9; ++var1) {
-          saveData[var0][2 + var1] = (byte)(GameEngine.weaponsAvailable[var1] ? 1 : 0);
-          saveData[var0][11 + var1] = (byte)(GameEngine.ammoCounts[var1] & 255);
-          saveData[var0][20 + var1] = (byte)(GameEngine.ammoCounts[var1] >> 8 & 255);
-       }
-
-       saveData[var0][29] = (byte) GameEngine.currentWeapon;
-       writeSaveData();
-    }
-
-    public static void writeSaveData() {
-       try {
-          String var0;
-          label39: {
-             var0 = "data";
-             StringBuffer var10000;
-             String var10001;
-             if (GameEngine.difficultyLevel == 0) {
-                var10000 = (new StringBuffer()).append(var0);
-                var10001 = "e";
-             } else {
-                if (GameEngine.difficultyLevel != 2) {
-                   break label39;
-                }
-
-                var10000 = (new StringBuffer()).append(var0);
-                var10001 = "h";
-             }
-
-             var0 = var10000.append(var10001).toString();
-          }
-
-          RecordStore var1;
-          int var2 = (var1 = RecordStore.openRecordStore(var0, true)).getNumRecords();
-
-          for(int var3 = 0; var3 < 9; ++var3) {
-             int var4 = saveData[var3] == null ? 0 : saveData[var3].length;
-             if (var2 > var3) {
-                var1.setRecord(var3 + 1, saveData[var3], 0, var4);
-             } else if (var4 > 0) {
-                var1.addRecord(saveData[var3], 0, var4);
-             }
-          }
-
-          var1.closeRecordStore();
-       } catch (RecordStoreException var5) {
-       } catch (OutOfMemoryError var6) {
-       }
-    }
-
+    /**
+     * Loads global settings (Sound, Music, Vibration) from RMS.
+     */
     public static void loadSettingsFromRMS() {
-       try {
-          RecordStore var0 = RecordStore.openRecordStore("settings", true);
-          Object var1 = null;
-          if (var0.getNumRecords() > 0) {
-             byte[] var5;
-             soundEnabled = (var5 = var0.getRecord(1))[0];
-             musicEnabled = var5[1];
-             vibrationEnabled = var5[2];
-             gameProgressFlags = var5[3];
-          }
+        try {
+            RecordStore store = RecordStore.openRecordStore(STORE_SETTINGS, true);
 
-          var0.closeRecordStore();
-       } catch (RecordStoreException var3) {
-       } catch (OutOfMemoryError var4) {
-       }
+            if (store.getNumRecords() > 0) {
+                byte[] data = store.getRecord(1);
+                soundEnabled = data[0];
+                musicEnabled = data[1];
+                vibrationEnabled = data[2];
+                gameProgressFlags = data[3];
+            }
+
+            store.closeRecordStore();
+        } catch (RecordStoreException e) {
+            // Settings load failed, using defaults
+        } catch (OutOfMemoryError e) {
+        }
     }
 
+    /**
+     * Saves global settings to RMS.
+     */
     public static void saveSettingsToRMS() {
-       try {
-          RecordStore var0;
-          int var1 = (var0 = RecordStore.openRecordStore("settings", true)).getNumRecords();
-          byte[] var2;
-          (var2 = new byte[16])[0] = soundEnabled;
-          var2[1] = musicEnabled;
-          var2[2] = vibrationEnabled;
-          var2[3] = gameProgressFlags;
-          if (var1 > 0) {
-             var0.setRecord(1, var2, 0, 16);
-          } else {
-             var0.addRecord(var2, 0, 16);
-          }
+        try {
+            RecordStore store = RecordStore.openRecordStore(STORE_SETTINGS, true);
+            int records = store.getNumRecords();
 
-          var0.closeRecordStore();
-       } catch (RecordStoreException var3) {
-       } catch (OutOfMemoryError var4) {
-       }
+            byte[] data = new byte[SETTINGS_RECORD_SIZE];
+            data[0] = soundEnabled;
+            data[1] = musicEnabled;
+            data[2] = vibrationEnabled;
+            data[3] = gameProgressFlags;
+
+            if (records > 0) {
+                store.setRecord(1, data, 0, SETTINGS_RECORD_SIZE);
+            } else {
+                store.addRecord(data, 0, SETTINGS_RECORD_SIZE);
+            }
+
+            store.closeRecordStore();
+        } catch (RecordStoreException e) {
+        } catch (OutOfMemoryError e) {
+        }
+    }
+
+    /**
+     * Helper to construct RecordStore name based on difficulty.
+     * "data" -> Normal
+     * "datae" -> Easy
+     * "datah" -> Hard
+     */
+    private static String getRecordStoreName() {
+        String suffix = "";
+        if (GameEngine.difficultyLevel == 0) { // Easy
+            suffix = "e";
+        } else if (GameEngine.difficultyLevel == 2) { // Hard
+            suffix = "h";
+        }
+        // Normal difficulty uses just "data"
+        return STORE_DATA_PREFIX + suffix;
     }
 }
