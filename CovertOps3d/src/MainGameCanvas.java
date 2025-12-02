@@ -25,8 +25,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public boolean isGameInitialized = true;
     public boolean areResourcesLoaded = false;
     public static CovertOps3D mainMidlet = null;
-
-    private static final String[] levelFileNames = new String[]{
+    private static final String LEVEL_PATH_PREFIX = "/gamedata/levels/level_";
+    private static final String[] LEVEL_FILE_NAMES = new String[]{
             "01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
     };
 
@@ -2173,13 +2173,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     private void loadLevelResources() {
         try {
             freeMemory();
-
+            String fullLevelPath = LEVEL_PATH_PREFIX + LEVEL_FILE_NAMES[currentLevelId];
             if (previousLevelId < currentLevelId) {
                 if (previousLevelId > -1) {
                     this.cachedStaticObjects = LevelLoader.gameWorld.staticObjects;
                 }
 
-                if (!LevelLoader.loadMapData("/gamedata/levels/level_" + levelFileNames[currentLevelId],
+                if (!LevelLoader.loadMapData(LEVEL_PATH_PREFIX + LEVEL_FILE_NAMES[currentLevelId],
                         this.nextLevelObjects == null)) {
                     CovertOps3D.exitApplication();
                 }
@@ -2193,7 +2193,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
             } else {
                 this.nextLevelObjects = LevelLoader.gameWorld.staticObjects;
-                if (!LevelLoader.loadMapData("/level_" + levelFileNames[currentLevelId],
+                if (!LevelLoader.loadMapData(fullLevelPath,
                         this.cachedStaticObjects == null)) {
                     CovertOps3D.exitApplication();
                 }
@@ -2240,7 +2240,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             continue;
                         case 10:
                             preloadObjectTextures(obj, var9, var10);
-                            if (levelFileNames[currentLevelId] == "06c") {
+                            if (LEVEL_FILE_NAMES[currentLevelId] == "06c") {
                                 obj.currentState = 1;
                             }
                             continue;
