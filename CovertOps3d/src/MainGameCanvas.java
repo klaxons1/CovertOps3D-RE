@@ -2755,7 +2755,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             if (c == ' ') {
                 width += this.var_59b;
             } else {
-                int[] coords = this.sub_62f(c);
+                int[] coords = this.getFontCharCoordinates(c);
                 int charWidth = this.var_65d[coords[1] * this.var_4db + coords[0]];
                 width += charWidth;
             }
@@ -2781,7 +2781,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         return width;
     }
 
-    private int[] sub_62f(char c) {
+    private int[] getFontCharCoordinates(char c) {
         int[] coords = new int[]{this.var_4db - 1, 2};
 
         if (c >= 'a' && c <= 'r') {
@@ -2890,7 +2890,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             if (c == ' ') {
                 x += this.var_59b;
             } else {
-                int[] coords = this.sub_62f(c);
+                int[] coords = this.getFontCharCoordinates(c);
                 int fontIdx = coords[1] * this.var_4db + coords[0];
                 int charWidth = this.var_65d[fontIdx];
                 int charX = this.var_5fa[fontIdx];
