@@ -33,7 +33,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static int currentLevelId = 0;
     public static int previousLevelId = -1;
     public static int keyMappingOffset;
-    public static AudioManager audioManager;
 
     private String[] SETTINGS_MENU_ITEMS;
     private String[] chapterMenuItems;
@@ -365,17 +364,17 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     }
 
     public void run() {
-        audioManager = new AudioManager();
-        audioManager.loadSound("/gamedata/sound/0.mid");
-        audioManager.loadSound("/gamedata/sound/1.amr");
-        audioManager.loadSound("/gamedata/sound/2.amr");
-        audioManager.loadSound("/gamedata/sound/3.amr");
-        audioManager.loadSound("/gamedata/sound/4.amr");
-        audioManager.loadSound("/gamedata/sound/5.amr");
-        audioManager.loadSound("/gamedata/sound/6.amr");
-        audioManager.loadSound("/gamedata/sound/7.amr");
-        audioManager.loadSound("/gamedata/sound/8.amr");
-        audioManager.loadSound("/gamedata/sound/9.amr");
+        HelperUtils.audioManager = new AudioManager();
+        HelperUtils.audioManager.loadSound("/gamedata/sound/0.mid");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/1.amr");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/2.amr");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/3.amr");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/4.amr");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/5.amr");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/6.amr");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/7.amr");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/8.amr");
+        HelperUtils.audioManager.loadSound("/gamedata/sound/9.amr");
 
         Graphics graphics = this.getGraphics();
         graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
@@ -579,7 +578,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
 
                     this.flushScreenBuffer();
-                    yieldToOtherThreads();
+                    HelperUtils.yieldToOtherThreads();
                 } catch (Exception e) {
                 } catch (OutOfMemoryError e) {
                 }
@@ -707,16 +706,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private static void fastArrayFill(Object buffer, int offset, int length) {
-        int step = 1;
-
-        while(step < length) {
-            System.arraycopy(buffer, offset, buffer, offset + step,
-                    (length - step > step) ? step : (length - step));
-            step += step;
-        }
-    }
-
     private void drawSplash(Graphics graphics) {
         try {
             Image logo = Image.createImage("/gamedata/sprites/logo.png");
@@ -756,22 +745,22 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
 
                         fadeBuffer[0] = fadeColor;
-                        fastArrayFill(fadeBuffer, 0, pixelCount);
+                        HelperUtils.fastArrayFill(fadeBuffer, 0, pixelCount);
                         graphics.drawImage(splash, 0, 0, 20);
                         graphics.drawRGB(fadeBuffer, 0, splash.getWidth(), 0, 0,
                                 splash.getWidth(), splash.getHeight(), true);
                         this.flushScreenBuffer();
-                        yieldToOtherThreads();
+                        HelperUtils.yieldToOtherThreads();
                     }
                 }
 
                 fadeBuffer[0] = fadeColor;
-                fastArrayFill(fadeBuffer, 0, pixelCount);
+                HelperUtils.fastArrayFill(fadeBuffer, 0, pixelCount);
                 graphics.drawImage(logo, logoX, logoY, 20);
                 graphics.drawRGB(fadeBuffer, 0, logo.getWidth(), logoX, logoY,
                         logo.getWidth(), logo.getHeight(), true);
                 this.flushScreenBuffer();
-                yieldToOtherThreads();
+                HelperUtils.yieldToOtherThreads();
             }
         } catch (Exception e) {
         } catch (OutOfMemoryError e) {
@@ -784,7 +773,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
             PortalRenderer.screenBuffer[0] = -2130771968;
-            fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+            HelperUtils.fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
 
             graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                     0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
@@ -794,7 +783,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             String message = "mission failed|game over";
             this.drawMultiLineMessage(graphics, message);
             this.flushScreenBuffer();
-            delay(2000);
+            HelperUtils.delay(2000);
 
             long startTime = System.currentTimeMillis();
 
@@ -812,7 +801,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 PortalRenderer.screenBuffer[0] = fadeColor;
-                fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                HelperUtils.fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(splash, 0, 0, 20);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
@@ -820,7 +809,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 this.drawMultiLineMessage(graphics, message);
                 this.flushScreenBuffer();
-                yieldToOtherThreads();
+                HelperUtils.yieldToOtherThreads();
             }
         } catch (Exception e) {
             return;
@@ -888,7 +877,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             this.drawStripedBackground(graphics, background);
 
             if (SaveSystem.musicEnabled == 1 && !this.isGamePaused) {
-                playSound(0, true, 80, 2);
+                HelperUtils.playSound(0, true, 80, 2);
             }
 
             Stack menuStack = new Stack();
@@ -940,7 +929,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(menuItems[totalItems]) - 3,
                         UI_HEIGHT - this.menuItemHeight - 3);
                 this.flushScreenBuffer();
-                yieldToOtherThreads();
+                HelperUtils.yieldToOtherThreads();
 
                 Object[] stackData = new Object[0];
 
@@ -1052,7 +1041,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         case 78:
                         case 79:
                         default:
-                            stopCurrentSound();
+                            HelperUtils.stopCurrentSound();
                             return menuMode;
 
                         case 18:
@@ -1090,9 +1079,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
                             if (SaveSystem.musicEnabled != 1) {
                                 if (SaveSystem.soundEnabled == 1) {
-                                    playSound(1, false, 80, 0);
+                                    HelperUtils.playSound(1, false, 80, 0);
                                 } else {
-                                    stopCurrentSound();
+                                    HelperUtils.stopCurrentSound();
                                 }
                             }
                             SaveSystem.saveSettingsToRMS();
@@ -1102,10 +1091,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             SaveSystem.musicEnabled = (byte)(SaveSystem.musicEnabled ^ 1);
                             this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
                             if (SaveSystem.musicEnabled == 1) {
-                                stopCurrentSound();
-                                playSound(0, true, 80, 2);
+                                HelperUtils.stopCurrentSound();
+                                HelperUtils.playSound(0, true, 80, 2);
                             } else {
-                                stopCurrentSound();
+                                HelperUtils.stopCurrentSound();
                             }
                             SaveSystem.saveSettingsToRMS();
                             break;
@@ -1114,7 +1103,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             SaveSystem.vibrationEnabled = (byte)(SaveSystem.vibrationEnabled ^ 1);
                             this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
                             if (SaveSystem.vibrationEnabled == 1) {
-                                vibrateDevice(100);
+                                HelperUtils.vibrateDevice(100);
                             }
                             SaveSystem.saveSettingsToRMS();
                             break;
@@ -1129,13 +1118,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         case 73:
                         case 74:
                             if (!this.chapterMenuItems[menuMode - 64].equals("unavailable")) {
-                                stopCurrentSound();
+                                HelperUtils.stopCurrentSound();
                                 return menuMode;
                             }
                             break;
 
                         case 80:
-                            stopCurrentSound();
+                            HelperUtils.stopCurrentSound();
                             return 4;
                     }
                 }
@@ -1190,10 +1179,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
             }
         } catch (Exception e) {
-            stopCurrentSound();
+            HelperUtils.stopCurrentSound();
             return 4;
         } catch (OutOfMemoryError e) {
-            stopCurrentSound();
+            HelperUtils.stopCurrentSound();
             return 4;
         }
     }
@@ -1216,15 +1205,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             for(int fadeStep = 1; fadeStep <= 8; ++fadeStep) {
                 PortalRenderer.screenBuffer[0] = 16777215 | (fadeStep * 268435456);
-                fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                HelperUtils.fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(background, 0, 0, 20);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 this.flushScreenBuffer();
-                yieldToOtherThreads();
-                delay(50);
+                HelperUtils.yieldToOtherThreads();
+                HelperUtils.delay(50);
             }
 
             long lastScrollTime = System.currentTimeMillis();
@@ -1262,7 +1251,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         int remainingDelay = scrollSteps * 50 - elapsed;
                         if (remainingDelay > 0) {
-                            delay(remainingDelay);
+                            HelperUtils.delay(remainingDelay);
                         }
                         lastScrollTime = currentTime;
                     } else {
@@ -1283,7 +1272,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 needsUpdate = scrolling;
-                yieldToOtherThreads();
+                HelperUtils.yieldToOtherThreads();
             } while(!GameEngine.inputBack);
 
             GameEngine.inputBack = false;
@@ -1291,15 +1280,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             for(int fadeStep = 8; fadeStep >= 1; --fadeStep) {
                 PortalRenderer.screenBuffer[0] = 16777215 | (fadeStep * 268435456);
-                fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+                HelperUtils.fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(background, 0, 0, 20);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 this.flushScreenBuffer();
-                yieldToOtherThreads();
-                delay(50);
+                HelperUtils.yieldToOtherThreads();
+                HelperUtils.delay(50);
             }
         } catch (Exception e) {
         } catch (OutOfMemoryError e) {
@@ -1614,15 +1603,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 if (totalDamage > 0) {
                     if (totalDamage > var_1329[GameEngine.difficultyLevel]) {
                         if (totalDamage > var_1358[GameEngine.difficultyLevel]) {
-                            playSound(2, false, 100, 0);
+                            HelperUtils.playSound(2, false, 100, 0);
                         } else {
-                            playSound(2, false, 80, 0);
+                            HelperUtils.playSound(2, false, 80, 0);
                         }
                     } else {
-                        playSound(2, false, 60, 0);
+                        HelperUtils.playSound(2, false, 60, 0);
                     }
 
-                    vibrateDevice(totalDamage * 10);
+                    HelperUtils.vibrateDevice(totalDamage * 10);
 
                     if (GameEngine.applyDamage(totalDamage)) {
                         return -2;
@@ -1681,7 +1670,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                 break;
                         }
 
-                        copyToScreenBuffer(enemySprites[i], spriteW, spriteH, enemyX, enemyY, totalDamage > 0);
+                        PortalRenderer.copyToScreenBuffer(enemySprites[i], spriteW, spriteH, enemyX, enemyY, totalDamage > 0);
 
                         if (enemyStates[i] == 4) {
                             enemyStates[i] = (enemyPositions[i] & 1) == 1 ? 1 : 5;
@@ -1719,7 +1708,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                     ? var12[enemyStates[i] - 1]
                                     : var13[enemyStates[i] - 1];
 
-                            copyToScreenBuffer(enemySprites[i], spriteW, spriteH, enemyX, enemyY, totalDamage > 0);
+                            PortalRenderer.copyToScreenBuffer(enemySprites[i], spriteW, spriteH, enemyX, enemyY, totalDamage > 0);
 
                             if (enemyStates[i] == 4) {
                                 enemyStates[i] = (enemyPositions[i] & 1) == 1 ? 1 : 5;
@@ -1791,7 +1780,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                             if (hitEnemy = level == 0 && speedType == 0 ? true
                                     : enemySprites[i][spriteW * spritePixelY + spritePixelX] != 16711935) {
-                                playSound(7, false, 100, 1);
+                                HelperUtils.playSound(7, false, 100, 1);
                                 enemyStates[i] = 0;
                                 hitColor = 16711680;
                                 break;
@@ -1800,7 +1789,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
 
                     if (!hitEnemy) {
-                        playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
+                        HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                     }
 
                     PortalRenderer.screenBuffer[PortalRenderer.VIEWPORT_WIDTH * centerY + centerX] = hitColor;
@@ -1815,40 +1804,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 this.drawHUDNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
                 this.flushScreenBuffer();
 
-                yieldToOtherThreads();
+                HelperUtils.yieldToOtherThreads();
             }
         } catch (Exception e) {
         } catch (OutOfMemoryError e) {
         }
 
         return -1;
-    }
-
-    private static void copyToScreenBuffer(int[] sprite, int width, int height, int x, int y, boolean redTint) {
-        int bufferIdx = PortalRenderer.VIEWPORT_WIDTH * y + x;
-        int spriteIdx = 0;
-
-        if (!redTint) {
-            for(int row = 0; row < height; ++row) {
-                for(int col = 0; col < width; ++col) {
-                    int pixel = sprite[spriteIdx++];
-                    if (pixel != 16711935) {
-                        PortalRenderer.screenBuffer[bufferIdx + col] = pixel;
-                    }
-                }
-                bufferIdx += PortalRenderer.VIEWPORT_WIDTH;
-            }
-        } else {
-            for(int row = 0; row < height; ++row) {
-                for(int col = 0; col < width; ++col) {
-                    int pixel = sprite[spriteIdx++];
-                    if (pixel != 16711935) {
-                        PortalRenderer.screenBuffer[bufferIdx + col] = pixel | 16711680;
-                    }
-                }
-                bufferIdx += PortalRenderer.VIEWPORT_WIDTH;
-            }
-        }
     }
 
     private void drawMultiLineMessage(Graphics graphics, String message) {
@@ -1887,16 +1849,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public final void stopGame() {
         if (!this.isGamePaused) {
             this.isGamePaused = true;
-            if (audioManager != null) {
-                audioManager.stopCurrentSound();
+            if (HelperUtils.audioManager != null) {
+                HelperUtils.audioManager.stopCurrentSound();
             }
         }
     }
 
     public final void resumeGame() {
         if (this.isGamePaused) {
-            if (audioManager != null && SaveSystem.musicEnabled == 1 && this.areResourcesLoaded) {
-                playSound(0, true, 80, 2);
+            if (HelperUtils.audioManager != null && SaveSystem.musicEnabled == 1 && this.areResourcesLoaded) {
+                HelperUtils.playSound(0, true, 80, 2);
             }
             this.isGamePaused = false;
         }
@@ -2141,20 +2103,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    private static void preloadObjectTextures(GameObject object, byte[] sprites1, byte[] sprites2) {
-        for(int i = 0; i < sprites1.length; ++i) {
-            byte sprite1 = sprites1[i];
-            byte sprite2 = sprites2[i];
-            object.addSpriteFrame(sprite1, sprite2);
-            if (sprite1 != 0) {
-                LevelLoader.preloadTexture(sprite1);
-            }
-            if (sprite2 != 0) {
-                LevelLoader.preloadTexture(sprite2);
-            }
-        }
-    }
-
     private void initializeGameResources() {
         try {
             this.statusBarImage = Image.createImage("/gamedata/sprites/bar.png");
@@ -2172,7 +2120,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private void loadLevelResources() {
         try {
-            freeMemory();
+            HelperUtils.freeMemory();
             String fullLevelPath = LEVEL_PATH_PREFIX + LEVEL_FILE_NAMES[currentLevelId];
             if (previousLevelId < currentLevelId) {
                 if (previousLevelId > -1) {
@@ -2204,7 +2152,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
             }
 
-            freeMemory();
+            HelperUtils.freeMemory();
             GameEngine.resetLevelState();
 
             LevelLoader.preloadTexture((byte)25);
@@ -2239,13 +2187,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             LevelLoader.preloadTexture((byte)-53);
                             continue;
                         case 10:
-                            preloadObjectTextures(obj, var9, var10);
+                            HelperUtils.preloadObjectTextures(obj, var9, var10);
                             if (LEVEL_FILE_NAMES[currentLevelId] == "06c") {
                                 obj.currentState = 1;
                             }
                             continue;
                         case 12:
-                            preloadObjectTextures(obj, var13, var14);
+                            HelperUtils.preloadObjectTextures(obj, var13, var14);
                             continue;
                         case 26:
                             obj.addSpriteFrame((byte)0, (byte)-16);
@@ -2323,27 +2271,27 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             LevelLoader.preloadTexture((byte)-56);
                             continue;
                         case 3001:
-                            preloadObjectTextures(obj, var11, var12);
+                            HelperUtils.preloadObjectTextures(obj, var11, var12);
                             LevelLoader.preloadTexture((byte)-57);
                             continue;
                         case 3002:
-                            preloadObjectTextures(obj, var15, var16);
+                            HelperUtils.preloadObjectTextures(obj, var15, var16);
                             LevelLoader.preloadTexture((byte)-56);
                             continue;
                         case 3003:
-                            preloadObjectTextures(obj, var2, var3);
+                            HelperUtils.preloadObjectTextures(obj, var2, var3);
                             LevelLoader.preloadTexture((byte)-48);
                             continue;
                         case 3004:
-                            preloadObjectTextures(obj, var5, var6);
+                            HelperUtils.preloadObjectTextures(obj, var5, var6);
                             LevelLoader.preloadTexture((byte)-54);
                             continue;
                         case 3005:
-                            preloadObjectTextures(obj, var4, var6);
+                            HelperUtils.preloadObjectTextures(obj, var4, var6);
                             LevelLoader.preloadTexture((byte)-48);
                             continue;
                         case 3006:
-                            preloadObjectTextures(obj, var7, var8);
+                            HelperUtils.preloadObjectTextures(obj, var7, var8);
                             LevelLoader.preloadTexture((byte)-54);
                             continue;
                         default:
@@ -2367,14 +2315,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 LevelLoader.preloadTexture((byte)-72);
             }
 
-            freeMemory();
+            HelperUtils.freeMemory();
 
             if (!LevelLoader.loadGameAssets("/gamedata/textures/tx", 4, "/gamedata/textures/sp", 4)) {
                 CovertOps3D.exitApplication();
             }
 
             GameEngine.handleWeaponChange((byte)25);
-            freeMemory();
+            HelperUtils.freeMemory();
         } catch (Exception e) {
         } catch (OutOfMemoryError e) {
         }
@@ -2387,7 +2335,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
         int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
         PortalRenderer.screenBuffer[0] = Integer.MIN_VALUE;
-        fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
+        HelperUtils.fastArrayFill(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
 
         graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                 0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
@@ -2482,7 +2430,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 charIndices[boxId] = 0;
                 currentText[boxId] = line;
-                delay(500);
+                HelperUtils.delay(500);
 
                 if (needsFade[boxId]) {
                     needsFade[boxId] = false;
@@ -2556,7 +2504,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
 
                     this.flushScreenBuffer();
-                    delay(c == ',' ? 300 : (c != '.' && c != '?' && c != '!' ? 50 : 400));
+                    HelperUtils.delay(c == ',' ? 300 : (c != '.' && c != '?' && c != '!' ? 50 : 400));
 
                     long currentTime = System.currentTimeMillis();
                     for(int b = 0; b < 3; ++b) {
@@ -2580,7 +2528,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         while(!GameEngine.inputRun && !GameEngine.inputBack
                                 && !this.isGamePaused && !GameEngine.inputFire) {
-                            yieldToOtherThreads();
+                            HelperUtils.yieldToOtherThreads();
                         }
                     }
 
@@ -2672,7 +2620,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         return -1;
                     }
 
-                    yieldToOtherThreads();
+                    HelperUtils.yieldToOtherThreads();
                 }
 
                 charIndices[boxId] = 0;
@@ -2681,10 +2629,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 boxEndY[boxId] = textY;
                 boxEndY[boxId] = maxY;
                 fadeTimers[boxId] = System.currentTimeMillis() + 5000L;
-                delay(500);
+                HelperUtils.delay(500);
             }
 
-            delay(5000);
+            HelperUtils.delay(5000);
             this.smallFontImage = null;
         } catch (Exception e) {
         } catch (OutOfMemoryError e) {
@@ -2729,21 +2677,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         lineStarts[lineStarts.length - 1] = startChar;
     }
 
-    public static void delay(int milliseconds) {
-        long start = System.currentTimeMillis();
-        do {
-            yieldToOtherThreads();
-        } while(System.currentTimeMillis() - start < (long)milliseconds);
-    }
-
     private void drawHUDNumber(int value, Graphics graphics, int x, int y) {
         String text = Integer.toString(value);
         int centerOffset = this.getLargeTextWidth(text) / 2;
         this.drawLargeString(text, graphics, x - centerOffset, y);
-    }
-
-    public static void freeMemory() {
-        System.gc();
     }
 
     private int getLargeTextWidth(String text) {
@@ -2921,34 +2858,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         }
     }
 
-    public static void playSound(int soundId, boolean loop, int volume, int priority) {
-        boolean isMusic = soundId > 0;
-        if (!isMusic || SaveSystem.soundEnabled != 0) {
-            int loopCount = loop ? -1 : 1;
-            audioManager.setVolume(volume);
-            audioManager.playSound(soundId, loopCount, priority);
-        }
-    }
-
-    public static void stopCurrentSound() {
-        audioManager.stopCurrentSound();
-    }
-
-    public static void vibrateDevice(int duration) {
-        if (SaveSystem.vibrationEnabled != 0) {
-            try {
-                CovertOps3D.display.vibrate(duration);
-            } catch (Exception e) {
-            } catch (OutOfMemoryError e) {
-            }
-        }
-    }
-
     private void flushScreenBuffer() {
         this.flushGraphics();
     }
 
-    private static void yieldToOtherThreads() {
-        Thread.yield();
-    }
 }

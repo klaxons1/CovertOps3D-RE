@@ -322,7 +322,7 @@ public final class GameWorld {
                continue;
             }
 
-            MainGameCanvas.playSound(1, false, 80, 0);
+            HelperUtils.playSound(1, false, 80, 0);
          }
       }
 
@@ -487,7 +487,7 @@ public final class GameWorld {
                   GameEngine.levelTransitionState = 1;
                }
 
-               MainGameCanvas.playSound(1, false, 80, 0);
+               HelperUtils.playSound(1, false, 80, 0);
             }
          }
       }
@@ -760,7 +760,7 @@ public final class GameWorld {
       int var6 = GameEngine.player.x + MathUtils.fixedPointMultiply(var5, var4);
       int var7 = GameEngine.player.z + MathUtils.fixedPointMultiply(var5, var3);
       if (GameEngine.currentWeapon == 5) {
-         MainGameCanvas.playSound(4, false, 100, 2);
+         HelperUtils.playSound(4, false, 100, 2);
          Transform3D var15 = new Transform3D(var6, GameEngine.cameraHeight - 655360, var7, var1);
          if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z, var15.x, var15.z, var15.y)) {
             GameObject var16;
@@ -773,7 +773,7 @@ public final class GameWorld {
       } else {
          int var9;
          if (GameEngine.currentWeapon == 7) {
-            MainGameCanvas.playSound(5, false, 100, 2);
+            HelperUtils.playSound(5, false, 100, 2);
             var3 = MathUtils.fastSin(var1);
             var4 = MathUtils.fastCos(var1);
             int var14 = 10 * var4;
@@ -835,7 +835,7 @@ public final class GameWorld {
                               var19 = 9;
                            }
 
-                           MainGameCanvas.playSound(var19, false, 100, 1);
+                           HelperUtils.playSound(var19, false, 100, 1);
                            var8 = true;
                         }
 
@@ -848,11 +848,11 @@ public final class GameWorld {
 
             if (!var8) {
                if (GameEngine.currentWeapon == 1 || GameEngine.currentWeapon == 2) {
-                  MainGameCanvas.playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
+                  HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                }
 
                if (GameEngine.currentWeapon == 3 || GameEngine.currentWeapon == 4) {
-                  MainGameCanvas.playSound((GameEngine.random.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
+                  HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
                }
             }
 
@@ -941,13 +941,13 @@ public final class GameWorld {
                continue;
             }
 
-            MainGameCanvas.playSound(4, false, 100, 2);
+            HelperUtils.playSound(4, false, 100, 2);
             int var3;
             if (this.checkLineOfSight(var2.transform, GameEngine.player)) {
                var3 = var2.transform.x - GameEngine.player.x;
                var4 = var2.transform.z - GameEngine.player.z;
                if ((var5 = MainGameCanvas.var_1113[GameEngine.difficultyLevel] - (MathUtils.fixedPointMultiply(MathUtils.fastHypot(var3, var4), MainGameCanvas.var_10c4[GameEngine.difficultyLevel]) >> 16)) > 0) {
-                  MainGameCanvas.vibrateDevice(var5 * 10);
+                  HelperUtils.vibrateDevice(var5 * 10);
                   if (GameEngine.applyDamage(var5)) {
                      return true;
                   }
@@ -990,10 +990,10 @@ public final class GameWorld {
             int var9 = (var2.objectType == 102 ? MainGameCanvas.var_104c : MainGameCanvas.var_1071)[GameEngine.difficultyLevel];
             if (doesLineIntersectCircle(var4, var5, var6, var7, GameEngine.player.x, GameEngine.player.z, 655360)) {
                if (var2.objectType == 101) {
-                  MainGameCanvas.playSound(4, false, 100, 2);
+                  HelperUtils.playSound(4, false, 100, 2);
                }
 
-               MainGameCanvas.vibrateDevice(var9 * 10);
+               HelperUtils.vibrateDevice(var9 * 10);
                if (GameEngine.applyDamage(var9)) {
                   return true;
                }

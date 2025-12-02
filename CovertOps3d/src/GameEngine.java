@@ -80,7 +80,7 @@ public final class GameEngine {
      * Must be called once before game starts.
      */
     public static void initializeEngine() {
-        MainGameCanvas.freeMemory();
+        HelperUtils.freeMemory();
         LevelLoader.initResourceArrays();
 
         player = new PhysicsBody(0, 1572864, 0, 65536);
@@ -136,7 +136,7 @@ public final class GameEngine {
         PortalRenderer.skyboxScaleY = MathUtils.fixedPointDivide(65536, 18874368);
         PortalRenderer.skyboxOffsetFactor = MathUtils.fixedPointDivide(65536, 411775);
 
-        MainGameCanvas.freeMemory();
+        HelperUtils.freeMemory();
     }
 
     /**
@@ -641,10 +641,10 @@ public final class GameEngine {
                             }
 
                             if (enemyType == 3001) {
-                                MainGameCanvas.playSound(4, false, 100, 1);
+                                HelperUtils.playSound(4, false, 100, 1);
                                 LevelLoader.gameWorld.shootProjectile(enemyTransform, enemySector);
                             } else if (enemyType == 3002) {
-                                MainGameCanvas.playSound(5, false, 80, 1);
+                                HelperUtils.playSound(5, false, 80, 1);
                                 LevelLoader.gameWorld.shootSpreadWeapon(enemyTransform, enemySector);
                             } else {
                                 int damage = 0;
@@ -652,19 +652,19 @@ public final class GameEngine {
 
                                 switch (enemyType) {
                                     case 3003:
-                                        MainGameCanvas.playSound(2, false, 80, 0);
+                                        HelperUtils.playSound(2, false, 80, 0);
                                         damageTable = MainGameCanvas.enemyDamageEasy;
                                         break;
                                     case 3004:
-                                        MainGameCanvas.playSound(2, false, 80, 0);
+                                        HelperUtils.playSound(2, false, 80, 0);
                                         damageTable = MainGameCanvas.enemyDamageNormal;
                                         break;
                                     case 3005:
-                                        MainGameCanvas.playSound(2, false, 80, 0);
+                                        HelperUtils.playSound(2, false, 80, 0);
                                         damageTable = MainGameCanvas.enemyDamageHard;
                                         break;
                                     case 3006:
-                                        MainGameCanvas.playSound(3, false, 80, 0);
+                                        HelperUtils.playSound(3, false, 80, 0);
                                         damageTable = MainGameCanvas.var_12d2;
                                         break;
                                 }
@@ -674,7 +674,7 @@ public final class GameEngine {
                                 }
 
                                 if (damage > 0) {
-                                    MainGameCanvas.vibrateDevice(damage * 10);
+                                    HelperUtils.vibrateDevice(damage * 10);
                                 }
 
                                 if (applyDamage(damage)) {
@@ -774,7 +774,7 @@ public final class GameEngine {
 
         // Damage floor
         if (currentSector.getSectorType() == 555) {
-            MainGameCanvas.vibrateDevice(10);
+            HelperUtils.vibrateDevice(10);
             if (applyDamage(1)) {
                 return true;
             }

@@ -1289,4 +1289,31 @@ public class PortalRenderer {
             }
         }
     }
+
+    static void copyToScreenBuffer(int[] sprite, int width, int height, int x, int y, boolean redTint) {
+        int bufferIdx = VIEWPORT_WIDTH * y + x;
+        int spriteIdx = 0;
+
+        if (!redTint) {
+            for(int row = 0; row < height; ++row) {
+                for(int col = 0; col < width; ++col) {
+                    int pixel = sprite[spriteIdx++];
+                    if (pixel != 16711935) {
+                        screenBuffer[bufferIdx + col] = pixel;
+                    }
+                }
+                bufferIdx += VIEWPORT_WIDTH;
+            }
+        } else {
+            for(int row = 0; row < height; ++row) {
+                for(int col = 0; col < width; ++col) {
+                    int pixel = sprite[spriteIdx++];
+                    if (pixel != 16711935) {
+                        screenBuffer[bufferIdx + col] = pixel | 16711680;
+                    }
+                }
+                bufferIdx += VIEWPORT_WIDTH;
+            }
+        }
+    }
 }
