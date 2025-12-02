@@ -8,7 +8,7 @@ public final class RenderUtils {
     private RenderSpan freeList = null;
 
     public RenderUtils() {
-        this.renderSpans = new RenderSpan[PortalRenderer.SCREEN_HEIGHT];
+        this.renderSpans = new RenderSpan[PortalRenderer.VIEWPORT_HEIGHT];
         this.resetRenderer();
     }
 
@@ -16,7 +16,7 @@ public final class RenderUtils {
      * Resets the renderer and rebuilds the free list.
      */
     public final void resetRenderer() {
-        int screenHeight = PortalRenderer.SCREEN_HEIGHT;
+        int screenHeight = PortalRenderer.VIEWPORT_HEIGHT;
 
         for (int scanline = 0; scanline < screenHeight; ++scanline) {
             if (this.renderSpans[scanline] != null) {
@@ -148,11 +148,11 @@ public final class RenderUtils {
         RenderSpan span;
         SectorData sector;
 
-        int halfScreenHeight = PortalRenderer.HALF_SCREEN_HEIGHT;
-        int screenHeight = PortalRenderer.SCREEN_HEIGHT;
+        int halfViewportHeight = PortalRenderer.HALF_VIEWPORT_HEIGHT;
+        int viewportHeight = PortalRenderer.VIEWPORT_HEIGHT;
 
         // Render floor spans (scanlines 0 to halfScreenHeight-1)
-        for (int scanline = 0; scanline < halfScreenHeight; ++scanline) {
+        for (int scanline = 0; scanline < halfViewportHeight; ++scanline) {
             currentSpan = this.renderSpans[scanline];
 
             while (true) {
@@ -176,7 +176,7 @@ public final class RenderUtils {
         }
 
         // Render ceiling spans (scanlines halfScreenHeight to screenHeight-1)
-        for (int scanline = halfScreenHeight; scanline < screenHeight; ++scanline) {
+        for (int scanline = halfViewportHeight; scanline < viewportHeight; ++scanline) {
             currentSpan = this.renderSpans[scanline];
 
             while (true) {

@@ -24,8 +24,8 @@ public final class Sector {
      * Returns true when every screen column is fully occluded (nothing left to draw).
      */
     public static boolean isRenderComplete() {
-        int screenWidth = PortalRenderer.SCREEN_WIDTH;
-        for (int x = 0; x < screenWidth; x++) {
+        int viewportWidth = PortalRenderer.VIEWPORT_WIDTH;
+        for (int x = 0; x < viewportWidth; x++) {
             if (floorClip[x] < ceilingClip[x]) {
                 return false;
             }
@@ -37,17 +37,17 @@ public final class Sector {
      * Resets clip arrays to initial state before rendering a new frame.
      */
     public static void resetClipArrays() {
-        int screenWidth = PortalRenderer.SCREEN_WIDTH;
-        int maxScreenY = PortalRenderer.MAX_SCREEN_Y;
+        int viewportWidth = PortalRenderer.VIEWPORT_WIDTH;
+        int maxViewportY = PortalRenderer.MAX_VIEWPORT_Y;
 
         if (floorClip == null) {
-            floorClip = new short[screenWidth];
-            ceilingClip = new short[screenWidth];
+            floorClip = new short[viewportWidth];
+            ceilingClip = new short[viewportWidth];
         }
 
-        for (int x = 0; x < screenWidth; x++) {
+        for (int x = 0; x < viewportWidth; x++) {
             floorClip[x] = 0;
-            ceilingClip[x] = (short)maxScreenY;
+            ceilingClip[x] = (short)maxViewportY;
         }
     }
 

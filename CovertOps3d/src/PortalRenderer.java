@@ -12,31 +12,31 @@ public class PortalRenderer {
 // ==================== Screen Resolution Constants ====================
 
     /** Screen width in pixels */
-    public static final int SCREEN_WIDTH = 240;
+    public static final int VIEWPORT_WIDTH = 240;
 
     /** Screen height in pixels */
-    public static final int SCREEN_HEIGHT = 288;
+    public static final int VIEWPORT_HEIGHT = 288;
 
     /** Half of screen width (horizontal center) */
-    public static final int HALF_SCREEN_WIDTH = SCREEN_WIDTH / 2;  // 88
+    public static final int HALF_VIEWPORT_WIDTH = VIEWPORT_WIDTH / 2;  // 88
 
     /** Half of screen height (vertical center) */
-    public static final int HALF_SCREEN_HEIGHT = SCREEN_HEIGHT / 2;  // 104
+    public static final int HALF_VIEWPORT_HEIGHT = VIEWPORT_HEIGHT / 2;  // 104
 
     /** Maximum valid X coordinate */
-    public static final int MAX_SCREEN_X = SCREEN_WIDTH - 1;  // 175
+    public static final int MAX_VIEWPORT_X = VIEWPORT_WIDTH - 1;  // 175
 
     /** Maximum valid Y coordinate */
-    public static final int MAX_SCREEN_Y = SCREEN_HEIGHT - 1;  // 207
+    public static final int MAX_VIEWPORT_Y = VIEWPORT_HEIGHT - 1;  // 207
 
     /** Total number of pixels in screen buffer */
-    public static final int SCREEN_BUFFER_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;  // 36608
+    public static final int SCREEN_BUFFER_SIZE = VIEWPORT_WIDTH * VIEWPORT_HEIGHT;  // 36608
 
     /** Half screen width in fixed-point 16.16 format */
-    public static final int HALF_SCREEN_WIDTH_FP = HALF_SCREEN_WIDTH << 16;
+    public static final int HALF_VIEWPORT_WIDTH_FP = HALF_VIEWPORT_WIDTH << 16;
 
     /** Half screen height in fixed-point 16.16 format */
-    private static final int HALF_SCREEN_HEIGHT_FP = HALF_SCREEN_HEIGHT << 16;
+    private static final int HALF_VIEWPORT_HEIGHT_FP = HALF_VIEWPORT_HEIGHT << 16;
 
 // ==================== Rendering Constants ====================
 
@@ -47,7 +47,7 @@ public class PortalRenderer {
      * Projection constant for perspective transformation.
      * Calculated as HALF_SCREEN_WIDTH << 48 for 90° horizontal FOV.
      */
-    private static final long PROJECTION_CONSTANT = (long)HALF_SCREEN_WIDTH << 48;
+    private static final long PROJECTION_CONSTANT = (long) HALF_VIEWPORT_WIDTH << 48;
 
     /** Fixed-point rounding constant (0.5 in 16.16 format) */
     private static final int FP_HALF = 32768;
@@ -209,12 +209,12 @@ public class PortalRenderer {
         long endDepthReciprocal = PROJECTION_CONSTANT / (long)clippedWallEnd.y >> 16;
 
         clippedWallStart.x = (int)((long)clippedWallStart.x * startDepthReciprocal >> 16);
-        if (clippedWallStart.x > HALF_SCREEN_WIDTH_FP) {
+        if (clippedWallStart.x > HALF_VIEWPORT_WIDTH_FP) {
             return false;
         }
 
         clippedWallEnd.x = (int)((long)clippedWallEnd.x * endDepthReciprocal >> 16);
-        if (clippedWallEnd.x < -HALF_SCREEN_WIDTH_FP) {
+        if (clippedWallEnd.x < -HALF_VIEWPORT_WIDTH_FP) {
             return false;
         }
 
@@ -261,12 +261,12 @@ public class PortalRenderer {
             Point2D screenStart = clippedWallStart;
             Point2D screenEnd = clippedWallEnd;
 
-            int screenStartX = (screenStart.x + HALF_SCREEN_WIDTH_FP) >> 16;
-            int screenCeilingStartY = (projectedCeilingStart + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int screenEndX = (screenEnd.x + HALF_SCREEN_WIDTH_FP) >> 16;
-            int screenCeilingEndY = (projectedCeilingEnd + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int screenFloorStartY = (projectedFloorStart + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int screenFloorEndY = (projectedFloorEnd + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int screenStartX = (screenStart.x + HALF_VIEWPORT_WIDTH_FP) >> 16;
+            int screenCeilingStartY = (projectedCeilingStart + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int screenEndX = (screenEnd.x + HALF_VIEWPORT_WIDTH_FP) >> 16;
+            int screenCeilingEndY = (projectedCeilingEnd + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int screenFloorStartY = (projectedFloorStart + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int screenFloorEndY = (projectedFloorEnd + HALF_VIEWPORT_HEIGHT_FP) >> 16;
 
             int wallHeight = sectorData.ceilingHeight - sectorData.floorHeight;
             Texture wallTexture = LevelLoader.getTexture(surface.mainTextureId);
@@ -326,17 +326,17 @@ public class PortalRenderer {
             Point2D screenStart = clippedWallStart;
             Point2D screenEnd = clippedWallEnd;
 
-            int screenStartX = (screenStart.x + HALF_SCREEN_WIDTH_FP) >> 16;
-            int frontCeilingStartY = (projectedCeilingStart + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int frontFloorStartY = (projectedFloorStart + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int screenEndX = (screenEnd.x + HALF_SCREEN_WIDTH_FP) >> 16;
-            int frontCeilingEndY = (projectedCeilingEnd + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int frontFloorEndY = (projectedFloorEnd + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int screenStartX = (screenStart.x + HALF_VIEWPORT_WIDTH_FP) >> 16;
+            int frontCeilingStartY = (projectedCeilingStart + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int frontFloorStartY = (projectedFloorStart + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int screenEndX = (screenEnd.x + HALF_VIEWPORT_WIDTH_FP) >> 16;
+            int frontCeilingEndY = (projectedCeilingEnd + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int frontFloorEndY = (projectedFloorEnd + HALF_VIEWPORT_HEIGHT_FP) >> 16;
 
-            int backCeilingStartY = (MathUtils.fixedPointDivide(backCeilingHeight, screenStart.y) * HALF_SCREEN_WIDTH + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int backFloorStartY = (MathUtils.fixedPointDivide(backFloorHeight, screenStart.y) * HALF_SCREEN_WIDTH + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int backCeilingEndY = (MathUtils.fixedPointDivide(backCeilingHeight, screenEnd.y) * HALF_SCREEN_WIDTH + HALF_SCREEN_HEIGHT_FP) >> 16;
-            int backFloorEndY = (MathUtils.fixedPointDivide(backFloorHeight, screenEnd.y) * HALF_SCREEN_WIDTH + HALF_SCREEN_HEIGHT_FP) >> 16;
+            int backCeilingStartY = (MathUtils.fixedPointDivide(backCeilingHeight, screenStart.y) * HALF_VIEWPORT_WIDTH + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int backFloorStartY = (MathUtils.fixedPointDivide(backFloorHeight, screenStart.y) * HALF_VIEWPORT_WIDTH + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int backCeilingEndY = (MathUtils.fixedPointDivide(backCeilingHeight, screenEnd.y) * HALF_VIEWPORT_WIDTH + HALF_VIEWPORT_HEIGHT_FP) >> 16;
+            int backFloorEndY = (MathUtils.fixedPointDivide(backFloorHeight, screenEnd.y) * HALF_VIEWPORT_WIDTH + HALF_VIEWPORT_HEIGHT_FP) >> 16;
 
             int upperWallHeight = frontSector.ceilingHeight - backSector.ceilingHeight;
             int lowerWallHeight = backSector.floorHeight - frontSector.floorHeight;
@@ -493,8 +493,8 @@ public class PortalRenderer {
 
             if (gameObject.projectToScreen()) {
                 int lightLevel = sectorData.getLightLevel();
-                int screenX = (gameObject.screenPos.x >> 16) + HALF_SCREEN_WIDTH;
-                int screenY = (gameObject.screenHeight >> 16) + HALF_SCREEN_HEIGHT;
+                int screenX = (gameObject.screenPos.x >> 16) + HALF_VIEWPORT_WIDTH;
+                int screenY = (gameObject.screenHeight >> 16) + HALF_VIEWPORT_HEIGHT;
                 int depth = gameObject.screenPos.y;
 
                 if (gameObject.texture2 != null) {
@@ -551,17 +551,17 @@ public class PortalRenderer {
 
             // Expand clip history if needed
             if (sectorIndex >= floorClipHistory.size()) {
-                short[] floorClipCopy = new short[SCREEN_WIDTH];
-                short[] ceilingClipCopy = new short[SCREEN_WIDTH];
+                short[] floorClipCopy = new short[VIEWPORT_WIDTH];
+                short[] ceilingClipCopy = new short[VIEWPORT_WIDTH];
                 floorClipHistory.addElement(floorClipCopy);
                 ceilingClipHistory.addElement(ceilingClipCopy);
             }
 
             // Save current clip state
             System.arraycopy(Sector.floorClip, 0,
-                    (short[])floorClipHistory.elementAt(sectorIndex), 0, SCREEN_WIDTH);
+                    (short[])floorClipHistory.elementAt(sectorIndex), 0, VIEWPORT_WIDTH);
             System.arraycopy(Sector.ceilingClip, 0,
-                    (short[])ceilingClipHistory.elementAt(sectorIndex), 0, SCREEN_WIDTH);
+                    (short[])ceilingClipHistory.elementAt(sectorIndex), 0, VIEWPORT_WIDTH);
 
             // Render all walls in sector
             WallSegment[] walls = currentSector.walls;
@@ -580,9 +580,9 @@ public class PortalRenderer {
 
             // Restore clip state for this sector
             System.arraycopy(floorClipHistory.elementAt(sectorIndex), 0,
-                    Sector.floorClip, 0, SCREEN_WIDTH);
+                    Sector.floorClip, 0, VIEWPORT_WIDTH);
             System.arraycopy(ceilingClipHistory.elementAt(sectorIndex), 0,
-                    Sector.ceilingClip, 0, SCREEN_WIDTH);
+                    Sector.ceilingClip, 0, VIEWPORT_WIDTH);
 
             renderDynamicObjects(currentSector, playerX, playerY, playerZ,
                     (long)sinAngle, (long)cosAngle);
@@ -630,7 +630,7 @@ public class PortalRenderer {
         int clipRight = spriteWidth;
 
         // Check horizontal visibility
-        if (screenX >= SCREEN_WIDTH || screenX + spriteWidth < 0) {
+        if (screenX >= VIEWPORT_WIDTH || screenX + spriteWidth < 0) {
             return;
         }
 
@@ -638,8 +638,8 @@ public class PortalRenderer {
         if (screenX < 0) {
             clipLeft = -screenX;
         }
-        if (screenX + spriteWidth >= SCREEN_WIDTH) {
-            clipRight = MAX_SCREEN_X - screenX;
+        if (screenX + spriteWidth >= VIEWPORT_WIDTH) {
+            clipRight = MAX_VIEWPORT_X - screenX;
         }
 
         short textureWidth = texture.width;
@@ -709,7 +709,7 @@ public class PortalRenderer {
         int clippedStartX = startX;
         int clippedEndX = endX;
 
-        if (startX >= SCREEN_WIDTH || endX < 0) {
+        if (startX >= VIEWPORT_WIDTH || endX < 0) {
             return;
         }
 
@@ -719,8 +719,8 @@ public class PortalRenderer {
         if (startX < 0) {
             clippedStartX = 0;
         }
-        if (endX >= SCREEN_WIDTH) {
-            clippedEndX = MAX_SCREEN_X;
+        if (endX >= VIEWPORT_WIDTH) {
+            clippedEndX = MAX_VIEWPORT_X;
         }
 
         short upperTextureHeight = upperTexture.height;
@@ -760,8 +760,8 @@ public class PortalRenderer {
         long depthRangeShifted = depthRange >> 16;
         long depthDenominator = (long)(endX - startX + 1 << 16) * (long)endDepth;
 
-        sectorData.floorOffsetX = relativeCeiling * HALF_SCREEN_WIDTH >> 16;
-        sectorData.ceilingOffsetX = relativeFloor * HALF_SCREEN_WIDTH >> 16;
+        sectorData.floorOffsetX = relativeCeiling * HALF_VIEWPORT_WIDTH >> 16;
+        sectorData.ceilingOffsetX = relativeFloor * HALF_VIEWPORT_WIDTH >> 16;
 
         for (int column = clippedStartX; column <= clippedEndX; column++) {
             if (floorClip[column] < ceilingClip[column]) {
@@ -823,7 +823,7 @@ public class PortalRenderer {
 
                 // Draw skybox for ceiling if no ceiling texture
                 if (ceilingTexture == null) {
-                    drawSkyboxColumn(column, screenFloorY + 1, MAX_SCREEN_Y, viewAngle);
+                    drawSkyboxColumn(column, screenFloorY + 1, MAX_VIEWPORT_Y, viewAngle);
                 }
 
                 // Draw lower wall
@@ -890,8 +890,8 @@ public class PortalRenderer {
                                        int[][] colorPalettes, int lightLevel, int sinAngle, int cosAngle,
                                        int cameraX, int heightOffset, int cameraZ) {
 
-        int rowOffset = row * SCREEN_WIDTH;
-        int rowFromCenter = row - HALF_SCREEN_HEIGHT;
+        int rowOffset = row * VIEWPORT_WIDTH;
+        int rowFromCenter = row - HALF_VIEWPORT_HEIGHT;
         int perspectiveFactor = rowFromCenter < 0 ? -reciprocalTable[-rowFromCenter] : reciprocalTable[rowFromCenter];
         int scaledPerspective = (heightOffset * perspectiveFactor) >> 8;
 
@@ -940,7 +940,7 @@ public class PortalRenderer {
         short floorClipY = Sector.floorClip[column];
         short ceilingClipY = Sector.ceilingClip[column];
 
-        if (topY > ceilingClipY || topY <= HALF_SCREEN_HEIGHT || heightOffset <= 0) {
+        if (topY > ceilingClipY || topY <= HALF_VIEWPORT_HEIGHT || heightOffset <= 0) {
             return;
         }
 
@@ -1007,7 +1007,7 @@ public class PortalRenderer {
         short floorClipY = Sector.floorClip[column];
         short ceilingClipY = Sector.ceilingClip[column];
 
-        if (bottomY < floorClipY || bottomY >= HALF_SCREEN_HEIGHT || heightOffset >= 0) {
+        if (bottomY < floorClipY || bottomY >= HALF_VIEWPORT_HEIGHT || heightOffset >= 0) {
             return;
         }
 
@@ -1094,19 +1094,19 @@ public class PortalRenderer {
         if (clippedTopY < 0) {
             clippedTopY = 0;
         }
-        if (clippedBottomY >= SCREEN_HEIGHT) {
-            clippedBottomY = MAX_SCREEN_Y;
+        if (clippedBottomY >= VIEWPORT_HEIGHT) {
+            clippedBottomY = MAX_VIEWPORT_Y;
         }
 
-        if (clippedBottomY < 0 || clippedTopY >= SCREEN_HEIGHT || bottomY <= topY || textureStartV > pixelData.length) {
+        if (clippedBottomY < 0 || clippedTopY >= VIEWPORT_HEIGHT || bottomY <= topY || textureStartV > pixelData.length) {
             return;
         }
 
-        int startPixelIndex = clippedTopY * SCREEN_WIDTH + column;
-        int endPixelIndex = clippedBottomY * SCREEN_WIDTH + column;
+        int startPixelIndex = clippedTopY * VIEWPORT_WIDTH + column;
+        int endPixelIndex = clippedBottomY * VIEWPORT_WIDTH + column;
 
         int columnHeight = bottomY - topY;
-        int textureStepV = columnHeight > SCREEN_HEIGHT
+        int textureStepV = columnHeight > VIEWPORT_HEIGHT
                 ? (textureHeight << 16) / columnHeight
                 : textureHeight * reciprocalTable[columnHeight];
 
@@ -1115,7 +1115,7 @@ public class PortalRenderer {
         int[] buffer = screenBuffer;
 
         if (pixelNibble == 0) {
-            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                 int texelIndex = textureV >>> 16;
                 if (texelIndex < pixelDataLength) {
                     int colorIndex = (pixelData[texelIndex] >> 4) & 15;
@@ -1126,7 +1126,7 @@ public class PortalRenderer {
                 textureV += textureStepV;
             }
         } else {
-            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                 int texelIndex = textureV >>> 16;
                 if (texelIndex < pixelDataLength) {
                     int colorIndex = pixelData[texelIndex] & 15;
@@ -1172,11 +1172,11 @@ public class PortalRenderer {
             clippedBottomY = ceilingClipY;
         }
 
-        int startPixelIndex = clippedTopY * SCREEN_WIDTH + column;
-        int endPixelIndex = clippedBottomY * SCREEN_WIDTH + column;
+        int startPixelIndex = clippedTopY * VIEWPORT_WIDTH + column;
+        int endPixelIndex = clippedBottomY * VIEWPORT_WIDTH + column;
 
         int columnHeight = bottomY - topY;
-        int textureStepV = columnHeight > SCREEN_HEIGHT
+        int textureStepV = columnHeight > VIEWPORT_HEIGHT
                 ? ((wallHeight - 1) << 16) / columnHeight
                 : (wallHeight - 1) * reciprocalTable[columnHeight];
 
@@ -1187,42 +1187,42 @@ public class PortalRenderer {
         // Optimized loops for common texture heights
         switch (textureHeight + pixelNibble) {
             case 16: // Height 16, high nibble
-                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                     buffer[pixelIndex] = colorPalette[(pixelData[(textureV & 0xF0000) >> 16] >> 4) & 15];
                     textureV += textureStepV;
                 }
                 return;
 
             case 17: // Height 16, low nibble
-                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                     buffer[pixelIndex] = colorPalette[pixelData[(textureV & 0xF0000) >> 16] & 15];
                     textureV += textureStepV;
                 }
                 return;
 
             case 64: // Height 64, high nibble
-                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                     buffer[pixelIndex] = colorPalette[(pixelData[(textureV & 0x3F0000) >> 16] >> 4) & 15];
                     textureV += textureStepV;
                 }
                 return;
 
             case 65: // Height 64, low nibble
-                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                     buffer[pixelIndex] = colorPalette[pixelData[(textureV & 0x3F0000) >> 16] & 15];
                     textureV += textureStepV;
                 }
                 return;
 
             case 128: // Height 128, high nibble
-                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                     buffer[pixelIndex] = colorPalette[(pixelData[(textureV & 0x7F0000) >> 16] >> 4) & 15];
                     textureV += textureStepV;
                 }
                 return;
 
             case 129: // Height 128, low nibble
-                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+                for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                     buffer[pixelIndex] = colorPalette[pixelData[(textureV & 0x7F0000) >> 16] & 15];
                     textureV += textureStepV;
                 }
@@ -1257,9 +1257,9 @@ public class PortalRenderer {
         }
 
 
-        int columnAngle = MathUtils.fixedPointMultiply((column - HALF_SCREEN_WIDTH) << 16, skyboxAngleFactor);
+        int columnAngle = MathUtils.fixedPointMultiply((column - HALF_VIEWPORT_WIDTH) << 16, skyboxAngleFactor);
         int angleCos = MathUtils.fastCos(columnAngle);
-        int scaledX = MathUtils.fixedPointMultiply(column - HALF_SCREEN_WIDTH, skyboxScaleX);
+        int scaledX = MathUtils.fixedPointMultiply(column - HALF_VIEWPORT_WIDTH, skyboxScaleX);
         int angleSin = MathUtils.fastSin(columnAngle);
 
         int textureColumn = MathUtils.fixedPointMultiply(
@@ -1269,21 +1269,21 @@ public class PortalRenderer {
         byte[] pixelData = skyboxTexture.getPixelRowFast(textureColumn);
         int[] colorPalette = skyboxTexture.colorPalettes[8];
 
-        int startPixelIndex = clippedTopY * SCREEN_WIDTH + column;
-        int endPixelIndex = clippedBottomY * SCREEN_WIDTH + column;
+        int startPixelIndex = clippedTopY * VIEWPORT_WIDTH + column;
+        int endPixelIndex = clippedBottomY * VIEWPORT_WIDTH + column;
 
         int textureStepV = MathUtils.fixedPointMultiply(angleCos * 200, skyboxScaleY);
-        int textureV = -textureStepV * (HALF_SCREEN_HEIGHT - clippedTopY) + 6553600;
+        int textureV = -textureStepV * (HALF_VIEWPORT_HEIGHT - clippedTopY) + 6553600;
 
         int[] buffer = screenBuffer;
 
         if ((textureColumn & 1) == 0) {
-            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                 buffer[pixelIndex] = colorPalette[(pixelData[(textureV >> 16) & 127] >> 4) & 15];
                 textureV += textureStepV;
             }
         } else {
-            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += SCREEN_WIDTH) {
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
                 buffer[pixelIndex] = colorPalette[pixelData[(textureV >> 16) & 127] & 15];
                 textureV += textureStepV;
             }

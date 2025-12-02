@@ -320,34 +320,34 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             if (this.isWeaponCentered) {
                 targetGraphics = graphics;
                 weaponSprite = this.weaponSprites[weaponSpriteFrame];
-                weaponX = (PortalRenderer.SCREEN_WIDTH - this.weaponSprites[weaponSpriteFrame].getWidth()) / 2;
+                weaponX = (PortalRenderer.VIEWPORT_WIDTH - this.weaponSprites[weaponSpriteFrame].getWidth()) / 2;
             } else {
                 targetGraphics = graphics;
                 weaponSprite = this.weaponSprites[weaponSpriteFrame];
-                weaponX = PortalRenderer.SCREEN_WIDTH - this.weaponSprites[weaponSpriteFrame].getWidth();
+                weaponX = PortalRenderer.VIEWPORT_WIDTH - this.weaponSprites[weaponSpriteFrame].getWidth();
             }
 
-            targetGraphics.drawImage(weaponSprite, weaponX, PortalRenderer.SCREEN_HEIGHT - weaponHeight - headBob + 3, 0);
+            targetGraphics.drawImage(weaponSprite, weaponX, PortalRenderer.VIEWPORT_HEIGHT - weaponHeight - headBob + 3, 0);
             weaponSpriteFrame = this.weaponAnimationState;
 
-            graphics.drawImage(this.statusBarImage, 0, PortalRenderer.SCREEN_HEIGHT, 0);
-            this.sub_547(GameEngine.playerHealth, graphics, 58, PortalRenderer.SCREEN_HEIGHT + 6);
-            this.sub_547(GameEngine.playerArmor, graphics, 138, PortalRenderer.SCREEN_HEIGHT + 6);
+            graphics.drawImage(this.statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
+            this.sub_547(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
+            this.sub_547(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
 
             int ammoType = GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4
                     ? GameEngine.currentWeapon : 1;
-            this.sub_547(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.SCREEN_HEIGHT + 6);
+            this.sub_547(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.VIEWPORT_HEIGHT + 6);
 
             if (GameEngine.currentWeapon > 0 && GameEngine.messageTimer == 0 && !mapEnabled) {
                 graphics.drawImage(this.crosshairImage,
-                        (PortalRenderer.SCREEN_WIDTH - this.crosshairImage.getWidth()) >> 1,
-                        (PortalRenderer.SCREEN_HEIGHT - this.crosshairImage.getHeight()) >> 1, 0);
+                        (PortalRenderer.VIEWPORT_WIDTH - this.crosshairImage.getWidth()) >> 1,
+                        (PortalRenderer.VIEWPORT_HEIGHT - this.crosshairImage.getHeight()) >> 1, 0);
             }
 
             if (mapEnabled) {
-                graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, PortalRenderer.SCREEN_HEIGHT);
+                graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT);
                 LevelLoader.gameWorld.drawMapOnScreen(graphics);
-                graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+                graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
             }
 
         } catch (Exception e) {
@@ -378,7 +378,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         audioManager.loadSound("/gamedata/sound/9.amr");
 
         Graphics graphics = this.getGraphics();
-        graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+        graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
         this.drawSplash(graphics);
         this.initializeGameResources();
         SaveSystem.loadSaveData();
@@ -724,11 +724,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             int pixelCount = logo.getWidth() * logo.getHeight();
             int[] fadeBuffer = new int[pixelCount];
-            int logoX = (PortalRenderer.SCREEN_WIDTH - logo.getWidth()) / 2;
+            int logoX = (PortalRenderer.VIEWPORT_WIDTH - logo.getWidth()) / 2;
             int logoY = (UI_HEIGHT - logo.getHeight()) / 2;
 
             graphics.setColor(16777215);
-            graphics.drawRect(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+            graphics.drawRect(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
             this.flushScreenBuffer();
 
             long startTime = System.currentTimeMillis();
@@ -782,14 +782,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         try {
             Image splash = Image.createImage("/gamedata/sprites/splash.png");
 
-            int halfScreenBuffer = PortalRenderer.SCREEN_WIDTH * HALF_UI_HEIGHT;
+            int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
             PortalRenderer.screenBuffer[0] = -2130771968;
             sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
 
-            graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                    0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
-            graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                    0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+            graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                    0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
+            graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                    0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
             String message = "mission failed|game over";
             this.sub_2e3(graphics, message);
@@ -814,10 +814,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 PortalRenderer.screenBuffer[0] = fadeColor;
                 sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(splash, 0, 0, 20);
-                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                        0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
-                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                        0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                        0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                        0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 this.sub_2e3(graphics, message);
                 this.flushScreenBuffer();
                 yieldToOtherThreads();
@@ -850,7 +850,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int displayProgress = progress > UI_HEIGHT ? UI_HEIGHT : progress;
             int column = 0;
 
-            for(int x = 0; x < PortalRenderer.SCREEN_WIDTH; x += 10) {
+            for(int x = 0; x < PortalRenderer.VIEWPORT_WIDTH; x += 10) {
                 if ((column & 1) == 0) {
                     graphics.drawRegion(background, x, UI_HEIGHT - displayProgress, 10, displayProgress,
                             0, x, 0, 20);
@@ -903,7 +903,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 if (totalItems > visibleItems && scrollOffset > 0) {
                     int arrowY = menuY + 2 * this.var_550 - 2;
                     graphics.setColor(16115387);
-                    graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_SCREEN_WIDTH, arrowY - 3);
+                    graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_VIEWPORT_WIDTH, arrowY - 3);
                 }
 
                 graphics.setColor(7433570);
@@ -915,11 +915,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
 
                     String itemText = menuItems[itemIndex];
-                    int textX = (PortalRenderer.SCREEN_WIDTH - this.sub_5d2(itemText)) / 2;
+                    int textX = (PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(itemText)) / 2;
 
                     if ((menuMode & 15) == itemIndex) {
                         int boxWidth = this.var_59b * 30;
-                        graphics.fillRoundRect((PortalRenderer.SCREEN_WIDTH - boxWidth) / 2, menuY,
+                        graphics.fillRoundRect((PortalRenderer.VIEWPORT_WIDTH - boxWidth) / 2, menuY,
                                 boxWidth, this.var_550, 10, 10);
                     }
 
@@ -930,14 +930,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 if (totalItems > visibleItems && scrollOffset < totalItems - 5) {
                     int arrowY = menuY + 1;
                     graphics.setColor(16115387);
-                    graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_SCREEN_WIDTH, arrowY + 3);
+                    graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_VIEWPORT_WIDTH, arrowY + 3);
                 }
 
                 String actionText = menuItems == this.SETTINGS_MENU_ITEMS ? "change" :
                         (menuItems == MenuSystem.CONFIRMATION_MENU_ITEMS ? "yes" : "select");
                 this.drawLargeString(actionText, graphics, 3, UI_HEIGHT - this.var_550 - 3);
                 this.drawLargeString(menuItems[totalItems], graphics,
-                        PortalRenderer.SCREEN_WIDTH - this.sub_5d2(menuItems[totalItems]) - 3,
+                        PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(menuItems[totalItems]) - 3,
                         UI_HEIGHT - this.var_550 - 3);
                 this.flushScreenBuffer();
                 yieldToOtherThreads();
@@ -1212,16 +1212,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             boolean needsUpdate = true;
             int textY = UI_HEIGHT - this.var_550;
 
-            int halfScreenBuffer = PortalRenderer.SCREEN_WIDTH * HALF_UI_HEIGHT;
+            int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
 
             for(int fadeStep = 1; fadeStep <= 8; ++fadeStep) {
                 PortalRenderer.screenBuffer[0] = 16777215 | (fadeStep * 268435456);
                 sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(background, 0, 0, 20);
-                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                        0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
-                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                        0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                        0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                        0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 this.flushScreenBuffer();
                 yieldToOtherThreads();
                 delay(50);
@@ -1231,21 +1231,21 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             do {
                 if (needsUpdate) {
-                    graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+                    graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
                     graphics.drawImage(background, 0, 0, 20);
-                    graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                            0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
-                    graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                            0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                    graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                            0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
+                    graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                            0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
                     String backText = "back";
                     this.drawLargeString(backText, graphics,
-                            PortalRenderer.SCREEN_WIDTH - this.sub_5d2(backText) - 3,
+                            PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(backText) - 3,
                             UI_HEIGHT - this.var_550 - 3);
                     this.drawLargeString(title, graphics,
-                            (PortalRenderer.SCREEN_WIDTH - this.sub_5d2(title)) / 2, 3);
+                            (PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(title)) / 2, 3);
 
-                    graphics.setClip(0, this.var_550 + 6, PortalRenderer.SCREEN_WIDTH,
+                    graphics.setClip(0, this.var_550 + 6, PortalRenderer.VIEWPORT_WIDTH,
                             UI_HEIGHT - 2 * this.var_550 - 12);
 
                     int displayY;
@@ -1275,7 +1275,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             line = line + " " + version;
                         }
                         this.drawSmallString(line, graphics,
-                                (PortalRenderer.SCREEN_WIDTH - this.sub_5ef(line)) / 2, displayY);
+                                (PortalRenderer.VIEWPORT_WIDTH - this.sub_5ef(line)) / 2, displayY);
                         displayY += this.var_6d3 + 2;
                     }
 
@@ -1287,16 +1287,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             } while(!GameEngine.inputBack);
 
             GameEngine.inputBack = false;
-            graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+            graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
 
             for(int fadeStep = 8; fadeStep >= 1; --fadeStep) {
                 PortalRenderer.screenBuffer[0] = 16777215 | (fadeStep * 268435456);
                 sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
                 graphics.drawImage(background, 0, 0, 20);
-                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                        0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
-                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                        0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                        0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                        0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 this.flushScreenBuffer();
                 yieldToOtherThreads();
                 delay(50);
@@ -1311,7 +1311,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         GameEngine.inputForward = false;
         GameEngine.inputBackward = false;
         this.smallFontImage = null;
-        graphics.setClip(0, 0, PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+        graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
     }
 
     private boolean sub_255(int[] states, int[] types, int[] timers, int[] freeSlots,
@@ -1452,8 +1452,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         this.var_d88 += this.var_be4 >> 2;
         this.var_d9b += this.var_c1f >> 2;
 
-        int maxSightX = PortalRenderer.SCREEN_WIDTH - 32;
-        int maxSightY = PortalRenderer.SCREEN_HEIGHT - 32;
+        int maxSightX = PortalRenderer.VIEWPORT_WIDTH - 32;
+        int maxSightY = PortalRenderer.VIEWPORT_HEIGHT - 32;
 
         if (this.var_d88 > maxSightX) {
             this.var_d88 = maxSightX;
@@ -1559,13 +1559,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             Image sightImage = Image.createImage("/gamedata/sniperminigame/sight.png");
-            this.sub_10f(level, PortalRenderer.SCREEN_WIDTH, PortalRenderer.SCREEN_HEIGHT,
+            this.sub_10f(level, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT,
                     scenePixels, maskPixels, sightPixels);
 
             this.var_be4 = 0;
             this.var_c1f = 0;
-            this.var_d88 = PortalRenderer.HALF_SCREEN_WIDTH - 32;
-            this.var_d9b = PortalRenderer.HALF_SCREEN_HEIGHT - 32;
+            this.var_d88 = PortalRenderer.HALF_VIEWPORT_WIDTH - 32;
+            this.var_d9b = PortalRenderer.HALF_VIEWPORT_HEIGHT - 32;
 
             int[] freeSlots = new int[8];
             this.accumulatedTime = 0L;
@@ -1636,20 +1636,20 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 int sightY = this.var_d9b;
                 int renderStartY = sightY < 0 ? 0 : sightY;
                 int renderEndY = sightY + 64;
-                if (renderEndY > PortalRenderer.SCREEN_HEIGHT) {
-                    renderEndY = PortalRenderer.SCREEN_HEIGHT;
+                if (renderEndY > PortalRenderer.VIEWPORT_HEIGHT) {
+                    renderEndY = PortalRenderer.VIEWPORT_HEIGHT;
                 }
 
                 int renderStartX = sightX < 0 ? 0 : sightX;
                 int renderEndX = sightX + 64;
-                if (renderEndX > PortalRenderer.SCREEN_WIDTH) {
-                    renderEndX = PortalRenderer.SCREEN_WIDTH;
+                if (renderEndX > PortalRenderer.VIEWPORT_WIDTH) {
+                    renderEndX = PortalRenderer.VIEWPORT_WIDTH;
                 }
 
                 // Render background
                 for(int y = renderStartY; y < renderEndY; ++y) {
-                    int rowStart = renderStartX + PortalRenderer.SCREEN_WIDTH * y;
-                    int rowEnd = renderEndX + PortalRenderer.SCREEN_WIDTH * y;
+                    int rowStart = renderStartX + PortalRenderer.VIEWPORT_WIDTH * y;
+                    int rowEnd = renderEndX + PortalRenderer.VIEWPORT_WIDTH * y;
                     for(int idx = rowStart; idx < rowEnd; ++idx) {
                         PortalRenderer.screenBuffer[idx] = regularPalette[scenePixels[idx] & 255];
                     }
@@ -1694,8 +1694,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 // Render mask overlay
                 for(int y = renderStartY; y < renderEndY; ++y) {
-                    int rowStart = renderStartX + PortalRenderer.SCREEN_WIDTH * y;
-                    int rowEnd = renderEndX + PortalRenderer.SCREEN_WIDTH * y;
+                    int rowStart = renderStartX + PortalRenderer.VIEWPORT_WIDTH * y;
+                    int rowEnd = renderEndX + PortalRenderer.VIEWPORT_WIDTH * y;
                     for(int idx = rowStart; idx < rowEnd; ++idx) {
                         int maskValue = maskPixels[idx] & 255;
                         if (maskValue != 255) {
@@ -1732,21 +1732,21 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 // Render background outside sight
-                int topBufferSize = PortalRenderer.SCREEN_WIDTH * renderStartY;
+                int topBufferSize = PortalRenderer.VIEWPORT_WIDTH * renderStartY;
                 for(int i = 0; i < topBufferSize; ++i) {
                     PortalRenderer.screenBuffer[i] = normalPalette[scenePixels[i] & 255];
                 }
 
                 int sightOffsetY = renderStartY - sightY;
                 for(int y = renderStartY; y < renderEndY; ++y, ++sightOffsetY) {
-                    int rowStart = PortalRenderer.SCREEN_WIDTH * y;
+                    int rowStart = PortalRenderer.VIEWPORT_WIDTH * y;
                     int leftEnd = rowStart + renderStartX;
                     for(int idx = rowStart; idx < leftEnd; ++idx) {
                         PortalRenderer.screenBuffer[idx] = normalPalette[scenePixels[idx] & 255];
                     }
 
                     int rightStart = renderEndX + rowStart;
-                    int rowEnd = rowStart + PortalRenderer.SCREEN_WIDTH;
+                    int rowEnd = rowStart + PortalRenderer.VIEWPORT_WIDTH;
                     for(int idx = rightStart; idx < rowEnd; ++idx) {
                         PortalRenderer.screenBuffer[idx] = normalPalette[scenePixels[idx] & 255];
                     }
@@ -1761,7 +1761,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
                 }
 
-                int bottomStart = PortalRenderer.SCREEN_WIDTH * renderEndY;
+                int bottomStart = PortalRenderer.VIEWPORT_WIDTH * renderEndY;
                 for(int i = bottomStart; i < bufferSize; ++i) {
                     PortalRenderer.screenBuffer[i] = normalPalette[scenePixels[i] & 255];
                 }
@@ -1781,7 +1781,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         int spriteH = spriteHeights[speedType];
 
                         if ((level == 0 && (i >= 6 || speedType == 0)
-                                || maskPixels[centerY * PortalRenderer.SCREEN_WIDTH + centerX] == -1)
+                                || maskPixels[centerY * PortalRenderer.VIEWPORT_WIDTH + centerX] == -1)
                                 && enemyStates[i] > 0
                                 && centerX >= enemyX && centerX <= enemyX + spriteW
                                 && centerY >= enemyY && centerY <= enemyY + spriteH) {
@@ -1803,16 +1803,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
                     }
 
-                    PortalRenderer.screenBuffer[PortalRenderer.SCREEN_WIDTH * centerY + centerX] = hitColor;
+                    PortalRenderer.screenBuffer[PortalRenderer.VIEWPORT_WIDTH * centerY + centerX] = hitColor;
                     GameEngine.inputFire = false;
                 }
 
-                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                        0, 0, PortalRenderer.SCREEN_WIDTH, PortalRenderer.SCREEN_HEIGHT, false);
+                graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                        0, 0, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT, false);
                 graphics.drawImage(sightImage, sightX, sightY, 20);
-                graphics.drawImage(this.statusBarImage, 0, PortalRenderer.SCREEN_HEIGHT, 0);
-                this.sub_547(GameEngine.playerHealth, graphics, 58, PortalRenderer.SCREEN_HEIGHT + 6);
-                this.sub_547(GameEngine.playerArmor, graphics, 138, PortalRenderer.SCREEN_HEIGHT + 6);
+                graphics.drawImage(this.statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
+                this.sub_547(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
+                this.sub_547(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
                 this.flushScreenBuffer();
 
                 yieldToOtherThreads();
@@ -1825,7 +1825,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     }
 
     private static void copyToScreenBuffer(int[] sprite, int width, int height, int x, int y, boolean redTint) {
-        int bufferIdx = PortalRenderer.SCREEN_WIDTH * y + x;
+        int bufferIdx = PortalRenderer.VIEWPORT_WIDTH * y + x;
         int spriteIdx = 0;
 
         if (!redTint) {
@@ -1836,7 +1836,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         PortalRenderer.screenBuffer[bufferIdx + col] = pixel;
                     }
                 }
-                bufferIdx += PortalRenderer.SCREEN_WIDTH;
+                bufferIdx += PortalRenderer.VIEWPORT_WIDTH;
             }
         } else {
             for(int row = 0; row < height; ++row) {
@@ -1846,7 +1846,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         PortalRenderer.screenBuffer[bufferIdx + col] = pixel | 16711680;
                     }
                 }
-                bufferIdx += PortalRenderer.SCREEN_WIDTH;
+                bufferIdx += PortalRenderer.VIEWPORT_WIDTH;
             }
         }
     }
@@ -1878,7 +1878,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             String line = message.substring(lineStart, lineEnd + 1);
-            int textX = (PortalRenderer.SCREEN_WIDTH - this.sub_5d2(line)) / 2;
+            int textX = (PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(line)) / 2;
             this.drawLargeString(line, graphics, textX, textY);
             textY += this.var_550;
         } while((lineStart = lineEnd + 2) < message.length());
@@ -2382,17 +2382,17 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private void drawPleaseWait(Graphics graphics) {
         String text = "please wait...";
-        int textX = (PortalRenderer.SCREEN_WIDTH - this.sub_5d2(text)) / 2;
+        int textX = (PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2(text)) / 2;
         int textY = HALF_UI_HEIGHT - this.var_550 / 2;
 
-        int halfScreenBuffer = PortalRenderer.SCREEN_WIDTH * HALF_UI_HEIGHT;
+        int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
         PortalRenderer.screenBuffer[0] = Integer.MIN_VALUE;
         sub_159(PortalRenderer.screenBuffer, 0, halfScreenBuffer);
 
-        graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                0, 0, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
-        graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.SCREEN_WIDTH,
-                0, HALF_UI_HEIGHT, PortalRenderer.SCREEN_WIDTH, HALF_UI_HEIGHT, true);
+        graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
+        graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
+                0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
         this.drawLargeString(text, graphics, textX, textY);
         this.flushScreenBuffer();
@@ -2401,7 +2401,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     private int drawDialogOverlay(Graphics graphics, int dialogId) {
         try {
             int menuHeight = this.var_550 + 6;
-            Image frameBuffer = Image.createImage(PortalRenderer.SCREEN_WIDTH, UI_HEIGHT);
+            Image frameBuffer = Image.createImage(PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
             Image background = Image.createImage("/gamedata/sprites/bkg_cut.png");
             Image playerPortrait = Image.createImage("/gamedata/sprites/player.png");
             Image agentPortrait = dialogId != 0 && dialogId != 9
@@ -2415,7 +2415,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
 
-            int textAreaWidth = PortalRenderer.SCREEN_WIDTH - playerPortrait.getWidth() - 6;
+            int textAreaWidth = PortalRenderer.VIEWPORT_WIDTH - playerPortrait.getWidth() - 6;
             Graphics fbGraphics = frameBuffer.getGraphics();
             fbGraphics.setColor(16711680);
             fbGraphics.drawImage(background, 0, 0, 20);
@@ -2433,15 +2433,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 if (doctorPortrait != null) {
                     agentY = (UI_HEIGHT - menuHeight) / 3 + 2;
                     fbGraphics.drawImage(agentPortrait,
-                            PortalRenderer.SCREEN_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
+                            PortalRenderer.VIEWPORT_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
                     fbGraphics.drawImage(doctorPortrait,
-                            PortalRenderer.SCREEN_WIDTH - 2 - doctorPortrait.getWidth(), doctorY, 20);
+                            PortalRenderer.VIEWPORT_WIDTH - 2 - doctorPortrait.getWidth(), doctorY, 20);
                     linesPerBox = (316 - menuHeight) / (this.var_6d3 * 3);
                     lineBuffers[1] = new int[linesPerBox];
                     lineBuffers[2] = new int[linesPerBox];
                 } else {
                     fbGraphics.drawImage(agentPortrait,
-                            PortalRenderer.SCREEN_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
+                            PortalRenderer.VIEWPORT_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
                     linesPerBox = (316 - menuHeight) / (this.var_6d3 * 2);
                     lineBuffers[1] = new int[linesPerBox];
                 }
@@ -2450,7 +2450,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             lineBuffers[0] = new int[linesPerBox];
             this.sub_1e3(graphics, frameBuffer);
             this.drawLargeString("back", graphics,
-                    PortalRenderer.SCREEN_WIDTH - this.sub_5d2("back") - 3, UI_HEIGHT - this.var_550 - 3);
+                    PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2("back") - 3, UI_HEIGHT - this.var_550 - 3);
             this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
 
             int[] charIndices = new int[]{0, 0, 0};
@@ -2604,7 +2604,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         graphics.drawImage(frameBuffer, 0, 0, 20);
                         this.drawLargeString("back", graphics,
-                                PortalRenderer.SCREEN_WIDTH - this.sub_5d2("back") - 3,
+                                PortalRenderer.VIEWPORT_WIDTH - this.sub_5d2("back") - 3,
                                 UI_HEIGHT - this.var_550 - 3);
                         this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
 

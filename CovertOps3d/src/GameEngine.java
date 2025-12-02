@@ -110,21 +110,21 @@ public final class GameEngine {
 
         // Initialize rendering buffers using constants
         PortalRenderer.screenBuffer = new int[PortalRenderer.SCREEN_BUFFER_SIZE];
-        PortalRenderer.depthBuffer = new short[PortalRenderer.SCREEN_HEIGHT];
+        PortalRenderer.depthBuffer = new short[PortalRenderer.VIEWPORT_HEIGHT];
         PortalRenderer.renderUtils = new RenderUtils();
 
         // Initialize angle correction table for perspective projection
-        PortalRenderer.angleCorrectionTable = new int[PortalRenderer.SCREEN_WIDTH];
-        for (int x = 0; x < PortalRenderer.SCREEN_WIDTH; x++) {
-            int offsetFromCenter = (x - PortalRenderer.HALF_SCREEN_WIDTH) << 16;
+        PortalRenderer.angleCorrectionTable = new int[PortalRenderer.VIEWPORT_WIDTH];
+        for (int x = 0; x < PortalRenderer.VIEWPORT_WIDTH; x++) {
+            int offsetFromCenter = (x - PortalRenderer.HALF_VIEWPORT_WIDTH) << 16;
             PortalRenderer.angleCorrectionTable[x] =
-                    MathUtils.fixedPointDivide(offsetFromCenter, PortalRenderer.HALF_SCREEN_WIDTH_FP) >> 2;
+                    MathUtils.fixedPointDivide(offsetFromCenter, PortalRenderer.HALF_VIEWPORT_WIDTH_FP) >> 2;
         }
 
         // Initialize reciprocal lookup table (1/x) for fast division
-        PortalRenderer.reciprocalTable = new int[PortalRenderer.SCREEN_HEIGHT + 1];
+        PortalRenderer.reciprocalTable = new int[PortalRenderer.VIEWPORT_HEIGHT + 1];
         PortalRenderer.reciprocalTable[0] = 0;
-        for (int i = 1; i <= PortalRenderer.SCREEN_HEIGHT; i++) {
+        for (int i = 1; i <= PortalRenderer.VIEWPORT_HEIGHT; i++) {
             PortalRenderer.reciprocalTable[i] = 65536 / i;
         }
 
@@ -217,10 +217,10 @@ public final class GameEngine {
         graphics.drawRGB(
                 PortalRenderer.screenBuffer,
                 0,
-                PortalRenderer.SCREEN_WIDTH,
+                PortalRenderer.VIEWPORT_WIDTH,
                 0, 0,
-                PortalRenderer.SCREEN_WIDTH,
-                PortalRenderer.SCREEN_HEIGHT,
+                PortalRenderer.VIEWPORT_WIDTH,
+                PortalRenderer.VIEWPORT_HEIGHT,
                 false
         );
 
