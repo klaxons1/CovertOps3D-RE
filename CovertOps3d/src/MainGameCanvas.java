@@ -37,16 +37,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private String[] SETTINGS_MENU_ITEMS;
     private String[] chapterMenuItems;
-    private int var_4db;
+    private int menuOffsetY;
     private int smallFontCharsPerRow;
-    private int var_550;
-    private int var_59b;
-    private int[] var_5fa;
-    private int[] var_65d;
-    private int[] var_691;
-    private int[] var_6a8;
-    private int var_6d3;
-    private int var_75f;
+    private int menuItemHeight;
+    private int menuBoxWidthUnit;
+    private int[] fontCharOffsets;
+    private int[] fontCharWidths;
+    private int[] fontTextureX;
+    private int[] fontTextureW;
+    private int textLineHeight;
+    private int spaceWidth;
     private long frameDeltaTime;
     private long accumulatedTime;
     private long lastFrameTime;
@@ -88,12 +88,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] var_1071 = new int[]{150, 150, 150};
     public static final int[] var_10c4 = new int[]{65536, 65536, 65536};
     public static final int[] var_1113 = new int[]{400, 400, 400};
-    public static final int[] var_111e = new int[]{4, 4, 4};
-    public static final int[] var_1128 = new int[]{6, 6, 6};
-    public static final int[] var_1147 = new int[]{8, 8, 8};
-    public static final int[] var_119b = new int[]{3, 3, 3};
-    public static final int[] var_11e0 = new int[]{2, 2, 2};
-    public static final int[] var_11f1 = new int[]{10, 10, 10};
+    public static final int[] COOLDOWN_FIST = new int[]{4, 4, 4};
+    public static final int[] COOLDOWN_LUGER = new int[]{6, 6, 6};
+    public static final int[] COOLDOWN_MAUSER = new int[]{8, 8, 8};
+    public static final int[] COOLDOWN_RIFLE = new int[]{3, 3, 3};
+    public static final int[] COOLDOWN_STEN = new int[]{2, 2, 2};
+    public static final int[] COOLDOWN_SONIC = new int[]{10, 10, 10};
     public static final int[] enemyDamageEasy = new int[]{10, 15, 20};
     public static final int[] enemyDamageNormal = new int[]{15, 20, 25};
     public static final int[] enemyDamageHard = new int[]{20, 25, 30};
@@ -140,16 +140,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public MainGameCanvas() {
         super(false);
         System.currentTimeMillis();
-        this.var_4db = 18;
+        this.menuOffsetY = 18;
         this.smallFontCharsPerRow = 26;
-        this.var_550 = 23;
-        this.var_59b = 4;
-        this.var_5fa = new int[]{1, 11, 22, 31, 42, 52, 62, 70, 82, 91, 101, 112, 120, 130, 142, 151, 161, 171, 2, 12, 20, 31, 40, 51, 61, 72, 80, 90, 100, 110, 120, 130, 142, 151, 160, 170, 1, 12, 21, 31, 41, 51, 61, 71, 81, 91, 100, 110, 120, 130, 140, 150, 160, 170};
-        this.var_65d = new int[]{9, 9, 7, 8, 7, 7, 7, 10, 6, 6, 9, 6, 10, 10, 7, 9, 8, 8, 7, 6, 10, 8, 10, 9, 8, 7, 4, 4, 4, 8, 4, 4, 7, 4, 0, 0, 8, 6, 8, 8, 9, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0};
-        this.var_691 = new int[]{0, 8, 14, 21, 29, 36, 42, 49, 58, 64, 71, 78, 85, 91, 98, 106, 112, 120, 126, 134, 140, 148, 154, 162, 169, 176, 1, 8, 15, 22, 29, 36, 43, 50, 59, 65, 71, 80, 84, 92, 99, 106, 113, 121, 127, 135, 141, 148, 155, 162, 169, 177, 1, 9, 15, 22, 29, 36, 43, 50, 57, 64, 71, 77, 85, 92, 99, 105, 112, 121, 127, 133, 140, 147, 154, 161, 168, 175};
-        this.var_6a8 = new int[]{6, 5, 6, 6, 5, 5, 6, 6, 3, 3, 5, 4, 5, 6, 6, 5, 6, 5, 5, 5, 6, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 1, 2, 5, 2, 7, 5, 5, 5, 5, 3, 5, 2, 5, 5, 5, 4, 5, 3, 4, 3, 4, 4, 5, 4, 4, 4, 4, 4, 1, 2, 1, 4, 1, 2, 4, 3, 2, 7, 0, 0, 0, 0, 0, 0};
-        this.var_6d3 = 10;
-        this.var_75f = 3;
+        this.menuItemHeight = 23;
+        this.menuBoxWidthUnit = 4;
+        this.fontCharOffsets = new int[]{1, 11, 22, 31, 42, 52, 62, 70, 82, 91, 101, 112, 120, 130, 142, 151, 161, 171, 2, 12, 20, 31, 40, 51, 61, 72, 80, 90, 100, 110, 120, 130, 142, 151, 160, 170, 1, 12, 21, 31, 41, 51, 61, 71, 81, 91, 100, 110, 120, 130, 140, 150, 160, 170};
+        this.fontCharWidths = new int[]{9, 9, 7, 8, 7, 7, 7, 10, 6, 6, 9, 6, 10, 10, 7, 9, 8, 8, 7, 6, 10, 8, 10, 9, 8, 7, 4, 4, 4, 8, 4, 4, 7, 4, 0, 0, 8, 6, 8, 8, 9, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0};
+        this.fontTextureX = new int[]{0, 8, 14, 21, 29, 36, 42, 49, 58, 64, 71, 78, 85, 91, 98, 106, 112, 120, 126, 134, 140, 148, 154, 162, 169, 176, 1, 8, 15, 22, 29, 36, 43, 50, 59, 65, 71, 80, 84, 92, 99, 106, 113, 121, 127, 135, 141, 148, 155, 162, 169, 177, 1, 9, 15, 22, 29, 36, 43, 50, 57, 64, 71, 77, 85, 92, 99, 105, 112, 121, 127, 133, 140, 147, 154, 161, 168, 175};
+        this.fontTextureW = new int[]{6, 5, 6, 6, 5, 5, 6, 6, 3, 3, 5, 4, 5, 6, 6, 5, 6, 5, 5, 5, 6, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 1, 2, 5, 2, 7, 5, 5, 5, 5, 3, 5, 2, 5, 5, 5, 4, 5, 3, 4, 3, 4, 4, 5, 4, 4, 4, 4, 4, 1, 2, 1, 4, 1, 2, 4, 3, 2, 7, 0, 0, 0, 0, 0, 0};
+        this.textLineHeight = 10;
+        this.spaceWidth = 3;
         this.frameDeltaTime = 0L;
         this.accumulatedTime = 0L;
         this.lastFrameTime = 0L;
@@ -898,10 +898,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 int totalItems = menuItems.length - 1;
                 int visibleItems = totalItems > 5 ? 5 : totalItems;
-                int menuY = UI_HEIGHT - visibleItems * this.var_550 - 3 - this.var_550;
+                int menuY = UI_HEIGHT - visibleItems * this.menuItemHeight - 3 - this.menuItemHeight;
 
                 if (totalItems > visibleItems && scrollOffset > 0) {
-                    int arrowY = menuY + 2 * this.var_550 - 2;
+                    int arrowY = menuY + 2 * this.menuItemHeight - 2;
                     graphics.setColor(16115387);
                     graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_VIEWPORT_WIDTH, arrowY - 3);
                 }
@@ -918,13 +918,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(itemText)) / 2;
 
                     if ((menuMode & 15) == itemIndex) {
-                        int boxWidth = this.var_59b * 30;
+                        int boxWidth = this.menuBoxWidthUnit * 30;
                         graphics.fillRoundRect((PortalRenderer.VIEWPORT_WIDTH - boxWidth) / 2, menuY,
-                                boxWidth, this.var_550, 10, 10);
+                                boxWidth, this.menuItemHeight, 10, 10);
                     }
 
                     this.drawLargeString(itemText, graphics, textX, menuY);
-                    menuY += this.var_550;
+                    menuY += this.menuItemHeight;
                 }
 
                 if (totalItems > visibleItems && scrollOffset < totalItems - 5) {
@@ -935,10 +935,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 String actionText = menuItems == this.SETTINGS_MENU_ITEMS ? "change" :
                         (menuItems == MenuSystem.CONFIRMATION_MENU_ITEMS ? "yes" : "select");
-                this.drawLargeString(actionText, graphics, 3, UI_HEIGHT - this.var_550 - 3);
+                this.drawLargeString(actionText, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
                 this.drawLargeString(menuItems[totalItems], graphics,
                         PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(menuItems[totalItems]) - 3,
-                        UI_HEIGHT - this.var_550 - 3);
+                        UI_HEIGHT - this.menuItemHeight - 3);
                 this.flushScreenBuffer();
                 yieldToOtherThreads();
 
@@ -1210,7 +1210,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
 
             boolean needsUpdate = true;
-            int textY = UI_HEIGHT - this.var_550;
+            int textY = UI_HEIGHT - this.menuItemHeight;
 
             int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
 
@@ -1241,12 +1241,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     String backText = "back";
                     this.drawLargeString(backText, graphics,
                             PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(backText) - 3,
-                            UI_HEIGHT - this.var_550 - 3);
+                            UI_HEIGHT - this.menuItemHeight - 3);
                     this.drawLargeString(title, graphics,
                             (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(title)) / 2, 3);
 
-                    graphics.setClip(0, this.var_550 + 6, PortalRenderer.VIEWPORT_WIDTH,
-                            UI_HEIGHT - 2 * this.var_550 - 12);
+                    graphics.setClip(0, this.menuItemHeight + 6, PortalRenderer.VIEWPORT_WIDTH,
+                            UI_HEIGHT - 2 * this.menuItemHeight - 12);
 
                     int displayY;
                     if (scrolling) {
@@ -1256,8 +1256,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         int scrollSteps = elapsed / 50 + 1;
                         textY -= scrollSteps;
 
-                        if (textY + content.length * (this.var_6d3 + 2) < 0) {
-                            textY = UI_HEIGHT - this.var_550;
+                        if (textY + content.length * (this.textLineHeight + 2) < 0) {
+                            textY = UI_HEIGHT - this.menuItemHeight;
                         }
 
                         int remainingDelay = scrollSteps * 50 - elapsed;
@@ -1266,7 +1266,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
                         lastScrollTime = currentTime;
                     } else {
-                        displayY = (UI_HEIGHT - (this.var_6d3 + 2) * content.length) / 2;
+                        displayY = (UI_HEIGHT - (this.textLineHeight + 2) * content.length) / 2;
                     }
 
                     for(int i = 0; i < content.length; ++i) {
@@ -1276,7 +1276,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
                         this.drawSmallString(line, graphics,
                                 (PortalRenderer.VIEWPORT_WIDTH - this.getSmallTextWidth(line)) / 2, displayY);
-                        displayY += this.var_6d3 + 2;
+                        displayY += this.textLineHeight + 2;
                     }
 
                     this.flushScreenBuffer();
@@ -1866,7 +1866,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             ++lineCount;
         } while((lineStart = lineEnd + 2) < message.length());
 
-        int textY = HALF_UI_HEIGHT - this.var_550 * lineCount / 2;
+        int textY = HALF_UI_HEIGHT - this.menuItemHeight * lineCount / 2;
         lineStart = 0;
 
         do {
@@ -1880,7 +1880,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             String line = message.substring(lineStart, lineEnd + 1);
             int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(line)) / 2;
             this.drawLargeString(line, graphics, textX, textY);
-            textY += this.var_550;
+            textY += this.menuItemHeight;
         } while((lineStart = lineEnd + 2) < message.length());
     }
 
@@ -2024,7 +2024,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 switch(GameEngine.currentWeapon) {
                     case 0:
-                        if (GameEngine.weaponCooldownTimer < -var_111e[GameEngine.difficultyLevel]) {
+                        if (GameEngine.weaponCooldownTimer < -COOLDOWN_FIST[GameEngine.difficultyLevel]) {
                             LevelLoader.gameWorld.fireWeapon();
                             this.weaponAnimationState = 1;
                             weaponSpriteFrame = 1;
@@ -2032,7 +2032,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
                         break;
                     case 1:
-                        if (GameEngine.weaponCooldownTimer < -var_1128[GameEngine.difficultyLevel]
+                        if (GameEngine.weaponCooldownTimer < -COOLDOWN_LUGER[GameEngine.difficultyLevel]
                                 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                             ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                             LevelLoader.gameWorld.fireWeapon();
@@ -2042,7 +2042,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
                         break;
                     case 2:
-                        if (GameEngine.weaponCooldownTimer < -var_1147[GameEngine.difficultyLevel]
+                        if (GameEngine.weaponCooldownTimer < -COOLDOWN_MAUSER[GameEngine.difficultyLevel]
                                 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                             ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                             LevelLoader.gameWorld.fireWeapon();
@@ -2063,7 +2063,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                 }
                             } else {
                                 this.weaponAnimationState = 0;
-                                GameEngine.weaponCooldownTimer = var_119b[GameEngine.difficultyLevel];
+                                GameEngine.weaponCooldownTimer = COOLDOWN_RIFLE[GameEngine.difficultyLevel];
                             }
                         }
                         break;
@@ -2079,7 +2079,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                 }
                             } else {
                                 this.weaponAnimationState = 0;
-                                GameEngine.weaponCooldownTimer = var_11e0[GameEngine.difficultyLevel];
+                                GameEngine.weaponCooldownTimer = COOLDOWN_STEN[GameEngine.difficultyLevel];
                             }
                         }
                         break;
@@ -2110,7 +2110,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
                         break;
                     case 7:
-                        if (GameEngine.weaponCooldownTimer < -var_11f1[GameEngine.difficultyLevel]
+                        if (GameEngine.weaponCooldownTimer < -COOLDOWN_SONIC[GameEngine.difficultyLevel]
                                 && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
                             ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
                             LevelLoader.gameWorld.fireWeapon();
@@ -2383,7 +2383,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     private void drawPleaseWait(Graphics graphics) {
         String text = "please wait...";
         int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(text)) / 2;
-        int textY = HALF_UI_HEIGHT - this.var_550 / 2;
+        int textY = HALF_UI_HEIGHT - this.menuItemHeight / 2;
 
         int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
         PortalRenderer.screenBuffer[0] = Integer.MIN_VALUE;
@@ -2400,7 +2400,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private int drawDialogOverlay(Graphics graphics, int dialogId) {
         try {
-            int menuHeight = this.var_550 + 6;
+            int menuHeight = this.menuItemHeight + 6;
             Image frameBuffer = Image.createImage(PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
             Image background = Image.createImage("/gamedata/sprites/bkg_cut.png");
             Image playerPortrait = Image.createImage("/gamedata/sprites/player.png");
@@ -2423,7 +2423,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             int agentY = HALF_UI_HEIGHT + 2;
             int doctorY = 2 * (UI_HEIGHT - menuHeight) / 3 + 2;
-            int linesPerBox = (316 - menuHeight) / this.var_6d3;
+            int linesPerBox = (316 - menuHeight) / this.textLineHeight;
 
             int[][] lineBuffers = new int[3][];
             int[] lineIndices = new int[]{0, 0, 0};
@@ -2436,13 +2436,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             PortalRenderer.VIEWPORT_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
                     fbGraphics.drawImage(doctorPortrait,
                             PortalRenderer.VIEWPORT_WIDTH - 2 - doctorPortrait.getWidth(), doctorY, 20);
-                    linesPerBox = (316 - menuHeight) / (this.var_6d3 * 3);
+                    linesPerBox = (316 - menuHeight) / (this.textLineHeight * 3);
                     lineBuffers[1] = new int[linesPerBox];
                     lineBuffers[2] = new int[linesPerBox];
                 } else {
                     fbGraphics.drawImage(agentPortrait,
                             PortalRenderer.VIEWPORT_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
-                    linesPerBox = (316 - menuHeight) / (this.var_6d3 * 2);
+                    linesPerBox = (316 - menuHeight) / (this.textLineHeight * 2);
                     lineBuffers[1] = new int[linesPerBox];
                 }
             }
@@ -2450,8 +2450,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             lineBuffers[0] = new int[linesPerBox];
             this.drawStripedBackground(graphics, frameBuffer);
             this.drawLargeString("back", graphics,
-                    PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth("back") - 3, UI_HEIGHT - this.var_550 - 3);
-            this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
+                    PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth("back") - 3, UI_HEIGHT - this.menuItemHeight - 3);
+            this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
 
             int[] charIndices = new int[]{0, 0, 0};
             int[] boxStartY = new int[]{0, 0, 0};
@@ -2476,7 +2476,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 int maxX = textX + textAreaWidth;
-                int maxY = textY + linesPerBox * this.var_6d3;
+                int maxY = textY + linesPerBox * this.textLineHeight;
                 int currentX = textX;
                 int currentY = textY;
 
@@ -2498,13 +2498,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     char c = line.charAt(charPos);
 
                     if (c == ' ') {
-                        if (currentX + this.var_75f > maxX) {
+                        if (currentX + this.spaceWidth > maxX) {
                             currentX = textX;
                             if (lineIndices[boxId] >= linesPerBox - 1) {
                                 this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
                                         textX, textY, maxY, textAreaWidth);
                             } else {
-                                currentY += this.var_6d3;
+                                currentY += this.textLineHeight;
                                 ++lineIndices[boxId];
                                 lineBuffers[boxId][lineIndices[boxId]] = charPos + 1;
                             }
@@ -2517,26 +2517,26 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             String word = line.substring(charPos, nextSpace);
                             int wordWidth = this.getSmallTextWidth(word);
 
-                            if (currentX + this.var_75f + wordWidth > maxX) {
+                            if (currentX + this.spaceWidth + wordWidth > maxX) {
                                 currentX = textX;
                                 if (lineIndices[boxId] >= linesPerBox - 1) {
                                     this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
                                             textX, textY, maxY, textAreaWidth);
                                 } else {
-                                    currentY += this.var_6d3;
+                                    currentY += this.textLineHeight;
                                     ++lineIndices[boxId];
                                     lineBuffers[boxId][lineIndices[boxId]] = charPos + 1;
                                 }
                             } else {
-                                currentX += this.var_75f;
+                                currentX += this.spaceWidth;
                             }
                         }
                     } else {
                         int[] fontCoords = this.getFontCoordinates(c);
                         int fontIdx = fontCoords[1] * this.smallFontCharsPerRow + fontCoords[0];
-                        int charWidth = this.var_6a8[fontIdx];
-                        int charX = this.var_691[fontIdx];
-                        int charY = fontCoords[1] * this.var_6d3;
+                        int charWidth = this.fontTextureW[fontIdx];
+                        int charX = this.fontTextureX[fontIdx];
+                        int charY = fontCoords[1] * this.textLineHeight;
 
                         if (currentX + charWidth + 1 > maxX) {
                             currentX = textX;
@@ -2544,13 +2544,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                 this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos,
                                         textX, textY, maxY, textAreaWidth);
                             } else {
-                                currentY += this.var_6d3;
+                                currentY += this.textLineHeight;
                                 ++lineIndices[boxId];
                                 lineBuffers[boxId][lineIndices[boxId]] = charPos;
                             }
                         }
 
-                        graphics.drawRegion(this.smallFontImage, charX, charY, charWidth, this.var_6d3,
+                        graphics.drawRegion(this.smallFontImage, charX, charY, charWidth, this.textLineHeight,
                                 0, currentX, currentY, 20);
                         currentX += charWidth + 1;
                     }
@@ -2572,10 +2572,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                     if (GameEngine.inputRun) {
                         GameEngine.inputRun = false;
-                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.var_550 - 3,
-                                this.getLargeTextWidth("pause"), this.var_550,
-                                0, 3, UI_HEIGHT - this.var_550 - 3, 20);
-                        this.drawLargeString("resume", graphics, 3, UI_HEIGHT - this.var_550 - 3);
+                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.menuItemHeight - 3,
+                                this.getLargeTextWidth("pause"), this.menuItemHeight,
+                                0, 3, UI_HEIGHT - this.menuItemHeight - 3, 20);
+                        this.drawLargeString("resume", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
                         this.flushScreenBuffer();
 
                         while(!GameEngine.inputRun && !GameEngine.inputBack
@@ -2585,10 +2585,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
 
                     if (GameEngine.inputRun) {
-                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.var_550 - 3,
-                                this.getLargeTextWidth("resume"), this.var_550,
-                                0, 3, UI_HEIGHT - this.var_550 - 3, 20);
-                        this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
+                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.menuItemHeight - 3,
+                                this.getLargeTextWidth("resume"), this.menuItemHeight,
+                                0, 3, UI_HEIGHT - this.menuItemHeight - 3, 20);
+                        this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
                         this.flushScreenBuffer();
                         GameEngine.inputRun = false;
                     }
@@ -2605,8 +2605,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         graphics.drawImage(frameBuffer, 0, 0, 20);
                         this.drawLargeString("back", graphics,
                                 PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth("back") - 3,
-                                UI_HEIGHT - this.var_550 - 3);
-                        this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.var_550 - 3);
+                                UI_HEIGHT - this.menuItemHeight - 3);
+                        this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
 
                         for(int b = 0; b < 3; ++b) {
                             int endChar = b == boxId ? charPos :
@@ -2646,19 +2646,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                         char ch = currentText[b].charAt(pos);
 
                                         if (ch == ' ') {
-                                            renderX += this.var_75f;
+                                            renderX += this.spaceWidth;
                                         } else {
                                             int[] fCoords = this.getFontCoordinates(ch);
                                             int fIdx = fCoords[1] * this.smallFontCharsPerRow + fCoords[0];
-                                            int cWidth = this.var_6a8[fIdx];
-                                            int cX = this.var_691[fIdx];
-                                            int cY = fCoords[1] * this.var_6d3;
-                                            graphics.drawRegion(this.smallFontImage, cX, cY, cWidth, this.var_6d3,
+                                            int cWidth = this.fontTextureW[fIdx];
+                                            int cX = this.fontTextureX[fIdx];
+                                            int cY = fCoords[1] * this.textLineHeight;
+                                            graphics.drawRegion(this.smallFontImage, cX, cY, cWidth, this.textLineHeight,
                                                     0, renderX, startY, 20);
                                             renderX += cWidth + 1;
                                         }
                                     }
-                                    startY += this.var_6d3;
+                                    startY += this.textLineHeight;
                                 }
                             }
                         }
@@ -2711,19 +2711,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 char c = text.charAt(charIdx);
 
                 if (c == ' ') {
-                    renderX += this.var_75f;
+                    renderX += this.spaceWidth;
                 } else {
                     int[] coords = this.getFontCoordinates(c);
                     int fontIdx = coords[1] * this.smallFontCharsPerRow + coords[0];
-                    int charW = this.var_6a8[fontIdx];
-                    int charX = this.var_691[fontIdx];
-                    int charY = coords[1] * this.var_6d3;
-                    graphics.drawRegion(this.smallFontImage, charX, charY, charW, this.var_6d3,
+                    int charW = this.fontTextureW[fontIdx];
+                    int charX = this.fontTextureX[fontIdx];
+                    int charY = coords[1] * this.textLineHeight;
+                    graphics.drawRegion(this.smallFontImage, charX, charY, charW, this.textLineHeight,
                             0, renderX, renderY, 20);
                     renderX += charW + 1;
                 }
             }
-            renderY += this.var_6d3;
+            renderY += this.textLineHeight;
         }
 
         lineStarts[lineStarts.length - 1] = startChar;
@@ -2753,10 +2753,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         for(int i = 0; i < text.length(); ++i) {
             char c = text.charAt(i);
             if (c == ' ') {
-                width += this.var_59b;
+                width += this.menuBoxWidthUnit;
             } else {
                 int[] coords = this.getFontCharCoordinates(c);
-                int charWidth = this.var_65d[coords[1] * this.var_4db + coords[0]];
+                int charWidth = this.fontCharWidths[coords[1] * this.menuOffsetY + coords[0]];
                 width += charWidth;
             }
         }
@@ -2770,10 +2770,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         for(int i = 0; i < text.length(); ++i) {
             char c = text.charAt(i);
             if (c == ' ') {
-                width += this.var_75f;
+                width += this.spaceWidth;
             } else {
                 int[] coords = this.getFontCoordinates(c);
-                int charWidth = this.var_6a8[coords[1] * this.smallFontCharsPerRow + coords[0]];
+                int charWidth = this.fontTextureW[coords[1] * this.smallFontCharsPerRow + coords[0]];
                 width += charWidth + 1;
             }
         }
@@ -2782,7 +2782,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     }
 
     private int[] getFontCharCoordinates(char c) {
-        int[] coords = new int[]{this.var_4db - 1, 2};
+        int[] coords = new int[]{this.menuOffsetY - 1, 2};
 
         if (c >= 'a' && c <= 'r') {
             coords[0] = c - 97;
@@ -2888,14 +2888,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             char c = text.charAt(i);
 
             if (c == ' ') {
-                x += this.var_59b;
+                x += this.menuBoxWidthUnit;
             } else {
                 int[] coords = this.getFontCharCoordinates(c);
-                int fontIdx = coords[1] * this.var_4db + coords[0];
-                int charWidth = this.var_65d[fontIdx];
-                int charX = this.var_5fa[fontIdx];
-                int charY = coords[1] * this.var_550;
-                graphics.drawRegion(this.largeFontImage, charX, charY, charWidth, this.var_550,
+                int fontIdx = coords[1] * this.menuOffsetY + coords[0];
+                int charWidth = this.fontCharWidths[fontIdx];
+                int charX = this.fontCharOffsets[fontIdx];
+                int charY = coords[1] * this.menuItemHeight;
+                graphics.drawRegion(this.largeFontImage, charX, charY, charWidth, this.menuItemHeight,
                         0, x, y, 20);
                 x += charWidth;
             }
@@ -2907,14 +2907,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             char c = text.charAt(i);
 
             if (c == ' ') {
-                x += this.var_75f;
+                x += this.spaceWidth;
             } else {
                 int[] coords = this.getFontCoordinates(c);
                 int fontIdx = coords[1] * this.smallFontCharsPerRow + coords[0];
-                int charWidth = this.var_6a8[fontIdx];
-                int charX = this.var_691[fontIdx];
-                int charY = coords[1] * this.var_6d3;
-                graphics.drawRegion(this.smallFontImage, charX, charY, charWidth, this.var_6d3,
+                int charWidth = this.fontTextureW[fontIdx];
+                int charX = this.fontTextureX[fontIdx];
+                int charY = coords[1] * this.textLineHeight;
+                graphics.drawRegion(this.smallFontImage, charX, charY, charWidth, this.textLineHeight,
                         0, x, y, 20);
                 x += charWidth + 1;
             }
