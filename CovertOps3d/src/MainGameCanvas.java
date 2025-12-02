@@ -559,7 +559,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         this.accumulatedTime = 600L;
                     }
 
-                    while(this.accumulatedTime >= 80L) {
+                    while(this.accumulatedTime >= 50L) {
                         ++this.frameCounter;
                         if (this.gameLoopTick()) {
                             GameEngine.damageFlash = false;
@@ -570,7 +570,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             continue label182;
                         }
 
-                        this.accumulatedTime -= 80L;
+                        this.accumulatedTime -= 50L; //20 fps quick hack
                     }
 
                     this.renderHUDAndWeapon(graphics);
