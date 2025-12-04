@@ -652,72 +652,147 @@ public class LevelLoader {
        }
     }
 
-    public static void decompressSprite(byte[] var0, int var1, byte[] var2, int var3, int var4, int var5) {
-       int var6 = var1 * var5 / 8;
-       int var7 = var1 * var5 % 8;
-       int var8 = (1 << var5) - 1;
-       int var9 = var4 + var3;
+    /**
+     * Decompresses a stream of packed pixel indices (palette indices) from a source
+     * byte array into an unpacked destination array. This method implements a
+     * BitReader logic that handles pixel indices spanning across byte boundaries.
+     * The bits are read from Most Significant Bit (MSB) to Least Significant Bit (LSB).
+     *
+     * @param packedData The source byte array containing the packed pixel indices.
+     * @param startPixelIndex The index of the first pixel in the logical stream to start decompression from.
+     * This value is used to calculate the initial byte and bit offsets in {@code packedData}.
+     * @param outputIndices The destination byte array to store the unpacked 8-bit pixel indices.
+     * @param outputOffset The starting index in the destination array to write the first decompressed pixel.
+     * @param pixelCount The number of pixels (indices) to decompress.
+     * @param bitsPerPixel The bit depth of the packed indices (e.g., 4 for 16-color, 8 for 256-color).
+     */
+    public static void decompressSprite(
+            byte[] packedData,
+            int startPixelIndex,
+            byte[] outputIndices,
+            int outputOffset,
+            int pixelCount,
+            int bitsPerPixel)
+    {
+        // Calculate the initial position in the packed data stream
+        int totalStartBits = startPixelIndex * bitsPerPixel;
+        int currentByteIndex = totalStartBits / 8; // Current byte offset in packedData
+        int currentBitOffset = totalStartBits % 8; // Current bit offset (0-7)
 
-       for(int var10 = var3; var10 < var9; ++var10) {
-          byte var11 = var0[var6];
-          int var12;
-          int var10000;
-          if ((var12 = 8 - (var5 + var7)) >= 0) {
-             var10000 = var11 >> var12;
-          } else {
-             var12 = -var12;
-             var10000 = (byte)(var11 << var12) | (var0[var6 + 1] & 255) >> 8 - var12;
-          }
+        // Mask to isolate the 'bitsPerPixel' value (e.g., for 4bpp, mask is 0xF)
+        final int pixelValueMask = (1 << bitsPerPixel) - 1;
+        final int outputEndIndex = outputOffset + pixelCount;
 
-          var11 = (byte)var10000;
-          if ((var7 += var5) > 7) {
-             var7 -= 8;
-             ++var6;
-          }
+        for (int i = outputOffset; i < outputEndIndex; ++i) {
+            // --- Bit Extraction Logic (Handles byte boundaries) ---
 
-          var2[var10] = (byte)(var11 & var8);
-       }
+            byte currentByte = packedData[currentByteIndex];
+            int extractedValue;
 
+            // Calculate the number of bits to right-shift the current byte to align
+            // the desired 'bitsPerPixel' block to the LSB position.
+            // shiftRight: 8 - (bitsPerPixel + currentBitOffset)
+            int shiftRight = 8 - (bitsPerPixel + currentBitOffset);
+
+            if (shiftRight >= 0) {
+                // Case 1: All bits are within the current byte
+                // Shift right to align the value to the LSB.
+                extractedValue = currentByte >> shiftRight;
+            } else {
+                // Case 2: Bits span across the current byte and the next byte
+                int bitsFromNextByte = -shiftRight;
+
+                // 1. Take the required bits from the current byte, shift them left.
+                extractedValue = currentByte << bitsFromNextByte;
+
+                // 2. Take the high bits from the next byte and combine (OR) them.
+                //    Using `& 0xFF` ensures the next byte is treated as an unsigned value before shifting.
+                extractedValue |= (packedData[currentByteIndex + 1] & 0xFF) >> (8 - bitsFromNextByte);
+            }
+
+            // --- Stream Position Update ---
+
+            // Move the bit offset forward
+            if ((currentBitOffset += bitsPerPixel) > 7) {
+                currentBitOffset -= 8; // New bit offset (0-7)
+                currentByteIndex++;    // Move to the next byte
+            }
+
+            // --- Write to Output ---
+
+            // Apply the mask to isolate the pure pixel index and write it to the destination array.
+            outputIndices[i] = (byte)(extractedValue & pixelValueMask);
+        }
     }
 
-    private static void decompressTexture(byte[] var0, int var1, byte[] var2, int var3, int var4, int var5, int var6) {
-       int var7 = var1 * var5 / 8;
-       int var8 = var1 * var5 % 8;
-       int var9 = (1 << var5) - 1;
-       int var10 = var4 + var3;
+    /**
+     * Decompresses a stream of packed pixel indices, typically for scenarios where a lower bit-depth source
+     * (e.g., 4bpp) is written into an 8bpp destination array in two separate passes (high and low nibble).
+     *
+     * The core bit-reading logic is the same as {@code decompressSprite}.
+     *
+     * @param packedData The source byte array containing the packed pixel indices.
+     * @param startPixelIndex The index of the first pixel in the logical stream to start decompression from.
+     * @param outputIndices The destination byte array (e.g., 8bpp) to store the combined pixel indices.
+     * @param outputOffset The starting index in the destination array to write.
+     * @param pixelCount The number of pixels (indices) to decompress.
+     * @param bitsPerPixel The bit depth of the packed indices (must be compatible with the packing scheme, typically 4).
+     * @param texturePartMode A flag indicating which part of the destination byte to write to (partially packed destination):
+     * <ul>
+     * <li><b>0:</b> Writes the extracted index to the <b>high nibble</b> (bits 7-4).</li>
+     * <li><b>1:</b> Writes the extracted index to the <b>low nibble</b> (bits 3-0),
+     * combining it with the high nibble already present in the byte.</li>
+     * </ul>
+     */
+    private static void decompressTexture(
+            byte[] packedData,
+            int startPixelIndex,
+            byte[] outputIndices,
+            int outputOffset,
+            int pixelCount,
+            int bitsPerPixel,
+            int texturePartMode)
+    {
+        // Decompression setup (identical to decompressSprite)
+        int totalStartBits = startPixelIndex * bitsPerPixel;
+        int currentByteIndex = totalStartBits / 8;
+        int currentBitOffset = totalStartBits % 8;
+        final int pixelValueMask = (1 << bitsPerPixel) - 1;
+        final int outputEndIndex = outputOffset + pixelCount;
 
-       for(int var11 = var3; var11 < var10; ++var11) {
-          byte var12 = var0[var7];
-          int var13;
-          int var10000;
-          if ((var13 = 8 - (var5 + var8)) >= 0) {
-             var10000 = var12 >> var13;
-          } else {
-             var13 = -var13;
-             var10000 = (byte)(var12 << var13) | (var0[var7 + 1] & 255) >> 8 - var13;
-          }
+        for (int i = outputOffset; i < outputEndIndex; ++i) {
+            // --- Bit Extraction Logic (Identical to decompressSprite) ---
 
-          var12 = (byte)var10000;
-          if ((var8 += var5) > 7) {
-             var8 -= 8;
-             ++var7;
-          }
+            byte currentByte = packedData[currentByteIndex];
+            int extractedValue;
+            int shiftRight = 8 - (bitsPerPixel + currentBitOffset);
 
-          byte[] var14;
-          int var10001;
-          int var10002;
-          if (var6 == 0) {
-             var14 = var2;
-             var10001 = var11;
-             var10002 = (var12 & var9) << 4;
-          } else {
-             var14 = var2;
-             var10001 = var11;
-             var10002 = var2[var11] | (byte)(var12 & var9);
-          }
+            if (shiftRight >= 0) {
+                extractedValue = currentByte >> shiftRight;
+            } else {
+                int bitsFromNextByte = -shiftRight;
+                extractedValue = currentByte << bitsFromNextByte;
+                extractedValue |= (packedData[currentByteIndex + 1] & 0xFF) >> (8 - bitsFromNextByte);
+            }
 
-          var14[var10001] = (byte)var10002;
-       }
+            // --- Stream Position Update ---
 
+            if ((currentBitOffset += bitsPerPixel) > 7) {
+                currentBitOffset -= 8;
+                currentByteIndex++;
+            }
+
+            // --- Write to Output (Part-Write Logic) ---
+
+            int extractedIndex = extractedValue & pixelValueMask;
+
+            if (texturePartMode == 0) {
+                // Mode 0: Write to the high nibble (shift left by 4, e.g., for 4bpp)
+                outputIndices[i] = (byte)(extractedIndex << 4);
+            } else {
+                // Mode 1: Write to the low nibble. Use bitwise OR to combine with the existing high nibble.
+                outputIndices[i] = (byte)(outputIndices[i] | extractedIndex);
+            }
+        }
     }
 }
