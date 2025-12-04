@@ -2402,6 +2402,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
 
             int[] charIndices = new int[]{0, 0, 0};
+            int[] boxStartX = new int[]{0, 0, 0};
             int[] boxStartY = new int[]{0, 0, 0};
             int[] boxEndY = new int[]{0, 0, 0};
             long[] fadeTimers = new long[]{0L, 0L, 0L};
@@ -2423,6 +2424,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     boxId = 2;
                 }
 
+                boxStartX[boxId] = textX;
+                boxStartY[boxId] = textY;
+                boxEndY[boxId] = textY + linesPerBox * this.textLineHeight;
+
                 int maxX = textX + textAreaWidth;
                 int maxY = textY + linesPerBox * this.textLineHeight;
                 int currentX = textX;
@@ -2434,9 +2439,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 if (needsFade[boxId]) {
                     needsFade[boxId] = false;
-                    graphics.drawRegion(frameBuffer, boxStartY[boxId], boxEndY[boxId],
-                            textAreaWidth, boxEndY[boxId] - boxEndY[boxId],
-                            0, boxStartY[boxId], boxEndY[boxId], 20);
+                    int oldColor = graphics.getColor();
+                    graphics.setColor(0);
+                    graphics.fillRect(boxStartX[boxId], boxStartY[boxId], textAreaWidth, boxEndY[boxId] - boxStartY[boxId]);
+                    graphics.setColor(oldColor);
+                    graphics.drawRegion(frameBuffer, boxStartX[boxId], boxStartY[boxId],
+                            textAreaWidth, boxEndY[boxId] - boxStartY[boxId],
+                            0, boxStartX[boxId], boxStartY[boxId], 20);
                 }
 
                 lineIndices[boxId] = 0;
@@ -2510,9 +2519,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     for(int b = 0; b < 3; ++b) {
                         if (needsFade[b] && currentTime > fadeTimers[b]) {
                             needsFade[b] = false;
-                            graphics.drawRegion(frameBuffer, boxStartY[b], boxEndY[b],
-                                    textAreaWidth, boxEndY[b] - boxEndY[b],
-                                    0, boxStartY[b], boxEndY[b], 20);
+                            int oldColor = graphics.getColor();
+                            graphics.setColor(0);
+                            graphics.fillRect(boxStartX[b], boxStartY[b], textAreaWidth, boxEndY[b] - boxStartY[b]);
+                            graphics.setColor(oldColor);
+                            graphics.drawRegion(frameBuffer, boxStartX[b], boxStartY[b],
+                                    textAreaWidth, boxEndY[b] - boxStartY[b],
+                                    0, boxStartX[b], boxStartY[b], 20);
                             lineIndices[b] = 0;
                             currentText[b] = null;
                         }
@@ -2625,8 +2638,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 charIndices[boxId] = 0;
                 needsFade[boxId] = true;
-                boxStartY[boxId] = textX;
-                boxEndY[boxId] = textY;
+                boxStartX[boxId] = textX;
+                boxStartY[boxId] = textY;
                 boxEndY[boxId] = maxY;
                 fadeTimers[boxId] = System.currentTimeMillis() + 5000L;
                 HelperUtils.delay(500);
@@ -2644,7 +2657,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     private void drawWrappedLine(Graphics graphics, Image frameBuffer, String text, int[] lineStarts,
                                  int startChar, int startX, int startY, int maxY, int width) {
 
-        graphics.drawRegion(frameBuffer, startX, startY, width, maxY - startY, 0, startX, startY, 20);
+        int height = maxY - startY;
+        int oldColor = graphics.getColor();
+        graphics.setColor(0);
+        graphics.fillRect(startX, startY, width, height);
+        graphics.setColor(oldColor);
+        graphics.drawRegion(frameBuffer, startX, startY, width, height, 0, startX, startY, 20);
+
         int renderY = startY;
 
         for(int lineIdx = 1; lineIdx < lineStarts.length; ++lineIdx) {
@@ -2653,6 +2672,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int lineEnd = lineIdx + 1 < lineStarts.length
                     ? lineStarts[lineIdx + 1]
                     : startChar;
+
+            if (lineIdx > 1) {
+                int oldColor2 = graphics.getColor();
+                graphics.setColor(0);
+                graphics.fillRect(startX, renderY, width, this.textLineHeight);
+                graphics.setColor(oldColor2);
+                graphics.drawRegion(frameBuffer, startX, renderY, width, this.textLineHeight,
+                        0, startX, renderY, 20);
+            }
 
             int renderX = startX;
             for(int charIdx = lineStart; charIdx < lineEnd; ++charIdx) {
