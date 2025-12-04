@@ -25,11 +25,8 @@ public class HelperUtils {
         }
     }
 
-    public static void delay(int milliseconds) {
-        long start = System.currentTimeMillis();
-        do {
-            yieldToOtherThreads();
-        } while(System.currentTimeMillis() - start < (long)milliseconds);
+    public static void delay(int milliseconds) throws InterruptedException {
+        Thread.sleep(milliseconds);
     }
 
     public static void freeMemory() {
