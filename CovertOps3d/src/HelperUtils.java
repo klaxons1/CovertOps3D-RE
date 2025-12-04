@@ -25,9 +25,13 @@ public class HelperUtils {
         }
     }
 
-    public static void delay(int milliseconds) throws InterruptedException {
-        Thread.sleep(milliseconds);
+    public static void delay(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+        }
     }
+
 
     public static void freeMemory() {
         System.gc();
