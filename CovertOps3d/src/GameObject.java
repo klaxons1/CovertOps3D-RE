@@ -76,17 +76,17 @@ public final class GameObject {
     public final int getMovementSpeed() {
         switch(this.objectType) {
             case 3001:
-                return MainGameCanvas.var_1a4a[GameEngine.difficultyLevel];
+                return MainGameCanvas.SPEED_3001[GameEngine.difficultyLevel];
             case 3002:
-                return MainGameCanvas.var_1a74[GameEngine.difficultyLevel];
+                return MainGameCanvas.SPEED_3002[GameEngine.difficultyLevel];
             case 3003:
-                return MainGameCanvas.var_1966[GameEngine.difficultyLevel];
+                return MainGameCanvas.SPEED_3003[GameEngine.difficultyLevel];
             case 3004:
-                return MainGameCanvas.var_19bb[GameEngine.difficultyLevel];
+                return MainGameCanvas.SPEED_3004[GameEngine.difficultyLevel];
             case 3005:
-                return MainGameCanvas.var_19fd[GameEngine.difficultyLevel];
+                return MainGameCanvas.SPEED_3005[GameEngine.difficultyLevel];
             case 3006:
-                return MainGameCanvas.var_1a1b[GameEngine.difficultyLevel];
+                return MainGameCanvas.SPEED_3006[GameEngine.difficultyLevel];
             default:
                 return 65536;
         }

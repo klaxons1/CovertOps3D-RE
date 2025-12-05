@@ -128,12 +128,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] var_18ad = new int[]{128, 128, 128};
     public static final int[] var_1910 = new int[]{128, 64, 32};
     public static final int[] var_191e = new int[]{32, 32, 32};
-    public static final int[] var_1966 = new int[]{131072, 196608, 262144};
-    public static final int[] var_19bb = new int[]{131072, 196608, 262144};
-    public static final int[] var_19fd = new int[]{196608, 262144, 327680};
-    public static final int[] var_1a1b = new int[]{196608, 262144, 327680};
-    public static final int[] var_1a4a = new int[]{196608, 262144, 327680};
-    public static final int[] var_1a74 = new int[]{196608, 262144, 327680};
+    public static final int[] SPEED_3003 = new int[]{131072, 196608, 262144};
+    public static final int[] SPEED_3004 = new int[]{131072, 196608, 262144};
+    public static final int[] SPEED_3005 = new int[]{196608, 262144, 327680};
+    public static final int[] SPEED_3006 = new int[]{196608, 262144, 327680};
+    public static final int[] SPEED_3001 = new int[]{196608, 262144, 327680};
+    public static final int[] SPEED_3002 = new int[]{196608, 262144, 327680};
     public static final int[] var_1ad2 = new int[]{4, 3, 2};
 
     public MainGameCanvas() {
