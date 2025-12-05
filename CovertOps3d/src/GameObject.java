@@ -3,7 +3,7 @@ import java.util.Vector;
 public final class GameObject {
     public Transform3D transform;
     public int objectType;
-    public int spawnDelay;
+    public int detonationTimer;
     private Vector torsoSpriteIds;
     private Vector legsSpriteIds;
     public int spriteFrameIndex;
@@ -24,7 +24,7 @@ public final class GameObject {
         this.transform = var1;
         this.screenPos = new Point2D(0, 0);
         this.objectType = var3;
-        this.spawnDelay = var4;
+        this.detonationTimer = var4;
         this.torsoSpriteIds = new Vector();
         this.legsSpriteIds = new Vector();
         this.spriteFrameIndex = 0;

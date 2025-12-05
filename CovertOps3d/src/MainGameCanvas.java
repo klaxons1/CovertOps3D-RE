@@ -93,10 +93,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] COOLDOWN_RIFLE = new int[]{3, 3, 3};
     public static final int[] COOLDOWN_STEN = new int[]{2, 2, 2};
     public static final int[] COOLDOWN_SONIC = new int[]{10, 10, 10};
-    public static final int[] enemyDamageEasy = new int[]{10, 15, 20};
-    public static final int[] enemyDamageNormal = new int[]{15, 20, 25};
-    public static final int[] enemyDamageHard = new int[]{20, 25, 30};
-    public static final int[] var_12d2 = new int[]{25, 30, 40};
+    public static final int[] DAMAGE_3003 = new int[]{10, 15, 20};
+    public static final int[] DAMAGE_3004 = new int[]{15, 20, 25};
+    public static final int[] DAMAGE_3005 = new int[]{20, 25, 30};
+    public static final int[] DAMAGE_3006 = new int[]{25, 30, 40};
     public static final int[] var_1329 = new int[]{1, 2, 3};
     public static final int[] var_1358 = new int[]{2, 4, 5};
     public static final int[] var_1366 = new int[]{3, 5, 7};

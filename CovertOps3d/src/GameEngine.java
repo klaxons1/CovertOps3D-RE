@@ -653,19 +653,19 @@ public final class GameEngine {
                                 switch (enemyType) {
                                     case 3003:
                                         HelperUtils.playSound(2, false, 80, 0);
-                                        damageTable = MainGameCanvas.enemyDamageEasy;
+                                        damageTable = MainGameCanvas.DAMAGE_3003;
                                         break;
                                     case 3004:
                                         HelperUtils.playSound(2, false, 80, 0);
-                                        damageTable = MainGameCanvas.enemyDamageNormal;
+                                        damageTable = MainGameCanvas.DAMAGE_3004;
                                         break;
                                     case 3005:
                                         HelperUtils.playSound(2, false, 80, 0);
-                                        damageTable = MainGameCanvas.enemyDamageHard;
+                                        damageTable = MainGameCanvas.DAMAGE_3005;
                                         break;
                                     case 3006:
                                         HelperUtils.playSound(3, false, 80, 0);
-                                        damageTable = MainGameCanvas.var_12d2;
+                                        damageTable = MainGameCanvas.DAMAGE_3006;
                                         break;
                                 }
 

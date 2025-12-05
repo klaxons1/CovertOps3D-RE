@@ -932,12 +932,12 @@ public final class GameWorld {
          Transform3D var15;
          GameWorld var10000;
          if ((var2 = (GameObject)this.projectiles.elementAt(var1)).objectType == 103) {
-            if (var2.spawnDelay <= 0) {
+            if (var2.detonationTimer <= 0) {
                continue;
             }
 
-            --var2.spawnDelay;
-            if (var2.spawnDelay != 0) {
+            --var2.detonationTimer;
+            if (var2.detonationTimer != 0) {
                continue;
             }
 
