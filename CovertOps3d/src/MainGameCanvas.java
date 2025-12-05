@@ -2189,7 +2189,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         case 10:
                             HelperUtils.preloadObjectTextures(obj, var9, var10);
                             if (LEVEL_FILE_NAMES[currentLevelId] == "06c") {
-                                obj.currentState = 1;
+                                obj.spriteFrameIndex = 1;
                             }
                             continue;
                         case 12:

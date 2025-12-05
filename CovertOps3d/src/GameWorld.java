@@ -709,7 +709,7 @@ public final class GameWorld {
       GameObject var10;
       (var10 = new GameObject(var9, 0, 101, 0)).addSpriteFrame((byte)0, (byte)-46);
       var10.addSpriteFrame((byte)0, (byte)-47);
-      var10.currentState = 0;
+      var10.spriteFrameIndex = 0;
       this.projectiles.addElement(var10);
    }
 
@@ -726,11 +726,11 @@ public final class GameWorld {
       Transform3D var11 = new Transform3D(var7 + var9, var1.y + (var2.floorHeight + 40 << 16), var8 + var10, var3);
       GameObject var12;
       (var12 = new GameObject(var11, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
-      var12.currentState = 0;
+      var12.spriteFrameIndex = 0;
       this.projectiles.addElement(var12);
       var11 = new Transform3D(var7 - var9, var1.y + (var2.floorHeight + 40 << 16), var8 - var10, var3);
       (var12 = new GameObject(var11, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
-      var12.currentState = 0;
+      var12.spriteFrameIndex = 0;
       this.projectiles.addElement(var12);
    }
 
@@ -766,7 +766,7 @@ public final class GameWorld {
             GameObject var16;
             (var16 = new GameObject(var15, 0, 100, 0)).addSpriteFrame((byte)0, (byte)-44);
             var16.addSpriteFrame((byte)0, (byte)-45);
-            var16.currentState = 0;
+            var16.spriteFrameIndex = 0;
             this.projectiles.addElement(var16);
          }
 
@@ -782,14 +782,14 @@ public final class GameWorld {
             GameObject var18;
             if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z, var17.x, var17.z, var17.y)) {
                (var18 = new GameObject(var17, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
-               var18.currentState = 0;
+               var18.spriteFrameIndex = 0;
                this.projectiles.addElement(var18);
             }
 
             var17 = new Transform3D(var6 + var14, GameEngine.cameraHeight - 655360, var7 + var9, var1);
             if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z, var17.x, var17.z, var17.y)) {
                (var18 = new GameObject(var17, 0, 102, 0)).addSpriteFrame((byte)0, (byte)-71);
-               var18.currentState = 0;
+               var18.spriteFrameIndex = 0;
                this.projectiles.addElement(var18);
             }
 
@@ -886,7 +886,7 @@ public final class GameWorld {
             return;
          }
 
-         var10000.currentState = var10001;
+         var10000.spriteFrameIndex = var10001;
       } else {
          var0.aiState = 5;
          switch(var0.objectType) {
@@ -908,7 +908,7 @@ public final class GameWorld {
             return;
          }
 
-         var10000.currentState = var10001;
+         var10000.spriteFrameIndex = var10001;
       }
    }
 
@@ -916,7 +916,7 @@ public final class GameWorld {
       for(int var1 = 0; var1 < this.projectiles.size(); ++var1) {
          GameObject var2;
          if ((var2 = (GameObject)this.projectiles.elementAt(var1)).objectType == 100 || var2.objectType == 101) {
-            var2.currentState ^= 1;
+            var2.spriteFrameIndex ^= 1;
          }
       }
 
@@ -1076,7 +1076,7 @@ public final class GameWorld {
       Transform3D var8 = new Transform3D(var6, 0, var7, var1);
       GameObject var9;
       (var9 = new GameObject(var8, 0, 103, 100)).addSpriteFrame((byte)0, (byte)-51);
-      var9.currentState = 0;
+      var9.spriteFrameIndex = 0;
       this.projectiles.addElement(var9);
       return true;
    }

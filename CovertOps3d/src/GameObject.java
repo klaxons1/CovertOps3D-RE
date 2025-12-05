@@ -6,14 +6,14 @@ public final class GameObject {
     public int spawnDelay;
     private Vector torsoSpriteIds;
     private Vector legsSpriteIds;
-    public int currentState;
+    public int spriteFrameIndex;
     public int health;
     public int stateTimer;
     public int aiState;
     public Point2D screenPos;
     public int screenHeight;
-    public Texture texture1;
-    public Texture texture2;
+    public Texture torsoTexture;
+    public Texture legsTexture;
     public int spriteWidth1;
     public int spriteHeight1;
     public int spriteWidth2;
@@ -27,10 +27,10 @@ public final class GameObject {
         this.spawnDelay = var4;
         this.torsoSpriteIds = new Vector();
         this.legsSpriteIds = new Vector();
-        this.currentState = 0;
+        this.spriteFrameIndex = 0;
         this.screenHeight = 0;
-        this.texture1 = null;
-        this.texture2 = null;
+        this.torsoTexture = null;
+        this.legsTexture = null;
         this.spriteWidth1 = 0;
         this.spriteHeight1 = 0;
         this.spriteWidth2 = 0;
@@ -97,15 +97,15 @@ public final class GameObject {
     }
 
     public final byte getCurrentSprite1() {
-        if (this.currentState > -1 && this.currentState < this.torsoSpriteIds.size()) {
-            return ((Byte)this.torsoSpriteIds.elementAt(this.currentState)).byteValue();
+        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.torsoSpriteIds.size()) {
+            return ((Byte)this.torsoSpriteIds.elementAt(this.spriteFrameIndex)).byteValue();
         }
         return 0;
     }
 
     public final byte getCurrentSprite2() {
-        if (this.currentState > -1 && this.currentState < this.legsSpriteIds.size()) {
-            return ((Byte)this.legsSpriteIds.elementAt(this.currentState)).byteValue();
+        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.legsSpriteIds.size()) {
+            return ((Byte)this.legsSpriteIds.elementAt(this.spriteFrameIndex)).byteValue();
         }
         return 0;
     }
@@ -130,12 +130,12 @@ public final class GameObject {
     }
 
     public final void calculateSpriteSize1() {
-        this.spriteWidth1 = MathUtils.fixedPointDivide(this.texture1.width << 16, this.screenPos.y) * 120 - 131072 >> 18;
-        this.spriteHeight1 = MathUtils.fixedPointDivide(this.texture1.height << 16, this.screenPos.y) * 120 - 131072 >> 18;
+        this.spriteWidth1 = MathUtils.fixedPointDivide(this.torsoTexture.width << 16, this.screenPos.y) * 120 - 131072 >> 18;
+        this.spriteHeight1 = MathUtils.fixedPointDivide(this.torsoTexture.height << 16, this.screenPos.y) * 120 - 131072 >> 18;
     }
 
     public final void calculateSpriteSize2() {
-        this.spriteWidth2 = MathUtils.fixedPointDivide(this.texture2.width << 16, this.screenPos.y) * 120 + 65536 >> 17;
-        this.spriteHeight2 = MathUtils.fixedPointDivide(this.texture2.height << 16, this.screenPos.y) * 120 + 65536 >> 17;
+        this.spriteWidth2 = MathUtils.fixedPointDivide(this.legsTexture.width << 16, this.screenPos.y) * 120 + 65536 >> 17;
+        this.spriteHeight2 = MathUtils.fixedPointDivide(this.legsTexture.height << 16, this.screenPos.y) * 120 + 65536 >> 17;
     }
 }

@@ -610,7 +610,7 @@ public final class GameEngine {
                         enemy.aiState = 2;
                         enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
                                 % MainGameCanvas.enemyReactionTime[difficultyLevel];
-                        enemy.currentState = 0;
+                        enemy.spriteFrameIndex = 0;
                         break;
 
                     case 2:
@@ -619,12 +619,12 @@ public final class GameEngine {
                             enemy.aiState = 3;
                             enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
                                     + MainGameCanvas.var_17b5[difficultyLevel];
-                            enemy.currentState = 2;
+                            enemy.spriteFrameIndex = 2;
                         } else {
                             enemy.aiState = 1;
                             enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
                                     % MainGameCanvas.var_1851[difficultyLevel];
-                            enemy.currentState = 0;
+                            enemy.spriteFrameIndex = 0;
                         }
                         break;
 
@@ -637,7 +637,7 @@ public final class GameEngine {
                             enemy.stateTimer = 2;
 
                             if (enemyType != 3002) {
-                                enemy.currentState = 3;
+                                enemy.spriteFrameIndex = 3;
                             }
 
                             if (enemyType == 3001) {
@@ -685,7 +685,7 @@ public final class GameEngine {
                             enemy.aiState = 2;
                             enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
                                     % MainGameCanvas.enemyReactionTime[difficultyLevel];
-                            enemy.currentState = 0;
+                            enemy.spriteFrameIndex = 0;
                         }
                         break;
 
@@ -693,7 +693,7 @@ public final class GameEngine {
                         enemy.aiState = 2;
                         enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
                                 % MainGameCanvas.enemyReactionTime[difficultyLevel];
-                        enemy.currentState = 0;
+                        enemy.spriteFrameIndex = 0;
                         break;
 
                     case 5:
@@ -701,12 +701,12 @@ public final class GameEngine {
                         enemy.aiState = 3;
                         enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
                                 + MainGameCanvas.var_17b5[difficultyLevel];
-                        enemy.currentState = 2;
+                        enemy.spriteFrameIndex = 2;
                         break;
 
                     case 6:
                         enemy.aiState = -1;
-                        enemy.currentState = (enemyType == 3002) ? 5 : 6;
+                        enemy.spriteFrameIndex = (enemyType == 3002) ? 5 : 6;
                         LevelLoader.gameWorld.spawnPickUp(enemy);
                         break;
                 }
@@ -715,7 +715,7 @@ public final class GameEngine {
             // Chase AI
             if (enemy.aiState == 2) {
                 if ((enemy.stateTimer & 3) == 0) {
-                    enemy.currentState = (enemy.currentState == 0) ? 1 : 0;
+                    enemy.spriteFrameIndex = (enemy.spriteFrameIndex == 0) ? 1 : 0;
                 }
 
                 SectorData enemySector = LevelLoader.gameWorld.getSectorDataAtPoint(
@@ -767,7 +767,7 @@ public final class GameEngine {
                     enemy.aiState = 3;
                     enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
                             + MainGameCanvas.var_17b5[difficultyLevel];
-                    enemy.currentState = 2;
+                    enemy.spriteFrameIndex = 2;
                 }
             }
         }

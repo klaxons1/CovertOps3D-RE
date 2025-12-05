@@ -458,10 +458,10 @@ public class PortalRenderer {
 
                     gameObject.screenHeight = objectHeight - cameraY;
 
-                    gameObject.texture1 = (spriteIndex1 != 0)
+                    gameObject.torsoTexture = (spriteIndex1 != 0)
                             ? LevelLoader.textureTable[spriteIndex1 + 128]
                             : null;
-                    gameObject.texture2 = (spriteIndex2 != 0)
+                    gameObject.legsTexture = (spriteIndex2 != 0)
                             ? LevelLoader.textureTable[spriteIndex2 + 128]
                             : null;
 
@@ -497,15 +497,15 @@ public class PortalRenderer {
                 int screenY = (gameObject.screenHeight >> 16) + HALF_VIEWPORT_HEIGHT;
                 int depth = gameObject.screenPos.y;
 
-                if (gameObject.texture2 != null) {
+                if (gameObject.legsTexture != null) {
                     gameObject.calculateSpriteSize2();
-                    drawSprite(gameObject.texture2, lightLevel, screenX, screenY,
+                    drawSprite(gameObject.legsTexture, lightLevel, screenX, screenY,
                             depth, gameObject.spriteWidth2, gameObject.spriteHeight2);
                 }
 
-                if (gameObject.texture1 != null) {
+                if (gameObject.torsoTexture != null) {
                     gameObject.calculateSpriteSize1();
-                    drawSprite(gameObject.texture1, lightLevel, screenX, screenY,
+                    drawSprite(gameObject.torsoTexture, lightLevel, screenX, screenY,
                             depth, gameObject.spriteWidth1, gameObject.spriteHeight1);
                 }
             }
