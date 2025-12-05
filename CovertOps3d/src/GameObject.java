@@ -45,27 +45,27 @@ public final class GameObject {
                 this.aiState = 0;
                 break;
             case 3001:
-                this.health = MainGameCanvas.var_146a[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.HP_3001[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3002:
-                this.health = MainGameCanvas.var_1492[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.HP_3002[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3003:
-                this.health = MainGameCanvas.var_139c[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.HP_3003[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3004:
-                this.health = MainGameCanvas.var_13e4[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.HP_3004[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3005:
-                this.health = MainGameCanvas.var_13fe[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.HP_3005[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             case 3006:
-                this.health = MainGameCanvas.var_143e[GameEngine.difficultyLevel];
+                this.health = MainGameCanvas.HP_3006[GameEngine.difficultyLevel];
                 this.aiState = 0;
                 break;
             default:
