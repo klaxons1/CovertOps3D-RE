@@ -165,7 +165,7 @@ public final class GameEngine {
      *
      * @param textureId ID of the new skybox texture
      */
-    public static void handleWeaponChange(byte textureId) {
+    public static void changeSkyboxTexture(byte textureId) {
         PortalRenderer.setSkyboxTexture(LevelLoader.getTexture(textureId));
     }
 

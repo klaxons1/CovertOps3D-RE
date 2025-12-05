@@ -2321,7 +2321,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 CovertOps3D.exitApplication();
             }
 
-            GameEngine.handleWeaponChange((byte)25);
+            GameEngine.changeSkyboxTexture((byte)25);
             HelperUtils.freeMemory();
         } catch (Exception e) {
         } catch (OutOfMemoryError e) {
