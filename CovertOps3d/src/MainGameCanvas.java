@@ -955,11 +955,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         case 1:
                         case 34:
                             this.SETTINGS_MENU_ITEMS = new String[6];
-                            this.SETTINGS_MENU_ITEMS[0] = "settings";
-                            this.SETTINGS_MENU_ITEMS[1] = "";
-                            this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
-                            this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
-                            this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[0] = TextStrings.SETTINGS;
+                            this.SETTINGS_MENU_ITEMS[1] = TextStrings.EMPTY_SPACE;
+                            this.SETTINGS_MENU_ITEMS[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
                             this.SETTINGS_MENU_ITEMS[5] = TextStrings.BACK;
                             stackData = new Object[4];
                             stackData[0] = menuItems;
@@ -975,12 +975,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 2:
                         case 35:
-                            this.showScrollingText(graphics, background, "help", TextStrings.HELP_MENU_ITEMS, false);
+                            this.showScrollingText(graphics, background, TextStrings.HELP, TextStrings.HELP_MENU_ITEMS, false);
                             break;
 
                         case 3:
                         case 36:
-                            this.showScrollingText(graphics, background, "about", TextStrings.ABOUT_MENU_TEXT, true);
+                            this.showScrollingText(graphics, background, TextStrings.ABOUT, TextStrings.ABOUT_MENU_TEXT, true);
                             break;
 
                         case 4:
@@ -1067,7 +1067,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             for(int i = 3; i <= lastItem; ++i) {
                                 this.chapterMenuItems[i] = SaveSystem.saveData[i - 3] != null
                                         ? TextStrings.CHAPTER_MENU_DATA[i]
-                                        : "unavailable";
+                                        : TextStrings.UNAVAILABLE;
                             }
 
                             menuItems = this.chapterMenuItems;
@@ -1076,7 +1076,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 50:
                             SaveSystem.soundEnabled = (byte)(SaveSystem.soundEnabled ^ 1);
-                            this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? "on" : "off");
                             if (SaveSystem.musicEnabled != 1) {
                                 if (SaveSystem.soundEnabled == 1) {
                                     HelperUtils.playSound(1, false, 80, 0);
@@ -1089,7 +1089,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 51:
                             SaveSystem.musicEnabled = (byte)(SaveSystem.musicEnabled ^ 1);
-                            this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? "on" : "off");
                             if (SaveSystem.musicEnabled == 1) {
                                 HelperUtils.stopCurrentSound();
                                 HelperUtils.playSound(0, true, 80, 2);
@@ -1101,7 +1101,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 52:
                             SaveSystem.vibrationEnabled = (byte)(SaveSystem.vibrationEnabled ^ 1);
-                            this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
                             if (SaveSystem.vibrationEnabled == 1) {
                                 HelperUtils.vibrateDevice(100);
                             }
@@ -1117,7 +1117,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         case 72:
                         case 73:
                         case 74:
-                            if (!this.chapterMenuItems[menuMode - 64].equals("unavailable")) {
+                            if (!this.chapterMenuItems[menuMode - 64].equals(TextStrings.UNAVAILABLE)) {
                                 HelperUtils.stopCurrentSound();
                                 return menuMode;
                             }
@@ -2060,7 +2060,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             if ((currentLevelId == 4 || currentLevelId == 7 || currentLevelId == 8)
                                     && (currentLevelId != 4 || GameEngine.currentSector.getSectorType() != 666)
                                     && GameEngine.ammoCounts[6] == 1) {
-                                GameEngine.messageText = "i'd better use it|to finish my mission";
+                                GameEngine.messageText = TextStrings.I_D_BETTER_USE_IT_TO_FINISH_MY_MISSION;
                                 GameEngine.messageTimer = 50;
                             } else if (LevelLoader.gameWorld.throwGrenade()) {
                                 ammoUsed = GameEngine.ammoCounts[6]--;
@@ -2329,7 +2329,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     }
 
     private void drawPleaseWait(Graphics graphics) {
-        String text = "please wait...";
+        String text = TextStrings.PLEASE_WAIT;
         int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(text)) / 2;
         int textY = HALF_UI_HEIGHT - this.menuItemHeight / 2;
 

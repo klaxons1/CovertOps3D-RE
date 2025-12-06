@@ -16,6 +16,16 @@ public class TextStrings {
     public static final String PAUSE = "pause";
     public static final String RESUME = "resume";
     public static final String BACK = "back";
+    public static final String I_D_BETTER_USE_IT_TO_FINISH_MY_MISSION = "i'd better use it|to finish my mission";
+    public static final String UNAVAILABLE = "unavailable";
+    public static final String SOUND = "sound: ";
+    public static final String HELP = "help";
+    public static final String ABOUT = "about";
+    public static final String MUSIC = "music: ";
+    public static final String VIBRATION = "vibration: ";
+    public static final String EMPTY_SPACE = "";
+    public static final String SETTINGS = "settings";
+    public static final String PLEASE_WAIT = "please wait...";
     static final String[] mainMenuItems = new String[]{"new game", "settings", "help", "about", "quit"};
     static final String[] pauseMenuItems = new String[]{"resume", "new game", "settings", "help", "about", "quit"};
     static final String[] difficultyMenuItems = new String[]{"difficulty", "", "easy", "normal", "hard", "back"};
