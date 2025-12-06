@@ -335,8 +335,8 @@ public final class GameWorld {
                         // Special message for level 4 switch
                         if (obj.objectType == 10 && MainGameCanvas.currentLevelId == 4) {
                             GameEngine.messageText = GameEngine.ammoCounts[6] > 0
-                                    ? "find the wall i told you|and blow it up!"
-                                    : "go, get the dynamite!";
+                                    ? TextStrings.FIND_THE_WALL_I_TOLD_YOU_AND_BLOW_IT_UP
+                                    : TextStrings.GO_GET_THE_DYNAMITE;
                             GameEngine.messageTimer = 30;
                         }
 
@@ -449,7 +449,7 @@ public final class GameWorld {
 
                 case 82: // Sniper rifle (special item flag)
                     GameEngine.weaponsAvailable[8] = true;
-                    GameEngine.messageText = "go now to the agent anna";
+                    GameEngine.messageText = TextStrings.GO_ANNA;
                     GameEngine.messageTimer = 30;
                     break;
 
@@ -461,7 +461,7 @@ public final class GameWorld {
 
                 case 2002: // Mauser weapon pickup
                     if (MainGameCanvas.currentLevelId == 3) {
-                        GameEngine.messageText = "to change weapon press 3";
+                        GameEngine.messageText = TextStrings.TO_CHANGE_WEAPON_PRESS_3;
                         GameEngine.messageTimer = 30;
                     }
                     GameEngine.weaponsAvailable[2] = true;

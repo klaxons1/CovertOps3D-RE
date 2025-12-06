@@ -229,7 +229,7 @@ public final class GameEngine {
             switch (MainGameCanvas.currentLevelId) {
                 case 3:
                     if (!weaponsAvailable[8]) {
-                        messageText = "get the sniper rifle!";
+                        messageText = TextStrings.GET_THE_SNIPER_RIFLE;
                         messageTimer = 30;
                         break;
                     }
@@ -239,7 +239,7 @@ public final class GameEngine {
                     levelTransitionState = 1;
                     break;
                 case 4:
-                    messageText = "i think that's the wall|she mentioned";
+                    messageText = TextStrings.I_THINK_THAT_S_THE_WALL_SHE_MENTIONED;
                     messageTimer = 30;
                     break;
             }
@@ -249,7 +249,7 @@ public final class GameEngine {
         if ((SaveSystem.gameProgressFlags & 1) == 0
                 && MainGameCanvas.currentLevelId == 0
                 && currentSector.sectorId == 31) {
-            messageText = "press 1 to open the door";
+            messageText = TextStrings.PRESS_1_TO_OPEN_THE_DOOR;
             messageTimer = 30;
         }
 
@@ -343,8 +343,8 @@ public final class GameEngine {
 
             if (interactionTimer >= 50) {
                 messageText = (activeInteractable.getWallType() == 62)
-                        ? "press 1 to move the lift"
-                        : "press 1 to open the door";
+                        ? TextStrings.PRESS_1_TO_MOVE_THE_LIFT
+                        : TextStrings.PRESS_1_TO_OPEN_THE_DOOR;
                 messageTimer = 10;
             }
         } else {
@@ -407,7 +407,7 @@ public final class GameEngine {
 
                             case 11:
                                 if (MainGameCanvas.currentLevelId == 7 && ammoCounts[6] == 0) {
-                                    messageText = "we'll need some dynamite|maybe i should look for some";
+                                    messageText = TextStrings.WE_LL_NEED_SOME_DYNAMITE_MAYBE_I_SHOULD_LOOK_FOR_SOME;
                                     messageTimer = 50;
                                     break;
                                 }
@@ -423,8 +423,8 @@ public final class GameEngine {
                                     door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
                                 } else {
                                     messageText = keysCollected[1]
-                                            ? "oops, i need another key..."
-                                            : "oh, i need a key...";
+                                            ? TextStrings.OOPS_I_NEED_ANOTHER_KEY
+                                            : TextStrings.OH_I_NEED_A_KEY;
                                     messageTimer = 50;
                                 }
                                 break;
@@ -436,8 +436,8 @@ public final class GameEngine {
                                     door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
                                 } else {
                                     messageText = keysCollected[0]
-                                            ? "oops, i need another key..."
-                                            : "oh, i need a key...";
+                                            ? TextStrings.OOPS_I_NEED_ANOTHER_KEY
+                                            : TextStrings.OH_I_NEED_A_KEY;
                                     messageTimer = 50;
                                 }
                                 break;
