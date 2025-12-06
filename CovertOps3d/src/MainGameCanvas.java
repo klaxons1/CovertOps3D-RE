@@ -865,11 +865,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             Image background = Image.createImage("/gamedata/sprites/bkg.png");
             int menuMode = 0;
             int scrollOffset = 0;
-            String[] menuItems = MenuSystem.mainMenuItems;
+            String[] menuItems = TextStrings.mainMenuItems;
 
             if (!isMainMenu) {
                 menuMode = 32;
-                menuItems = MenuSystem.pauseMenuItems;
+                menuItems = TextStrings.pauseMenuItems;
             }
 
             int firstItem = 0;
@@ -923,7 +923,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 String actionText = menuItems == this.SETTINGS_MENU_ITEMS ? "change" :
-                        (menuItems == MenuSystem.CONFIRMATION_MENU_ITEMS ? "yes" : "select");
+                        (menuItems == TextStrings.CONFIRMATION_MENU_ITEMS ? "yes" : "select");
                 this.drawLargeString(actionText, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
                 this.drawLargeString(menuItems[totalItems], graphics,
                         PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(menuItems[totalItems]) - 3,
@@ -946,7 +946,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             stackData[2] = new Integer(firstItem);
                             stackData[3] = new Integer(lastItem);
                             menuStack.push(stackData);
-                            menuItems = MenuSystem.difficultyMenuItems;
+                            menuItems = TextStrings.difficultyMenuItems;
                             menuMode = 18 + GameEngine.difficultyLevel;
                             firstItem = 2;
                             lastItem = menuItems.length - 2;
@@ -975,12 +975,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 2:
                         case 35:
-                            this.showScrollingText(graphics, background, "help", MenuSystem.HELP_MENU_ITEMS, false);
+                            this.showScrollingText(graphics, background, "help", TextStrings.HELP_MENU_ITEMS, false);
                             break;
 
                         case 3:
                         case 36:
-                            this.showScrollingText(graphics, background, "about", MenuSystem.ABOUT_MENU_TEXT, true);
+                            this.showScrollingText(graphics, background, "about", TextStrings.ABOUT_MENU_TEXT, true);
                             break;
 
                         case 4:
@@ -1047,12 +1047,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         case 18:
                         case 19:
                         case 20:
-                            this.chapterMenuItems = new String[MenuSystem.CHAPTER_MENU_DATA.length];
-                            this.chapterMenuItems[0] = MenuSystem.CHAPTER_MENU_DATA[0];
-                            this.chapterMenuItems[1] = MenuSystem.CHAPTER_MENU_DATA[1];
-                            this.chapterMenuItems[2] = MenuSystem.CHAPTER_MENU_DATA[2];
+                            this.chapterMenuItems = new String[TextStrings.CHAPTER_MENU_DATA.length];
+                            this.chapterMenuItems[0] = TextStrings.CHAPTER_MENU_DATA[0];
+                            this.chapterMenuItems[1] = TextStrings.CHAPTER_MENU_DATA[1];
+                            this.chapterMenuItems[2] = TextStrings.CHAPTER_MENU_DATA[2];
                             this.chapterMenuItems[this.chapterMenuItems.length - 1] =
-                                    MenuSystem.CHAPTER_MENU_DATA[this.chapterMenuItems.length - 1];
+                                    TextStrings.CHAPTER_MENU_DATA[this.chapterMenuItems.length - 1];
                             stackData = new Object[4];
                             stackData[0] = menuItems;
                             stackData[1] = new Integer(menuMode);
@@ -1066,7 +1066,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                             for(int i = 3; i <= lastItem; ++i) {
                                 this.chapterMenuItems[i] = SaveSystem.saveData[i - 3] != null
-                                        ? MenuSystem.CHAPTER_MENU_DATA[i]
+                                        ? TextStrings.CHAPTER_MENU_DATA[i]
                                         : "unavailable";
                             }
 
@@ -1139,7 +1139,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             stackData[2] = new Integer(firstItem);
                             stackData[3] = new Integer(lastItem);
                             menuStack.push(stackData);
-                            menuItems = MenuSystem.CONFIRMATION_MENU_ITEMS;
+                            menuItems = TextStrings.CONFIRMATION_MENU_ITEMS;
                             menuMode = 80;
                             firstItem = 0;
                             lastItem = 0;
@@ -2408,8 +2408,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             long[] fadeTimers = new long[]{0L, 0L, 0L};
             boolean[] needsFade = new boolean[]{false, false, false};
 
-            for(int lineNum = 0; lineNum < MenuSystem.storyText[dialogId].length; ++lineNum) {
-                String line = MenuSystem.storyText[dialogId][lineNum];
+            for(int lineNum = 0; lineNum < TextStrings.storyText[dialogId].length; ++lineNum) {
+                String line = TextStrings.storyText[dialogId][lineNum];
                 int textX = playerPortrait.getWidth() + 4;
                 int textY = 2;
                 byte boxId = 0;
