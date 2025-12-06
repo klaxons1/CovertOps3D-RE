@@ -9,6 +9,13 @@ public class TextStrings {
     public static final String OH_I_NEED_A_KEY = "oh, i need a key...";
     public static final String I_THINK_THAT_S_THE_WALL_SHE_MENTIONED = "i think that's the wall|she mentioned";
     public static final String GET_THE_SNIPER_RIFLE = "get the sniper rifle!";
+    public static final String CHANGE = "change";
+    public static final String YES = "yes";
+    public static final String SELECT = "select";
+    public static final String MISSION_FAILED_GAME_OVER = "mission failed|game over";
+    public static final String PAUSE = "pause";
+    public static final String RESUME = "resume";
+    public static final String BACK = "back";
     static final String[] mainMenuItems = new String[]{"new game", "settings", "help", "about", "quit"};
     static final String[] pauseMenuItems = new String[]{"resume", "new game", "settings", "help", "about", "quit"};
     static final String[] difficultyMenuItems = new String[]{"difficulty", "", "easy", "normal", "hard", "back"};

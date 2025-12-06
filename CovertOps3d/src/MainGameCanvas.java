@@ -780,7 +780,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                     0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
-            String message = "mission failed|game over";
+            String message = TextStrings.MISSION_FAILED_GAME_OVER;
             this.drawMultiLineMessage(graphics, message);
             this.flushScreenBuffer();
             HelperUtils.delay(2000);
@@ -922,8 +922,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_VIEWPORT_WIDTH, arrowY + 3);
                 }
 
-                String actionText = menuItems == this.SETTINGS_MENU_ITEMS ? "change" :
-                        (menuItems == TextStrings.CONFIRMATION_MENU_ITEMS ? "yes" : "select");
+                String actionText = menuItems == this.SETTINGS_MENU_ITEMS ? TextStrings.CHANGE :
+                        (menuItems == TextStrings.CONFIRMATION_MENU_ITEMS ? TextStrings.YES : TextStrings.SELECT);
                 this.drawLargeString(actionText, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
                 this.drawLargeString(menuItems[totalItems], graphics,
                         PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(menuItems[totalItems]) - 3,
@@ -960,7 +960,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             this.SETTINGS_MENU_ITEMS[2] = "sound: " + (SaveSystem.soundEnabled == 1 ? "on" : "off");
                             this.SETTINGS_MENU_ITEMS[3] = "music: " + (SaveSystem.musicEnabled == 1 ? "on" : "off");
                             this.SETTINGS_MENU_ITEMS[4] = "vibration: " + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
-                            this.SETTINGS_MENU_ITEMS[5] = "back";
+                            this.SETTINGS_MENU_ITEMS[5] = TextStrings.BACK;
                             stackData = new Object[4];
                             stackData[0] = menuItems;
                             stackData[1] = new Integer(menuMode);
@@ -1131,7 +1131,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 if (GameEngine.inputBack) {
                     GameEngine.inputBack = false;
-                    if (menuItems[menuItems.length - 1] != "back" && menuItems[menuItems.length - 1] != "no") {
+                    if (menuItems[menuItems.length - 1] != TextStrings.BACK && menuItems[menuItems.length - 1] != "no") {
                         if (menuItems[menuItems.length - 1] == "quit") {
                             stackData = new Object[4];
                             stackData[0] = menuItems;
@@ -1227,7 +1227,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                             0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
-                    String backText = "back";
+                    String backText = TextStrings.BACK;
                     this.drawLargeString(backText, graphics,
                             PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(backText) - 3,
                             UI_HEIGHT - this.menuItemHeight - 3);
@@ -2397,9 +2397,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             lineBuffers[0] = new int[linesPerBox];
             this.drawStripedBackground(graphics, frameBuffer);
-            this.drawLargeString("back", graphics,
-                    PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth("back") - 3, UI_HEIGHT - this.menuItemHeight - 3);
-            this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
+            this.drawLargeString(TextStrings.BACK, graphics,
+                    PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(TextStrings.BACK) - 3, UI_HEIGHT - this.menuItemHeight - 3);
+            this.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
 
             int[] charIndices = new int[]{0, 0, 0};
             int[] boxStartX = new int[]{0, 0, 0};
@@ -2534,9 +2534,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     if (GameEngine.inputRun) {
                         GameEngine.inputRun = false;
                         graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.menuItemHeight - 3,
-                                this.getLargeTextWidth("pause"), this.menuItemHeight,
+                                this.getLargeTextWidth(TextStrings.PAUSE), this.menuItemHeight,
                                 0, 3, UI_HEIGHT - this.menuItemHeight - 3, 20);
-                        this.drawLargeString("resume", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
+                        this.drawLargeString(TextStrings.RESUME, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
                         this.flushScreenBuffer();
 
                         while(!GameEngine.inputRun && !GameEngine.inputBack
@@ -2547,9 +2547,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                     if (GameEngine.inputRun) {
                         graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.menuItemHeight - 3,
-                                this.getLargeTextWidth("resume"), this.menuItemHeight,
+                                this.getLargeTextWidth(TextStrings.RESUME), this.menuItemHeight,
                                 0, 3, UI_HEIGHT - this.menuItemHeight - 3, 20);
-                        this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
+                        this.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
                         this.flushScreenBuffer();
                         GameEngine.inputRun = false;
                     }
@@ -2564,10 +2564,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
 
                         graphics.drawImage(frameBuffer, 0, 0, 20);
-                        this.drawLargeString("back", graphics,
-                                PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth("back") - 3,
+                        this.drawLargeString(TextStrings.BACK, graphics,
+                                PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(TextStrings.BACK) - 3,
                                 UI_HEIGHT - this.menuItemHeight - 3);
-                        this.drawLargeString("pause", graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
+                        this.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
 
                         for(int b = 0; b < 3; ++b) {
                             int endChar = b == boxId ? charPos :
