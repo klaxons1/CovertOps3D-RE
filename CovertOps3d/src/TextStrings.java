@@ -26,6 +26,9 @@ public class TextStrings {
     public static final String EMPTY_SPACE = "";
     public static final String SETTINGS = "settings";
     public static final String PLEASE_WAIT = "please wait...";
+    public static final String ON = "on";
+    public static final String OFF = "off";
+    public static final String QUIT = "quit";
     static final String[] mainMenuItems = new String[]{"new game", "settings", "help", "about", "quit"};
     static final String[] pauseMenuItems = new String[]{"resume", "new game", "settings", "help", "about", "quit"};
     static final String[] difficultyMenuItems = new String[]{"difficulty", "", "easy", "normal", "hard", "back"};

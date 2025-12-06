@@ -957,9 +957,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             this.SETTINGS_MENU_ITEMS = new String[6];
                             this.SETTINGS_MENU_ITEMS[0] = TextStrings.SETTINGS;
                             this.SETTINGS_MENU_ITEMS[1] = TextStrings.EMPTY_SPACE;
-                            this.SETTINGS_MENU_ITEMS[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? "on" : "off");
-                            this.SETTINGS_MENU_ITEMS[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? "on" : "off");
-                            this.SETTINGS_MENU_ITEMS[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+                            this.SETTINGS_MENU_ITEMS[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+                            this.SETTINGS_MENU_ITEMS[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             this.SETTINGS_MENU_ITEMS[5] = TextStrings.BACK;
                             stackData = new Object[4];
                             stackData[0] = menuItems;
@@ -1076,7 +1076,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 50:
                             SaveSystem.soundEnabled = (byte)(SaveSystem.soundEnabled ^ 1);
-                            this.SETTINGS_MENU_ITEMS[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.musicEnabled != 1) {
                                 if (SaveSystem.soundEnabled == 1) {
                                     HelperUtils.playSound(1, false, 80, 0);
@@ -1089,7 +1089,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 51:
                             SaveSystem.musicEnabled = (byte)(SaveSystem.musicEnabled ^ 1);
-                            this.SETTINGS_MENU_ITEMS[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.musicEnabled == 1) {
                                 HelperUtils.stopCurrentSound();
                                 HelperUtils.playSound(0, true, 80, 2);
@@ -1101,7 +1101,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         case 52:
                             SaveSystem.vibrationEnabled = (byte)(SaveSystem.vibrationEnabled ^ 1);
-                            this.SETTINGS_MENU_ITEMS[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? "on" : "off");
+                            this.SETTINGS_MENU_ITEMS[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.vibrationEnabled == 1) {
                                 HelperUtils.vibrateDevice(100);
                             }
@@ -1132,7 +1132,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 if (GameEngine.inputBack) {
                     GameEngine.inputBack = false;
                     if (menuItems[menuItems.length - 1] != TextStrings.BACK && menuItems[menuItems.length - 1] != "no") {
-                        if (menuItems[menuItems.length - 1] == "quit") {
+                        if (menuItems[menuItems.length - 1] == TextStrings.QUIT) {
                             stackData = new Object[4];
                             stackData[0] = menuItems;
                             stackData[1] = new Integer(menuMode);
