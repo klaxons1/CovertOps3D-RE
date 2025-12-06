@@ -18,19 +18,19 @@ public class PortalRenderer {
     public static final int VIEWPORT_HEIGHT = 288;
 
     /** Half of screen width (horizontal center) */
-    public static final int HALF_VIEWPORT_WIDTH = VIEWPORT_WIDTH / 2;  // 88
+    public static final int HALF_VIEWPORT_WIDTH = VIEWPORT_WIDTH / 2;
 
     /** Half of screen height (vertical center) */
-    public static final int HALF_VIEWPORT_HEIGHT = VIEWPORT_HEIGHT / 2;  // 104
+    public static final int HALF_VIEWPORT_HEIGHT = VIEWPORT_HEIGHT / 2;
 
     /** Maximum valid X coordinate */
-    public static final int MAX_VIEWPORT_X = VIEWPORT_WIDTH - 1;  // 175
+    public static final int MAX_VIEWPORT_X = VIEWPORT_WIDTH - 1;
 
     /** Maximum valid Y coordinate */
-    public static final int MAX_VIEWPORT_Y = VIEWPORT_HEIGHT - 1;  // 207
+    public static final int MAX_VIEWPORT_Y = VIEWPORT_HEIGHT - 1;
 
     /** Total number of pixels in screen buffer */
-    public static final int SCREEN_BUFFER_SIZE = VIEWPORT_WIDTH * VIEWPORT_HEIGHT;  // 36608
+    public static final int SCREEN_BUFFER_SIZE = VIEWPORT_WIDTH * VIEWPORT_HEIGHT;
 
     /** Half screen width in fixed-point 16.16 format */
     public static final int HALF_VIEWPORT_WIDTH_FP = HALF_VIEWPORT_WIDTH << 16;

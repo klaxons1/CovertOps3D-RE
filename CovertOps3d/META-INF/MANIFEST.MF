@@ -4,5 +4,5 @@ MicroEdition-Profile: MIDP-2.0
 MIDlet-Vendor: Micazook + klaxons
 MIDlet-Version: 1.0.7
 MIDlet-Name: CovertOpsRE
-MIDlet-1: CovertOpsRE,,CovertOps3D
+MIDlet-1: CovertOpsRE,/icon.png,CovertOps3D
 MIDlet-Jar-URL: CovertOps3d.jar
