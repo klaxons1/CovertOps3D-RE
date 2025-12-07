@@ -609,7 +609,7 @@ public final class GameEngine {
                     case 1:
                         enemy.aiState = 2;
                         enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
-                                % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                                % MainGameCanvas.ENEMY_STATE_TRANSITION_TIME[difficultyLevel];
                         enemy.spriteFrameIndex = 0;
                         break;
 
@@ -617,13 +617,13 @@ public final class GameEngine {
                         randValue = random.nextInt() & Integer.MAX_VALUE;
                         if ((randValue & 1) == 0) {
                             enemy.aiState = 3;
-                            enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
-                                    + MainGameCanvas.var_17b5[difficultyLevel];
+                            enemy.stateTimer = randValue % MainGameCanvas.ENEMY_ATTACK_DELAY_RANGE[difficultyLevel]
+                                    + MainGameCanvas.ENEMY_ATTACK_DELAY_MIN[difficultyLevel];
                             enemy.spriteFrameIndex = 2;
                         } else {
                             enemy.aiState = 1;
                             enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
-                                    % MainGameCanvas.var_1851[difficultyLevel];
+                                    % MainGameCanvas.ENEMY_REDETECT_DELAY[difficultyLevel];
                             enemy.spriteFrameIndex = 0;
                         }
                         break;
@@ -684,7 +684,7 @@ public final class GameEngine {
                         } else {
                             enemy.aiState = 2;
                             enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
-                                    % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                                    % MainGameCanvas.ENEMY_STATE_TRANSITION_TIME[difficultyLevel];
                             enemy.spriteFrameIndex = 0;
                         }
                         break;
@@ -692,15 +692,15 @@ public final class GameEngine {
                     case 4:
                         enemy.aiState = 2;
                         enemy.stateTimer = (random.nextInt() & Integer.MAX_VALUE)
-                                % MainGameCanvas.enemyReactionTime[difficultyLevel];
+                                % MainGameCanvas.ENEMY_STATE_TRANSITION_TIME[difficultyLevel];
                         enemy.spriteFrameIndex = 0;
                         break;
 
                     case 5:
                         randValue = random.nextInt() & Integer.MAX_VALUE;
                         enemy.aiState = 3;
-                        enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
-                                + MainGameCanvas.var_17b5[difficultyLevel];
+                        enemy.stateTimer = randValue % MainGameCanvas.ENEMY_ATTACK_DELAY_RANGE[difficultyLevel]
+                                + MainGameCanvas.ENEMY_ATTACK_DELAY_MIN[difficultyLevel];
                         enemy.spriteFrameIndex = 2;
                         break;
 
@@ -732,7 +732,7 @@ public final class GameEngine {
                             MathUtils.preciseDivide(deltaZ, distance), enemy.getMovementSpeed());
 
                     if ((random.nextInt() & Integer.MAX_VALUE)
-                            % MainGameCanvas.var_1ad2[difficultyLevel] == 0) {
+                            % MainGameCanvas.ENEMY_STRAFE_CHANCE_DIVISOR[difficultyLevel] == 0) {
                         int tempVelX = velocityX;
                         if ((random.nextInt() & 1) == 0) {
                             velocityX += -velocityZ;
@@ -765,8 +765,8 @@ public final class GameEngine {
                 } else {
                     int randValue = random.nextInt() & Integer.MAX_VALUE;
                     enemy.aiState = 3;
-                    enemy.stateTimer = randValue % MainGameCanvas.var_180b[difficultyLevel]
-                            + MainGameCanvas.var_17b5[difficultyLevel];
+                    enemy.stateTimer = randValue % MainGameCanvas.ENEMY_ATTACK_DELAY_RANGE[difficultyLevel]
+                            + MainGameCanvas.ENEMY_ATTACK_DELAY_MIN[difficultyLevel];
                     enemy.spriteFrameIndex = 2;
                 }
             }

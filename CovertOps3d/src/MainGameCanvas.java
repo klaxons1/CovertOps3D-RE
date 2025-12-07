@@ -97,9 +97,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] DAMAGE_3004 = new int[]{15, 20, 25};
     public static final int[] DAMAGE_3005 = new int[]{20, 25, 30};
     public static final int[] DAMAGE_3006 = new int[]{25, 30, 40};
-    public static final int[] var_1329 = new int[]{1, 2, 3};
-    public static final int[] var_1358 = new int[]{2, 4, 5};
-    public static final int[] var_1366 = new int[]{3, 5, 7};
+    public static final int[] SNIPER_DAMAGE_SMALL = new int[]{1, 2, 3};
+    public static final int[] SNIPER_DAMAGE_MEDIUM = new int[]{2, 4, 5};
+    public static final int[] SNIPER_DAMAGE_LARGE = new int[]{3, 5, 7};
     public static final int[] HP_3003 = new int[]{50, 100, 150};
     public static final int[] HP_3004 = new int[]{100, 200, 300};
     public static final int[] HP_3005 = new int[]{100, 200, 300};
@@ -120,21 +120,21 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] HEALTH_SMALL = new int[]{25, 25, 25};
     public static final int[] HEALTH_LARGE = new int[]{50, 50, 50};
     public static final int[] ARMOR_PICKUP = new int[]{25, 25, 25};
-    public static final int[] enemyReactionTime = new int[]{64, 64, 64};
-    public static final int[] var_17b5 = new int[]{6, 4, 2};
-    public static final int[] var_180b = new int[]{32, 22, 12};
-    public static final int[] var_1851 = new int[]{32, 22, 12};
-    public static final int[] var_18a0 = new int[]{256, 192, 128};
-    public static final int[] var_18ad = new int[]{128, 128, 128};
-    public static final int[] var_1910 = new int[]{128, 64, 32};
-    public static final int[] var_191e = new int[]{32, 32, 32};
+    public static final int[] ENEMY_STATE_TRANSITION_TIME = new int[]{64, 64, 64};
+    public static final int[] ENEMY_ATTACK_DELAY_MIN = new int[]{6, 4, 2};
+    public static final int[] ENEMY_ATTACK_DELAY_RANGE = new int[]{32, 22, 12};
+    public static final int[] ENEMY_REDETECT_DELAY = new int[]{32, 22, 12};
+    public static final int[] ENEMY_SPAWN_DELAY_BASE = new int[]{256, 192, 128};
+    public static final int[] ENEMY_SPAWN_DELAY_VARIANCE = new int[]{128, 128, 128};
+    public static final int[] ENEMY_ATTACK_DELAY_BASE = new int[]{128, 64, 32};
+    public static final int[] ENEMY_ATTACK_DELAY_VARIANCE = new int[]{32, 32, 32};
     public static final int[] SPEED_3003 = new int[]{131072, 196608, 262144};
     public static final int[] SPEED_3004 = new int[]{131072, 196608, 262144};
     public static final int[] SPEED_3005 = new int[]{196608, 262144, 327680};
     public static final int[] SPEED_3006 = new int[]{196608, 262144, 327680};
     public static final int[] SPEED_3001 = new int[]{196608, 262144, 327680};
     public static final int[] SPEED_3002 = new int[]{196608, 262144, 327680};
-    public static final int[] var_1ad2 = new int[]{4, 3, 2};
+    public static final int[] ENEMY_STRAFE_CHANCE_DIVISOR = new int[]{4, 3, 2};
 
     public MainGameCanvas() {
         super(false);
@@ -1322,8 +1322,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     int slotIndex = freeSlots[(GameEngine.random.nextInt() & 7) % freeCount];
                     types[slotIndex] = enemyType;
                     int spawnDelay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                    timers[slotIndex] = spawnDelay % var_18ad[GameEngine.difficultyLevel]
-                            + var_18a0[GameEngine.difficultyLevel];
+                    timers[slotIndex] = spawnDelay % ENEMY_SPAWN_DELAY_VARIANCE[GameEngine.difficultyLevel]
+                            + ENEMY_SPAWN_DELAY_BASE[GameEngine.difficultyLevel];
                     positions[slotIndex] = starts[slotIndex];
                     states[slotIndex] = starts[slotIndex] > ends[slotIndex] ? 1 : 5;
                     ++this.activeEnemyCount;
@@ -1389,8 +1389,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         case 6:
                             states[i] = 3;
                             int delay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                            timers[i] = delay % var_191e[GameEngine.difficultyLevel]
-                                    + var_1910[GameEngine.difficultyLevel];
+                            timers[i] = delay % ENEMY_ATTACK_DELAY_VARIANCE[GameEngine.difficultyLevel]
+                                    + ENEMY_ATTACK_DELAY_BASE[GameEngine.difficultyLevel];
                             break;
                         case 3:
                             states[i] = 4;
@@ -1520,9 +1520,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int[] spriteWidths = new int[]{4, 9, 14};
             int[] spriteHeights = new int[]{8, 18, 30};
             int[] hitPoints = new int[]{
-                    var_1329[GameEngine.difficultyLevel],
-                    var_1358[GameEngine.difficultyLevel],
-                    var_1366[GameEngine.difficultyLevel]
+                    SNIPER_DAMAGE_SMALL[GameEngine.difficultyLevel],
+                    SNIPER_DAMAGE_MEDIUM[GameEngine.difficultyLevel],
+                    SNIPER_DAMAGE_LARGE[GameEngine.difficultyLevel]
             };
 
             int[] screenOffsets = new int[]{0, 0};
@@ -1601,8 +1601,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 int[] regularPalette = this.paletteRegular;
 
                 if (totalDamage > 0) {
-                    if (totalDamage > var_1329[GameEngine.difficultyLevel]) {
-                        if (totalDamage > var_1358[GameEngine.difficultyLevel]) {
+                    if (totalDamage > SNIPER_DAMAGE_SMALL[GameEngine.difficultyLevel]) {
+                        if (totalDamage > SNIPER_DAMAGE_MEDIUM[GameEngine.difficultyLevel]) {
                             HelperUtils.playSound(2, false, 100, 0);
                         } else {
                             HelperUtils.playSound(2, false, 80, 0);
@@ -1675,8 +1675,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         if (enemyStates[i] == 4) {
                             enemyStates[i] = (enemyPositions[i] & 1) == 1 ? 1 : 5;
                             int respawnDelay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                            enemyTimers[i] = respawnDelay % var_18ad[GameEngine.difficultyLevel]
-                                    + var_18a0[GameEngine.difficultyLevel];
+                            enemyTimers[i] = respawnDelay % ENEMY_SPAWN_DELAY_VARIANCE[GameEngine.difficultyLevel]
+                                    + ENEMY_SPAWN_DELAY_BASE[GameEngine.difficultyLevel];
                         }
                     }
                 }
@@ -1713,8 +1713,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             if (enemyStates[i] == 4) {
                                 enemyStates[i] = (enemyPositions[i] & 1) == 1 ? 1 : 5;
                                 int respawnDelay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                                enemyTimers[i] = respawnDelay % var_18ad[GameEngine.difficultyLevel]
-                                        + var_18a0[GameEngine.difficultyLevel];
+                                enemyTimers[i] = respawnDelay % ENEMY_SPAWN_DELAY_VARIANCE[GameEngine.difficultyLevel]
+                                        + ENEMY_SPAWN_DELAY_BASE[GameEngine.difficultyLevel];
                             }
                         }
                     }
