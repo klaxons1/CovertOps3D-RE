@@ -433,12 +433,12 @@ public class PortalRenderer {
             int relativeX = transform.x - cameraX;
             int relativeZ = transform.z - cameraZ;
 
-            gameObject.screenPos.x = (int)(cosAngle * (long)relativeX - sinAngle * (long)relativeZ >> 16);
-            gameObject.screenPos.y = (int)(sinAngle * (long)relativeX + cosAngle * (long)relativeZ >> 16);
+            gameObject.projectionData.x = (int)(cosAngle * (long)relativeX - sinAngle * (long)relativeZ >> 16);
+            gameObject.projectionData.y = (int)(sinAngle * (long)relativeX + cosAngle * (long)relativeZ >> 16);
 
-            if (gameObject.screenPos.y > NEAR_CLIP_DISTANCE) {
-                byte spriteIndex1 = gameObject.getCurrentSprite1();
-                byte spriteIndex2 = gameObject.getCurrentSprite2();
+            if (gameObject.projectionData.y > NEAR_CLIP_DISTANCE) {
+                byte spriteIndex1 = gameObject.getCurrentUpperBodySpriteId();
+                byte spriteIndex2 = gameObject.getCurrentLowerBodySpriteId();
 
                 if (spriteIndex1 != 0 || spriteIndex2 != 0) {
                     int objectHeight;
@@ -456,12 +456,12 @@ public class PortalRenderer {
                         objectHeight = -sectorData.floorHeight << 16;
                     }
 
-                    gameObject.screenHeight = objectHeight - cameraY;
+                    gameObject.screenY = objectHeight - cameraY;
 
-                    gameObject.torsoTexture = (spriteIndex1 != 0)
+                    gameObject.upperBodyTexture = (spriteIndex1 != 0)
                             ? LevelLoader.textureTable[spriteIndex1 + 128]
                             : null;
-                    gameObject.legsTexture = (spriteIndex2 != 0)
+                    gameObject.lowerBodyTexture = (spriteIndex2 != 0)
                             ? LevelLoader.textureTable[spriteIndex2 + 128]
                             : null;
 
@@ -493,20 +493,20 @@ public class PortalRenderer {
 
             if (gameObject.projectToScreen()) {
                 int lightLevel = sectorData.getLightLevel();
-                int screenX = (gameObject.screenPos.x >> 16) + HALF_VIEWPORT_WIDTH;
-                int screenY = (gameObject.screenHeight >> 16) + HALF_VIEWPORT_HEIGHT;
-                int depth = gameObject.screenPos.y;
+                int screenX = (gameObject.projectionData.x >> 16) + HALF_VIEWPORT_WIDTH;
+                int screenY = (gameObject.screenY >> 16) + HALF_VIEWPORT_HEIGHT;
+                int depth = gameObject.projectionData.y;
 
-                if (gameObject.legsTexture != null) {
-                    gameObject.calculateSpriteSize2();
-                    drawSprite(gameObject.legsTexture, lightLevel, screenX, screenY,
-                            depth, gameObject.spriteWidth2, gameObject.spriteHeight2);
+                if (gameObject.lowerBodyTexture != null) {
+                    gameObject.calculateLowerBodyScreenSize();
+                    drawSprite(gameObject.lowerBodyTexture, lightLevel, screenX, screenY,
+                            depth, gameObject.lowerBodyScreenWidth, gameObject.lowerBodyScreenHeight);
                 }
 
-                if (gameObject.torsoTexture != null) {
-                    gameObject.calculateSpriteSize1();
-                    drawSprite(gameObject.torsoTexture, lightLevel, screenX, screenY,
-                            depth, gameObject.spriteWidth1, gameObject.spriteHeight1);
+                if (gameObject.upperBodyTexture != null) {
+                    gameObject.calculateUpperBodyScreenSize();
+                    drawSprite(gameObject.upperBodyTexture, lightLevel, screenX, screenY,
+                            depth, gameObject.upperBodyScreenWidth, gameObject.upperBodyScreenHeight);
                 }
             }
         }

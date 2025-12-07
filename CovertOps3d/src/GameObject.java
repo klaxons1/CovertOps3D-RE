@@ -4,42 +4,42 @@ public final class GameObject {
     public Transform3D transform;
     public int objectType;
     public int detonationTimer;
-    private Vector torsoSpriteIds;
-    private Vector legsSpriteIds;
+    private Vector upperBodySpriteIds;
+    private Vector lowerBodySpriteIds;
     public int spriteFrameIndex;
     public int health;
     public int stateTimer;
     public int aiState;
-    public Point2D screenPos;
-    public int screenHeight;
-    public Texture torsoTexture;
-    public Texture legsTexture;
-    public int spriteWidth1;
-    public int spriteHeight1;
-    public int spriteWidth2;
-    public int spriteHeight2;
+    public Point2D projectionData;
+    public int screenY;
+    public Texture upperBodyTexture;
+    public Texture lowerBodyTexture;
+    public int upperBodyScreenWidth;
+    public int upperBodyScreenHeight;
+    public int lowerBodyScreenWidth;
+    public int lowerBodyScreenHeight;
 
-    public GameObject(Transform3D var1, int var2, int var3, int var4) {
+    public GameObject(Transform3D position, int var2, int type, int fuseTime) {
 
-        this.transform = var1;
-        this.screenPos = new Point2D(0, 0);
-        this.objectType = var3;
-        this.detonationTimer = var4;
-        this.torsoSpriteIds = new Vector();
-        this.legsSpriteIds = new Vector();
+        this.transform = position;
+        this.projectionData = new Point2D(0, 0);
+        this.objectType = type;
+        this.detonationTimer = fuseTime;
+        this.upperBodySpriteIds = new Vector();
+        this.lowerBodySpriteIds = new Vector();
         this.spriteFrameIndex = 0;
-        this.screenHeight = 0;
-        this.torsoTexture = null;
-        this.legsTexture = null;
-        this.spriteWidth1 = 0;
-        this.spriteHeight1 = 0;
-        this.spriteWidth2 = 0;
-        this.spriteHeight2 = 0;
+        this.screenY = 0;
+        this.upperBodyTexture = null;
+        this.lowerBodyTexture = null;
+        this.upperBodyScreenWidth = 0;
+        this.upperBodyScreenHeight = 0;
+        this.lowerBodyScreenWidth = 0;
+        this.lowerBodyScreenHeight = 0;
         this.health = 0;
         this.stateTimer = 0;
         this.aiState = -1;
 
-        switch(var3) {
+        switch(type) {
             case 10:
             case 12:
                 this.aiState = 0;
@@ -96,46 +96,46 @@ public final class GameObject {
         var1.getSectorAtPoint(this.transform.x, this.transform.z).addDynamicObject(this);
     }
 
-    public final byte getCurrentSprite1() {
-        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.torsoSpriteIds.size()) {
-            return ((Byte)this.torsoSpriteIds.elementAt(this.spriteFrameIndex)).byteValue();
+    public final byte getCurrentUpperBodySpriteId() {
+        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.upperBodySpriteIds.size()) {
+            return ((Byte)this.upperBodySpriteIds.elementAt(this.spriteFrameIndex)).byteValue();
         }
         return 0;
     }
 
-    public final byte getCurrentSprite2() {
-        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.legsSpriteIds.size()) {
-            return ((Byte)this.legsSpriteIds.elementAt(this.spriteFrameIndex)).byteValue();
+    public final byte getCurrentLowerBodySpriteId() {
+        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.lowerBodySpriteIds.size()) {
+            return ((Byte)this.lowerBodySpriteIds.elementAt(this.spriteFrameIndex)).byteValue();
         }
         return 0;
     }
 
     public final void addSpriteFrame(byte var1, byte var2) {
-        this.torsoSpriteIds.addElement(new Byte(var1));
-        this.legsSpriteIds.addElement(new Byte(var2));
+        this.upperBodySpriteIds.addElement(new Byte(var1));
+        this.lowerBodySpriteIds.addElement(new Byte(var2));
     }
 
     public final boolean compareDepth(GameObject var1) {
-        return this.screenPos.y < var1.screenPos.y;
+        return this.projectionData.y < var1.projectionData.y;
     }
 
     public final boolean projectToScreen() {
-        if (this.screenPos.y <= 0) {
+        if (this.projectionData.y <= 0) {
             return false;
         } else {
-            this.screenPos.x = (int)((long) MathUtils.fixedPointDivide(this.screenPos.x, this.screenPos.y) * 7864320L >> 16);
-            this.screenHeight = MathUtils.fixedPointDivide(this.screenHeight, this.screenPos.y) * 120;
+            this.projectionData.x = (int)((long) MathUtils.fixedPointDivide(this.projectionData.x, this.projectionData.y) * 7864320L >> 16);
+            this.screenY = MathUtils.fixedPointDivide(this.screenY, this.projectionData.y) * 120;
             return true;
         }
     }
 
-    public final void calculateSpriteSize1() {
-        this.spriteWidth1 = MathUtils.fixedPointDivide(this.torsoTexture.width << 16, this.screenPos.y) * 120 - 131072 >> 18;
-        this.spriteHeight1 = MathUtils.fixedPointDivide(this.torsoTexture.height << 16, this.screenPos.y) * 120 - 131072 >> 18;
+    public final void calculateUpperBodyScreenSize() {
+        this.upperBodyScreenWidth = MathUtils.fixedPointDivide(this.upperBodyTexture.width << 16, this.projectionData.y) * 120 - 131072 >> 18;
+        this.upperBodyScreenHeight = MathUtils.fixedPointDivide(this.upperBodyTexture.height << 16, this.projectionData.y) * 120 - 131072 >> 18;
     }
 
-    public final void calculateSpriteSize2() {
-        this.spriteWidth2 = MathUtils.fixedPointDivide(this.legsTexture.width << 16, this.screenPos.y) * 120 + 65536 >> 17;
-        this.spriteHeight2 = MathUtils.fixedPointDivide(this.legsTexture.height << 16, this.screenPos.y) * 120 + 65536 >> 17;
+    public final void calculateLowerBodyScreenSize() {
+        this.lowerBodyScreenWidth = MathUtils.fixedPointDivide(this.lowerBodyTexture.width << 16, this.projectionData.y) * 120 + 65536 >> 17;
+        this.lowerBodyScreenHeight = MathUtils.fixedPointDivide(this.lowerBodyTexture.height << 16, this.projectionData.y) * 120 + 65536 >> 17;
     }
 }
