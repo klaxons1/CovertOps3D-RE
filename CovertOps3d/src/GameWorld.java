@@ -381,31 +381,31 @@ public final class GameWorld {
                 switch (pickupType) {
                     case 2004: // Panzerfaust ammo drop
                         GameEngine.weaponsAvailable[5] = true;
-                        GameEngine.ammoCounts[5] += MainGameCanvas.var_1616[GameEngine.difficultyLevel];
+                        GameEngine.ammoCounts[5] += MainGameCanvas.AMMO_PANZERFAUST_PICKUP[GameEngine.difficultyLevel];
                         triggerWeaponSwitch(5);
                         break;
 
                     case 2006: // Sonic gun + level transition (boss drop)
                         GameEngine.weaponsAvailable[7] = true;
-                        GameEngine.ammoCounts[7] += MainGameCanvas.var_1677[GameEngine.difficultyLevel];
+                        GameEngine.ammoCounts[7] += MainGameCanvas.AMMO_SONIC_PICKUP[GameEngine.difficultyLevel];
                         triggerWeaponSwitch(7);
                         triggerLevelTransition();
                         break;
 
                     case 2007: // Luger ammo drop
-                        GameEngine.ammoCounts[1] += MainGameCanvas.var_14be[GameEngine.difficultyLevel];
+                        GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_LUGER_SMALL[GameEngine.difficultyLevel];
                         break;
 
                     case 2008: // Mauser ammo drop
-                        GameEngine.ammoCounts[2] += MainGameCanvas.var_14f5[GameEngine.difficultyLevel];
+                        GameEngine.ammoCounts[2] += MainGameCanvas.AMMO_MAUSER_SMALL[GameEngine.difficultyLevel];
                         break;
 
                     case 2010: // Panzerfaust single ammo
-                        GameEngine.ammoCounts[5] += MainGameCanvas.var_151d[GameEngine.difficultyLevel];
+                        GameEngine.ammoCounts[5] += MainGameCanvas.AMMO_PANZERFAUST_SMALL[GameEngine.difficultyLevel];
                         break;
 
                     case 2047: // Sonic gun ammo
-                        GameEngine.ammoCounts[7] += MainGameCanvas.var_156b[GameEngine.difficultyLevel];
+                        GameEngine.ammoCounts[7] += MainGameCanvas.AMMO_SONIC_SMALL[GameEngine.difficultyLevel];
                         break;
 
                     default:
@@ -455,7 +455,7 @@ public final class GameWorld {
 
                 case 2001: // Luger weapon pickup
                     GameEngine.weaponsAvailable[1] = true;
-                    GameEngine.ammoCounts[1] += MainGameCanvas.var_157a[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_LUGER_WEAPON[GameEngine.difficultyLevel];
                     triggerWeaponSwitch(1);
                     break;
 
@@ -465,45 +465,45 @@ public final class GameWorld {
                         GameEngine.messageTimer = 30;
                     }
                     GameEngine.weaponsAvailable[2] = true;
-                    GameEngine.ammoCounts[2] += MainGameCanvas.var_1592[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[2] += MainGameCanvas.AMMO_MAUSER_WEAPON[GameEngine.difficultyLevel];
                     triggerWeaponSwitch(2);
                     break;
 
                 case 2003: // Rifle weapon pickup
                     GameEngine.weaponsAvailable[3] = true;
-                    GameEngine.ammoCounts[1] += MainGameCanvas.var_15c4[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_RIFLE_WEAPON[GameEngine.difficultyLevel];
                     triggerWeaponSwitch(3);
                     break;
 
                 case 2004: // Panzerfaust weapon pickup
                     GameEngine.weaponsAvailable[5] = true;
-                    GameEngine.ammoCounts[5] += MainGameCanvas.var_1616[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[5] += MainGameCanvas.AMMO_PANZERFAUST_PICKUP[GameEngine.difficultyLevel];
                     triggerWeaponSwitch(5);
                     break;
 
                 case 2005: // Dynamite pickup
                     GameEngine.weaponsAvailable[6] = true;
-                    GameEngine.ammoCounts[6] += MainGameCanvas.var_1630[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[6] += MainGameCanvas.AMMO_DYNAMITE_PICKUP[GameEngine.difficultyLevel];
                     triggerWeaponSwitch(6);
                     break;
 
                 case 2006: // Sonic gun + level transition
                     GameEngine.weaponsAvailable[7] = true;
-                    GameEngine.ammoCounts[7] += MainGameCanvas.var_1677[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[7] += MainGameCanvas.AMMO_SONIC_PICKUP[GameEngine.difficultyLevel];
                     triggerWeaponSwitch(7);
                     triggerTransition = true;
                     break;
 
                 case 2007: // Luger ammo
-                    GameEngine.ammoCounts[1] += MainGameCanvas.var_14be[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_LUGER_SMALL[GameEngine.difficultyLevel];
                     break;
 
                 case 2008: // Mauser ammo
-                    GameEngine.ammoCounts[2] += MainGameCanvas.var_14f5[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[2] += MainGameCanvas.AMMO_MAUSER_SMALL[GameEngine.difficultyLevel];
                     break;
 
                 case 2010: // Panzerfaust ammo
-                    GameEngine.ammoCounts[5] += MainGameCanvas.var_151d[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[5] += MainGameCanvas.AMMO_PANZERFAUST_SMALL[GameEngine.difficultyLevel];
                     break;
 
                 case 2012: // Large health pack
@@ -511,7 +511,7 @@ public final class GameWorld {
                         collected = false;
                         break;
                     }
-                    GameEngine.playerHealth += MainGameCanvas.var_16e8[GameEngine.difficultyLevel];
+                    GameEngine.playerHealth += MainGameCanvas.HEALTH_LARGE[GameEngine.difficultyLevel];
                     if (GameEngine.playerHealth > 100) {
                         GameEngine.playerHealth = 100;
                     }
@@ -526,7 +526,7 @@ public final class GameWorld {
                         collected = false;
                         break;
                     }
-                    GameEngine.playerHealth += MainGameCanvas.var_16c7[GameEngine.difficultyLevel];
+                    GameEngine.playerHealth += MainGameCanvas.HEALTH_SMALL[GameEngine.difficultyLevel];
                     if (GameEngine.playerHealth > 100) {
                         GameEngine.playerHealth = 100;
                     }
@@ -537,7 +537,7 @@ public final class GameWorld {
                         collected = false;
                         break;
                     }
-                    GameEngine.playerArmor += MainGameCanvas.var_1731[GameEngine.difficultyLevel];
+                    GameEngine.playerArmor += MainGameCanvas.ARMOR_PICKUP[GameEngine.difficultyLevel];
                     if (GameEngine.playerArmor > 100) {
                         GameEngine.playerArmor = 100;
                     }
@@ -545,12 +545,12 @@ public final class GameWorld {
 
                 case 2024: // Sten weapon pickup
                     GameEngine.weaponsAvailable[4] = true;
-                    GameEngine.ammoCounts[1] += MainGameCanvas.var_15d0[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_STEN_WEAPON[GameEngine.difficultyLevel];
                     triggerWeaponSwitch(4);
                     break;
 
                 case 2047: // Sonic gun ammo
-                    GameEngine.ammoCounts[7] += MainGameCanvas.var_156b[GameEngine.difficultyLevel];
+                    GameEngine.ammoCounts[7] += MainGameCanvas.AMMO_SONIC_SMALL[GameEngine.difficultyLevel];
                     break;
 
                 default:
@@ -922,13 +922,6 @@ public final class GameWorld {
 
     /**
      * Fires the player's current weapon.
-     *
-     * Suggested constant renames in MainGameCanvas:
-     * - var_f4a -> DAMAGE_FIST ({5,5,5})
-     * - var_f5c -> DAMAGE_LUGER ({25,25,25})
-     * - var_f76 -> DAMAGE_MAUSER ({30,30,30})
-     * - var_fa7 -> DAMAGE_RIFLE ({25,25,25})
-     * - var_ff1 -> DAMAGE_STEN ({25,25,25})
      */
     public final void fireWeapon() {
         int playerAngle = GameEngine.player.rotation;
@@ -1013,26 +1006,26 @@ public final class GameWorld {
 
                 switch (GameEngine.currentWeapon) {
                     case 0: // Fist
-                        damage = MainGameCanvas.var_f4a[GameEngine.difficultyLevel];
+                        damage = MainGameCanvas.DAMAGE_FIST[GameEngine.difficultyLevel];
                         break;
 
                     case 1: // Luger
-                        damage = MainGameCanvas.var_f5c[GameEngine.difficultyLevel];
+                        damage = MainGameCanvas.DAMAGE_LUGER[GameEngine.difficultyLevel];
                         hitSound = 7;
                         break;
 
                     case 2: // Mauser
-                        damage = MainGameCanvas.var_f76[GameEngine.difficultyLevel];
+                        damage = MainGameCanvas.DAMAGE_MAUSER[GameEngine.difficultyLevel];
                         hitSound = 7;
                         break;
 
                     case 3: // Rifle
-                        damage = MainGameCanvas.var_fa7[GameEngine.difficultyLevel];
+                        damage = MainGameCanvas.DAMAGE_RIFLE[GameEngine.difficultyLevel];
                         hitSound = 9;
                         break;
 
                     case 4: // Sten
-                        damage = MainGameCanvas.var_ff1[GameEngine.difficultyLevel];
+                        damage = MainGameCanvas.DAMAGE_STEN[GameEngine.difficultyLevel];
                         hitSound = 9;
                         break;
                 }
@@ -1122,12 +1115,6 @@ public final class GameWorld {
     /**
      * Updates all active projectiles and handles their collisions.
      *
-     * Suggested constant renames:
-     * - var_104c -> DAMAGE_SONIC_PROJECTILE ({65536,65536,65536} - 1.0 in fixed-point)
-     * - var_1071 -> DAMAGE_ROCKET ({150,150,150})
-     * - var_1113 -> EXPLOSION_MAX_DAMAGE ({400,400,400})
-     * - var_10c4 -> EXPLOSION_FALLOFF_RATE ({65536,65536,65536} - 1.0 in fixed-point)
-     *
      * @return true if player was killed
      */
     public final boolean updateProjectiles() {
@@ -1150,8 +1137,8 @@ public final class GameWorld {
                     int deltaZ = projectile.transform.z - GameEngine.player.z;
                     int distance = MathUtils.fastHypot(deltaX, deltaZ);
                     int scaledDistance = MathUtils.fixedPointMultiply(distance,
-                            MainGameCanvas.var_10c4[GameEngine.difficultyLevel]) >> 16;
-                    int explosionDamage = MainGameCanvas.var_1113[GameEngine.difficultyLevel] - scaledDistance;
+                            MainGameCanvas.EXPLOSION_FALLOFF_RATE[GameEngine.difficultyLevel]) >> 16;
+                    int explosionDamage = MainGameCanvas.EXPLOSION_MAX_DAMAGE[GameEngine.difficultyLevel] - scaledDistance;
 
                     if (explosionDamage > 0) {
                         HelperUtils.vibrateDevice(explosionDamage * 10);
@@ -1171,8 +1158,8 @@ public final class GameWorld {
                         int deltaZ = projectile.transform.z - enemy.transform.z;
                         int distance = MathUtils.fastHypot(deltaX, deltaZ);
                         int scaledDistance = MathUtils.fixedPointMultiply(distance,
-                                MainGameCanvas.var_10c4[GameEngine.difficultyLevel]) >> 16;
-                        int explosionDamage = MainGameCanvas.var_1113[GameEngine.difficultyLevel] - scaledDistance;
+                                MainGameCanvas.EXPLOSION_FALLOFF_RATE[GameEngine.difficultyLevel]) >> 16;
+                        int explosionDamage = MainGameCanvas.EXPLOSION_MAX_DAMAGE[GameEngine.difficultyLevel] - scaledDistance;
 
                         if (explosionDamage > 0) {
                             applyDamageToEnemy(enemy, explosionDamage);
@@ -1207,8 +1194,8 @@ public final class GameWorld {
 
             // Determine damage based on projectile type
             int projectileDamage = (projectile.objectType == 102)
-                    ? MainGameCanvas.var_104c[GameEngine.difficultyLevel]  // Sonic
-                    : MainGameCanvas.var_1071[GameEngine.difficultyLevel]; // Rocket/enemy
+                    ? MainGameCanvas.DAMAGE_SONIC_PROJECTILE[GameEngine.difficultyLevel]  // Sonic
+                    : MainGameCanvas.DAMAGE_ROCKET[GameEngine.difficultyLevel]; // Rocket/enemy
 
             // Check collision with player
             if (doesLineIntersectCircle(prevX, prevZ, newX, newZ,
