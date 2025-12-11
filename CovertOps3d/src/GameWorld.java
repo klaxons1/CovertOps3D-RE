@@ -39,6 +39,28 @@ public final class GameWorld {
     // Max weapon range for hitscan weapons
     private static final int MAX_HITSCAN_RANGE = 67108864;        // 1024 units
 
+    // Pickup ammo amounts by difficulty
+    public static final int[] AMMO_PANZERFAUST_PICKUP = {3, 3, 3};
+    public static final int[] AMMO_SONIC_PICKUP = {3, 3, 3};
+    public static final int[] AMMO_LUGER_SMALL = {10, 10, 10};
+    public static final int[] AMMO_MAUSER_SMALL = {10, 10, 10};
+    public static final int[] AMMO_PANZERFAUST_SMALL = {1, 1, 1};
+    public static final int[] AMMO_SONIC_SMALL = {6, 6, 6};
+    public static final int[] AMMO_LUGER_WEAPON = {10, 10, 10};
+    public static final int[] AMMO_MAUSER_WEAPON = {10, 10, 10};
+    public static final int[] AMMO_RIFLE_WEAPON = {20, 20, 20};
+    public static final int[] AMMO_STEN_WEAPON = {20, 20, 20};
+    public static final int[] AMMO_DYNAMITE_PICKUP = {1, 1, 1};
+
+    // Health and armor pickups
+    public static final int[] HEALTH_SMALL = {25, 25, 25};
+    public static final int[] HEALTH_LARGE = {50, 50, 50};
+    public static final int[] ARMOR_PICKUP = {25, 25, 25};
+
+    // Explosion mechanics
+    public static final int[] EXPLOSION_FALLOFF_RATE = {65536, 65536, 65536};
+    public static final int[] EXPLOSION_MAX_DAMAGE = {400, 400, 400};
+
     public static int MIN_WALL_HEIGHT = 16;
     public static int MIN_CEILING_CLEARANCE = 50;
     public static int PLAYER_HEIGHT_OFFSET = 40;
@@ -49,18 +71,18 @@ public final class GameWorld {
     public Point2D[] vertices;
     private Point2D[] transformedVertices;
     public WallDefinition[] wallDefinitions;
-    public GameObject[] staticObjects;      // Consider: worldObjects
-    private Vector projectiles;             // Consider: activeProjectiles
-    private Vector pickupItems;             // Consider: droppedPickups
+    public GameObject[] staticObjects;
+    private Vector projectiles;
+    private Vector pickupItems;
     public SectorData[] sectors;
     public WallSurface[] wallSurfaces;
     public Transform3D worldOrigin;
     public BSPNode[] bspNodes;
-    public Sector[] bspSectors;             // Consider: sectorNodes
+    public Sector[] bspSectors;
     public WallSegment[] wallSegments;
 
     public GameWorld() {
-        new Point2D(0, 0); // Unused allocation - likely leftover from debugging
+        new Point2D(0, 0);
         this.projectiles = new Vector();
         this.pickupItems = new Vector();
         this.lastWallIndex = -1;
@@ -91,7 +113,6 @@ public final class GameWorld {
             int relativeX = this.vertices[i].x - originX;
             int relativeY = this.vertices[i].y - originY;
 
-            // Standard 2D rotation: x' = x*cos - y*sin, y' = x*sin + y*cos
             this.transformedVertices[i].x = (int)(cosAngle * (long)relativeX - sinAngle * (long)relativeY >> 16);
             this.transformedVertices[i].y = (int)(sinAngle * (long)relativeX + cosAngle * (long)relativeY >> 16);
         }
@@ -139,12 +160,10 @@ public final class GameWorld {
      * Updates spatial partitioning for all dynamic objects.
      */
     public final void updateWorld() {
-        // Clear all dynamic object lists from sectors
         for (int i = 0; i < this.bspSectors.length; i++) {
             this.bspSectors[i].clearDynamicObjects();
         }
 
-        // Re-add static objects to their sectors
         for (int i = 0; i < this.staticObjects.length; i++) {
             GameObject gameObject = this.staticObjects[i];
             if (gameObject != null) {
@@ -152,12 +171,10 @@ public final class GameWorld {
             }
         }
 
-        // Add projectiles to sectors
         for (int i = 0; i < this.projectiles.size(); i++) {
             ((GameObject)this.projectiles.elementAt(i)).addToWorld(this);
         }
 
-        // Add dropped pickups to sectors
         for (int i = 0; i < this.pickupItems.size(); i++) {
             ((GameObject)this.pickupItems.elementAt(i)).addToWorld(this);
         }
@@ -168,7 +185,6 @@ public final class GameWorld {
      * Used for collision detection and BSP traversal.
      */
     private static boolean isPointOnLeftSideOfLine(Point2D point, Point2D lineStart, Point2D lineEnd) {
-        // Handle vertical lines
         if (lineStart.x == lineEnd.x) {
             if (point.x <= lineStart.x) {
                 return lineStart.y - lineEnd.y > 0;
@@ -177,7 +193,6 @@ public final class GameWorld {
             }
         }
 
-        // Handle horizontal lines
         if (lineStart.y == lineEnd.y) {
             if (point.y <= lineStart.y) {
                 return lineStart.x - lineEnd.x < 0;
@@ -186,7 +201,6 @@ public final class GameWorld {
             }
         }
 
-        // General case: use cross product
         int deltaX = point.x - lineStart.x;
         int deltaY = point.y - lineStart.y;
         long crossProduct = (long)(lineStart.y - lineEnd.y) * (long)deltaX;
@@ -196,17 +210,11 @@ public final class GameWorld {
     /**
      * Checks if an entity can move to the proposed position.
      * Returns false if collision with blocking object occurs.
-     *
-     * @param entity The entity trying to move (excluded from collision checks)
-     * @param proposedPos The proposed new position
-     * @param currentSector The sector the entity is currently in
-     * @return true if movement is allowed, false if blocked
      */
     public final boolean checkCollision(GameObject entity, Transform3D proposedPos, SectorData currentSector) {
         this.collisionTestPoint.x = proposedPos.x;
         this.collisionTestPoint.y = proposedPos.z;
 
-        // Check wall collisions and adjust position
         for (int i = 0; i < this.wallDefinitions.length; i++) {
             WallDefinition wall = this.wallDefinitions[i];
             if (wall.isCollidable() || isWallPassableForSector(currentSector, wall)) {
@@ -214,13 +222,11 @@ public final class GameWorld {
             }
         }
 
-        // Calculate AABB bounds for entity
         int entityMinX = this.collisionTestPoint.x - COLLISION_RADIUS;
         int entityMaxX = this.collisionTestPoint.x + COLLISION_RADIUS;
         int entityMinZ = this.collisionTestPoint.y - COLLISION_RADIUS;
         int entityMaxZ = this.collisionTestPoint.y + COLLISION_RADIUS;
 
-        // Check collision with other game objects
         for (int i = 0; i < this.staticObjects.length; i++) {
             GameObject other = this.staticObjects[i];
             if (other != null && other != entity && other.aiState != -1) {
@@ -230,25 +236,23 @@ public final class GameWorld {
                 int otherMinZ = otherTransform.z - COLLISION_RADIUS;
                 int otherMaxZ = otherTransform.z + COLLISION_RADIUS;
 
-                // AABB intersection test
                 if (entityMinX <= otherMaxX && entityMaxX >= otherMinX &&
                         entityMinZ <= otherMaxZ && entityMaxZ >= otherMinZ) {
                     switch (other.objectType) {
-                        case 10:    // Switch/Lever
-                        case 12:    // Button
-                        case 3001:  // Elite Soldier
-                        case 3002:  // Boss
-                        case 3003:  // Regular Soldier
-                        case 3004:  // Officer
-                        case 3005:  // Guard
-                        case 3006:  // Special Unit
+                        case 10:
+                        case 12:
+                        case 3001:
+                        case 3002:
+                        case 3003:
+                        case 3004:
+                        case 3005:
+                        case 3006:
                             return false;
                     }
                 }
             }
         }
 
-        // Update proposed position with collision-adjusted values
         proposedPos.x = this.collisionTestPoint.x;
         proposedPos.z = this.collisionTestPoint.y;
         return true;
@@ -256,26 +260,6 @@ public final class GameWorld {
 
     /**
      * Handles player movement including collision detection and item pickup.
-     *
-     * @param player The player's physics body
-     * @param currentSector The sector the player is in
-     * @return The wall that was touched (for interaction), or null
-     *
-     * Suggested constant renames in MainGameCanvas:
-     * - var_1616 -> AMMO_PANZERFAUST_PICKUP (amount: {3,3,3})
-     * - var_1677 -> AMMO_SONIC_PICKUP (amount: {3,3,3})
-     * - var_14be -> AMMO_LUGER_SMALL (amount: {10,10,10})
-     * - var_14f5 -> AMMO_MAUSER_SMALL (amount: {10,10,10})
-     * - var_151d -> AMMO_PANZERFAUST_SMALL (amount: {1,1,1})
-     * - var_156b -> AMMO_SONIC_SMALL (amount: {6,6,6})
-     * - var_157a -> AMMO_LUGER_WEAPON (amount: {10,10,10})
-     * - var_1592 -> AMMO_MAUSER_WEAPON (amount: {10,10,10})
-     * - var_15c4 -> AMMO_RIFLE_WEAPON (amount: {20,20,20})
-     * - var_15d0 -> AMMO_STEN_WEAPON (amount: {20,20,20})
-     * - var_1630 -> AMMO_DYNAMITE_PICKUP (amount: {1,1,1})
-     * - var_16c7 -> HEALTH_SMALL (amount: {25,25,25})
-     * - var_16e8 -> HEALTH_LARGE (amount: {50,50,50})
-     * - var_1731 -> ARMOR_PICKUP (amount: {25,25,25})
      */
     public final WallDefinition handlePlayerMovement(PhysicsBody player, SectorData currentSector) {
         WallDefinition touchedWall = null;
@@ -284,7 +268,6 @@ public final class GameWorld {
 
         int newLastWallIndex = -1;
 
-        // First check the last wall we collided with (optimization)
         if (this.lastWallIndex != -1) {
             WallDefinition lastWall = this.wallDefinitions[this.lastWallIndex];
             if ((lastWall.isPassable() || isWallPassableForSector(currentSector, lastWall))
@@ -294,7 +277,6 @@ public final class GameWorld {
             }
         }
 
-        // Check all other walls
         for (int i = 0; i < this.wallDefinitions.length; i++) {
             if (i == this.lastWallIndex) continue;
 
@@ -304,27 +286,25 @@ public final class GameWorld {
                 if (newLastWallIndex == -1) {
                     newLastWallIndex = i;
                 }
-                // Prefer interactive walls over normal walls
                 if (touchedWall == null || touchedWall.getWallType() == 0) {
                     touchedWall = wall;
                 }
             }
         }
 
-        // Check collision with blocking objects (NPCs, switches, etc.)
         for (int i = 0; i < this.staticObjects.length; i++) {
             GameObject obj = this.staticObjects[i];
             if (obj == null || obj.aiState == -1) continue;
 
             switch (obj.objectType) {
-                case 10:    // Switch/Lever
-                case 12:    // Button
-                case 3001:  // Elite Soldier
-                case 3002:  // Boss
-                case 3003:  // Regular Soldier
-                case 3004:  // Officer
-                case 3005:  // Guard
-                case 3006:  // Special Unit
+                case 10:
+                case 12:
+                case 3001:
+                case 3002:
+                case 3003:
+                case 3004:
+                case 3005:
+                case 3006:
                     Transform3D objTransform = obj.transform;
                     int deltaX = this.collisionTestPoint.x - objTransform.x;
                     int deltaZ = this.collisionTestPoint.y - objTransform.z;
@@ -332,7 +312,6 @@ public final class GameWorld {
                     int absDeltaZ = deltaZ < 0 ? -deltaZ : deltaZ;
 
                     if (absDeltaX < OBJECT_COLLISION_RADIUS && absDeltaZ < OBJECT_COLLISION_RADIUS) {
-                        // Special message for level 4 switch
                         if (obj.objectType == 10 && MainGameCanvas.currentLevelId == 4) {
                             GameEngine.messageText = GameEngine.ammoCounts[6] > 0
                                     ? TextStrings.FIND_THE_WALL_I_TOLD_YOU_AND_BLOW_IT_UP
@@ -340,7 +319,6 @@ public final class GameWorld {
                             GameEngine.messageTimer = 30;
                         }
 
-                        // Push player out of collision
                         if (absDeltaX > absDeltaZ) {
                             if (deltaX > 0) {
                                 this.collisionTestPoint.x += OBJECT_COLLISION_RADIUS - absDeltaX;
@@ -359,12 +337,10 @@ public final class GameWorld {
             }
         }
 
-        // Update player position
         player.x = this.collisionTestPoint.x;
         player.z = this.collisionTestPoint.y;
         this.lastWallIndex = newLastWallIndex;
 
-        // Check for dropped pickup items
         for (int i = 0; i < this.pickupItems.size(); i++) {
             GameObject pickup = (GameObject) this.pickupItems.elementAt(i);
             int pickupType = pickup.objectType;
@@ -379,33 +355,33 @@ public final class GameWorld {
                 boolean collected = true;
 
                 switch (pickupType) {
-                    case 2004: // Panzerfaust ammo drop
-                        GameEngine.weaponsAvailable[5] = true;
-                        GameEngine.ammoCounts[5] += MainGameCanvas.AMMO_PANZERFAUST_PICKUP[GameEngine.difficultyLevel];
-                        triggerWeaponSwitch(5);
+                    case 2004:
+                        GameEngine.weaponsAvailable[WeaponFactory.PANZERFAUST] = true;
+                        GameEngine.ammoCounts[WeaponFactory.PANZERFAUST] += AMMO_PANZERFAUST_PICKUP[GameEngine.difficultyLevel];
+                        triggerWeaponSwitch(WeaponFactory.PANZERFAUST);
                         break;
 
-                    case 2006: // Sonic gun + level transition (boss drop)
-                        GameEngine.weaponsAvailable[7] = true;
-                        GameEngine.ammoCounts[7] += MainGameCanvas.AMMO_SONIC_PICKUP[GameEngine.difficultyLevel];
-                        triggerWeaponSwitch(7);
+                    case 2006:
+                        GameEngine.weaponsAvailable[WeaponFactory.SONIC] = true;
+                        GameEngine.ammoCounts[WeaponFactory.SONIC] += AMMO_SONIC_PICKUP[GameEngine.difficultyLevel];
+                        triggerWeaponSwitch(WeaponFactory.SONIC);
                         triggerLevelTransition();
                         break;
 
-                    case 2007: // Luger ammo drop
-                        GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_LUGER_SMALL[GameEngine.difficultyLevel];
+                    case 2007:
+                        GameEngine.ammoCounts[WeaponFactory.LUGER] += AMMO_LUGER_SMALL[GameEngine.difficultyLevel];
                         break;
 
-                    case 2008: // Mauser ammo drop
-                        GameEngine.ammoCounts[2] += MainGameCanvas.AMMO_MAUSER_SMALL[GameEngine.difficultyLevel];
+                    case 2008:
+                        GameEngine.ammoCounts[WeaponFactory.MAUSER] += AMMO_MAUSER_SMALL[GameEngine.difficultyLevel];
                         break;
 
-                    case 2010: // Panzerfaust single ammo
-                        GameEngine.ammoCounts[5] += MainGameCanvas.AMMO_PANZERFAUST_SMALL[GameEngine.difficultyLevel];
+                    case 2010:
+                        GameEngine.ammoCounts[WeaponFactory.PANZERFAUST] += AMMO_PANZERFAUST_SMALL[GameEngine.difficultyLevel];
                         break;
 
-                    case 2047: // Sonic gun ammo
-                        GameEngine.ammoCounts[7] += MainGameCanvas.AMMO_SONIC_SMALL[GameEngine.difficultyLevel];
+                    case 2047:
+                        GameEngine.ammoCounts[WeaponFactory.SONIC] += AMMO_SONIC_SMALL[GameEngine.difficultyLevel];
                         break;
 
                     default:
@@ -420,7 +396,6 @@ public final class GameWorld {
             }
         }
 
-        // Check for static world pickups
         for (int i = 0; i < this.staticObjects.length; i++) {
             GameObject obj = this.staticObjects[i];
             if (obj == null) continue;
@@ -439,118 +414,118 @@ public final class GameWorld {
             boolean triggerTransition = false;
 
             switch (objType) {
-                case 5: // Key 1
+                case 5:
                     GameEngine.keysCollected[0] = true;
                     break;
 
-                case 13: // Key 2
+                case 13:
                     GameEngine.keysCollected[1] = true;
                     break;
 
-                case 82: // Sniper rifle (special item flag)
+                case 82:
                     GameEngine.weaponsAvailable[8] = true;
                     GameEngine.messageText = TextStrings.GO_ANNA;
                     GameEngine.messageTimer = 30;
                     break;
 
-                case 2001: // Luger weapon pickup
-                    GameEngine.weaponsAvailable[1] = true;
-                    GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_LUGER_WEAPON[GameEngine.difficultyLevel];
-                    triggerWeaponSwitch(1);
+                case 2001:
+                    GameEngine.weaponsAvailable[WeaponFactory.LUGER] = true;
+                    GameEngine.ammoCounts[WeaponFactory.LUGER] += AMMO_LUGER_WEAPON[GameEngine.difficultyLevel];
+                    triggerWeaponSwitch(WeaponFactory.LUGER);
                     break;
 
-                case 2002: // Mauser weapon pickup
+                case 2002:
                     if (MainGameCanvas.currentLevelId == 3) {
                         GameEngine.messageText = TextStrings.TO_CHANGE_WEAPON_PRESS_3;
                         GameEngine.messageTimer = 30;
                     }
-                    GameEngine.weaponsAvailable[2] = true;
-                    GameEngine.ammoCounts[2] += MainGameCanvas.AMMO_MAUSER_WEAPON[GameEngine.difficultyLevel];
-                    triggerWeaponSwitch(2);
+                    GameEngine.weaponsAvailable[WeaponFactory.MAUSER] = true;
+                    GameEngine.ammoCounts[WeaponFactory.MAUSER] += AMMO_MAUSER_WEAPON[GameEngine.difficultyLevel];
+                    triggerWeaponSwitch(WeaponFactory.MAUSER);
                     break;
 
-                case 2003: // Rifle weapon pickup
-                    GameEngine.weaponsAvailable[3] = true;
-                    GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_RIFLE_WEAPON[GameEngine.difficultyLevel];
-                    triggerWeaponSwitch(3);
+                case 2003:
+                    GameEngine.weaponsAvailable[WeaponFactory.RIFLE] = true;
+                    GameEngine.ammoCounts[WeaponFactory.LUGER] += AMMO_RIFLE_WEAPON[GameEngine.difficultyLevel];
+                    triggerWeaponSwitch(WeaponFactory.RIFLE);
                     break;
 
-                case 2004: // Panzerfaust weapon pickup
-                    GameEngine.weaponsAvailable[5] = true;
-                    GameEngine.ammoCounts[5] += MainGameCanvas.AMMO_PANZERFAUST_PICKUP[GameEngine.difficultyLevel];
-                    triggerWeaponSwitch(5);
+                case 2004:
+                    GameEngine.weaponsAvailable[WeaponFactory.PANZERFAUST] = true;
+                    GameEngine.ammoCounts[WeaponFactory.PANZERFAUST] += AMMO_PANZERFAUST_PICKUP[GameEngine.difficultyLevel];
+                    triggerWeaponSwitch(WeaponFactory.PANZERFAUST);
                     break;
 
-                case 2005: // Dynamite pickup
-                    GameEngine.weaponsAvailable[6] = true;
-                    GameEngine.ammoCounts[6] += MainGameCanvas.AMMO_DYNAMITE_PICKUP[GameEngine.difficultyLevel];
-                    triggerWeaponSwitch(6);
+                case 2005:
+                    GameEngine.weaponsAvailable[WeaponFactory.DYNAMITE] = true;
+                    GameEngine.ammoCounts[WeaponFactory.DYNAMITE] += AMMO_DYNAMITE_PICKUP[GameEngine.difficultyLevel];
+                    triggerWeaponSwitch(WeaponFactory.DYNAMITE);
                     break;
 
-                case 2006: // Sonic gun + level transition
-                    GameEngine.weaponsAvailable[7] = true;
-                    GameEngine.ammoCounts[7] += MainGameCanvas.AMMO_SONIC_PICKUP[GameEngine.difficultyLevel];
-                    triggerWeaponSwitch(7);
+                case 2006:
+                    GameEngine.weaponsAvailable[WeaponFactory.SONIC] = true;
+                    GameEngine.ammoCounts[WeaponFactory.SONIC] += AMMO_SONIC_PICKUP[GameEngine.difficultyLevel];
+                    triggerWeaponSwitch(WeaponFactory.SONIC);
                     triggerTransition = true;
                     break;
 
-                case 2007: // Luger ammo
-                    GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_LUGER_SMALL[GameEngine.difficultyLevel];
+                case 2007:
+                    GameEngine.ammoCounts[WeaponFactory.LUGER] += AMMO_LUGER_SMALL[GameEngine.difficultyLevel];
                     break;
 
-                case 2008: // Mauser ammo
-                    GameEngine.ammoCounts[2] += MainGameCanvas.AMMO_MAUSER_SMALL[GameEngine.difficultyLevel];
+                case 2008:
+                    GameEngine.ammoCounts[WeaponFactory.MAUSER] += AMMO_MAUSER_SMALL[GameEngine.difficultyLevel];
                     break;
 
-                case 2010: // Panzerfaust ammo
-                    GameEngine.ammoCounts[5] += MainGameCanvas.AMMO_PANZERFAUST_SMALL[GameEngine.difficultyLevel];
+                case 2010:
+                    GameEngine.ammoCounts[WeaponFactory.PANZERFAUST] += AMMO_PANZERFAUST_SMALL[GameEngine.difficultyLevel];
                     break;
 
-                case 2012: // Large health pack
+                case 2012:
                     if (GameEngine.playerHealth >= 100) {
                         collected = false;
                         break;
                     }
-                    GameEngine.playerHealth += MainGameCanvas.HEALTH_LARGE[GameEngine.difficultyLevel];
+                    GameEngine.playerHealth += HEALTH_LARGE[GameEngine.difficultyLevel];
                     if (GameEngine.playerHealth > 100) {
                         GameEngine.playerHealth = 100;
                     }
                     break;
 
-                case 2013: // Level transition item
+                case 2013:
                     triggerTransition = true;
                     break;
 
-                case 2014: // Small health pack
+                case 2014:
                     if (GameEngine.playerHealth >= 100) {
                         collected = false;
                         break;
                     }
-                    GameEngine.playerHealth += MainGameCanvas.HEALTH_SMALL[GameEngine.difficultyLevel];
+                    GameEngine.playerHealth += HEALTH_SMALL[GameEngine.difficultyLevel];
                     if (GameEngine.playerHealth > 100) {
                         GameEngine.playerHealth = 100;
                     }
                     break;
 
-                case 2015: // Armor pickup
+                case 2015:
                     if (GameEngine.playerArmor >= 100) {
                         collected = false;
                         break;
                     }
-                    GameEngine.playerArmor += MainGameCanvas.ARMOR_PICKUP[GameEngine.difficultyLevel];
+                    GameEngine.playerArmor += ARMOR_PICKUP[GameEngine.difficultyLevel];
                     if (GameEngine.playerArmor > 100) {
                         GameEngine.playerArmor = 100;
                     }
                     break;
 
-                case 2024: // Sten weapon pickup
-                    GameEngine.weaponsAvailable[4] = true;
-                    GameEngine.ammoCounts[1] += MainGameCanvas.AMMO_STEN_WEAPON[GameEngine.difficultyLevel];
-                    triggerWeaponSwitch(4);
+                case 2024:
+                    GameEngine.weaponsAvailable[WeaponFactory.STEN] = true;
+                    GameEngine.ammoCounts[WeaponFactory.LUGER] += AMMO_STEN_WEAPON[GameEngine.difficultyLevel];
+                    triggerWeaponSwitch(WeaponFactory.STEN);
                     break;
 
-                case 2047: // Sonic gun ammo
-                    GameEngine.ammoCounts[7] += MainGameCanvas.AMMO_SONIC_SMALL[GameEngine.difficultyLevel];
+                case 2047:
+                    GameEngine.ammoCounts[WeaponFactory.SONIC] += AMMO_SONIC_SMALL[GameEngine.difficultyLevel];
                     break;
 
                 default:
@@ -571,14 +546,18 @@ public final class GameWorld {
         return touchedWall;
     }
 
-    /** Helper to trigger weapon switch animation */
     private static void triggerWeaponSwitch(int weaponId) {
+        // Use WeaponManager for weapon switching
+        if (MainGameCanvas.weaponManager != null) {
+            MainGameCanvas.weaponManager.forceWeaponSwitch(weaponId);
+        }
+
+        // Keep GameEngine in sync for compatibility
         GameEngine.pendingWeaponSwitch = weaponId;
         GameEngine.weaponSwitchAnimationActive = true;
         GameEngine.weaponAnimationState = 8;
     }
 
-    /** Helper to trigger level transition */
     private static void triggerLevelTransition() {
         MainGameCanvas.previousLevelId = MainGameCanvas.currentLevelId++;
         LevelLoader.levelVariant = 0;
@@ -593,13 +572,10 @@ public final class GameWorld {
         SectorData backSector = wall.backSurface.linkedSector;
         SectorData frontSector = wall.frontSurface.linkedSector;
 
-        // Check back sector accessibility
         if (backSector != currentSector) {
-            // Check step height
             if (backSector.floorHeight - currentSector.floorHeight > MIN_WALL_HEIGHT) {
                 return true;
             }
-            // Check ceiling clearance
             short maxFloorHeight = backSector.floorHeight;
             if (currentSector.floorHeight > maxFloorHeight) {
                 maxFloorHeight = currentSector.floorHeight;
@@ -609,7 +585,6 @@ public final class GameWorld {
             }
         }
 
-        // Check front sector accessibility
         if (frontSector != currentSector) {
             if (frontSector.floorHeight - currentSector.floorHeight > MIN_WALL_HEIGHT) {
                 return true;
@@ -633,7 +608,6 @@ public final class GameWorld {
         SectorData backSector = wall.backSurface.linkedSector;
         SectorData frontSector = wall.frontSurface.linkedSector;
 
-        // Check if either sector is collapsed (zero or negative height)
         if (backSector.ceilingHeight - backSector.floorHeight <= 0) {
             return true;
         }
@@ -641,7 +615,6 @@ public final class GameWorld {
             return true;
         }
 
-        // Check if sectors don't overlap vertically
         if (backSector.floorHeight >= frontSector.ceilingHeight) {
             return true;
         }
@@ -669,7 +642,6 @@ public final class GameWorld {
         Point2D startVertex = this.vertices[wall.startVertexId & 0xFFFF];
         Point2D endVertex = this.vertices[wall.endVertexId & 0xFFFF];
 
-        // Calculate wall properties
         int wallDeltaX = endVertex.x - startVertex.x;
         int wallDeltaY = endVertex.y - startVertex.y;
         int wallCenterX = startVertex.x + (wallDeltaX >> 1);
@@ -677,21 +649,17 @@ public final class GameWorld {
         int wallHalfExtentX = wallDeltaX >= 0 ? wallDeltaX >> 1 : -(wallDeltaX >> 1);
         int wallHalfExtentY = wallDeltaY >= 0 ? wallDeltaY >> 1 : -(wallDeltaY >> 1);
 
-        // Calculate relative position to wall center
         int relativeToCenterX = this.collisionTestPoint.x - wallCenterX;
         int relativeToCenterY = this.collisionTestPoint.y - wallCenterY;
         int absRelativeX = relativeToCenterX >= 0 ? relativeToCenterX : -relativeToCenterX;
         int absRelativeY = relativeToCenterY >= 0 ? relativeToCenterY : -relativeToCenterY;
 
-        // Check X-axis overlap
         int overlapX = wallHalfExtentX + COLLISION_RADIUS - absRelativeX;
         if (overlapX <= 0) return false;
 
-        // Check Y-axis overlap
         int overlapY = wallHalfExtentY + COLLISION_RADIUS - absRelativeY;
         if (overlapY <= 0) return false;
 
-        // Determine correction direction (separate on axis with smallest overlap)
         int correctionX, correctionY;
         if (overlapX < overlapY) {
             correctionX = relativeToCenterX < 0 ? -overlapX : overlapX;
@@ -712,7 +680,6 @@ public final class GameWorld {
                                          Point2D wallStart, Point2D wallEnd, Point2D wallNormal,
                                          int wallCenterX, int wallCenterY, int wallHalfExtentX, int wallHalfExtentY) {
 
-        // Determine which side of wall we're on and get appropriate normal direction
         int normalX, normalY;
         if (isPointOnLeftSideOfLine(this.collisionTestPoint, wallStart, wallEnd)) {
             normalX = -wallNormal.x;
@@ -722,7 +689,6 @@ public final class GameWorld {
             normalY = wallNormal.y;
         }
 
-        // Calculate penetration depth
         int penetration;
         if (wallHalfExtentX > wallHalfExtentY) {
             if (normalY >= 0) {
@@ -740,7 +706,6 @@ public final class GameWorld {
 
         if (penetration <= 0) return false;
 
-        // Calculate position relative to wall bounds
         int relativeX, relativeY;
         if (normalX >= 0) {
             relativeX = (this.collisionTestPoint.x - COLLISION_RADIUS) - (wallCenterX + wallHalfExtentX);
@@ -753,19 +718,16 @@ public final class GameWorld {
             relativeY = (this.collisionTestPoint.y + COLLISION_RADIUS) - (wallCenterY + wallHalfExtentY);
         }
 
-        // Calculate dot product with normal
         int dotProduct = (int)((long)relativeX * (long)normalX + (long)relativeY * (long)normalY >> 16);
 
         if (dotProduct >= 0) return false;
 
-        // Calculate push-out vector
         int pushX = (int)((long)normalX * (long)(-dotProduct) >> 16);
         int pushY = (int)((long)normalY * (long)(-dotProduct) >> 16);
         int pushMagnitude = (pushX >= 0 ? pushX : -pushX) + (pushY >= 0 ? pushY : -pushY);
         int correctionMagnitude = (correctionX >= 0 ? correctionX : -correctionX)
                 + (correctionY >= 0 ? correctionY : -correctionY);
 
-        // Apply smaller correction
         if (correctionMagnitude < pushMagnitude) {
             this.collisionTestPoint.x += correctionX;
             this.collisionTestPoint.y += correctionY;
@@ -785,13 +747,12 @@ public final class GameWorld {
         long denominator = (long)(y4 - y3) * (long)(x2 - x1) - (long)(x4 - x3) * (long)(y2 - y1);
 
         if (denominator == 0L) {
-            return false; // Lines are parallel
+            return false;
         }
 
         long numeratorA = (long)(x4 - x3) * (long)(y1 - y3) - (long)(y4 - y3) * (long)(x1 - x3);
         long numeratorB = (long)(x2 - x1) * (long)(y1 - y3) - (long)(y2 - y1) * (long)(x1 - x3);
 
-        // Check if intersection point lies within both segments
         if (denominator > 0L) {
             return numeratorA >= 0L && numeratorA <= denominator
                     && numeratorB >= 0L && numeratorB <= denominator;
@@ -806,15 +767,14 @@ public final class GameWorld {
      */
     private static boolean doesLineIntersectCircle(int lineX1, int lineY1, int lineX2, int lineY2,
                                                    int circleX, int circleY, int radius) {
-        // Test intersection with all four sides of bounding box
         return doLineSegmentsIntersect(lineX1, lineY1, lineX2, lineY2,
-                circleX - radius, circleY - radius, circleX + radius, circleY - radius)  // Top
+                circleX - radius, circleY - radius, circleX + radius, circleY - radius)
                 || doLineSegmentsIntersect(lineX1, lineY1, lineX2, lineY2,
-                circleX + radius, circleY - radius, circleX + radius, circleY + radius)  // Right
+                circleX + radius, circleY - radius, circleX + radius, circleY + radius)
                 || doLineSegmentsIntersect(lineX1, lineY1, lineX2, lineY2,
-                circleX + radius, circleY + radius, circleX - radius, circleY + radius)  // Bottom
+                circleX + radius, circleY + radius, circleX - radius, circleY + radius)
                 || doLineSegmentsIntersect(lineX1, lineY1, lineX2, lineY2,
-                circleX - radius, circleY + radius, circleX - radius, circleY - radius); // Left
+                circleX - radius, circleY + radius, circleX - radius, circleY - radius);
     }
 
     /**
@@ -847,14 +807,13 @@ public final class GameWorld {
         int sinAngle = MathUtils.fastSin(ANGLE_90_DEGREES - angleToPlayer);
         int cosAngle = MathUtils.fastCos(ANGLE_90_DEGREES - angleToPlayer);
 
-        // Offset spawn position slightly forward
         int spawnX = origin.x + 20 * cosAngle;
         int spawnZ = origin.z + 20 * sinAngle;
         int spawnY = origin.y + ((sector.floorHeight + 40) << 16);
 
         Transform3D projectileTransform = new Transform3D(spawnX, spawnY, spawnZ, angleToPlayer);
 
-        GameObject projectile = new GameObject(projectileTransform, 0, 101, 0); // 101 = enemy projectile
+        GameObject projectile = new GameObject(projectileTransform, 0, 101, 0);
         projectile.addSpriteFrame((byte)0, (byte)-46);
         projectile.addSpriteFrame((byte)0, (byte)-47);
         projectile.spriteFrameIndex = 0;
@@ -873,25 +832,21 @@ public final class GameWorld {
         int sinAngle = MathUtils.fastSin(ANGLE_90_DEGREES - angleToPlayer);
         int cosAngle = MathUtils.fastCos(ANGLE_90_DEGREES - angleToPlayer);
 
-        // Base spawn position
         int baseX = origin.x + 20 * cosAngle;
         int baseZ = origin.z + 20 * sinAngle;
         int spawnY = origin.y + ((sector.floorHeight + 40) << 16);
 
-        // Calculate perpendicular offset for spread
         sinAngle = MathUtils.fastSin(angleToPlayer);
         cosAngle = MathUtils.fastCos(angleToPlayer);
         int offsetX = 10 * cosAngle;
         int offsetZ = -10 * sinAngle;
 
-        // Create left projectile
         Transform3D leftTransform = new Transform3D(baseX + offsetX, spawnY, baseZ + offsetZ, angleToPlayer);
-        GameObject leftProjectile = new GameObject(leftTransform, 0, 102, 0); // 102 = spread projectile
+        GameObject leftProjectile = new GameObject(leftTransform, 0, 102, 0);
         leftProjectile.addSpriteFrame((byte)0, (byte)-71);
         leftProjectile.spriteFrameIndex = 0;
         this.projectiles.addElement(leftProjectile);
 
-        // Create right projectile
         Transform3D rightTransform = new Transform3D(baseX - offsetX, spawnY, baseZ - offsetZ, angleToPlayer);
         GameObject rightProjectile = new GameObject(rightTransform, 0, 102, 0);
         rightProjectile.addSpriteFrame((byte)0, (byte)-71);
@@ -924,28 +879,27 @@ public final class GameWorld {
      * Fires the player's current weapon.
      */
     public final void fireWeapon() {
+        int currentWeaponId = GameEngine.currentWeapon;
         int playerAngle = GameEngine.player.rotation;
         int sinAngle = MathUtils.fastSin(ANGLE_90_DEGREES - playerAngle);
         int cosAngle = MathUtils.fastCos(ANGLE_90_DEGREES - playerAngle);
 
-        // Determine weapon range (melee/explosive weapons have shorter range)
-        boolean isShortRangeWeapon = GameEngine.currentWeapon == 0
-                || GameEngine.currentWeapon == 5
-                || GameEngine.currentWeapon == 7;
+        boolean isShortRangeWeapon = currentWeaponId == WeaponFactory.FIST
+                || currentWeaponId == WeaponFactory.PANZERFAUST
+                || currentWeaponId == WeaponFactory.SONIC;
         int weaponRange = isShortRangeWeapon ? OBJECT_COLLISION_RADIUS : MAX_HITSCAN_RANGE;
 
         int targetX = GameEngine.player.x + MathUtils.fixedPointMultiply(weaponRange, cosAngle);
         int targetZ = GameEngine.player.z + MathUtils.fixedPointMultiply(weaponRange, sinAngle);
 
-        // Handle Panzerfaust (weapon 5) - fires rocket projectile
-        if (GameEngine.currentWeapon == 5) {
+        if (currentWeaponId == WeaponFactory.PANZERFAUST) {
             HelperUtils.playSound(4, false, 100, 2);
             Transform3D rocketTransform = new Transform3D(targetX,
                     GameEngine.cameraHeight - COLLISION_RADIUS, targetZ, playerAngle);
 
             if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
                     rocketTransform.x, rocketTransform.z, rocketTransform.y)) {
-                GameObject rocket = new GameObject(rocketTransform, 0, 100, 0); // 100 = player rocket
+                GameObject rocket = new GameObject(rocketTransform, 0, 100, 0);
                 rocket.addSpriteFrame((byte)0, (byte)-44);
                 rocket.addSpriteFrame((byte)0, (byte)-45);
                 rocket.spriteFrameIndex = 0;
@@ -954,8 +908,7 @@ public final class GameWorld {
             return;
         }
 
-        // Handle Sonic Gun (weapon 7) - fires spread projectiles
-        if (GameEngine.currentWeapon == 7) {
+        if (currentWeaponId == WeaponFactory.SONIC) {
             HelperUtils.playSound(5, false, 100, 2);
 
             sinAngle = MathUtils.fastSin(playerAngle);
@@ -963,7 +916,6 @@ public final class GameWorld {
             int offsetX = 10 * cosAngle;
             int offsetZ = -10 * sinAngle;
 
-            // Left projectile
             Transform3D leftTransform = new Transform3D(targetX - offsetX,
                     GameEngine.cameraHeight - COLLISION_RADIUS, targetZ - offsetZ, playerAngle);
             if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
@@ -974,7 +926,6 @@ public final class GameWorld {
                 this.projectiles.addElement(leftProjectile);
             }
 
-            // Right projectile
             Transform3D rightTransform = new Transform3D(targetX + offsetX,
                     GameEngine.cameraHeight - COLLISION_RADIUS, targetZ + offsetZ, playerAngle);
             if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
@@ -987,8 +938,8 @@ public final class GameWorld {
             return;
         }
 
-        // Handle hitscan weapons (fist, pistols, rifles)
         boolean hitEnemy = false;
+        Weapon currentWeapon = MainGameCanvas.weaponManager.getCurrentWeapon();
 
         for (int i = 0; i < this.staticObjects.length; i++) {
             GameObject enemy = this.staticObjects[i];
@@ -1001,31 +952,20 @@ public final class GameWorld {
             if (doesLineIntersectCircle(GameEngine.player.x, GameEngine.player.z,
                     targetX, targetZ, enemyTransform.x, enemyTransform.z, ENEMY_HIT_RADIUS)) {
 
-                int damage = 0;
+                int damage = currentWeapon.getDamage(GameEngine.difficultyLevel);
                 int hitSound = 0;
 
-                switch (GameEngine.currentWeapon) {
-                    case 0: // Fist
-                        damage = MainGameCanvas.DAMAGE_FIST[GameEngine.difficultyLevel];
+                switch (currentWeaponId) {
+                    case WeaponFactory.FIST:
                         break;
 
-                    case 1: // Luger
-                        damage = MainGameCanvas.DAMAGE_LUGER[GameEngine.difficultyLevel];
+                    case WeaponFactory.LUGER:
+                    case WeaponFactory.MAUSER:
                         hitSound = 7;
                         break;
 
-                    case 2: // Mauser
-                        damage = MainGameCanvas.DAMAGE_MAUSER[GameEngine.difficultyLevel];
-                        hitSound = 7;
-                        break;
-
-                    case 3: // Rifle
-                        damage = MainGameCanvas.DAMAGE_RIFLE[GameEngine.difficultyLevel];
-                        hitSound = 9;
-                        break;
-
-                    case 4: // Sten
-                        damage = MainGameCanvas.DAMAGE_STEN[GameEngine.difficultyLevel];
+                    case WeaponFactory.RIFLE:
+                    case WeaponFactory.STEN:
                         hitSound = 9;
                         break;
                 }
@@ -1040,12 +980,11 @@ public final class GameWorld {
             }
         }
 
-        // Play miss sound if no enemy was hit
         if (!hitEnemy) {
-            if (GameEngine.currentWeapon == 1 || GameEngine.currentWeapon == 2) {
+            if (currentWeaponId == WeaponFactory.LUGER || currentWeaponId == WeaponFactory.MAUSER) {
                 HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
             }
-            if (GameEngine.currentWeapon == 3 || GameEngine.currentWeapon == 4) {
+            if (currentWeaponId == WeaponFactory.RIFLE || currentWeaponId == WeaponFactory.STEN) {
                 HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
             }
         }
@@ -1058,28 +997,8 @@ public final class GameWorld {
         enemy.health -= damage;
 
         if (enemy.health <= 0) {
-            // Enemy killed
             enemy.health = 0;
-            enemy.aiState = 6; // Death state
-
-            switch (enemy.objectType) {
-                case 3001: // Elite Soldier
-                case 3003: // Regular Soldier
-                case 3004: // Officer
-                case 3005: // Guard
-                case 3006: // Special Unit
-                    enemy.stateTimer = 5;
-                    enemy.spriteFrameIndex = 5; // Death frame
-                    break;
-
-                case 3002: // Boss (different death animation)
-                    enemy.stateTimer = 5;
-                    enemy.spriteFrameIndex = 4;
-                    break;
-            }
-        } else {
-            // Enemy hurt but alive
-            enemy.aiState = 5; // Hurt state
+            enemy.aiState = 6;
 
             switch (enemy.objectType) {
                 case 3001:
@@ -1088,7 +1007,25 @@ public final class GameWorld {
                 case 3005:
                 case 3006:
                     enemy.stateTimer = 5;
-                    enemy.spriteFrameIndex = 4; // Hurt frame
+                    enemy.spriteFrameIndex = 5;
+                    break;
+
+                case 3002:
+                    enemy.stateTimer = 5;
+                    enemy.spriteFrameIndex = 4;
+                    break;
+            }
+        } else {
+            enemy.aiState = 5;
+
+            switch (enemy.objectType) {
+                case 3001:
+                case 3003:
+                case 3004:
+                case 3005:
+                case 3006:
+                    enemy.stateTimer = 5;
+                    enemy.spriteFrameIndex = 4;
                     break;
 
                 case 3002:
@@ -1105,7 +1042,6 @@ public final class GameWorld {
     public final void toggleProjectileSprites() {
         for (int i = 0; i < this.projectiles.size(); i++) {
             GameObject projectile = (GameObject) this.projectiles.elementAt(i);
-            // Animate rockets and enemy projectiles
             if (projectile.objectType == 100 || projectile.objectType == 101) {
                 projectile.spriteFrameIndex ^= 1;
             }
@@ -1114,31 +1050,26 @@ public final class GameWorld {
 
     /**
      * Updates all active projectiles and handles their collisions.
-     *
-     * @return true if player was killed
      */
     public final boolean updateProjectiles() {
         for (int i = 0; i < this.projectiles.size(); i++) {
             GameObject projectile = (GameObject) this.projectiles.elementAt(i);
 
-            // Handle grenades (type 103)
             if (projectile.objectType == 103) {
                 if (projectile.detonationTimer <= 0) continue;
 
                 projectile.detonationTimer--;
                 if (projectile.detonationTimer != 0) continue;
 
-                // Grenade explosion
                 HelperUtils.playSound(4, false, 100, 2);
 
-                // Damage player if in line of sight
                 if (this.checkLineOfSight(projectile.transform, GameEngine.player)) {
                     int deltaX = projectile.transform.x - GameEngine.player.x;
                     int deltaZ = projectile.transform.z - GameEngine.player.z;
                     int distance = MathUtils.fastHypot(deltaX, deltaZ);
                     int scaledDistance = MathUtils.fixedPointMultiply(distance,
-                            MainGameCanvas.EXPLOSION_FALLOFF_RATE[GameEngine.difficultyLevel]) >> 16;
-                    int explosionDamage = MainGameCanvas.EXPLOSION_MAX_DAMAGE[GameEngine.difficultyLevel] - scaledDistance;
+                            EXPLOSION_FALLOFF_RATE[GameEngine.difficultyLevel]) >> 16;
+                    int explosionDamage = EXPLOSION_MAX_DAMAGE[GameEngine.difficultyLevel] - scaledDistance;
 
                     if (explosionDamage > 0) {
                         HelperUtils.vibrateDevice(explosionDamage * 10);
@@ -1148,7 +1079,6 @@ public final class GameWorld {
                     }
                 }
 
-                // Damage enemies in range
                 for (int j = 0; j < this.staticObjects.length; j++) {
                     GameObject enemy = this.staticObjects[j];
                     if (enemy == null || enemy.aiState == -1) continue;
@@ -1158,8 +1088,8 @@ public final class GameWorld {
                         int deltaZ = projectile.transform.z - enemy.transform.z;
                         int distance = MathUtils.fastHypot(deltaX, deltaZ);
                         int scaledDistance = MathUtils.fixedPointMultiply(distance,
-                                MainGameCanvas.EXPLOSION_FALLOFF_RATE[GameEngine.difficultyLevel]) >> 16;
-                        int explosionDamage = MainGameCanvas.EXPLOSION_MAX_DAMAGE[GameEngine.difficultyLevel] - scaledDistance;
+                                EXPLOSION_FALLOFF_RATE[GameEngine.difficultyLevel]) >> 16;
+                        int explosionDamage = EXPLOSION_MAX_DAMAGE[GameEngine.difficultyLevel] - scaledDistance;
 
                         if (explosionDamage > 0) {
                             applyDamageToEnemy(enemy, explosionDamage);
@@ -1169,7 +1099,6 @@ public final class GameWorld {
 
                 GameEngine.screenShake = 16;
 
-                // Special level 4 objective: blow up marked wall
                 if (MainGameCanvas.currentLevelId == 4) {
                     Transform3D grenadePos = projectile.transform;
                     if (this.getSectorDataAtPoint(grenadePos.x, grenadePos.z).getSectorType() == 666) {
@@ -1181,7 +1110,6 @@ public final class GameWorld {
                 continue;
             }
 
-            // Handle moving projectiles (rockets, enemy shots, sonic blasts)
             Transform3D projTransform = projectile.transform;
             int prevX = projTransform.x;
             int prevZ = projTransform.z;
@@ -1192,16 +1120,17 @@ public final class GameWorld {
             int newZ = projTransform.z;
             boolean projectileHit = false;
 
-            // Determine damage based on projectile type
-            int projectileDamage = (projectile.objectType == 102)
-                    ? MainGameCanvas.DAMAGE_SONIC_PROJECTILE[GameEngine.difficultyLevel]  // Sonic
-                    : MainGameCanvas.DAMAGE_ROCKET[GameEngine.difficultyLevel]; // Rocket/enemy
+            int projectileDamage;
+            if (projectile.objectType == 102) {
+                projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.SONIC).getDamage(GameEngine.difficultyLevel);
+            } else {
+                projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.PANZERFAUST).getDamage(GameEngine.difficultyLevel);
+            }
 
-            // Check collision with player
             if (doesLineIntersectCircle(prevX, prevZ, newX, newZ,
                     GameEngine.player.x, GameEngine.player.z, COLLISION_RADIUS)) {
                 if (projectile.objectType == 101) {
-                    HelperUtils.playSound(4, false, 100, 2); // Enemy rocket hit sound
+                    HelperUtils.playSound(4, false, 100, 2);
                 }
                 HelperUtils.vibrateDevice(projectileDamage * 10);
                 if (GameEngine.applyDamage(projectileDamage)) {
@@ -1210,7 +1139,6 @@ public final class GameWorld {
                 projectileHit = true;
             }
 
-            // Check collision with enemies
             for (int j = 0; j < this.staticObjects.length; j++) {
                 GameObject enemy = this.staticObjects[j];
                 if (enemy == null || enemy.aiState == -1) continue;
@@ -1225,7 +1153,6 @@ public final class GameWorld {
                 }
             }
 
-            // Check collision with walls
             if (!projectileHit) {
                 int projectileHeight = projTransform.y >> 16;
 
@@ -1261,18 +1188,15 @@ public final class GameWorld {
         int deltaZ = toZ - fromZ;
         int distance = MathUtils.fastHypot(deltaX, deltaZ);
 
-        // Normalize delta values
         int normalizedX = MathUtils.preciseDivide(deltaX, distance);
         int normalizedZ = MathUtils.preciseDivide(deltaZ, distance);
 
         long absNormalizedZ = (long)(normalizedZ < 0 ? -normalizedZ : normalizedZ);
         long absNormalizedX = (long)(normalizedX < 0 ? -normalizedX : normalizedX);
 
-        // Calculate base angle using arctangent
         int angle = (absNormalizedX < 6L) ? 0
                 : MathUtils.fastAtan((int)((absNormalizedZ << 32) / absNormalizedX >> 16));
 
-        // Adjust for quadrant
         if (normalizedX < 0) {
             angle = ANGLE_180_DEGREES - angle;
         }
@@ -1280,7 +1204,6 @@ public final class GameWorld {
             angle = ANGLE_360_DEGREES - angle;
         }
 
-        // Offset to match game's coordinate system
         angle += ANGLE_90_DEGREES;
         if (angle >= ANGLE_360_DEGREES) {
             angle -= ANGLE_360_DEGREES;
@@ -1291,7 +1214,6 @@ public final class GameWorld {
 
     /**
      * Throws a grenade in the direction the player is facing.
-     * @return true (always succeeds)
      */
     public final boolean throwGrenade() {
         int playerAngle = GameEngine.player.rotation;
@@ -1304,7 +1226,6 @@ public final class GameWorld {
 
         Transform3D grenadeTransform = new Transform3D(spawnX, 0, spawnZ, playerAngle);
 
-        // Create grenade with 100 tick fuse timer
         GameObject grenade = new GameObject(grenadeTransform, 0, 103, 100);
         grenade.addSpriteFrame((byte)0, (byte)-51);
         grenade.spriteFrameIndex = 0;
@@ -1320,24 +1241,24 @@ public final class GameWorld {
         GameObject pickup = null;
 
         switch (deadEnemy.objectType) {
-            case 3001: // Elite Soldier drops Panzerfaust ammo
+            case 3001:
                 pickup = new GameObject(deadEnemy.transform, 0, 2004, 0);
                 pickup.addSpriteFrame((byte)0, (byte)-43);
                 break;
 
-            case 3002: // Boss drops Sonic Gun
+            case 3002:
                 pickup = new GameObject(deadEnemy.transform, 0, 2006, 0);
                 pickup.addSpriteFrame((byte)0, (byte)-72);
                 break;
 
-            case 3003: // Regular Soldier
-            case 3005: // Guard
-            case 3006: // Special Unit - all drop Luger ammo
+            case 3003:
+            case 3005:
+            case 3006:
                 pickup = new GameObject(deadEnemy.transform, 0, 2007, 0);
                 pickup.addSpriteFrame((byte)0, (byte)-48);
                 break;
 
-            case 3004: // Officer drops Mauser ammo
+            case 3004:
                 pickup = new GameObject(deadEnemy.transform, 0, 2008, 0);
                 pickup.addSpriteFrame((byte)0, (byte)-54);
                 break;
@@ -1352,11 +1273,9 @@ public final class GameWorld {
      * Draws the minimap overlay.
      */
     public final void drawMapOnScreen(Graphics graphics) {
-        // Draw all visible walls
         for (int i = 0; i < this.wallDefinitions.length; i++) {
             WallDefinition wall = this.wallDefinitions[i];
 
-            // Skip transparent portal walls and non-rendered walls
             if ((wall.getWallType() == 0 && wall.isTransparent()) || !wall.isRendered()) {
                 continue;
             }
@@ -1366,11 +1285,9 @@ public final class GameWorld {
             Point2D startVertex = this.transformedVertices[startVertexId];
             Point2D endVertex = this.transformedVertices[endVertexId];
 
-            // Set color: yellow for special walls, red for normal walls
             int wallColor = (wall.getWallType() != 0) ? 0xFFFF00 : 0xFF0000;
             graphics.setColor(wallColor);
 
-            // Transform to screen coordinates
             int screenX1 = (startVertex.x >> 18) + 120;
             int screenY1 = -(startVertex.y >> 18) + 144;
             int screenX2 = (endVertex.x >> 18) + 120;
@@ -1379,7 +1296,6 @@ public final class GameWorld {
             graphics.drawLine(screenX1, screenY1, screenX2, screenY2);
         }
 
-        // Draw player indicator (green triangle)
         graphics.setColor(0x00FF00);
         graphics.drawLine(120, 139, 116, 149);
         graphics.drawLine(120, 139, 124, 149);

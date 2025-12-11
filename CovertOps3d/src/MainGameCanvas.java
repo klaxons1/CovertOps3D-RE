@@ -19,7 +19,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     private static final int HALF_UI_HEIGHT = UI_HEIGHT / 2;
 
     // ==================== Fields ====================
-
+    public static WeaponManager weaponManager;
+    public static int weaponSpriteFrame = 0;
     public boolean isGameRunning = false;
     public boolean isGamePaused = false;
     public boolean isGameInitialized = true;
@@ -52,10 +53,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     private int frameCounter;
 
     private Image statusBarImage;
-    private Image[] weaponSprites;
-    private boolean isWeaponCentered;
-    private int weaponAnimationState;
-    public static int weaponSpriteFrame = 0;
     private Image crosshairImage;
     private Image largeFontImage;
     private Image smallFontImage;
@@ -78,21 +75,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     public static boolean mapEnabled = false;
 
-    public static final int[] DAMAGE_FIST = new int[]{5, 5, 5};
-    public static final int[] DAMAGE_LUGER = new int[]{25, 25, 25};
-    public static final int[] DAMAGE_MAUSER = new int[]{30, 30, 30};
-    public static final int[] DAMAGE_RIFLE = new int[]{25, 25, 25};
-    public static final int[] DAMAGE_STEN = new int[]{25, 25, 25};
-    public static final int[] DAMAGE_SONIC_PROJECTILE = new int[]{100, 100, 100};
-    public static final int[] DAMAGE_ROCKET = new int[]{150, 150, 150};
     public static final int[] EXPLOSION_FALLOFF_RATE = new int[]{65536, 65536, 65536};
     public static final int[] EXPLOSION_MAX_DAMAGE = new int[]{400, 400, 400};
-    public static final int[] COOLDOWN_FIST = new int[]{4, 4, 4};
-    public static final int[] COOLDOWN_LUGER = new int[]{6, 6, 6};
-    public static final int[] COOLDOWN_MAUSER = new int[]{8, 8, 8};
-    public static final int[] COOLDOWN_RIFLE = new int[]{3, 3, 3};
-    public static final int[] COOLDOWN_STEN = new int[]{2, 2, 2};
-    public static final int[] COOLDOWN_SONIC = new int[]{10, 10, 10};
     public static final int[] DAMAGE_3003 = new int[]{10, 15, 20};
     public static final int[] DAMAGE_3004 = new int[]{15, 20, 25};
     public static final int[] DAMAGE_3005 = new int[]{20, 25, 30};
@@ -106,17 +90,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] HP_3006 = new int[]{100, 200, 300};
     public static final int[] HP_3001 = new int[]{200, 400, 600};
     public static final int[] HP_3002 = new int[]{300, 600, 900};
-    public static final int[] AMMO_LUGER_SMALL = new int[]{10, 10, 10};
-    public static final int[] AMMO_MAUSER_SMALL = new int[]{10, 10, 10};
-    public static final int[] AMMO_PANZERFAUST_SMALL = new int[]{1, 1, 1};
-    public static final int[] AMMO_SONIC_SMALL = new int[]{6, 6, 6};
-    public static final int[] AMMO_LUGER_WEAPON = new int[]{10, 10, 10};
-    public static final int[] AMMO_MAUSER_WEAPON = new int[]{10, 10, 10};
-    public static final int[] AMMO_RIFLE_WEAPON = new int[]{20, 20, 20};
-    public static final int[] AMMO_STEN_WEAPON = new int[]{20, 20, 20};
-    public static final int[] AMMO_PANZERFAUST_PICKUP = new int[]{3, 3, 3};
-    public static final int[] AMMO_DYNAMITE_PICKUP = new int[]{1, 1, 1};
-    public static final int[] AMMO_SONIC_PICKUP = new int[]{3, 3, 3};
     public static final int[] HEALTH_SMALL = new int[]{25, 25, 25};
     public static final int[] HEALTH_LARGE = new int[]{50, 50, 50};
     public static final int[] ARMOR_PICKUP = new int[]{25, 25, 25};
@@ -153,9 +126,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         this.accumulatedTime = 0L;
         this.lastFrameTime = 0L;
         this.frameCounter = 0;
-        this.weaponSprites = new Image[3];
-        this.isWeaponCentered = true;
-        this.weaponAnimationState = 0;
         this.cachedStaticObjects = null;
         this.nextLevelObjects = null;
         this.paletteRegular = null;
@@ -171,6 +141,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         this.lastInputDirection = 0;
         this.scopePositionX = 0;
         this.scopePositionY = 0;
+        weaponManager = new WeaponManager();
         keyMappingOffset = Math.abs(this.getKeyCode(8)) == 53 ? 5 : Math.abs(this.getKeyCode(8));
         this.setFullScreenMode(true);
     }
@@ -302,45 +273,23 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private void renderHUDAndWeapon(Graphics graphics) {
         try {
-            int headBob = GameEngine.renderFrame(graphics, this.frameCounter) >> 15;
-            int weaponHeight = this.weaponSprites[weaponSpriteFrame].getHeight();
+            int headBob = GameEngine.renderFrame(graphics, frameCounter) >> 15;
 
-            if (GameEngine.weaponSwitchAnimationActive) {
-                int animState = GameEngine.weaponAnimationState;
-                if (animState < 0) {
-                    animState = -animState;
-                }
-                weaponHeight = weaponHeight * animState >> 3;
+            weaponManager.render(graphics, headBob);
+
+            graphics.drawImage(statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
+            drawHUDNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
+            drawHUDNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
+
+            int ammoType = weaponManager.getDisplayAmmoType();
+            if (ammoType >= 0) {
+                drawHUDNumber(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.VIEWPORT_HEIGHT + 6);
             }
 
-            Graphics targetGraphics;
-            Image weaponSprite;
-            int weaponX;
-            if (this.isWeaponCentered) {
-                targetGraphics = graphics;
-                weaponSprite = this.weaponSprites[weaponSpriteFrame];
-                weaponX = (PortalRenderer.VIEWPORT_WIDTH - this.weaponSprites[weaponSpriteFrame].getWidth()) / 2;
-            } else {
-                targetGraphics = graphics;
-                weaponSprite = this.weaponSprites[weaponSpriteFrame];
-                weaponX = PortalRenderer.VIEWPORT_WIDTH - this.weaponSprites[weaponSpriteFrame].getWidth();
-            }
-
-            targetGraphics.drawImage(weaponSprite, weaponX, PortalRenderer.VIEWPORT_HEIGHT - weaponHeight - headBob + 3, 0);
-            weaponSpriteFrame = this.weaponAnimationState;
-
-            graphics.drawImage(this.statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
-            this.drawHUDNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
-            this.drawHUDNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
-
-            int ammoType = GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4
-                    ? GameEngine.currentWeapon : 1;
-            this.drawHUDNumber(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.VIEWPORT_HEIGHT + 6);
-
-            if (GameEngine.currentWeapon > 0 && GameEngine.messageTimer == 0 && !mapEnabled) {
-                graphics.drawImage(this.crosshairImage,
-                        (PortalRenderer.VIEWPORT_WIDTH - this.crosshairImage.getWidth()) >> 1,
-                        (PortalRenderer.VIEWPORT_HEIGHT - this.crosshairImage.getHeight()) >> 1, 0);
+            if (weaponManager.getCurrentWeaponId() > 0 && GameEngine.messageTimer == 0 && !mapEnabled) {
+                graphics.drawImage(crosshairImage,
+                        (PortalRenderer.VIEWPORT_WIDTH - crosshairImage.getWidth()) >> 1,
+                        (PortalRenderer.VIEWPORT_HEIGHT - crosshairImage.getHeight()) >> 1, 0);
             }
 
             if (mapEnabled) {
@@ -348,11 +297,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 LevelLoader.gameWorld.drawMapOnScreen(graphics);
                 graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
             }
-
         } catch (Exception e) {
         } catch (OutOfMemoryError e) {
-        } finally {
-            ;
         }
     }
 
@@ -1879,238 +1825,52 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public final boolean gameLoopTick() {
         if (GameEngine.updateGameLogic()) {
             return true;
-        } else {
-            if (!GameEngine.weaponSwitchAnimationActive) {
-                GameEngine.pendingWeaponSwitch = GameEngine.currentWeapon;
-                if (GameEngine.selectNextWeapon) {
-                    GameEngine.selectNextWeapon = false;
-                    GameEngine.pendingWeaponSwitch = GameEngine.cycleWeaponForward(GameEngine.pendingWeaponSwitch);
-                }
-
-                GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(GameEngine.pendingWeaponSwitch);
-                if (GameEngine.pendingWeaponSwitch != GameEngine.currentWeapon) {
-                    GameEngine.weaponSwitchAnimationActive = true;
-                    GameEngine.weaponAnimationState = 8;
-                }
-            }
-
-            if (GameEngine.weaponSwitchAnimationActive) {
-                --GameEngine.weaponAnimationState;
-                if (GameEngine.weaponAnimationState == -8) {
-                    GameEngine.weaponSwitchAnimationActive = false;
-                }
-
-                if (GameEngine.weaponAnimationState == 0) {
-                    GameEngine.currentWeapon = GameEngine.pendingWeaponSwitch;
-
-                    try {
-                        MainGameCanvas canvas;
-                        boolean centered;
-
-                        switch(GameEngine.currentWeapon) {
-                            case 0:
-                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/fist_a.png");
-                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/fist_b.png");
-                                this.weaponSprites[2] = null;
-                                canvas = this;
-                                centered = true;
-                                break;
-                            case 1:
-                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/luger_a.png");
-                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/luger_b.png");
-                                this.weaponSprites[2] = null;
-                                canvas = this;
-                                centered = true;
-                                break;
-                            case 2:
-                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/mauser_a.png");
-                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/mauser_b.png");
-                                this.weaponSprites[2] = null;
-                                canvas = this;
-                                centered = false;
-                                break;
-                            case 3:
-                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/m40_a.png");
-                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/m40_b.png");
-                                this.weaponSprites[2] = null;
-                                canvas = this;
-                                centered = false;
-                                break;
-                            case 4:
-                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/sten_a.png");
-                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/sten_b.png");
-                                this.weaponSprites[2] = null;
-                                canvas = this;
-                                centered = false;
-                                break;
-                            case 5:
-                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/panzerfaust_a.png");
-                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/panzerfaust_b.png");
-                                this.weaponSprites[2] = Image.createImage("/gamedata/sprites/panzerfaust_c.png");
-                                canvas = this;
-                                centered = false;
-                                break;
-                            case 6:
-                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/dynamite.png");
-                                this.weaponSprites[1] = null;
-                                this.weaponSprites[2] = null;
-                                canvas = this;
-                                centered = true;
-                                break;
-                            case 7:
-                                this.weaponSprites[0] = Image.createImage("/gamedata/sprites/sonic_a.png");
-                                this.weaponSprites[1] = Image.createImage("/gamedata/sprites/sonic_b.png");
-                                this.weaponSprites[2] = null;
-                                canvas = this;
-                                centered = true;
-                                break;
-                            default:
-                                return false;
-                        }
-
-                        canvas.isWeaponCentered = centered;
-                        this.weaponAnimationState = 0;
-                        weaponSpriteFrame = 0;
-                    } catch (Exception e) {
-                    } catch (OutOfMemoryError e) {
-                    }
-                }
-            }
-
-            if (GameEngine.weaponCooldownTimer > -32768) {
-                --GameEngine.weaponCooldownTimer;
-            }
-
-            if (GameEngine.inputFire && !GameEngine.weaponSwitchAnimationActive) {
-                int ammoUsed;
-
-                switch(GameEngine.currentWeapon) {
-                    case 0:
-                        if (GameEngine.weaponCooldownTimer < -COOLDOWN_FIST[GameEngine.difficultyLevel]) {
-                            LevelLoader.gameWorld.fireWeapon();
-                            this.weaponAnimationState = 1;
-                            weaponSpriteFrame = 1;
-                            GameEngine.weaponCooldownTimer = 1;
-                        }
-                        break;
-                    case 1:
-                        if (GameEngine.weaponCooldownTimer < -COOLDOWN_LUGER[GameEngine.difficultyLevel]
-                                && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
-                            ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                            LevelLoader.gameWorld.fireWeapon();
-                            this.weaponAnimationState = 1;
-                            weaponSpriteFrame = 1;
-                            GameEngine.weaponCooldownTimer = 1;
-                        }
-                        break;
-                    case 2:
-                        if (GameEngine.weaponCooldownTimer < -COOLDOWN_MAUSER[GameEngine.difficultyLevel]
-                                && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
-                            ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                            LevelLoader.gameWorld.fireWeapon();
-                            this.weaponAnimationState = 1;
-                            weaponSpriteFrame = 1;
-                            GameEngine.weaponCooldownTimer = 1;
-                        }
-                        break;
-                    case 3:
-                        if (GameEngine.weaponCooldownTimer <= 0) {
-                            if (this.weaponAnimationState == 0) {
-                                if (GameEngine.ammoCounts[1] > 0) {
-                                    ammoUsed = GameEngine.ammoCounts[1]--;
-                                    LevelLoader.gameWorld.fireWeapon();
-                                    this.weaponAnimationState = 1;
-                                    weaponSpriteFrame = 1;
-                                    GameEngine.weaponCooldownTimer = 1;
-                                }
-                            } else {
-                                this.weaponAnimationState = 0;
-                                GameEngine.weaponCooldownTimer = COOLDOWN_RIFLE[GameEngine.difficultyLevel];
-                            }
-                        }
-                        break;
-                    case 4:
-                        if (GameEngine.weaponCooldownTimer <= 0) {
-                            if (this.weaponAnimationState == 0) {
-                                if (GameEngine.ammoCounts[1] > 0) {
-                                    ammoUsed = GameEngine.ammoCounts[1]--;
-                                    LevelLoader.gameWorld.fireWeapon();
-                                    this.weaponAnimationState = 1;
-                                    weaponSpriteFrame = 1;
-                                    GameEngine.weaponCooldownTimer = 1;
-                                }
-                            } else {
-                                this.weaponAnimationState = 0;
-                                GameEngine.weaponCooldownTimer = COOLDOWN_STEN[GameEngine.difficultyLevel];
-                            }
-                        }
-                        break;
-                    case 5:
-                        if (GameEngine.weaponCooldownTimer <= -1
-                                && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
-                            ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                            LevelLoader.gameWorld.fireWeapon();
-                            this.weaponAnimationState = 1;
-                            weaponSpriteFrame = 1;
-                            GameEngine.weaponCooldownTimer = 2;
-                        }
-                        break;
-                    case 6:
-                        if (GameEngine.weaponCooldownTimer <= -1 && GameEngine.ammoCounts[6] > 0) {
-                            if ((currentLevelId == 4 || currentLevelId == 7 || currentLevelId == 8)
-                                    && (currentLevelId != 4 || GameEngine.currentSector.getSectorType() != 666)
-                                    && GameEngine.ammoCounts[6] == 1) {
-                                GameEngine.messageText = TextStrings.I_D_BETTER_USE_IT_TO_FINISH_MY_MISSION;
-                                GameEngine.messageTimer = 50;
-                            } else if (LevelLoader.gameWorld.throwGrenade()) {
-                                ammoUsed = GameEngine.ammoCounts[6]--;
-                                GameEngine.weaponCooldownTimer = 0;
-                                GameEngine.weaponAnimationState = 8;
-                                GameEngine.weaponSwitchAnimationActive = true;
-                                GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(6);
-                            }
-                        }
-                        break;
-                    case 7:
-                        if (GameEngine.weaponCooldownTimer < -COOLDOWN_SONIC[GameEngine.difficultyLevel]
-                                && GameEngine.ammoCounts[GameEngine.currentWeapon] > 0) {
-                            ammoUsed = GameEngine.ammoCounts[GameEngine.currentWeapon]--;
-                            LevelLoader.gameWorld.fireWeapon();
-                            this.weaponAnimationState = 1;
-                            weaponSpriteFrame = 1;
-                            GameEngine.weaponCooldownTimer = 1;
-                        }
-                }
-            } else if (GameEngine.weaponCooldownTimer <= 0) {
-                if (GameEngine.currentWeapon == 5) {
-                    if (this.weaponAnimationState == 1) {
-                        this.weaponAnimationState = 2;
-                        weaponSpriteFrame = 2;
-                        GameEngine.weaponAnimationState = 8;
-                        GameEngine.weaponSwitchAnimationActive = true;
-                        GameEngine.pendingWeaponSwitch = GameEngine.findNextAvailableWeapon(5);
-                    }
-                } else {
-                    this.weaponAnimationState = 0;
-                }
-            }
-
-            if (GameEngine.currentWeapon != 3 && GameEngine.currentWeapon != 4 || GameEngine.inputStrafe) {
-                GameEngine.inputFire = false;
-            }
-
-            return false;
         }
+
+        weaponManager.update(GameEngine.ammoCounts, GameEngine.weaponsAvailable);
+
+        if (GameEngine.selectNextWeapon && !weaponManager.isSwitchAnimationActive()) {
+            GameEngine.selectNextWeapon = false;
+            weaponManager.switchToNext(GameEngine.ammoCounts, GameEngine.weaponsAvailable);
+        }
+
+        // Синхронизация с GameEngine
+        GameEngine.currentWeapon = weaponManager.getCurrentWeaponId();
+        GameEngine.weaponSwitchAnimationActive = weaponManager.isSwitchAnimationActive();
+        GameEngine.weaponAnimationState = weaponManager.getAnimationState();
+        GameEngine.weaponCooldownTimer = weaponManager.getCooldownTimer();
+        weaponSpriteFrame = weaponManager.getSpriteFrame();
+
+        // Стрельба
+        if (GameEngine.inputFire && !weaponManager.isSwitchAnimationActive()) {
+            int sectorType = 0;
+            if (GameEngine.currentSector != null) {
+                sectorType = GameEngine.currentSector.getSectorType();
+            }
+            weaponManager.fire(GameEngine.ammoCounts, GameEngine.weaponsAvailable,
+                    GameEngine.difficultyLevel, currentLevelId, sectorType);
+        } else {
+            weaponManager.releaseFire(GameEngine.ammoCounts, GameEngine.weaponsAvailable,
+                    GameEngine.difficultyLevel);
+        }
+
+        // Сброс флага
+        Weapon currentWeapon = weaponManager.getCurrentWeapon();
+        if (!currentWeapon.getIsAutomatic() || GameEngine.inputStrafe) {
+            GameEngine.inputFire = false;
+        }
+
+        return false;
     }
 
     private void initializeGameResources() {
         try {
-            this.statusBarImage = Image.createImage("/gamedata/sprites/bar.png");
-            this.weaponSprites[0] = Image.createImage("/gamedata/sprites/fist_a.png");
-            this.weaponSprites[1] = Image.createImage("/gamedata/sprites/fist_b.png");
-            this.weaponSprites[2] = null;
-            this.crosshairImage = Image.createImage("/gamedata/sprites/aim.png");
-            this.largeFontImage = Image.createImage("/gamedata/sprites/font.png");
+            statusBarImage = Image.createImage("/gamedata/sprites/bar.png");
+            crosshairImage = Image.createImage("/gamedata/sprites/aim.png");
+            largeFontImage = Image.createImage("/gamedata/sprites/font.png");
+
+            weaponManager.initialize();
+
             MathUtils.initializeMathTables();
             GameEngine.initializeEngine();
         } catch (Exception e) {
