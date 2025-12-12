@@ -4,23 +4,6 @@ import javax.microedition.lcdui.Graphics;
 /**
  * Represents the game world containing geometry, objects, and handles physics/collision.
  *
- * Suggested field renames:
- * - collisionTestPoint -> collisionResultPoint
- * - lastWallIndex -> lastCollidedWallIndex
- * - transformedVertices -> viewTransformedVertices
- * - staticObjects -> worldObjects (contains both static items and NPCs)
- * - projectiles -> activeProjectiles
- * - pickupItems -> droppedPickups
- * - bspSectors -> sectorNodes
- *
- * Suggested constant additions:
- * - COLLISION_RADIUS = 655360 (10 units in 16.16 fixed-point)
- * - OBJECT_COLLISION_RADIUS = 1310720 (20 units)
- * - PICKUP_RADIUS = 1966080 (30 units)
- * - ENEMY_HIT_RADIUS = 327680 (5 units)
- * - ANGLE_90_DEGREES = 102943 (PI/2 in fixed-point angle system)
- * - MAX_HITSCAN_RANGE = 67108864 (1024 units)
- * - PROJECTILE_SPEED = 1048576 (16 units per tick)
  */
 public final class GameWorld {
 

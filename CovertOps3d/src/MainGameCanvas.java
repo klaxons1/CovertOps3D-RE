@@ -75,8 +75,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     public static boolean mapEnabled = false;
 
-    public static final int[] EXPLOSION_FALLOFF_RATE = new int[]{65536, 65536, 65536};
-    public static final int[] EXPLOSION_MAX_DAMAGE = new int[]{400, 400, 400};
     public static final int[] DAMAGE_3003 = new int[]{10, 15, 20};
     public static final int[] DAMAGE_3004 = new int[]{15, 20, 25};
     public static final int[] DAMAGE_3005 = new int[]{20, 25, 30};
@@ -90,9 +88,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] HP_3006 = new int[]{100, 200, 300};
     public static final int[] HP_3001 = new int[]{200, 400, 600};
     public static final int[] HP_3002 = new int[]{300, 600, 900};
-    public static final int[] HEALTH_SMALL = new int[]{25, 25, 25};
-    public static final int[] HEALTH_LARGE = new int[]{50, 50, 50};
-    public static final int[] ARMOR_PICKUP = new int[]{25, 25, 25};
     public static final int[] ENEMY_STATE_TRANSITION_TIME = new int[]{64, 64, 64};
     public static final int[] ENEMY_ATTACK_DELAY_MIN = new int[]{6, 4, 2};
     public static final int[] ENEMY_ATTACK_DELAY_RANGE = new int[]{32, 22, 12};
