@@ -21,6 +21,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     // ==================== Fields ====================
     public static WeaponManager weaponManager;
     public static int weaponSpriteFrame = 0;
+    private final SniperMiniGame sniperMiniGame = new SniperMiniGame();
     public boolean isGameRunning = false;
     public boolean isGamePaused = false;
     public boolean isGameInitialized = true;
@@ -47,10 +48,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     private int[] fontTextureW;
     private int textLineHeight;
     private int spaceWidth;
-    private long frameDeltaTime;
-    private long accumulatedTime;
-    private long lastFrameTime;
-    private int frameCounter;
+    public long frameDeltaTime;
+    public long accumulatedTime;
+    public long lastFrameTime;
+    public int frameCounter;
 
     private Image statusBarImage;
     private Image crosshairImage;
@@ -59,19 +60,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private GameObject[] cachedStaticObjects;
     private GameObject[] nextLevelObjects;
-    private int[] paletteRegular;
-    private int[] paletteGray;
-    private int[] paletteRedTint;
-    private int[] paletteGrayRed;
-    private int scopeVelocityX;
-    private int scopeVelocityY;
-    private int scopeWobbleIndex;
-    private int enemyUpdateCounter;
-    private int enemySpawnTimer;
-    private int activeEnemyCount;
-    private int lastInputDirection;
-    private int scopePositionX;
-    private int scopePositionY;
 
     public static boolean mapEnabled = false;
 
@@ -123,19 +111,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         this.frameCounter = 0;
         this.cachedStaticObjects = null;
         this.nextLevelObjects = null;
-        this.paletteRegular = null;
-        this.paletteGray = null;
-        this.paletteRedTint = null;
-        this.paletteGrayRed = null;
-        this.scopeVelocityX = 0;
-        this.scopeVelocityY = 0;
-        this.scopeWobbleIndex = 0;
-        this.enemyUpdateCounter = 0;
-        this.enemySpawnTimer = 0;
-        this.activeEnemyCount = 0;
-        this.lastInputDirection = 0;
-        this.scopePositionX = 0;
-        this.scopePositionY = 0;
+
         weaponManager = new WeaponManager();
         keyMappingOffset = Math.abs(this.getKeyCode(8)) == 53 ? 5 : Math.abs(this.getKeyCode(8));
         this.setFullScreenMode(true);
@@ -577,75 +553,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         return result;
     }
 
-    private void loadSniperMiniGameResources(int level, int width, int height, byte[] pixels, byte[] mask, byte[] sight) {
-        try {
-            String basePath = "/" + (level == 0 ? "gamedata/sniperminigame/ss1" : "gamedata/sniperminigame/ss2");
-            InputStream stream = (new Object()).getClass().getResourceAsStream(basePath);
-            DataInputStream dataInput = new DataInputStream(stream);
-            dataInput.skipBytes(1);
-            byte compression = dataInput.readByte();
-            short imageWidth = dataInput.readShort();
-            short imageHeight = dataInput.readShort();
 
-            if (imageWidth == width && imageHeight == height) {
-                short paletteSize = dataInput.readShort();
-                int pixelCount = width * height;
-
-                int compressedSize = dataInput.readInt();
-                byte[] compressed = new byte[compressedSize];
-                dataInput.readFully(compressed, 0, compressedSize);
-                LevelLoader.decompressSprite(compressed, 0, pixels, 0, pixelCount, compression);
-
-                this.paletteRegular = new int[paletteSize];
-                this.paletteGray = new int[paletteSize];
-                this.paletteRedTint = new int[paletteSize];
-                this.paletteGrayRed = new int[paletteSize];
-
-                for(int i = 0; i < paletteSize; ++i) {
-                    int r = dataInput.readByte() & 255;
-                    int g = dataInput.readByte() & 255;
-                    int b = dataInput.readByte() & 255;
-                    this.paletteRegular[i] = r << 16 | g << 8 | b;
-                    this.paletteRedTint[i] = this.paletteRegular[i] | 16711680;
-
-                    int gray = (r + g + b) / 3;
-                    gray = gray + (96 - (gray >> 2));
-                    if (gray > 255) {
-                        gray = 255;
-                    }
-                    this.paletteGray[i] = gray << 16 | gray << 8 | gray;
-                    this.paletteGrayRed[i] = this.paletteGray[i] | 16711680;
-                }
-
-                dataInput.close();
-
-                stream = (new Object()).getClass().getResourceAsStream("/gamedata/sniperminigame/sight");
-                dataInput = new DataInputStream(stream);
-                dataInput.skipBytes(8);
-                compressed = new byte[compressedSize = dataInput.readInt()];
-                dataInput.readFully(compressed, 0, compressedSize);
-                dataInput.close();
-                LevelLoader.decompressSprite(compressed, 0, sight, 0, 4096, 1);
-
-                stream = (new Object()).getClass().getResourceAsStream(basePath + "_mask");
-                dataInput = new DataInputStream(stream);
-                dataInput.skipBytes(8);
-                compressed = new byte[compressedSize = dataInput.readInt()];
-                dataInput.readFully(compressed, 0, compressedSize);
-                dataInput.close();
-                LevelLoader.decompressSprite(compressed, 0, mask, 0, pixelCount, 1);
-
-                for(int i = 0; i < pixelCount; ++i) {
-                    mask[i] = mask[i] == 0 ? -1 : pixels[i];
-                }
-
-            } else {
-                throw new IllegalStateException();
-            }
-        } catch (Exception e) {
-        } catch (OutOfMemoryError e) {
-        }
-    }
 
     private void drawSplash(Graphics graphics) {
         try {
@@ -1244,186 +1152,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
     }
 
-    private boolean updateSniperMiniGameLogic(int[] states, int[] types, int[] timers, int[] freeSlots,
-                                              int[] positions, int[] starts, int[] ends, int[] speeds) {
 
-        if (this.enemySpawnTimer >= 200) {
-            this.enemySpawnTimer = 0;
-            int freeCount = 0;
-
-            for(int i = 0; i < 8; ++i) {
-                if (states[i] == 0) {
-                    freeSlots[freeCount++] = i;
-                }
-            }
-
-            if (this.activeEnemyCount < 20) {
-                if (freeCount > 0) {
-                    int enemyType = GameEngine.random.nextInt() & 1;
-                    int slotIndex = freeSlots[(GameEngine.random.nextInt() & 7) % freeCount];
-                    types[slotIndex] = enemyType;
-                    int spawnDelay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                    timers[slotIndex] = spawnDelay % ENEMY_SPAWN_DELAY_VARIANCE[GameEngine.difficultyLevel]
-                            + ENEMY_SPAWN_DELAY_BASE[GameEngine.difficultyLevel];
-                    positions[slotIndex] = starts[slotIndex];
-                    states[slotIndex] = starts[slotIndex] > ends[slotIndex] ? 1 : 5;
-                    ++this.activeEnemyCount;
-                }
-            } else if (freeCount == 8) {
-                return false;
-            }
-        }
-
-        ++this.enemySpawnTimer;
-        ++this.enemyUpdateCounter;
-
-        for(int i = 0; i < 8; ++i) {
-            if (this.enemyUpdateCounter % 10 == 0) {
-                switch(states[i]) {
-                    case 1:
-                        states[i] = 2;
-                        break;
-                    case 2:
-                        states[i] = 1;
-                        break;
-                    case 5:
-                        states[i] = 6;
-                        break;
-                    case 6:
-                        states[i] = 5;
-                        break;
-                }
-            } else if (speeds[i] == 0) {
-                continue;
-            }
-
-            if ((speeds[i] == 1 && this.enemyUpdateCounter % 7 == 0)
-                    || (speeds[i] == 2 && this.enemyUpdateCounter % 5 == 0)) {
-                if (states[i] == 1 || states[i] == 2) {
-                    int newPos = positions[i] - 1;
-                    int targetPos = (starts[i] < ends[i] ? starts : ends)[i];
-                    if (newPos < targetPos) {
-                        newPos = targetPos;
-                        states[i] = 5;
-                    }
-                    positions[i] = newPos;
-                } else if (states[i] == 5 || states[i] == 6) {
-                    int newPos = positions[i] + 1;
-                    int targetPos = (starts[i] > ends[i] ? starts : ends)[i];
-                    if (newPos > targetPos) {
-                        newPos = targetPos;
-                        states[i] = 1;
-                    }
-                    positions[i] = newPos;
-                }
-            }
-        }
-
-        for(int i = 0; i < 8; ++i) {
-            int state = states[i];
-            if (state != 0) {
-                if (timers[i] <= 0) {
-                    switch(state) {
-                        case 1:
-                        case 2:
-                        case 5:
-                        case 6:
-                            states[i] = 3;
-                            int delay = GameEngine.random.nextInt() & Integer.MAX_VALUE;
-                            timers[i] = delay % ENEMY_ATTACK_DELAY_VARIANCE[GameEngine.difficultyLevel]
-                                    + ENEMY_ATTACK_DELAY_BASE[GameEngine.difficultyLevel];
-                            break;
-                        case 3:
-                            states[i] = 4;
-                            timers[i] = 1;
-                            break;
-                    }
-                }
-                --timers[i];
-            }
-        }
-
-        int[] deltaX = new int[]{0, 0, -1, 1, -1, 1, -1, 1};
-        int[] deltaY = new int[]{-1, 1, 0, 0, -1, 1, 1, -1};
-        int direction = this.scopeWobbleIndex;
-        this.scopeWobbleIndex = (direction + 1) & 7;
-        this.scopePositionX += deltaX[direction];
-        this.scopePositionY += deltaY[direction];
-
-        byte inputDirection = 0;
-        if (GameEngine.inputLookUp) {
-            if (this.lastInputDirection == 3) {
-                --this.scopeVelocityX;
-            }
-            inputDirection = 3;
-        }
-
-        if (GameEngine.inputLookDown) {
-            if (this.lastInputDirection == 4) {
-                ++this.scopeVelocityX;
-            }
-            inputDirection = 4;
-        }
-
-        if (GameEngine.inputForward) {
-            if (this.lastInputDirection == 1) {
-                --this.scopeVelocityY;
-            }
-            inputDirection = 1;
-        }
-
-        if (GameEngine.inputBackward) {
-            if (this.lastInputDirection == 2) {
-                ++this.scopeVelocityY;
-            }
-            inputDirection = 2;
-        }
-
-        this.scopePositionX += this.scopeVelocityX >> 2;
-        this.scopePositionY += this.scopeVelocityY >> 2;
-
-        int maxSightX = PortalRenderer.VIEWPORT_WIDTH - 32;
-        int maxSightY = PortalRenderer.VIEWPORT_HEIGHT - 32;
-
-        if (this.scopePositionX > maxSightX) {
-            this.scopePositionX = maxSightX;
-            this.scopeVelocityX = 0;
-        }
-
-        if (this.scopePositionX < -31) {
-            this.scopePositionX = -31;
-            this.scopeVelocityX = 0;
-        }
-
-        if (this.scopePositionY > maxSightY) {
-            this.scopePositionY = maxSightY;
-            this.scopeVelocityY = 0;
-        }
-
-        if (this.scopePositionY < -31) {
-            this.scopePositionY = -31;
-            this.scopeVelocityY = 0;
-        }
-
-        this.lastInputDirection = inputDirection;
-
-        if (this.lastInputDirection == 0) {
-            if (this.scopeVelocityX > 0) {
-                --this.scopeVelocityX;
-            }
-            if (this.scopeVelocityX < 0) {
-                ++this.scopeVelocityX;
-            }
-            if (this.scopeVelocityY > 0) {
-                --this.scopeVelocityY;
-            }
-            if (this.scopeVelocityY < 0) {
-                ++this.scopeVelocityY;
-            }
-        }
-
-        return true;
-    }
 
     private int runMiniGameSniper(Graphics graphics, int level) {
         try {
@@ -1437,9 +1166,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int[][] var12 = new int[6][];
             int[][] var13 = new int[6][];
 
-            this.enemySpawnTimer = 0;
-            this.enemyUpdateCounter = 0;
-            this.activeEnemyCount = 0;
+            // Используем методы вместо прямого доступа к полям
+            sniperMiniGame.resetEnemyCounters();
 
             int[][] startPositions = new int[][]{
                     {84, 147, 197, 132, 147, 155, 77, 155},
@@ -1473,13 +1201,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             int[] enemyPositions = new int[8];
             int[] enemyTypes = new int[8];
 
-            for(int i = 0; i < 8; ++i) {
+            for (int i = 0; i < 8; ++i) {
                 startPositions[level][i] -= screenOffsets[level];
                 endPositions[level][i] -= screenOffsets[level];
                 yPositions[level][i] -= screenOffsets[level];
             }
 
-            for(int i = 0; i < 6; ++i) {
+            for (int i = 0; i < 6; ++i) {
                 boolean flip = i > 3;
                 int spriteNum = flip ? i - 3 : i + 1;
                 var10[i] = loadSpriteRaw("/gamedata/sniperminigame/ot8" + Integer.toString(spriteNum), flip);
@@ -1489,20 +1217,20 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             Image sightImage = Image.createImage("/gamedata/sniperminigame/sight.png");
-            this.loadSniperMiniGameResources(level, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT,
+
+            // Загрузка ресурсов через новый метод
+            sniperMiniGame.loadResources(level, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT,
                     scenePixels, maskPixels, sightPixels);
 
-            this.scopeVelocityX = 0;
-            this.scopeVelocityY = 0;
-            this.scopePositionX = PortalRenderer.HALF_VIEWPORT_WIDTH - 32;
-            this.scopePositionY = PortalRenderer.HALF_VIEWPORT_HEIGHT - 32;
+            // Инициализация позиции прицела через метод
+            sniperMiniGame.initScopePosition();
 
             int[] freeSlots = new int[8];
             this.accumulatedTime = 0L;
             this.lastFrameTime = 0L;
             GameEngine.levelTransitionState = 2;
 
-            while(this.isGameRunning) {
+            while (this.isGameRunning) {
                 if (GameEngine.levelTransitionState == 1) {
                     return -1;
                 }
@@ -1522,9 +1250,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     this.accumulatedTime = 600L;
                 }
 
-                while(this.accumulatedTime >= 40L) {
+                while (this.accumulatedTime >= 40L) {
                     ++this.frameCounter;
-                    if (!this.updateSniperMiniGameLogic(enemyStates, enemyTypes, enemyTimers, freeSlots,
+                    // Используем новое имя метода
+                    if (!sniperMiniGame.updateLogic(enemyStates, enemyTypes, enemyTimers, freeSlots,
                             enemyPositions, startPositions[level], endPositions[level], enemySpeeds[level])) {
                         return -1;
                     }
@@ -1532,14 +1261,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 int totalDamage = 0;
-                for(int i = 0; i < 8; ++i) {
+                for (int i = 0; i < 8; ++i) {
                     if (enemyStates[i] == 4) {
                         totalDamage += hitPoints[enemySpeeds[level][i]];
                     }
                 }
 
-                int[] normalPalette = this.paletteGray;
-                int[] regularPalette = this.paletteRegular;
+                // Используем геттеры вместо прямого доступа
+                int[] normalPalette = sniperMiniGame.getPaletteGray();
+                int[] regularPalette = sniperMiniGame.getPaletteRegular();
 
                 if (totalDamage > 0) {
                     if (totalDamage > SNIPER_DAMAGE_SMALL[GameEngine.difficultyLevel]) {
@@ -1557,13 +1287,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     if (GameEngine.applyDamage(totalDamage)) {
                         return -2;
                     } else {
-                        normalPalette = this.paletteGrayRed;
-                        regularPalette = this.paletteRedTint;
+                        normalPalette = sniperMiniGame.getPaletteGrayRed();
+                        regularPalette = sniperMiniGame.getPaletteRedTint();
                     }
                 }
 
-                int sightX = this.scopePositionX;
-                int sightY = this.scopePositionY;
+                // Используем геттеры для позиции прицела
+                int sightX = sniperMiniGame.getScopePositionX();
+                int sightY = sniperMiniGame.getScopePositionY();
+
                 int renderStartY = sightY < 0 ? 0 : sightY;
                 int renderEndY = sightY + 64;
                 if (renderEndY > PortalRenderer.VIEWPORT_HEIGHT) {
@@ -1577,10 +1309,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 // Render background
-                for(int y = renderStartY; y < renderEndY; ++y) {
+                for (int y = renderStartY; y < renderEndY; ++y) {
                     int rowStart = renderStartX + PortalRenderer.VIEWPORT_WIDTH * y;
                     int rowEnd = renderEndX + PortalRenderer.VIEWPORT_WIDTH * y;
-                    for(int idx = rowStart; idx < rowEnd; ++idx) {
+                    for (int idx = rowStart; idx < rowEnd; ++idx) {
                         PortalRenderer.screenBuffer[idx] = regularPalette[scenePixels[idx] & 255];
                     }
                 }
@@ -1588,7 +1320,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 int activeEnemies = level == 0 ? 6 : 8;
 
                 // Render enemies (first pass - behind mask)
-                for(int i = 0; i < activeEnemies; ++i) {
+                for (int i = 0; i < activeEnemies; ++i) {
                     if (enemyStates[i] > 0) {
                         enemySprites[i] = null;
                         int enemyX = enemyPositions[i];
@@ -1597,7 +1329,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         int spriteW = spriteWidths[speedType];
                         int spriteH = spriteHeights[speedType];
 
-                        switch(speedType) {
+                        switch (speedType) {
                             case 0:
                                 enemySprites[i] = var10[enemyStates[i] - 1];
                                 break;
@@ -1623,10 +1355,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 // Render mask overlay
-                for(int y = renderStartY; y < renderEndY; ++y) {
+                for (int y = renderStartY; y < renderEndY; ++y) {
                     int rowStart = renderStartX + PortalRenderer.VIEWPORT_WIDTH * y;
                     int rowEnd = renderEndX + PortalRenderer.VIEWPORT_WIDTH * y;
-                    for(int idx = rowStart; idx < rowEnd; ++idx) {
+                    for (int idx = rowStart; idx < rowEnd; ++idx) {
                         int maskValue = maskPixels[idx] & 255;
                         if (maskValue != 255) {
                             PortalRenderer.screenBuffer[idx] = regularPalette[maskValue];
@@ -1636,7 +1368,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 // Render enemies (second pass - in front of mask)
                 if (level == 0) {
-                    for(int i = 6; i < 8; ++i) {
+                    for (int i = 6; i < 8; ++i) {
                         if (enemyStates[i] > 0) {
                             enemySprites[i] = null;
                             int enemyX = enemyPositions[i];
@@ -1663,27 +1395,27 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 // Render background outside sight
                 int topBufferSize = PortalRenderer.VIEWPORT_WIDTH * renderStartY;
-                for(int i = 0; i < topBufferSize; ++i) {
+                for (int i = 0; i < topBufferSize; ++i) {
                     PortalRenderer.screenBuffer[i] = normalPalette[scenePixels[i] & 255];
                 }
 
                 int sightOffsetY = renderStartY - sightY;
-                for(int y = renderStartY; y < renderEndY; ++y, ++sightOffsetY) {
+                for (int y = renderStartY; y < renderEndY; ++y, ++sightOffsetY) {
                     int rowStart = PortalRenderer.VIEWPORT_WIDTH * y;
                     int leftEnd = rowStart + renderStartX;
-                    for(int idx = rowStart; idx < leftEnd; ++idx) {
+                    for (int idx = rowStart; idx < leftEnd; ++idx) {
                         PortalRenderer.screenBuffer[idx] = normalPalette[scenePixels[idx] & 255];
                     }
 
                     int rightStart = renderEndX + rowStart;
                     int rowEnd = rowStart + PortalRenderer.VIEWPORT_WIDTH;
-                    for(int idx = rightStart; idx < rowEnd; ++idx) {
+                    for (int idx = rightStart; idx < rowEnd; ++idx) {
                         PortalRenderer.screenBuffer[idx] = normalPalette[scenePixels[idx] & 255];
                     }
 
                     int sightRowOffset = 64 * sightOffsetY;
                     int sightOffsetX = renderStartX - sightX;
-                    for(int x = renderStartX; x < renderEndX; ++x, ++sightOffsetX) {
+                    for (int x = renderStartX; x < renderEndX; ++x, ++sightOffsetX) {
                         if (sightPixels[sightRowOffset + sightOffsetX] == 0) {
                             int idx = rowStart + x;
                             PortalRenderer.screenBuffer[idx] = normalPalette[scenePixels[idx] & 255];
@@ -1692,7 +1424,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 }
 
                 int bottomStart = PortalRenderer.VIEWPORT_WIDTH * renderEndY;
-                for(int i = bottomStart; i < bufferSize; ++i) {
+                for (int i = bottomStart; i < bufferSize; ++i) {
                     PortalRenderer.screenBuffer[i] = normalPalette[scenePixels[i] & 255];
                 }
 
@@ -1703,7 +1435,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     int hitColor = 16777215;
                     boolean hitEnemy = false;
 
-                    for(int i = 7; i >= 0; --i) {
+                    for (int i = 7; i >= 0; --i) {
                         int enemyX = enemyPositions[i];
                         int enemyY = yPositions[level][i];
                         int speedType = enemySpeeds[level][i];
