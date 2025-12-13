@@ -2129,9 +2129,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     }
 
 
-
-
-
     private void flushScreenBuffer() {
         this.flushGraphics();
     }
