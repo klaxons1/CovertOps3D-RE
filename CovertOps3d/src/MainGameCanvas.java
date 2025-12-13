@@ -38,16 +38,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private String[] SETTINGS_MENU_ITEMS;
     private String[] chapterMenuItems;
-    private int menuOffsetY;
-    private int smallFontCharsPerRow;
-    private int menuItemHeight;
-    private int menuBoxWidthUnit;
-    private int[] fontCharOffsets;
-    private int[] fontCharWidths;
-    private int[] fontTextureX;
-    private int[] fontTextureW;
-    private int textLineHeight;
-    private int spaceWidth;
+
     public long frameDeltaTime;
     public long accumulatedTime;
     public long lastFrameTime;
@@ -55,8 +46,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private Image statusBarImage;
     private Image crosshairImage;
-    private Image largeFontImage;
-    private Image smallFontImage;
+    private final FontRenderer fontRenderer = new FontRenderer();
+    private static final int MENU_ITEM_HEIGHT = 23;
 
     private GameObject[] cachedStaticObjects;
     private GameObject[] nextLevelObjects;
@@ -95,16 +86,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public MainGameCanvas() {
         super(false);
         System.currentTimeMillis();
-        this.menuOffsetY = 18;
-        this.smallFontCharsPerRow = 26;
-        this.menuItemHeight = 23;
-        this.menuBoxWidthUnit = 4;
-        this.fontCharOffsets = new int[]{1, 11, 22, 31, 42, 52, 62, 70, 82, 91, 101, 112, 120, 130, 142, 151, 161, 171, 2, 12, 20, 31, 40, 51, 61, 72, 80, 90, 100, 110, 120, 130, 142, 151, 160, 170, 1, 12, 21, 31, 41, 51, 61, 71, 81, 91, 100, 110, 120, 130, 140, 150, 160, 170};
-        this.fontCharWidths = new int[]{9, 9, 7, 8, 7, 7, 7, 10, 6, 6, 9, 6, 10, 10, 7, 9, 8, 8, 7, 6, 10, 8, 10, 9, 8, 7, 4, 4, 4, 8, 4, 4, 7, 4, 0, 0, 8, 6, 8, 8, 9, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0};
-        this.fontTextureX = new int[]{0, 8, 14, 21, 29, 36, 42, 49, 58, 64, 71, 78, 85, 91, 98, 106, 112, 120, 126, 134, 140, 148, 154, 162, 169, 176, 1, 8, 15, 22, 29, 36, 43, 50, 59, 65, 71, 80, 84, 92, 99, 106, 113, 121, 127, 135, 141, 148, 155, 162, 169, 177, 1, 9, 15, 22, 29, 36, 43, 50, 57, 64, 71, 77, 85, 92, 99, 105, 112, 121, 127, 133, 140, 147, 154, 161, 168, 175};
-        this.fontTextureW = new int[]{6, 5, 6, 6, 5, 5, 6, 6, 3, 3, 5, 4, 5, 6, 6, 5, 6, 5, 5, 5, 6, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 1, 2, 5, 2, 7, 5, 5, 5, 5, 3, 5, 2, 5, 5, 5, 4, 5, 3, 4, 3, 4, 4, 5, 4, 4, 4, 4, 4, 1, 2, 1, 4, 1, 2, 4, 3, 2, 7, 0, 0, 0, 0, 0, 0};
-        this.textLineHeight = 10;
-        this.spaceWidth = 3;
+
         this.frameDeltaTime = 0L;
         this.accumulatedTime = 0L;
         this.lastFrameTime = 0L;
@@ -249,12 +231,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             weaponManager.render(graphics, headBob);
 
             graphics.drawImage(statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
-            drawHUDNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
-            drawHUDNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
+            fontRenderer.drawCenteredNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
+            fontRenderer.drawCenteredNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
 
             int ammoType = weaponManager.getDisplayAmmoType();
             if (ammoType >= 0) {
-                drawHUDNumber(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.VIEWPORT_HEIGHT + 6);
+                fontRenderer.drawCenteredNumber(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.VIEWPORT_HEIGHT + 6);
             }
 
             if (weaponManager.getCurrentWeaponId() > 0 && GameEngine.messageTimer == 0 && !mapEnabled) {
@@ -736,10 +718,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 int totalItems = menuItems.length - 1;
                 int visibleItems = totalItems > 5 ? 5 : totalItems;
-                int menuY = UI_HEIGHT - visibleItems * this.menuItemHeight - 3 - this.menuItemHeight;
+                int menuY = UI_HEIGHT - visibleItems * MENU_ITEM_HEIGHT - 3 - MENU_ITEM_HEIGHT;
 
                 if (totalItems > visibleItems && scrollOffset > 0) {
-                    int arrowY = menuY + 2 * this.menuItemHeight - 2;
+                    int arrowY = menuY + 2 * MENU_ITEM_HEIGHT - 2;
                     graphics.setColor(16115387);
                     graphics.fillTriangle(117, arrowY, 123, arrowY, PortalRenderer.HALF_VIEWPORT_WIDTH, arrowY - 3);
                 }
@@ -753,16 +735,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
 
                     String itemText = menuItems[itemIndex];
-                    int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(itemText)) / 2;
+                    int textX = (PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(itemText)) / 2;
 
                     if ((menuMode & 15) == itemIndex) {
-                        int boxWidth = this.menuBoxWidthUnit * 30;
+                        int boxWidth = 4 * 30;;
                         graphics.fillRoundRect((PortalRenderer.VIEWPORT_WIDTH - boxWidth) / 2, menuY,
-                                boxWidth, this.menuItemHeight, 10, 10);
+                                boxWidth, MENU_ITEM_HEIGHT, 10, 10);
                     }
 
-                    this.drawLargeString(itemText, graphics, textX, menuY);
-                    menuY += this.menuItemHeight;
+                    fontRenderer.drawLargeString(itemText, graphics, textX, menuY);
+                    menuY += MENU_ITEM_HEIGHT;
                 }
 
                 if (totalItems > visibleItems && scrollOffset < totalItems - 5) {
@@ -773,10 +755,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                 String actionText = menuItems == this.SETTINGS_MENU_ITEMS ? TextStrings.CHANGE :
                         (menuItems == TextStrings.CONFIRMATION_MENU_ITEMS ? TextStrings.YES : TextStrings.SELECT);
-                this.drawLargeString(actionText, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
-                this.drawLargeString(menuItems[totalItems], graphics,
-                        PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(menuItems[totalItems]) - 3,
-                        UI_HEIGHT - this.menuItemHeight - 3);
+                fontRenderer.drawLargeString(actionText, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
+                fontRenderer.drawLargeString(menuItems[totalItems], graphics,
+                        PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(menuItems[totalItems]) - 3,
+                        UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
                 this.flushScreenBuffer();
                 HelperUtils.yieldToOtherThreads();
 
@@ -1045,10 +1027,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
         try {
             String version = mainMidlet.getAppProperty("MIDlet-Version");
-            this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
+            fontRenderer.loadSmallFont("/gamedata/sprites/font_cut.png");
 
             boolean needsUpdate = true;
-            int textY = UI_HEIGHT - this.menuItemHeight;
+            int textY = UI_HEIGHT - MENU_ITEM_HEIGHT;
 
             int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
 
@@ -1077,14 +1059,14 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
                     String backText = TextStrings.BACK;
-                    this.drawLargeString(backText, graphics,
-                            PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(backText) - 3,
-                            UI_HEIGHT - this.menuItemHeight - 3);
-                    this.drawLargeString(title, graphics,
-                            (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(title)) / 2, 3);
+                    fontRenderer.drawLargeString(backText, graphics,
+                            PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(backText) - 3,
+                            UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
+                    fontRenderer.drawLargeString(title, graphics,
+                            (PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(title)) / 2, 3);
 
-                    graphics.setClip(0, this.menuItemHeight + 6, PortalRenderer.VIEWPORT_WIDTH,
-                            UI_HEIGHT - 2 * this.menuItemHeight - 12);
+                    graphics.setClip(0, MENU_ITEM_HEIGHT + 6, PortalRenderer.VIEWPORT_WIDTH,
+                            UI_HEIGHT - 2 * MENU_ITEM_HEIGHT - 12);
 
                     int displayY;
                     if (scrolling) {
@@ -1094,8 +1076,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         int scrollSteps = elapsed / 50 + 1;
                         textY -= scrollSteps;
 
-                        if (textY + content.length * (this.textLineHeight + 2) < 0) {
-                            textY = UI_HEIGHT - this.menuItemHeight;
+                        if (textY + content.length * (fontRenderer.getSmallCharHeight() + 2) < 0) {
+                            textY = UI_HEIGHT - MENU_ITEM_HEIGHT;
                         }
 
                         int remainingDelay = scrollSteps * 50 - elapsed;
@@ -1104,7 +1086,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
                         lastScrollTime = currentTime;
                     } else {
-                        displayY = (UI_HEIGHT - (this.textLineHeight + 2) * content.length) / 2;
+                        displayY = (UI_HEIGHT - (fontRenderer.getSmallCharHeight() + 2) * content.length) / 2;
                     }
 
                     for(int i = 0; i < content.length; ++i) {
@@ -1112,9 +1094,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         if (i == 0 && scrolling) {
                             line = line + " " + version;
                         }
-                        this.drawSmallString(line, graphics,
-                                (PortalRenderer.VIEWPORT_WIDTH - this.getSmallTextWidth(line)) / 2, displayY);
-                        displayY += this.textLineHeight + 2;
+                        fontRenderer.drawSmallString(line, graphics,
+                                (PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getSmallTextWidth(line)) / 2, displayY);
+                        displayY += fontRenderer.getSmallCharHeight() + 2;
                     }
 
                     this.flushScreenBuffer();
@@ -1148,7 +1130,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         GameEngine.inputFire = false;
         GameEngine.inputForward = false;
         GameEngine.inputBackward = false;
-        this.smallFontImage = null;
+        fontRenderer.unloadSmallFont();
         graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
     }
 
@@ -1473,8 +1455,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT, false);
                 graphics.drawImage(sightImage, sightX, sightY, 20);
                 graphics.drawImage(this.statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
-                this.drawHUDNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
-                this.drawHUDNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
+                fontRenderer.drawCenteredNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
+                fontRenderer.drawCenteredNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
                 this.flushScreenBuffer();
 
                 HelperUtils.yieldToOtherThreads();
@@ -1501,7 +1483,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             ++lineCount;
         } while((lineStart = lineEnd + 2) < message.length());
 
-        int textY = HALF_UI_HEIGHT - this.menuItemHeight * lineCount / 2;
+        int textY = HALF_UI_HEIGHT - MENU_ITEM_HEIGHT * lineCount / 2;
         lineStart = 0;
 
         do {
@@ -1513,9 +1495,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             }
 
             String line = message.substring(lineStart, lineEnd + 1);
-            int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(line)) / 2;
-            this.drawLargeString(line, graphics, textX, textY);
-            textY += this.menuItemHeight;
+            int textX = (PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(line)) / 2;
+            fontRenderer.drawLargeString(line, graphics, textX, textY);
+            textY += MENU_ITEM_HEIGHT;
         } while((lineStart = lineEnd + 2) < message.length());
     }
 
@@ -1594,7 +1576,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         try {
             statusBarImage = Image.createImage("/gamedata/sprites/bar.png");
             crosshairImage = Image.createImage("/gamedata/sprites/aim.png");
-            largeFontImage = Image.createImage("/gamedata/sprites/font.png");
+            fontRenderer.loadLargeFont("/gamedata/sprites/font.png");
 
             weaponManager.initialize();
 
@@ -1817,8 +1799,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     private void drawPleaseWait(Graphics graphics) {
         String text = TextStrings.PLEASE_WAIT;
-        int textX = (PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(text)) / 2;
-        int textY = HALF_UI_HEIGHT - this.menuItemHeight / 2;
+        int textX = (PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(text)) / 2;
+        int textY = HALF_UI_HEIGHT - MENU_ITEM_HEIGHT / 2;
 
         int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
         PortalRenderer.screenBuffer[0] = Integer.MIN_VALUE;
@@ -1829,26 +1811,33 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                 0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
-        this.drawLargeString(text, graphics, textX, textY);
+        fontRenderer.drawLargeString(text, graphics, textX, textY);
         this.flushScreenBuffer();
     }
 
     private int drawDialogOverlay(Graphics graphics, int dialogId) {
         try {
-            int menuHeight = this.menuItemHeight + 6;
+            int menuHeight = MENU_ITEM_HEIGHT + 6;
+
             Image frameBuffer = Image.createImage(PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
             Image background = Image.createImage("/gamedata/sprites/bkg_cut.png");
             Image playerPortrait = Image.createImage("/gamedata/sprites/player.png");
-            Image agentPortrait = dialogId != 0 && dialogId != 9
-                    ? Image.createImage(dialogId == 8
-                    ? "/gamedata/sprites/ag_hurt.png"
-                    : "/gamedata/sprites/ag.png")
-                    : null;
-            Image doctorPortrait = dialogId == 7
+            Image agentPortrait = null;
+            if (dialogId != 0 && dialogId != 9) {
+                agentPortrait = Image.createImage(dialogId == 8
+                        ? "/gamedata/sprites/ag_hurt.png"
+                        : "/gamedata/sprites/ag.png");
+            }
+            Image doctorPortrait = (dialogId == 7)
                     ? Image.createImage("/gamedata/sprites/doctor.png")
                     : null;
 
-            this.smallFontImage = Image.createImage("/gamedata/sprites/font_cut.png");
+            // Загружаем маленький шрифт
+            fontRenderer.loadSmallFont("/gamedata/sprites/font_cut.png");
+
+            // Кэшируем высоту и пробел
+            int smallH = fontRenderer.getSmallCharHeight();
+            int smallSpace = fontRenderer.getSmallSpaceWidth();
 
             int textAreaWidth = PortalRenderer.VIEWPORT_WIDTH - playerPortrait.getWidth() - 6;
             Graphics fbGraphics = frameBuffer.getGraphics();
@@ -1858,7 +1847,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
             int agentY = HALF_UI_HEIGHT + 2;
             int doctorY = 2 * (UI_HEIGHT - menuHeight) / 3 + 2;
-            int linesPerBox = (316 - menuHeight) / this.textLineHeight;
+            int linesPerBox = (316 - menuHeight) / smallH;
 
             int[][] lineBuffers = new int[3][];
             int[] lineIndices = new int[]{0, 0, 0};
@@ -1867,26 +1856,23 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             if (agentPortrait != null) {
                 if (doctorPortrait != null) {
                     agentY = (UI_HEIGHT - menuHeight) / 3 + 2;
-                    fbGraphics.drawImage(agentPortrait,
-                            PortalRenderer.VIEWPORT_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
-                    fbGraphics.drawImage(doctorPortrait,
-                            PortalRenderer.VIEWPORT_WIDTH - 2 - doctorPortrait.getWidth(), doctorY, 20);
-                    linesPerBox = (316 - menuHeight) / (this.textLineHeight * 3);
+                    fbGraphics.drawImage(agentPortrait, PortalRenderer.VIEWPORT_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
+                    fbGraphics.drawImage(doctorPortrait, PortalRenderer.VIEWPORT_WIDTH - 2 - doctorPortrait.getWidth(), doctorY, 20);
+                    linesPerBox = (316 - menuHeight) / (smallH * 3);
                     lineBuffers[1] = new int[linesPerBox];
                     lineBuffers[2] = new int[linesPerBox];
                 } else {
-                    fbGraphics.drawImage(agentPortrait,
-                            PortalRenderer.VIEWPORT_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
-                    linesPerBox = (316 - menuHeight) / (this.textLineHeight * 2);
+                    fbGraphics.drawImage(agentPortrait, PortalRenderer.VIEWPORT_WIDTH - 2 - agentPortrait.getWidth(), agentY, 20);
+                    linesPerBox = (316 - menuHeight) / (smallH * 2);
                     lineBuffers[1] = new int[linesPerBox];
                 }
             }
 
             lineBuffers[0] = new int[linesPerBox];
             this.drawStripedBackground(graphics, frameBuffer);
-            this.drawLargeString(TextStrings.BACK, graphics,
-                    PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(TextStrings.BACK) - 3, UI_HEIGHT - this.menuItemHeight - 3);
-            this.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
+            fontRenderer.drawLargeString(TextStrings.BACK, graphics,
+                    PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(TextStrings.BACK) - 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
+            fontRenderer.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
 
             int[] charIndices = new int[]{0, 0, 0};
             int[] boxStartX = new int[]{0, 0, 0};
@@ -1902,21 +1888,17 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                 byte boxId = 0;
 
                 if (line.startsWith("A")) {
-                    textX = 2;
-                    textY = agentY;
-                    boxId = 1;
+                    textX = 2; textY = agentY; boxId = 1;
                 } else if (line.startsWith("M")) {
-                    textX = 2;
-                    textY = doctorY;
-                    boxId = 2;
+                    textX = 2; textY = doctorY; boxId = 2;
                 }
 
                 boxStartX[boxId] = textX;
                 boxStartY[boxId] = textY;
-                boxEndY[boxId] = textY + linesPerBox * this.textLineHeight;
+                boxEndY[boxId] = textY + linesPerBox * smallH;
 
                 int maxX = textX + textAreaWidth;
-                int maxY = textY + linesPerBox * this.textLineHeight;
+                int maxY = textY + linesPerBox * smallH;
                 int currentX = textX;
                 int currentY = textY;
 
@@ -1931,8 +1913,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     graphics.fillRect(boxStartX[boxId], boxStartY[boxId], textAreaWidth, boxEndY[boxId] - boxStartY[boxId]);
                     graphics.setColor(oldColor);
                     graphics.drawRegion(frameBuffer, boxStartX[boxId], boxStartY[boxId],
-                            textAreaWidth, boxEndY[boxId] - boxStartY[boxId],
-                            0, boxStartX[boxId], boxStartY[boxId], 20);
+                            textAreaWidth, boxEndY[boxId] - boxStartY[boxId], 0, boxStartX[boxId], boxStartY[boxId], 20);
                 }
 
                 lineIndices[boxId] = 0;
@@ -1942,61 +1923,52 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     char c = line.charAt(charPos);
 
                     if (c == ' ') {
-                        if (currentX + this.spaceWidth > maxX) {
+                        if (currentX + smallSpace > maxX) {
                             currentX = textX;
                             if (lineIndices[boxId] >= linesPerBox - 1) {
-                                this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
-                                        textX, textY, maxY, textAreaWidth);
+                                this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1, textX, textY, maxY, textAreaWidth);
                             } else {
-                                currentY += this.textLineHeight;
+                                currentY += smallH;
                                 ++lineIndices[boxId];
                                 lineBuffers[boxId][lineIndices[boxId]] = charPos + 1;
                             }
                         } else {
                             int nextSpace = line.indexOf(32, charPos + 1);
-                            if (nextSpace == -1) {
-                                nextSpace = line.length();
-                            }
-
+                            if (nextSpace == -1) nextSpace = line.length();
                             String word = line.substring(charPos, nextSpace);
-                            int wordWidth = this.getSmallTextWidth(word);
+                            int wordWidth = fontRenderer.getSmallTextWidth(word);
 
-                            if (currentX + this.spaceWidth + wordWidth > maxX) {
+                            if (currentX + smallSpace + wordWidth > maxX) {
                                 currentX = textX;
                                 if (lineIndices[boxId] >= linesPerBox - 1) {
-                                    this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1,
-                                            textX, textY, maxY, textAreaWidth);
+                                    this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos + 1, textX, textY, maxY, textAreaWidth);
                                 } else {
-                                    currentY += this.textLineHeight;
+                                    currentY += smallH;
                                     ++lineIndices[boxId];
                                     lineBuffers[boxId][lineIndices[boxId]] = charPos + 1;
                                 }
                             } else {
-                                currentX += this.spaceWidth;
+                                currentX += smallSpace;
                             }
                         }
                     } else {
-                        int[] fontCoords = this.getFontCoordinates(c);
-                        int fontIdx = fontCoords[1] * this.smallFontCharsPerRow + fontCoords[0];
-                        int charWidth = this.fontTextureW[fontIdx];
-                        int charX = this.fontTextureX[fontIdx];
-                        int charY = fontCoords[1] * this.textLineHeight;
+                        // Используем метод рисования символа, который возвращает ширину
+                        int charWidth = fontRenderer.getSmallCharWidth(c);
 
-                        if (currentX + charWidth + 1 > maxX) {
+                        if (currentX + charWidth > maxX) {
                             currentX = textX;
                             if (lineIndices[boxId] >= linesPerBox - 1) {
-                                this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos,
-                                        textX, textY, maxY, textAreaWidth);
+                                this.drawWrappedLine(graphics, frameBuffer, line, lineBuffers[boxId], charPos, textX, textY, maxY, textAreaWidth);
                             } else {
-                                currentY += this.textLineHeight;
+                                currentY += smallH;
                                 ++lineIndices[boxId];
                                 lineBuffers[boxId][lineIndices[boxId]] = charPos;
                             }
                         }
 
-                        graphics.drawRegion(this.smallFontImage, charX, charY, charWidth, this.textLineHeight,
-                                0, currentX, currentY, 20);
-                        currentX += charWidth + 1;
+                        // Рисуем символ и сдвигаем курсор
+                        int drawnWidth = fontRenderer.drawSmallChar(c, graphics, currentX, currentY);
+                        currentX += drawnWidth;
                     }
 
                     this.flushScreenBuffer();
@@ -2011,8 +1983,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             graphics.fillRect(boxStartX[b], boxStartY[b], textAreaWidth, boxEndY[b] - boxStartY[b]);
                             graphics.setColor(oldColor);
                             graphics.drawRegion(frameBuffer, boxStartX[b], boxStartY[b],
-                                    textAreaWidth, boxEndY[b] - boxStartY[b],
-                                    0, boxStartX[b], boxStartY[b], 20);
+                                    textAreaWidth, boxEndY[b] - boxStartY[b], 0, boxStartX[b], boxStartY[b], 20);
                             lineIndices[b] = 0;
                             currentText[b] = null;
                         }
@@ -2020,23 +1991,22 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                     if (GameEngine.inputRun) {
                         GameEngine.inputRun = false;
-                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.menuItemHeight - 3,
-                                this.getLargeTextWidth(TextStrings.PAUSE), this.menuItemHeight,
-                                0, 3, UI_HEIGHT - this.menuItemHeight - 3, 20);
-                        this.drawLargeString(TextStrings.RESUME, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
+                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3,
+                                fontRenderer.getLargeTextWidth(TextStrings.PAUSE), MENU_ITEM_HEIGHT,
+                                0, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3, 20);
+                        fontRenderer.drawLargeString(TextStrings.RESUME, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
                         this.flushScreenBuffer();
 
-                        while(!GameEngine.inputRun && !GameEngine.inputBack
-                                && !this.isGamePaused && !GameEngine.inputFire) {
+                        while(!GameEngine.inputRun && !GameEngine.inputBack && !this.isGamePaused && !GameEngine.inputFire) {
                             HelperUtils.yieldToOtherThreads();
                         }
                     }
 
                     if (GameEngine.inputRun) {
-                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - this.menuItemHeight - 3,
-                                this.getLargeTextWidth(TextStrings.RESUME), this.menuItemHeight,
-                                0, 3, UI_HEIGHT - this.menuItemHeight - 3, 20);
-                        this.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
+                        graphics.drawRegion(frameBuffer, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3,
+                                fontRenderer.getLargeTextWidth(TextStrings.RESUME), MENU_ITEM_HEIGHT,
+                                0, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3, 20);
+                        fontRenderer.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
                         this.flushScreenBuffer();
                         GameEngine.inputRun = false;
                     }
@@ -2046,103 +2016,76 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         GameEngine.inputBack = false;
                         int menuResult = this.showMenuScreen(graphics, false);
                         if (menuResult != 32) {
-                            this.smallFontImage = null;
+                            fontRenderer.unloadSmallFont();
                             return menuResult;
                         }
 
                         graphics.drawImage(frameBuffer, 0, 0, 20);
-                        this.drawLargeString(TextStrings.BACK, graphics,
-                                PortalRenderer.VIEWPORT_WIDTH - this.getLargeTextWidth(TextStrings.BACK) - 3,
-                                UI_HEIGHT - this.menuItemHeight - 3);
-                        this.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - this.menuItemHeight - 3);
+                        fontRenderer.drawLargeString(TextStrings.BACK, graphics,
+                                PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(TextStrings.BACK) - 3,
+                                UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
+                        fontRenderer.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
 
                         for(int b = 0; b < 3; ++b) {
-                            int endChar = b == boxId ? charPos :
-                                    (currentText[b] != null ? currentText[b].length() : 0);
+                            int endChar = b == boxId ? charPos : (currentText[b] != null ? currentText[b].length() : 0);
 
                             if (lineBuffers[b] != null) {
-                                int startX = 0;
-                                int startY = 0;
-
+                                int startX = 0; int startY = 0;
                                 switch(b) {
-                                    case 0:
-                                        startX = playerPortrait.getWidth() + 4;
-                                        startY = 2;
-                                        break;
-                                    case 1:
-                                        startX = 2;
-                                        startY = agentY;
-                                        break;
-                                    case 2:
-                                        startX = 2;
-                                        startY = doctorY;
-                                        break;
+                                    case 0: startX = playerPortrait.getWidth() + 4; startY = 2; break;
+                                    case 1: startX = 2; startY = agentY; break;
+                                    case 2: startX = 2; startY = doctorY; break;
                                 }
 
                                 for(int lineIdx = 0; lineIdx <= lineIndices[b]; ++lineIdx) {
                                     int lineStart = lineBuffers[b][lineIdx];
-                                    int lineEnd = lineIdx + 1 <= lineIndices[b]
-                                            ? lineBuffers[b][lineIdx + 1]
-                                            : (currentText[b] != null ? currentText[b].length() : 0);
-
-                                    if (endChar + 1 < lineEnd) {
-                                        lineEnd = endChar + 1;
-                                    }
+                                    int lineEnd = lineIdx + 1 <= lineIndices[b] ? lineBuffers[b][lineIdx + 1] : endChar;
+                                    if (endChar + 1 < lineEnd) lineEnd = endChar + 1;
 
                                     int renderX = startX;
                                     for(int pos = lineStart; pos < lineEnd; ++pos) {
                                         char ch = currentText[b].charAt(pos);
-
                                         if (ch == ' ') {
-                                            renderX += this.spaceWidth;
+                                            renderX += smallSpace;
                                         } else {
-                                            int[] fCoords = this.getFontCoordinates(ch);
-                                            int fIdx = fCoords[1] * this.smallFontCharsPerRow + fCoords[0];
-                                            int cWidth = this.fontTextureW[fIdx];
-                                            int cX = this.fontTextureX[fIdx];
-                                            int cY = fCoords[1] * this.textLineHeight;
-                                            graphics.drawRegion(this.smallFontImage, cX, cY, cWidth, this.textLineHeight,
-                                                    0, renderX, startY, 20);
-                                            renderX += cWidth + 1;
+                                            renderX += fontRenderer.drawSmallChar(ch, graphics, renderX, startY);
                                         }
                                     }
-                                    startY += this.textLineHeight;
+                                    startY += smallH;
                                 }
                             }
                         }
-
                         this.flushScreenBuffer();
                     }
 
                     if (GameEngine.inputFire) {
                         GameEngine.inputFire = false;
-                        this.smallFontImage = null;
+                        fontRenderer.unloadSmallFont();
                         return -1;
                     }
-
                     HelperUtils.yieldToOtherThreads();
                 }
 
                 charIndices[boxId] = 0;
                 needsFade[boxId] = true;
-                boxStartX[boxId] = textX;
-                boxStartY[boxId] = textY;
-                boxEndY[boxId] = maxY;
+                boxStartX[boxId] = textX; boxStartY[boxId] = textY; boxEndY[boxId] = maxY;
                 fadeTimers[boxId] = System.currentTimeMillis() + 5000L;
                 HelperUtils.delay(500);
             }
 
             HelperUtils.delay(5000);
-            this.smallFontImage = null;
+            fontRenderer.unloadSmallFont();
         } catch (Exception e) {
         } catch (OutOfMemoryError e) {
         }
-
         return -1;
     }
 
     private void drawWrappedLine(Graphics graphics, Image frameBuffer, String text, int[] lineStarts,
                                  int startChar, int startX, int startY, int maxY, int width) {
+
+        int smallCharHeight = fontRenderer.getSmallCharHeight();
+        int smallSpaceWidth = fontRenderer.getSmallSpaceWidth();
 
         int height = maxY - startY;
         int oldColor = graphics.getColor();
@@ -2153,7 +2096,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
         int renderY = startY;
 
-        for(int lineIdx = 1; lineIdx < lineStarts.length; ++lineIdx) {
+        for (int lineIdx = 1; lineIdx < lineStarts.length; ++lineIdx) {
             int lineStart = lineStarts[lineIdx];
             lineStarts[lineIdx - 1] = lineStart;
             int lineEnd = lineIdx + 1 < lineStarts.length
@@ -2163,215 +2106,31 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             if (lineIdx > 1) {
                 int oldColor2 = graphics.getColor();
                 graphics.setColor(0);
-                graphics.fillRect(startX, renderY, width, this.textLineHeight);
+                graphics.fillRect(startX, renderY, width, smallCharHeight);
                 graphics.setColor(oldColor2);
-                graphics.drawRegion(frameBuffer, startX, renderY, width, this.textLineHeight,
+                graphics.drawRegion(frameBuffer, startX, renderY, width, smallCharHeight,
                         0, startX, renderY, 20);
             }
 
             int renderX = startX;
-            for(int charIdx = lineStart; charIdx < lineEnd; ++charIdx) {
+            for (int charIdx = lineStart; charIdx < lineEnd; ++charIdx) {
                 char c = text.charAt(charIdx);
 
                 if (c == ' ') {
-                    renderX += this.spaceWidth;
+                    renderX += smallSpaceWidth;
                 } else {
-                    int[] coords = this.getFontCoordinates(c);
-                    int fontIdx = coords[1] * this.smallFontCharsPerRow + coords[0];
-                    int charW = this.fontTextureW[fontIdx];
-                    int charX = this.fontTextureX[fontIdx];
-                    int charY = coords[1] * this.textLineHeight;
-                    graphics.drawRegion(this.smallFontImage, charX, charY, charW, this.textLineHeight,
-                            0, renderX, renderY, 20);
-                    renderX += charW + 1;
+                    renderX += fontRenderer.drawSmallChar(c, graphics, renderX, renderY);
                 }
             }
-            renderY += this.textLineHeight;
+            renderY += smallCharHeight;
         }
 
         lineStarts[lineStarts.length - 1] = startChar;
     }
 
-    private void drawHUDNumber(int value, Graphics graphics, int x, int y) {
-        String text = Integer.toString(value);
-        int centerOffset = this.getLargeTextWidth(text) / 2;
-        this.drawLargeString(text, graphics, x - centerOffset, y);
-    }
 
-    private int getLargeTextWidth(String text) {
-        text = text.toLowerCase();
-        int width = 0;
 
-        for(int i = 0; i < text.length(); ++i) {
-            char c = text.charAt(i);
-            if (c == ' ') {
-                width += this.menuBoxWidthUnit;
-            } else {
-                int[] coords = this.getFontCharCoordinates(c);
-                int charWidth = this.fontCharWidths[coords[1] * this.menuOffsetY + coords[0]];
-                width += charWidth;
-            }
-        }
 
-        return width;
-    }
-
-    private int getSmallTextWidth(String text) {
-        int width = 0;
-
-        for(int i = 0; i < text.length(); ++i) {
-            char c = text.charAt(i);
-            if (c == ' ') {
-                width += this.spaceWidth;
-            } else {
-                int[] coords = this.getFontCoordinates(c);
-                int charWidth = this.fontTextureW[coords[1] * this.smallFontCharsPerRow + coords[0]];
-                width += charWidth + 1;
-            }
-        }
-
-        return width;
-    }
-
-    private int[] getFontCharCoordinates(char c) {
-        int[] coords = new int[]{this.menuOffsetY - 1, 2};
-
-        if (c >= 'a' && c <= 'r') {
-            coords[0] = c - 97;
-            coords[1] = 0;
-        } else if (c >= 's' && c <= 'z') {
-            coords[0] = c - 115;
-            coords[1] = 1;
-        } else if (c >= '0' && c <= '9') {
-            coords[0] = c - 48;
-            coords[1] = 2;
-        } else {
-            coords[1] = 1;
-            switch(c) {
-                case '!':
-                    coords[0] = 10;
-                    break;
-                case '\'':
-                    coords[0] = 15;
-                    break;
-                case ',':
-                    coords[0] = 9;
-                    break;
-                case '.':
-                    coords[0] = 8;
-                    break;
-                case '/':
-                    coords[0] = 14;
-                    break;
-                case ':':
-                    coords[0] = 12;
-                    break;
-                case ';':
-                    coords[0] = 13;
-                    break;
-                case '?':
-                    coords[0] = 11;
-                    break;
-                default:
-                    return coords;
-            }
-        }
-
-        return coords;
-    }
-
-    private int[] getFontCoordinates(char character) {
-        int[] coords = new int[]{this.smallFontCharsPerRow - 1, 2};
-
-        if (character >= 'A' && character <= 'Z') {
-            coords[0] = character - 65;
-            coords[1] = 0;
-        } else if (character >= 'a' && character <= 'z') {
-            coords[0] = character - 97;
-            coords[1] = 1;
-        } else if (character >= '0' && character <= '9') {
-            coords[0] = character - 48;
-            coords[1] = 2;
-        } else {
-            coords[1] = 2;
-            switch(character) {
-                case '!':
-                    coords[0] = 12;
-                    break;
-                case '\'':
-                    coords[0] = 18;
-                    break;
-                case ',':
-                    coords[0] = 11;
-                    break;
-                case '-':
-                    coords[0] = 17;
-                    break;
-                case '.':
-                    coords[0] = 10;
-                    break;
-                case '/':
-                    coords[0] = 16;
-                    break;
-                case ':':
-                    coords[0] = 14;
-                    break;
-                case ';':
-                    coords[0] = 15;
-                    break;
-                case '?':
-                    coords[0] = 13;
-                    break;
-                case '@':
-                    coords[0] = 19;
-                    break;
-                default:
-                    return coords;
-            }
-        }
-
-        return coords;
-    }
-
-    private void drawLargeString(String text, Graphics graphics, int x, int y) {
-        text = text.toLowerCase();
-
-        for(int i = 0; i < text.length(); ++i) {
-            char c = text.charAt(i);
-
-            if (c == ' ') {
-                x += this.menuBoxWidthUnit;
-            } else {
-                int[] coords = this.getFontCharCoordinates(c);
-                int fontIdx = coords[1] * this.menuOffsetY + coords[0];
-                int charWidth = this.fontCharWidths[fontIdx];
-                int charX = this.fontCharOffsets[fontIdx];
-                int charY = coords[1] * this.menuItemHeight;
-                graphics.drawRegion(this.largeFontImage, charX, charY, charWidth, this.menuItemHeight,
-                        0, x, y, 20);
-                x += charWidth;
-            }
-        }
-    }
-
-    private void drawSmallString(String text, Graphics graphics, int x, int y) {
-        for(int i = 0; i < text.length(); ++i) {
-            char c = text.charAt(i);
-
-            if (c == ' ') {
-                x += this.spaceWidth;
-            } else {
-                int[] coords = this.getFontCoordinates(c);
-                int fontIdx = coords[1] * this.smallFontCharsPerRow + coords[0];
-                int charWidth = this.fontTextureW[fontIdx];
-                int charX = this.fontTextureX[fontIdx];
-                int charY = coords[1] * this.textLineHeight;
-                graphics.drawRegion(this.smallFontImage, charX, charY, charWidth, this.textLineHeight,
-                        0, x, y, 20);
-                x += charWidth + 1;
-            }
-        }
-    }
 
     private void flushScreenBuffer() {
         this.flushGraphics();
