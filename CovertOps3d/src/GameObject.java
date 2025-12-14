@@ -92,8 +92,8 @@ public final class GameObject {
         }
     }
 
-    public final void addToWorld(GameWorld var1) {
-        var1.getSectorAtPoint(this.transform.x, this.transform.z).addDynamicObject(this);
+    public final void addToWorld(GameWorld world) {
+        world.getSectorAtPoint(this.transform.x, this.transform.z).addDynamicObject(this);
     }
 
     public final byte getCurrentUpperBodySpriteId() {
@@ -110,13 +110,13 @@ public final class GameObject {
         return 0;
     }
 
-    public final void addSpriteFrame(byte var1, byte var2) {
-        this.upperBodySpriteIds.addElement(new Byte(var1));
-        this.lowerBodySpriteIds.addElement(new Byte(var2));
+    public final void addSpriteFrame(byte upperSpriteId, byte lowerSpriteId) {
+        this.upperBodySpriteIds.addElement(new Byte(upperSpriteId));
+        this.lowerBodySpriteIds.addElement(new Byte(lowerSpriteId));
     }
 
-    public final boolean compareDepth(GameObject var1) {
-        return this.projectionData.y < var1.projectionData.y;
+    public final boolean compareDepth(GameObject other) {
+        return this.projectionData.y < other.projectionData.y;
     }
 
     public final boolean projectToScreen() {
@@ -137,5 +137,19 @@ public final class GameObject {
     public final void calculateLowerBodyScreenSize() {
         this.lowerBodyScreenWidth = MathUtils.fixedPointDivide(this.lowerBodyTexture.width << 16, this.projectionData.y) * 120 + 65536 >> 17;
         this.lowerBodyScreenHeight = MathUtils.fixedPointDivide(this.lowerBodyTexture.height << 16, this.projectionData.y) * 120 + 65536 >> 17;
+    }
+
+    static void preloadObjectTextures(GameObject object, byte[] sprites1, byte[] sprites2) {
+        for(int i = 0; i < sprites1.length; ++i) {
+            byte sprite1 = sprites1[i];
+            byte sprite2 = sprites2[i];
+            object.addSpriteFrame(sprite1, sprite2);
+            if (sprite1 != 0) {
+                LevelLoader.preloadTexture(sprite1);
+            }
+            if (sprite2 != 0) {
+                LevelLoader.preloadTexture(sprite2);
+            }
+        }
     }
 }

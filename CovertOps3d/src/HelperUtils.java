@@ -11,19 +11,7 @@ public class HelperUtils {
         }
     }
 
-    static void preloadObjectTextures(GameObject object, byte[] sprites1, byte[] sprites2) {
-        for(int i = 0; i < sprites1.length; ++i) {
-            byte sprite1 = sprites1[i];
-            byte sprite2 = sprites2[i];
-            object.addSpriteFrame(sprite1, sprite2);
-            if (sprite1 != 0) {
-                LevelLoader.preloadTexture(sprite1);
-            }
-            if (sprite2 != 0) {
-                LevelLoader.preloadTexture(sprite2);
-            }
-        }
-    }
+
 
     public static void delay(int milliseconds) {
         try {

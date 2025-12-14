@@ -1656,13 +1656,13 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             LevelLoader.preloadTexture((byte)-53);
                             continue;
                         case 10:
-                            HelperUtils.preloadObjectTextures(obj, var9, var10);
+                            GameObject.preloadObjectTextures(obj, var9, var10);
                             if (LEVEL_FILE_NAMES[currentLevelId] == "06c") {
                                 obj.spriteFrameIndex = 1;
                             }
                             continue;
                         case 12:
-                            HelperUtils.preloadObjectTextures(obj, var13, var14);
+                            GameObject.preloadObjectTextures(obj, var13, var14);
                             continue;
                         case 26:
                             obj.addSpriteFrame((byte)0, (byte)-16);
@@ -1740,27 +1740,27 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             LevelLoader.preloadTexture((byte)-56);
                             continue;
                         case 3001:
-                            HelperUtils.preloadObjectTextures(obj, var11, var12);
+                            GameObject.preloadObjectTextures(obj, var11, var12);
                             LevelLoader.preloadTexture((byte)-57);
                             continue;
                         case 3002:
-                            HelperUtils.preloadObjectTextures(obj, var15, var16);
+                            GameObject.preloadObjectTextures(obj, var15, var16);
                             LevelLoader.preloadTexture((byte)-56);
                             continue;
                         case 3003:
-                            HelperUtils.preloadObjectTextures(obj, var2, var3);
+                            GameObject.preloadObjectTextures(obj, var2, var3);
                             LevelLoader.preloadTexture((byte)-48);
                             continue;
                         case 3004:
-                            HelperUtils.preloadObjectTextures(obj, var5, var6);
+                            GameObject.preloadObjectTextures(obj, var5, var6);
                             LevelLoader.preloadTexture((byte)-54);
                             continue;
                         case 3005:
-                            HelperUtils.preloadObjectTextures(obj, var4, var6);
+                            GameObject.preloadObjectTextures(obj, var4, var6);
                             LevelLoader.preloadTexture((byte)-48);
                             continue;
                         case 3006:
-                            HelperUtils.preloadObjectTextures(obj, var7, var8);
+                            GameObject.preloadObjectTextures(obj, var7, var8);
                             LevelLoader.preloadTexture((byte)-54);
                             continue;
                         default:
