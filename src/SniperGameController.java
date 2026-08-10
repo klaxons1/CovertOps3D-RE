@@ -349,7 +349,7 @@ public final class SniperGameController {
                 graphics.drawImage(statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
                 fontRenderer.drawCenteredNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
                 fontRenderer.drawCenteredNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
-                canvas.flushGraphics();
+                canvas.flushGraphicsPublic();
 
                 HelperUtils.yieldToOtherThreads();
             }

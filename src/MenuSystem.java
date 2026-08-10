@@ -50,7 +50,7 @@ public final class MenuSystem {
                 }
                 ++column;
             }
-            canvas.flushGraphics();
+            canvas.flushGraphicsPublic();
         } while (progress <= UI_HEIGHT);
     }
 
@@ -128,7 +128,7 @@ public final class MenuSystem {
                 fontRenderer.drawLargeString(menuItems[totalItems], graphics,
                         PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(menuItems[totalItems]) - 3,
                         UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
-                canvas.flushGraphics();
+                canvas.flushGraphicsPublic();
                 HelperUtils.yieldToOtherThreads();
 
                 Object[] stackData;
@@ -142,9 +142,9 @@ public final class MenuSystem {
                         case 33:
                             stackData = new Object[4];
                             stackData[0] = menuItems;
-                            stackData[1] = Integer.valueOf(menuMode);
-                            stackData[2] = Integer.valueOf(firstItem);
-                            stackData[3] = Integer.valueOf(lastItem);
+                            stackData[1] = new Integer(menuMode);
+                            stackData[2] = new Integer(firstItem);
+                            stackData[3] = new Integer(lastItem);
                             menuStack.push(stackData);
                             menuItems = TextStrings.difficultyMenuItems;
                             menuMode = 18 + GameEngine.difficultyLevel;
@@ -163,9 +163,9 @@ public final class MenuSystem {
                             settingsMenuItems[5] = TextStrings.BACK;
                             stackData = new Object[4];
                             stackData[0] = menuItems;
-                            stackData[1] = Integer.valueOf(menuMode);
-                            stackData[2] = Integer.valueOf(firstItem);
-                            stackData[3] = Integer.valueOf(lastItem);
+                            stackData[1] = new Integer(menuMode);
+                            stackData[2] = new Integer(firstItem);
+                            stackData[3] = new Integer(lastItem);
                             menuStack.push(stackData);
                             menuItems = settingsMenuItems;
                             menuMode = 50;
@@ -194,9 +194,9 @@ public final class MenuSystem {
                                     TextStrings.CHAPTER_MENU_DATA[TextStrings.CHAPTER_MENU_DATA.length - 1];
                             stackData = new Object[4];
                             stackData[0] = menuItems;
-                            stackData[1] = Integer.valueOf(menuMode);
-                            stackData[2] = Integer.valueOf(firstItem);
-                            stackData[3] = Integer.valueOf(lastItem);
+                            stackData[1] = new Integer(menuMode);
+                            stackData[2] = new Integer(firstItem);
+                            stackData[3] = new Integer(lastItem);
                             menuStack.push(stackData);
                             GameEngine.difficultyLevel = menuMode - 18;
                             SaveSystem.loadSaveData();
@@ -274,9 +274,9 @@ public final class MenuSystem {
                         if (menuItems[menuItems.length - 1] == TextStrings.QUIT) {
                             stackData = new Object[4];
                             stackData[0] = menuItems;
-                            stackData[1] = Integer.valueOf(menuMode);
-                            stackData[2] = Integer.valueOf(firstItem);
-                            stackData[3] = Integer.valueOf(lastItem);
+                            stackData[1] = new Integer(menuMode);
+                            stackData[2] = new Integer(firstItem);
+                            stackData[3] = new Integer(lastItem);
                             menuStack.push(stackData);
                             menuItems = TextStrings.CONFIRMATION_MENU_ITEMS;
                             menuMode = 80;

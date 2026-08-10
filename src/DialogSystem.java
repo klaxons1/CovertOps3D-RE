@@ -31,7 +31,7 @@ public final class DialogSystem {
 
             graphics.setColor(16777215);
             graphics.drawRect(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
-            canvas.flushGraphics();
+            canvas.flushGraphicsPublic();
 
             long startTime = System.currentTimeMillis();
 
@@ -62,7 +62,7 @@ public final class DialogSystem {
                         graphics.drawImage(splash, 0, 0, 20);
                         graphics.drawRGB(fadeBuffer, 0, splash.getWidth(), 0, 0,
                                 splash.getWidth(), splash.getHeight(), true);
-                        canvas.flushGraphics();
+                        canvas.flushGraphicsPublic();
                         HelperUtils.yieldToOtherThreads();
                     }
                 }
@@ -72,7 +72,7 @@ public final class DialogSystem {
                 graphics.drawImage(logo, logoX, logoY, 20);
                 graphics.drawRGB(fadeBuffer, 0, logo.getWidth(), logoX, logoY,
                         logo.getWidth(), logo.getHeight(), true);
-                canvas.flushGraphics();
+                canvas.flushGraphicsPublic();
                 HelperUtils.yieldToOtherThreads();
             }
         } catch (Exception e) {
@@ -95,7 +95,7 @@ public final class DialogSystem {
 
             String message = TextStrings.MISSION_FAILED_GAME_OVER;
             drawMultiLineMessage(graphics, message);
-            canvas.flushGraphics();
+            canvas.flushGraphicsPublic();
             HelperUtils.delay(2000);
 
             long startTime = System.currentTimeMillis();
@@ -121,7 +121,7 @@ public final class DialogSystem {
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 drawMultiLineMessage(graphics, message);
-                canvas.flushGraphics();
+                canvas.flushGraphicsPublic();
                 HelperUtils.yieldToOtherThreads();
             }
         } catch (Exception e) {
@@ -145,7 +145,7 @@ public final class DialogSystem {
                 0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
 
         fontRenderer.drawLargeString(text, graphics, textX, textY);
-        canvas.flushGraphics();
+        canvas.flushGraphicsPublic();
     }
 
     public void showScrollingText(Graphics graphics, Image background, String title, String[] content, boolean isScrollable) {
@@ -171,7 +171,7 @@ public final class DialogSystem {
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
-                canvas.flushGraphics();
+                canvas.flushGraphicsPublic();
                 HelperUtils.yieldToOtherThreads();
                 HelperUtils.delay(50);
             }
@@ -223,7 +223,7 @@ public final class DialogSystem {
                         displayY += fontRenderer.getSmallCharHeight() + 2;
                     }
 
-                    canvas.flushGraphics();
+                    canvas.flushGraphicsPublic();
                 }
                 needsUpdate = isScrollable;
                 HelperUtils.yieldToOtherThreads();
@@ -240,7 +240,7 @@ public final class DialogSystem {
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
                 graphics.drawRGB(PortalRenderer.screenBuffer, 0, PortalRenderer.VIEWPORT_WIDTH,
                         0, HALF_UI_HEIGHT, PortalRenderer.VIEWPORT_WIDTH, HALF_UI_HEIGHT, true);
-                canvas.flushGraphics();
+                canvas.flushGraphicsPublic();
                 HelperUtils.yieldToOtherThreads();
                 HelperUtils.delay(50);
             }
@@ -436,7 +436,7 @@ public final class DialogSystem {
                         currentX += drawnWidth;
                     }
 
-                    canvas.flushGraphics();
+                    canvas.flushGraphicsPublic();
                     HelperUtils.delay(c == ',' ? 300 : (c != '.' && c != '?' && c != '!' ? 50 : 400));
 
                     long currentTime = System.currentTimeMillis();
@@ -460,7 +460,7 @@ public final class DialogSystem {
                                 fontRenderer.getLargeTextWidth(TextStrings.PAUSE), MENU_ITEM_HEIGHT,
                                 0, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3, 20);
                         fontRenderer.drawLargeString(TextStrings.RESUME, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
-                        canvas.flushGraphics();
+                        canvas.flushGraphicsPublic();
                         while (!GameEngine.inputRun && !GameEngine.inputBack && !canvas.isGamePaused && !GameEngine.inputFire) {
                             HelperUtils.yieldToOtherThreads();
                         }
@@ -471,7 +471,7 @@ public final class DialogSystem {
                                 fontRenderer.getLargeTextWidth(TextStrings.RESUME), MENU_ITEM_HEIGHT,
                                 0, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3, 20);
                         fontRenderer.drawLargeString(TextStrings.PAUSE, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
-                        canvas.flushGraphics();
+                        canvas.flushGraphicsPublic();
                         GameEngine.inputRun = false;
                     }
 
@@ -516,7 +516,7 @@ public final class DialogSystem {
                                 }
                             }
                         }
-                        canvas.flushGraphics();
+                        canvas.flushGraphicsPublic();
                     }
 
                     if (GameEngine.inputFire) {
