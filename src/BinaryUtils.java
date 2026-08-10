@@ -1,4 +1,5 @@
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 /**
@@ -35,6 +36,13 @@ public final class BinaryUtils {
         while (byteCount > 0) {
             int chunk = byteCount > 4096 ? 4096 : byteCount;
             int skipped = (int)input.skip((long)chunk);
+            if (skipped <= 0) {
+                // End of stream: skip() keeps returning 0 from here on.
+                // Fail fast instead of spinning forever (this exact loop used
+                // to hang the game thread on the "Loading" screen when the
+                // atlas parser got misaligned and ran past the end of file).
+                throw new EOFException("skipBytes: end of stream, " + byteCount + " bytes left");
+            }
             byteCount -= skipped;
         }
     }

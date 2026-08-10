@@ -26,16 +26,21 @@ public final class LevelLoader {
     private static Hashtable paletteCache;
     static Texture defaultErrorTexture;
 
-    // Exact file header magics (big-endian short)
-    private static final int MAGIC_TX = 39251; // 0x9953
-    private static final int MAGIC_SP = 39252; // 0x9954 + variant handling, original checked both
+    // Exact file header magics (big-endian short), verified against the shipped atlases:
+    // tx1..tx4 all start with 0x9954, sp1..sp4 all start with 0x9953.
+    // (The constant names were swapped in the previous implementation - the same wrong
+    // code path then parsed TX entries with the SP header layout, which misaligned the
+    // stream and sent skipBytes() into an endless loop = infinite "Loading" screen.)
+    private static final int MAGIC_TX_ATLAS = 39252; // 0x9954 - wall/floor texture atlases (tx*)
+    private static final int MAGIC_SP_ATLAS = 39251; // 0x9953 - object sprite atlases (sp*)
 
     private LevelLoader() {}
 
     // ==================== Lookup helpers ====================
 
     private static Sprite getSprite(byte spriteId) {
-        if (spriteId == 51) {
+        if (spriteId == 51 || spriteId < 0) {
+            // guard against negative ids indexing the table (would kill the whole load)
             return null;
         }
         Sprite sprite = spriteTable[spriteId];
@@ -331,31 +336,37 @@ public final class LevelLoader {
 
                 DataInputStream dataIn = new DataInputStream(fileStream);
                 int magic = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
-                if (magic != MAGIC_SP && magic != MAGIC_TX) {
-                    // original code only checked for 39251/39252, allow both
-                    // but keep strict for TX set: must be 39252 (= SP/ TX variant)
-                    if (magic != 39252) throw new IllegalStateException("Bad magic TX");
-                }
+                if (magic != MAGIC_TX_ATLAS) throw new IllegalStateException("Bad magic TX: " + magic);
 
                 short spriteEntryCount = BinaryUtils.readShortBE(dataIn);
                 short paletteEntryCount = BinaryUtils.readShortBE(dataIn);
-                BinaryUtils.readIntBE(dataIn); // skip data offset
+                BinaryUtils.readIntBE(dataIn); // skip pixel-data offset
 
-                // sprite entries
+                // TX entries have a 9-byte header: id, width, height, paletteOffset, bitDepth.
+                // (No anchor offsets here - those only exist in SP entries.)
                 for (int entryIdx = 0; entryIdx < spriteEntryCount; ++entryIdx) {
                     byte rawId = dataIn.readByte();
                     short width = BinaryUtils.readShortBE(dataIn);
                     short height = BinaryUtils.readShortBE(dataIn);
-                    short hOffset = BinaryUtils.readShortBE(dataIn);
-                    short vOffset = BinaryUtils.readShortBE(dataIn);
                     short paletteOffset = BinaryUtils.readShortBE(dataIn);
                     short bitDepth = BinaryUtils.readShortBE(dataIn);
 
                     int pixelCount = width * height * bitDepth;
                     int packedBytes = pixelCount / 8 + (pixelCount % 8 > 0 ? 1 : 0);
 
-                    if (isTextureRegistered(rawId)) {
-                        Texture tex = new Texture(rawId, width, height, hOffset, vOffset);
+                    if (isSpriteRegistered(rawId)) {
+                        // Positive-id 64x64 floor/ceiling sprite stored inside the texture atlas
+                        if (width != 64 || height != 64) throw new IllegalStateException("Sprite must be 64x64");
+
+                        byte[] packedData = new byte[packedBytes];
+                        byte[] unpacked = new byte[width * height];
+                        dataIn.readFully(packedData, 0, packedBytes);
+                        decompressSprite(packedData, 0, unpacked, 0, width * height, bitDepth);
+
+                        spriteTable[rawId] = new Sprite(rawId, unpacked);
+                        textureIdToPaletteIndex.put(new Byte(rawId), new Integer(globalPaletteIndex + paletteOffset));
+                    } else if (isTextureRegistered(rawId)) {
+                        Texture tex = new Texture(rawId, width, height, 0, 0);
                         byte[] packedData = new byte[packedBytes];
                         dataIn.readFully(packedData, 0, packedBytes);
 
@@ -387,6 +398,7 @@ public final class LevelLoader {
 
                 globalPaletteIndex += paletteEntryCount;
                 dataIn.close();
+                DebugLogger.log("LevelLoader", "atlas ok " + fullPath + " entries=" + spriteEntryCount);
                 ++fileNumber;
             }
 
@@ -398,11 +410,14 @@ public final class LevelLoader {
 
                 DataInputStream dataIn = new DataInputStream(fileStream);
                 int magic = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
-                if (magic != 39251 && magic != 39252) throw new IllegalStateException("Bad magic SP");
+                if (magic != MAGIC_SP_ATLAS) throw new IllegalStateException("Bad magic SP: " + magic);
 
                 short spriteEntryCount = BinaryUtils.readShortBE(dataIn);
                 short paletteEntryCount = BinaryUtils.readShortBE(dataIn);
-                BinaryUtils.readIntBE(dataIn);
+                BinaryUtils.readIntBE(dataIn); // skip pixel-data offset
+
+                // SP entries have a 13-byte header:
+                // id, width, height, hOffset, vOffset, paletteOffset, bitDepth
 
                 for (int entryIdx = 0; entryIdx < spriteEntryCount; ++entryIdx) {
                     byte rawId = dataIn.readByte();
@@ -427,7 +442,9 @@ public final class LevelLoader {
                         spriteTable[rawId] = new Sprite(rawId, unpacked);
                         textureIdToPaletteIndex.put(new Byte(rawId), new Integer(globalPaletteIndex + paletteOffset));
                     } else if (isTextureRegistered(rawId)) {
-                        Texture tex = new Texture(rawId, width, height, 0, 0);
+                        // Negative-id object/enemy sprite textures; keep the anchor
+                        // offsets from the header, PortalRenderer uses them for billboards.
+                        Texture tex = new Texture(rawId, width, height, hOffset, vOffset);
                         byte[] packedData = new byte[packedBytes];
                         dataIn.readFully(packedData, 0, packedBytes);
                         byte[] rowBuffer = null;
@@ -457,6 +474,7 @@ public final class LevelLoader {
 
                 globalPaletteIndex += paletteEntryCount;
                 dataIn.close();
+                DebugLogger.log("LevelLoader", "atlas ok " + fullPath + " entries=" + spriteEntryCount);
             }
 
             // ---- Link sprites to palettes ----
