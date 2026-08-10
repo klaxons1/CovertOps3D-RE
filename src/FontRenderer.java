@@ -70,6 +70,7 @@ public class FontRenderer {
         try {
             largeFontImage = Image.createImage(path);
         } catch (Exception e) {
+        DebugLogger.logException("FontRenderer.java", e);
         }
     }
 
@@ -80,6 +81,7 @@ public class FontRenderer {
         try {
             smallFontImage = Image.createImage(path);
         } catch (Exception e) {
+        DebugLogger.logException("FontRenderer.java", e);
         }
     }
 
