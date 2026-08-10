@@ -1,29 +1,41 @@
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public class BinaryUtils {
-    static short readShortBE(DataInputStream var0) throws IOException {
-       return (short)((var0.read() << 8) + var0.read());
+/**
+ * Low-level binary helpers for reading little-endian and big-endian data
+ * from DataInputStream and for skipping bytes efficiently.
+ * All methods are intentionally allocation-free to keep loading fast.
+ */
+public final class BinaryUtils {
+
+    private BinaryUtils() { }
+
+    /** Reads unsigned short in big-endian order (high byte first). */
+    static short readShortBE(DataInputStream input) throws IOException {
+        return (short)((input.read() << 8) + input.read());
     }
 
-    static int readIntBE(DataInputStream var0) throws IOException {
-       return (var0.read() << 24) + (var0.read() << 16) + (var0.read() << 8) + var0.read();
+    /** Reads int in big-endian order. */
+    static int readIntBE(DataInputStream input) throws IOException {
+        return (input.read() << 24) + (input.read() << 16) + (input.read() << 8) + input.read();
     }
 
-    static short readShortLE(DataInputStream var0) throws IOException {
-       return (short)(var0.read() + (var0.read() << 8));
+    /** Reads short in little-endian order (low byte first). */
+    static short readShortLE(DataInputStream input) throws IOException {
+        return (short)(input.read() + (input.read() << 8));
     }
 
-    static int readIntLE(DataInputStream var0) throws IOException {
-       return var0.read() + (var0.read() << 8) + (var0.read() << 16) + (var0.read() << 24);
+    /** Reads int in little-endian order. */
+    static int readIntLE(DataInputStream input) throws IOException {
+        return input.read() + (input.read() << 8) + (input.read() << 16) + (input.read() << 24);
     }
 
-    static void skipBytes(DataInputStream var0, int var1) throws IOException {
-       while(var1 > 0) {
-          int var2 = var1 > 4096 ? 4096 : var1;
-          int var3 = (int)var0.skip((long)var2);
-          var1 -= var3;
-       }
-
+    /** Skips exactly byteCount bytes, looping because skip() may skip less. */
+    static void skipBytes(DataInputStream input, int byteCount) throws IOException {
+        while (byteCount > 0) {
+            int chunk = byteCount > 4096 ? 4096 : byteCount;
+            int skipped = (int)input.skip((long)chunk);
+            byteCount -= skipped;
+        }
     }
 }
