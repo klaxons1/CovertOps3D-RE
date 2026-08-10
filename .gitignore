@@ -28,3 +28,4 @@ deployed/
 .DS_Store
 __pycache__/
 *.pyc
+scripts/_test_out/
