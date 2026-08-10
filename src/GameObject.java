@@ -1,11 +1,13 @@
-import java.util.Vector;
-
 public final class GameObject {
     public Transform3D transform;
     public int objectType;
     public int detonationTimer;
-    private Vector upperBodySpriteIds;
-    private Vector lowerBodySpriteIds;
+    // Sprite frame id lists: plain arrays instead of Vector - these are read
+    // every frame in the renderer and Vector.elementAt is synchronized + boxes
+    // every id into a Byte. Counts stay tiny (<=7 frames), arrays are exact.
+    private byte[] upperBodySpriteIds;
+    private byte[] lowerBodySpriteIds;
+    private int spriteFrameCount;
     public int spriteFrameIndex;
     public int health;
     public int stateTimer;
@@ -25,8 +27,9 @@ public final class GameObject {
         this.projectionData = new Point2D(0, 0);
         this.objectType = type;
         this.detonationTimer = fuseTime;
-        this.upperBodySpriteIds = new Vector();
-        this.lowerBodySpriteIds = new Vector();
+        this.upperBodySpriteIds = new byte[4];
+        this.lowerBodySpriteIds = new byte[4];
+        this.spriteFrameCount = 0;
         this.spriteFrameIndex = 0;
         this.screenY = 0;
         this.upperBodyTexture = null;
@@ -97,22 +100,32 @@ public final class GameObject {
     }
 
     public final byte getCurrentUpperBodySpriteId() {
-        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.upperBodySpriteIds.size()) {
-            return ((Byte)this.upperBodySpriteIds.elementAt(this.spriteFrameIndex)).byteValue();
+        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.spriteFrameCount) {
+            return this.upperBodySpriteIds[this.spriteFrameIndex];
         }
         return 0;
     }
 
     public final byte getCurrentLowerBodySpriteId() {
-        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.lowerBodySpriteIds.size()) {
-            return ((Byte)this.lowerBodySpriteIds.elementAt(this.spriteFrameIndex)).byteValue();
+        if (this.spriteFrameIndex > -1 && this.spriteFrameIndex < this.spriteFrameCount) {
+            return this.lowerBodySpriteIds[this.spriteFrameIndex];
         }
         return 0;
     }
 
     public final void addSpriteFrame(byte upperSpriteId, byte lowerSpriteId) {
-        this.upperBodySpriteIds.addElement(new Byte(upperSpriteId));
-        this.lowerBodySpriteIds.addElement(new Byte(lowerSpriteId));
+        if (this.spriteFrameCount == this.upperBodySpriteIds.length) {
+            int newCapacity = this.upperBodySpriteIds.length << 1;
+            byte[] newUpper = new byte[newCapacity];
+            byte[] newLower = new byte[newCapacity];
+            System.arraycopy(this.upperBodySpriteIds, 0, newUpper, 0, this.spriteFrameCount);
+            System.arraycopy(this.lowerBodySpriteIds, 0, newLower, 0, this.spriteFrameCount);
+            this.upperBodySpriteIds = newUpper;
+            this.lowerBodySpriteIds = newLower;
+        }
+        this.upperBodySpriteIds[this.spriteFrameCount] = upperSpriteId;
+        this.lowerBodySpriteIds[this.spriteFrameCount] = lowerSpriteId;
+        this.spriteFrameCount++;
     }
 
     public final boolean compareDepth(GameObject other) {
