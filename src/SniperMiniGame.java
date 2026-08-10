@@ -106,9 +106,9 @@ public class SniperMiniGame {
             loadSceneMask(basePath + "_mask", mask, pixels, pixelCount);
 
         } catch (Exception e) {
-            // Log error
+            DebugLogger.logException("SniperMiniGame.loadResources", e);
         } catch (OutOfMemoryError e) {
-            // Handle OOM
+            DebugLogger.logOutOfMemory("SniperMiniGame.loadResources", e);
         }
     }
 

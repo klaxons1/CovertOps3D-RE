@@ -54,8 +54,10 @@ public final class HudRenderer {
 
             return headBob;
         } catch (Exception e) {
+            DebugLogger.logException("HudRenderer", e);
             return 0;
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("HudRenderer", e);
             return 0;
         }
     }

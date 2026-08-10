@@ -312,9 +312,11 @@ public final class MenuSystem {
                 }
             }
         } catch (Exception e) {
+            DebugLogger.logException("MenuSystem", e);
             HelperUtils.stopCurrentSound();
             return 4;
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("MenuSystem", e);
             HelperUtils.stopCurrentSound();
             return 4;
         }

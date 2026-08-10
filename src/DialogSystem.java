@@ -76,7 +76,9 @@ public final class DialogSystem {
                 HelperUtils.yieldToOtherThreads();
             }
         } catch (Exception e) {
+            DebugLogger.logException("DialogSystem", e);
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("DialogSystem", e);
         }
     }
 
@@ -125,8 +127,10 @@ public final class DialogSystem {
                 HelperUtils.yieldToOtherThreads();
             }
         } catch (Exception e) {
+            DebugLogger.logException("DialogSystem.java", e);
             return;
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("DialogSystem.java", e);
         }
     }
 
@@ -245,7 +249,9 @@ public final class DialogSystem {
                 HelperUtils.delay(50);
             }
         } catch (Exception e) {
+            DebugLogger.logException("DialogSystem.java", e);
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("DialogSystem.java", e);
         }
 
         GameEngine.inputRun = false;
@@ -537,7 +543,9 @@ public final class DialogSystem {
             HelperUtils.delay(5000);
             fontRenderer.unloadSmallFont();
         } catch (Exception e) {
+            DebugLogger.logException("DialogSystem.java", e);
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("DialogSystem.java", e);
         }
         return -1;
     }

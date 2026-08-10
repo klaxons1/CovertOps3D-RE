@@ -3,21 +3,10 @@ import javax.microedition.lcdui.game.GameCanvas;
 
 /**
  * Main game canvas - refactored to remove god-class anti-pattern.
- * Now acts as thin coordinator delegating to specialized subsystems:
- * - InputManager for input handling
- * - HudRenderer for HUD
- * - MenuSystem for menus
- * - DialogSystem for dialogs / splash / story
- * - LevelResourceManager for resource loading
- * - SniperGameController for sniper minigame
- *
- * Keeps static state for backward compatibility with GameEngine/GameWorld
- * but reduces own line count from 2135 to ~550.
- * Performance preserved: no allocations in hot loop, reuse of buffers.
+ * Now acts as thin coordinator delegating to specialized subsystems.
  */
 public class MainGameCanvas extends GameCanvas implements Runnable {
 
-    // ==================== Public UI Constants (exposed for subsystems) ====================
     public static final int UI_HEIGHT = 320;
     public static final int STATUS_BAR_HEIGHT = 32;
     public static final int HALF_UI_HEIGHT = UI_HEIGHT / 2;
@@ -27,7 +16,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             "01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
     };
 
-    // ==================== Weapon / Game State ====================
     public static WeaponManager weaponManager;
     public static int weaponSpriteFrame = 0;
 
@@ -43,12 +31,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     public static int currentLevelId = 0;
     public static int previousLevelId = -1;
-    public static int keyMappingOffset; // kept for compatibility
+    public static int keyMappingOffset;
 
-    // Made public for MenuSystem access (previously private)
     public String[] chapterMenuItems;
 
-    // Timing fields - public for subsystem access
     public long frameDeltaTime;
     public long accumulatedTime;
     public long lastFrameTime;
@@ -58,7 +44,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     public static boolean mapEnabled = false;
 
-    // ==================== Balance Constants (unchanged) ====================
     public static final int[] DAMAGE_3003 = new int[]{10, 15, 20};
     public static final int[] DAMAGE_3004 = new int[]{15, 20, 25};
     public static final int[] DAMAGE_3005 = new int[]{20, 25, 30};
@@ -88,7 +73,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] SPEED_3002 = new int[]{196608, 262144, 327680};
     public static final int[] ENEMY_STRAFE_CHANCE_DIVISOR = new int[]{4, 3, 2};
 
-    // ==================== Subsystems (composition over god-class) ====================
     private InputManager inputManager;
     private HudRenderer hudRenderer;
     private MenuSystem menuSystem;
@@ -105,7 +89,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         weaponManager = new WeaponManager();
         keyMappingOffset = Math.abs(this.getKeyCode(8)) == 53 ? 5 : Math.abs(this.getKeyCode(8));
 
-        // Initialize subsystems
         this.inputManager = new InputManager(this);
         this.hudRenderer = new HudRenderer(fontRenderer);
         this.menuSystem = new MenuSystem(fontRenderer, this);
@@ -115,10 +98,8 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         this.setFullScreenMode(true);
     }
 
-    public void sizeChanged(int width, int height) {
-    }
+    public void sizeChanged(int width, int height) {}
 
-    // ==================== Input delegation ====================
     private int translateKeyCode(int keyCode) {
         return inputManager.translateKeyCode(keyCode);
     }
@@ -131,40 +112,76 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         inputManager.handleKeyReleased(keyCode);
     }
 
-    // ==================== Rendering delegation ====================
     private void renderHUDAndWeapon(Graphics graphics) {
-        hudRenderer.renderFrameWithHud(graphics, frameCounter, weaponManager);
+        try {
+            hudRenderer.renderFrameWithHud(graphics, frameCounter, weaponManager);
+        } catch (Exception e) {
+            DebugLogger.logException("MainGameCanvas.renderHUD", e);
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("MainGameCanvas.renderHUD", e);
+        }
     }
 
-    private void drawSplash(Graphics g) { dialogSystem.drawSplash(g); }
-    private void drawGameOver(Graphics g) { dialogSystem.drawGameOver(g); }
-    private void drawPleaseWait(Graphics g) { dialogSystem.drawPleaseWait(g); }
-    private void drawMultiLineMessage(Graphics g, String msg) { dialogSystem.drawMultiLineMessage(g, msg); }
-
-    private void drawStripedBackground(Graphics g, javax.microedition.lcdui.Image bg) {
-        menuSystem.drawStripedBackground(g, bg);
+    private void drawSplash(Graphics g) {
+        try { dialogSystem.drawSplash(g); }
+        catch (Exception e) { DebugLogger.logException("drawSplash", e); }
+        catch (OutOfMemoryError e) { DebugLogger.logOutOfMemory("drawSplash", e); }
+    }
+    private void drawGameOver(Graphics g) {
+        try { dialogSystem.drawGameOver(g); }
+        catch (Exception e) { DebugLogger.logException("drawGameOver", e); }
+        catch (OutOfMemoryError e) { DebugLogger.logOutOfMemory("drawGameOver", e); }
+    }
+    private void drawPleaseWait(Graphics g) {
+        try { dialogSystem.drawPleaseWait(g); }
+        catch (Exception e) { DebugLogger.logException("drawPleaseWait", e); }
+        catch (OutOfMemoryError e) { DebugLogger.logOutOfMemory("drawPleaseWait", e); }
+    }
+    private void drawMultiLineMessage(Graphics g, String msg) {
+        try { dialogSystem.drawMultiLineMessage(g, msg); }
+        catch (Exception e) { DebugLogger.logException("drawMultiLine", e); }
+        catch (OutOfMemoryError e) { DebugLogger.logOutOfMemory("drawMultiLine", e); }
     }
 
     private int showMenuScreen(Graphics g, boolean isMain) {
-        return menuSystem.showMenuScreen(g, isMain, null);
-    }
-
-    private void showScrollingText(Graphics g, javax.microedition.lcdui.Image bg, String title, String[] content, boolean scroll) {
-        dialogSystem.showScrollingText(g, bg, title, content, scroll);
+        try {
+            return menuSystem.showMenuScreen(g, isMain, null);
+        } catch (Exception e) {
+            DebugLogger.logException("showMenuScreen", e);
+            return 4;
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("showMenuScreen", e);
+            return 4;
+        }
     }
 
     private int drawDialogOverlay(Graphics g, int dialogId) {
-        return dialogSystem.drawDialogOverlay(g, dialogId);
+        try {
+            return dialogSystem.drawDialogOverlay(g, dialogId);
+        } catch (Exception e) {
+            DebugLogger.logException("drawDialogOverlay", e);
+            return -1;
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("drawDialogOverlay", e);
+            return -1;
+        }
     }
 
     private int runMiniGameSniper(Graphics g, int level) {
-        if (sniperController == null) {
-            sniperController = new SniperGameController(this, sniperMiniGame, fontRenderer, hudRenderer.getStatusBarImage());
+        try {
+            if (sniperController == null) {
+                sniperController = new SniperGameController(this, sniperMiniGame, fontRenderer, hudRenderer.getStatusBarImage());
+            }
+            return sniperController.runSniperGame(g, level);
+        } catch (Exception e) {
+            DebugLogger.logException("runMiniGameSniper", e);
+            return -1;
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("runMiniGameSniper", e);
+            return -1;
         }
-        return sniperController.runSniperGame(g, level);
     }
 
-    // ==================== Game thread ====================
     public final void startGameThread() {
         Thread gameThread = new Thread(this);
         this.isGameRunning = true;
@@ -173,260 +190,276 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     }
 
     public void run() {
-        // Audio init
-        HelperUtils.audioManager = new AudioManager();
-        HelperUtils.audioManager.loadSound("/gamedata/sound/0.mid");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/1.amr");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/2.amr");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/3.amr");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/4.amr");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/5.amr");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/6.amr");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/7.amr");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/8.amr");
-        HelperUtils.audioManager.loadSound("/gamedata/sound/9.amr");
+        try {
+            DebugLogger.log("MainGameCanvas", "run start");
+            HelperUtils.audioManager = new AudioManager();
+            HelperUtils.audioManager.loadSound("/gamedata/sound/0.mid");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/1.amr");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/2.amr");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/3.amr");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/4.amr");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/5.amr");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/6.amr");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/7.amr");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/8.amr");
+            HelperUtils.audioManager.loadSound("/gamedata/sound/9.amr");
 
-        Graphics graphics = this.getGraphics();
-        graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
-        drawSplash(graphics);
-        initializeGameResources();
-        SaveSystem.loadSaveData();
-        SaveSystem.loadSettingsFromRMS();
-        this.areResourcesLoaded = true;
-        // Recreate sniper controller now that statusBarImage exists
-        sniperController = new SniperGameController(this, sniperMiniGame, fontRenderer, hudRenderer.getStatusBarImage());
+            Graphics graphics = this.getGraphics();
+            graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
+            DebugLogger.log("MainGameCanvas", "splash");
+            drawSplash(graphics);
+            DebugLogger.log("MainGameCanvas", "initResources");
+            initializeGameResources();
+            DebugLogger.log("MainGameCanvas", "loadSave");
+            SaveSystem.loadSaveData();
+            SaveSystem.loadSettingsFromRMS();
+            this.areResourcesLoaded = true;
+            sniperController = new SniperGameController(this, sniperMiniGame, fontRenderer, hudRenderer.getStatusBarImage());
 
-        int menuResult = showMenuScreen(graphics, true);
+            DebugLogger.log("MainGameCanvas", "show main menu");
+            int menuResult = showMenuScreen(graphics, true);
 
-        outerGameLoop:
-        while (true) {
+            outerGameLoop:
             while (true) {
-                do {
-                    if (!isGameRunning) {
+                while (true) {
+                    do {
+                        if (!isGameRunning) {
+                            isGameInitialized = true;
+                            DebugLogger.log("MainGameCanvas", "isGameRunning false exit");
+                            return;
+                        }
+                    } while (isGamePaused);
+
+                    if (menuResult == 4) {
                         isGameInitialized = true;
+                        CovertOps3D.exitApplication();
                         return;
                     }
-                } while (isGamePaused);
 
-                if (menuResult == 4) {
-                    isGameInitialized = true;
-                    CovertOps3D.exitApplication();
-                    return;
-                }
-
-                GameEngine.resetPlayerProgress();
-                if (menuResult == 66) {
-                    currentLevelId = 0;
-                    previousLevelId = -1;
-                    if ((menuResult = drawDialogOverlay(graphics, 0)) != -1) {
-                        continue;
-                    }
-                    drawPleaseWait(graphics);
-                    loadLevelResources();
-                    break;
-                }
-
-                int[] levelMap = new int[]{2, 4, 20, 5, 6, 22, 7, 9};
-                int chapterIndex = menuResult - 67;
-                currentLevelId = levelMap[chapterIndex];
-                previousLevelId = -1;
-                SaveSystem.loadGameState(chapterIndex);
-                GameEngine.levelTransitionState = 1;
-                break;
-            }
-
-            accumulatedTime = 0L;
-            lastFrameTime = 0L;
-
-            while (isGameRunning) {
-                try {
-                    if ((GameEngine.inputRun || GameEngine.inputBack || isGamePaused)
-                            && (menuResult = showMenuScreen(graphics, false)) != 32) {
+                    GameEngine.resetPlayerProgress();
+                    if (menuResult == 66) {
+                        currentLevelId = 0;
+                        previousLevelId = -1;
+                        if ((menuResult = drawDialogOverlay(graphics, 0)) != -1) {
+                            continue;
+                        }
+                        DebugLogger.log("MainGameCanvas", "load level 0");
+                        drawPleaseWait(graphics);
+                        loadLevelResources();
                         break;
                     }
 
-                    boolean needLoad = false;
+                    int[] levelMap = new int[]{2, 4, 20, 5, 6, 22, 7, 9};
+                    int chapterIndex = menuResult - 67;
+                    currentLevelId = levelMap[chapterIndex];
+                    previousLevelId = -1;
+                    SaveSystem.loadGameState(chapterIndex);
+                    GameEngine.levelTransitionState = 1;
+                    break;
+                }
 
-                    if (GameEngine.levelTransitionState == 1) {
-                        switch (currentLevelId) {
-                            case 0:
-                            case 13:
-                                currentLevelId = 0;
-                                SaveSystem.saveGameState(8);
-                                if ((menuResult = drawDialogOverlay(graphics, 9)) == -1) {
-                                    menuResult = showMenuScreen(graphics, true);
-                                }
+                accumulatedTime = 0L;
+                lastFrameTime = 0L;
+
+                while (isGameRunning) {
+                    try {
+                        if ((GameEngine.inputRun || GameEngine.inputBack || isGamePaused)
+                                && (menuResult = showMenuScreen(graphics, false)) != 32) {
+                            break;
+                        }
+
+                        boolean needLoad = false;
+
+                        if (GameEngine.levelTransitionState == 1) {
+                            switch (currentLevelId) {
+                                case 0:
+                                case 13:
+                                    currentLevelId = 0;
+                                    SaveSystem.saveGameState(8);
+                                    if ((menuResult = drawDialogOverlay(graphics, 9)) == -1) {
+                                        menuResult = showMenuScreen(graphics, true);
+                                    }
+                                    continue outerGameLoop;
+                                case 1: case 3: case 8: case 10: case 11: case 12:
+                                case 14: case 15: case 16: case 17: case 18: case 19: case 21:
+                                    break;
+                                case 2:
+                                    SaveSystem.saveGameState(0);
+                                    if ((menuResult = drawDialogOverlay(graphics, 1)) != -1) continue outerGameLoop;
+                                    break;
+                                case 4:
+                                case 20:
+                                    if (currentLevelId == 4) {
+                                        SaveSystem.saveGameState(1);
+                                        if ((menuResult = drawDialogOverlay(graphics, 2)) != -1) continue outerGameLoop;
+                                        if ((menuResult = runMiniGameSniper(graphics, 0)) == -2) {
+                                            drawGameOver(graphics);
+                                            menuResult = showMenuScreen(graphics, true);
+                                            continue outerGameLoop;
+                                        }
+                                        if (menuResult != -1) continue outerGameLoop;
+                                    } else {
+                                        currentLevelId = 4;
+                                    }
+                                    SaveSystem.saveGameState(2);
+                                    if ((menuResult = drawDialogOverlay(graphics, 3)) != -1) continue outerGameLoop;
+                                    break;
+                                case 5:
+                                    SaveSystem.saveGameState(3);
+                                    if ((menuResult = drawDialogOverlay(graphics, 4)) != -1) continue outerGameLoop;
+                                    break;
+                                case 6:
+                                case 22:
+                                    if (currentLevelId == 6) {
+                                        SaveSystem.saveGameState(4);
+                                        if ((menuResult = drawDialogOverlay(graphics, 5)) != -1) continue outerGameLoop;
+                                        if ((menuResult = runMiniGameSniper(graphics, 1)) == -2) {
+                                            drawGameOver(graphics);
+                                            menuResult = showMenuScreen(graphics, true);
+                                            continue outerGameLoop;
+                                        }
+                                        if (menuResult != -1) continue outerGameLoop;
+                                    } else {
+                                        currentLevelId = 6;
+                                    }
+                                    SaveSystem.saveGameState(5);
+                                    if ((menuResult = drawDialogOverlay(graphics, 6)) != -1) continue outerGameLoop;
+                                    break;
+                                case 7:
+                                    SaveSystem.saveGameState(6);
+                                    if ((menuResult = drawDialogOverlay(graphics, 7)) != -1) continue outerGameLoop;
+                                    break;
+                                case 9:
+                                    SaveSystem.saveGameState(7);
+                                    if ((menuResult = drawDialogOverlay(graphics, 8)) != -1) continue outerGameLoop;
+                                    break;
+                            }
+                            needLoad = true;
+                        } else if (GameEngine.levelTransitionState == -1) {
+                            needLoad = true;
+                        }
+
+                        if (needLoad) {
+                            DebugLogger.log("MainGameCanvas", "needLoad levelId=" + currentLevelId);
+                            drawPleaseWait(graphics);
+                            loadLevelResources();
+                            DebugLogger.log("MainGameCanvas", "level loaded ok");
+                        }
+
+                        long currentTime = System.currentTimeMillis();
+                        frameDeltaTime = currentTime - lastFrameTime;
+                        lastFrameTime = currentTime;
+                        accumulatedTime += frameDeltaTime;
+                        if (accumulatedTime > 600L) accumulatedTime = 600L;
+
+                        while (accumulatedTime >= 50L) {
+                            ++frameCounter;
+                            if (gameLoopTick()) {
+                                GameEngine.damageFlash = false;
+                                renderHUDAndWeapon(graphics);
+                                flushScreenBuffer();
+                                drawGameOver(graphics);
+                                menuResult = showMenuScreen(graphics, true);
                                 continue outerGameLoop;
-                            case 1: case 3: case 8: case 10: case 11: case 12:
-                            case 14: case 15: case 16: case 17: case 18: case 19: case 21:
-                                break;
-                            case 2:
-                                SaveSystem.saveGameState(0);
-                                if ((menuResult = drawDialogOverlay(graphics, 1)) != -1) {
-                                    continue outerGameLoop;
-                                }
-                                break;
-                            case 4:
-                            case 20:
-                                if (currentLevelId == 4) {
-                                    SaveSystem.saveGameState(1);
-                                    if ((menuResult = drawDialogOverlay(graphics, 2)) != -1) {
-                                        continue outerGameLoop;
-                                    }
-                                    if ((menuResult = runMiniGameSniper(graphics, 0)) == -2) {
-                                        drawGameOver(graphics);
-                                        menuResult = showMenuScreen(graphics, true);
-                                        continue outerGameLoop;
-                                    }
-                                    if (menuResult != -1) {
-                                        continue outerGameLoop;
-                                    }
-                                } else {
-                                    currentLevelId = 4;
-                                }
-                                SaveSystem.saveGameState(2);
-                                if ((menuResult = drawDialogOverlay(graphics, 3)) != -1) {
-                                    continue outerGameLoop;
-                                }
-                                break;
-                            case 5:
-                                SaveSystem.saveGameState(3);
-                                if ((menuResult = drawDialogOverlay(graphics, 4)) != -1) {
-                                    continue outerGameLoop;
-                                }
-                                break;
-                            case 6:
-                            case 22:
-                                if (currentLevelId == 6) {
-                                    SaveSystem.saveGameState(4);
-                                    if ((menuResult = drawDialogOverlay(graphics, 5)) != -1) {
-                                        continue outerGameLoop;
-                                    }
-                                    if ((menuResult = runMiniGameSniper(graphics, 1)) == -2) {
-                                        drawGameOver(graphics);
-                                        menuResult = showMenuScreen(graphics, true);
-                                        continue outerGameLoop;
-                                    }
-                                    if (menuResult != -1) {
-                                        continue outerGameLoop;
-                                    }
-                                } else {
-                                    currentLevelId = 6;
-                                }
-                                SaveSystem.saveGameState(5);
-                                if ((menuResult = drawDialogOverlay(graphics, 6)) != -1) {
-                                    continue outerGameLoop;
-                                }
-                                break;
-                            case 7:
-                                SaveSystem.saveGameState(6);
-                                if ((menuResult = drawDialogOverlay(graphics, 7)) != -1) {
-                                    continue outerGameLoop;
-                                }
-                                break;
-                            case 9:
-                                SaveSystem.saveGameState(7);
-                                if ((menuResult = drawDialogOverlay(graphics, 8)) != -1) {
-                                    continue outerGameLoop;
-                                }
-                                break;
+                            }
+                            accumulatedTime -= 50L;
                         }
-                        needLoad = true;
-                    } else if (GameEngine.levelTransitionState == -1) {
-                        needLoad = true;
-                    }
 
-                    if (needLoad) {
-                        drawPleaseWait(graphics);
-                        loadLevelResources();
-                    }
-
-                    long currentTime = System.currentTimeMillis();
-                    frameDeltaTime = currentTime - lastFrameTime;
-                    lastFrameTime = currentTime;
-                    accumulatedTime += frameDeltaTime;
-                    if (accumulatedTime > 600L) accumulatedTime = 600L;
-
-                    while (accumulatedTime >= 50L) {
-                        ++frameCounter;
-                        if (gameLoopTick()) {
-                            GameEngine.damageFlash = false;
-                            renderHUDAndWeapon(graphics);
-                            flushScreenBuffer();
-                            drawGameOver(graphics);
-                            menuResult = showMenuScreen(graphics, true);
-                            continue outerGameLoop;
+                        renderHUDAndWeapon(graphics);
+                        if (GameEngine.messageTimer > 0) {
+                            drawMultiLineMessage(graphics, GameEngine.messageText);
                         }
-                        accumulatedTime -= 50L;
-                    }
 
-                    renderHUDAndWeapon(graphics);
-                    if (GameEngine.messageTimer > 0) {
-                        drawMultiLineMessage(graphics, GameEngine.messageText);
-                    }
+                        // Draw last error on top for debugging
+                        DebugLogger.drawLastError(graphics, fontRenderer);
 
-                    flushScreenBuffer();
-                    HelperUtils.yieldToOtherThreads();
-                } catch (Exception e) {
-                } catch (OutOfMemoryError e) {
+                        flushScreenBuffer();
+                        HelperUtils.yieldToOtherThreads();
+                    } catch (Exception innerEx) {
+                        DebugLogger.logException("MainGameCanvas.innerLoop", innerEx);
+                    } catch (OutOfMemoryError innerOom) {
+                        DebugLogger.logOutOfMemory("MainGameCanvas.innerLoop", innerOom);
+                    }
                 }
             }
+        } catch (Exception ex) {
+            DebugLogger.logException("MainGameCanvas.run", ex);
+        } catch (OutOfMemoryError oom) {
+            DebugLogger.logOutOfMemory("MainGameCanvas.run", oom);
         }
+        DebugLogger.log("MainGameCanvas", "run exit - isGameInitialized=true");
+        isGameInitialized = true;
     }
 
-    // ==================== Game logic tick (unchanged logic, extracted) ====================
     public final boolean gameLoopTick() {
-        if (GameEngine.updateGameLogic()) {
-            return true;
-        }
-
-        weaponManager.update(GameEngine.ammoCounts, GameEngine.weaponsAvailable);
-
-        if (GameEngine.selectNextWeapon && !weaponManager.isSwitchAnimationActive()) {
-            GameEngine.selectNextWeapon = false;
-            weaponManager.switchToNext(GameEngine.ammoCounts, GameEngine.weaponsAvailable);
-        }
-
-        GameEngine.currentWeapon = weaponManager.getCurrentWeaponId();
-        GameEngine.weaponSwitchAnimationActive = weaponManager.isSwitchAnimationActive();
-        GameEngine.weaponAnimationState = weaponManager.getAnimationState();
-        GameEngine.weaponCooldownTimer = weaponManager.getCooldownTimer();
-        weaponSpriteFrame = weaponManager.getSpriteFrame();
-
-        if (GameEngine.inputFire && !weaponManager.isSwitchAnimationActive()) {
-            int sectorType = 0;
-            if (GameEngine.currentSector != null) {
-                sectorType = GameEngine.currentSector.getSectorType();
+        try {
+            if (GameEngine.updateGameLogic()) {
+                return true;
             }
-            weaponManager.fire(GameEngine.ammoCounts, GameEngine.weaponsAvailable,
-                    GameEngine.difficultyLevel, currentLevelId, sectorType);
-        } else {
-            weaponManager.releaseFire(GameEngine.ammoCounts, GameEngine.weaponsAvailable,
-                    GameEngine.difficultyLevel);
-        }
 
-        Weapon currentWeapon = weaponManager.getCurrentWeapon();
-        if (!currentWeapon.getIsAutomatic() || GameEngine.inputStrafe) {
-            GameEngine.inputFire = false;
-        }
+            weaponManager.update(GameEngine.ammoCounts, GameEngine.weaponsAvailable);
 
-        return false;
+            if (GameEngine.selectNextWeapon && !weaponManager.isSwitchAnimationActive()) {
+                GameEngine.selectNextWeapon = false;
+                weaponManager.switchToNext(GameEngine.ammoCounts, GameEngine.weaponsAvailable);
+            }
+
+            GameEngine.currentWeapon = weaponManager.getCurrentWeaponId();
+            GameEngine.weaponSwitchAnimationActive = weaponManager.isSwitchAnimationActive();
+            GameEngine.weaponAnimationState = weaponManager.getAnimationState();
+            GameEngine.weaponCooldownTimer = weaponManager.getCooldownTimer();
+            weaponSpriteFrame = weaponManager.getSpriteFrame();
+
+            if (GameEngine.inputFire && !weaponManager.isSwitchAnimationActive()) {
+                int sectorType = 0;
+                if (GameEngine.currentSector != null) {
+                    sectorType = GameEngine.currentSector.getSectorType();
+                }
+                weaponManager.fire(GameEngine.ammoCounts, GameEngine.weaponsAvailable,
+                        GameEngine.difficultyLevel, currentLevelId, sectorType);
+            } else {
+                weaponManager.releaseFire(GameEngine.ammoCounts, GameEngine.weaponsAvailable,
+                        GameEngine.difficultyLevel);
+            }
+
+            Weapon currentWeapon = weaponManager.getCurrentWeapon();
+            if (!currentWeapon.getIsAutomatic() || GameEngine.inputStrafe) {
+                GameEngine.inputFire = false;
+            }
+
+            return false;
+        } catch (Exception e) {
+            DebugLogger.logException("gameLoopTick", e);
+            return false;
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("gameLoopTick", e);
+            return false;
+        }
     }
 
-    // ==================== Resource handling ====================
     private void initializeGameResources() {
-        levelResourceManager.initializeGameResources(hudRenderer);
-        // refresh sniper controller image reference after init
-        if (hudRenderer.getStatusBarImage() != null) {
-            sniperController = new SniperGameController(this, sniperMiniGame, fontRenderer, hudRenderer.getStatusBarImage());
+        try {
+            levelResourceManager.initializeGameResources(hudRenderer);
+            if (hudRenderer.getStatusBarImage() != null) {
+                sniperController = new SniperGameController(this, sniperMiniGame, fontRenderer, hudRenderer.getStatusBarImage());
+            }
+        } catch (Exception e) {
+            DebugLogger.logException("initializeGameResources", e);
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("initializeGameResources", e);
         }
     }
 
     private void loadLevelResources() {
-        levelResourceManager.loadLevelResources();
+        try {
+            levelResourceManager.loadLevelResources();
+        } catch (Exception e) {
+            DebugLogger.logException("loadLevelResources", e);
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("loadLevelResources", e);
+        }
     }
 
-    // ==================== Lifecycle ====================
     public final void stopGame() {
         if (!isGamePaused) {
             isGamePaused = true;
@@ -453,7 +486,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
         this.flushGraphics();
     }
 
-    // Expose flushGraphics for subsystems if needed
     public void flushGraphicsPublic() {
         this.flushGraphics();
     }

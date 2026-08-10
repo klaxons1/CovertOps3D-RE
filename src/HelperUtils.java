@@ -43,8 +43,10 @@ public class HelperUtils {
             try {
                 CovertOps3D.display.vibrate(duration);
             } catch (Exception e) {
-            } catch (OutOfMemoryError e) {
-            }
+            DebugLogger.logException("HelperUtils.java", e);
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("HelperUtils.java", e);
+        }
         }
     }
 

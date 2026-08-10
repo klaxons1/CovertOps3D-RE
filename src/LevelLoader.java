@@ -257,8 +257,10 @@ public final class LevelLoader {
 
             dataIn.close();
         } catch (Exception loadEx) {
+            DebugLogger.logException("LevelLoader.loadMapData", loadEx);
             return false;
         } catch (OutOfMemoryError oom) {
+            DebugLogger.logOutOfMemory("LevelLoader.loadMapData", oom);
             return false;
         }
 
@@ -546,9 +548,10 @@ public final class LevelLoader {
             }
 
         } catch (Exception ex) {
-            // Keep original silent failure semantics
+            DebugLogger.logException("LevelLoader.loadGameAssets", ex);
             return false;
         } catch (OutOfMemoryError oom) {
+            DebugLogger.logOutOfMemory("LevelLoader.loadGameAssets", oom);
             return false;
         }
 

@@ -62,6 +62,7 @@ public class Weapon {
                 try {
                     sprites[i] = Image.createImage(spritePaths[i]);
                 } catch (Exception e) {
+                    DebugLogger.logException("Weapon.loadSprites "+name, e);
                     sprites[i] = null;
                 }
             }

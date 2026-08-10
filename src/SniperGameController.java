@@ -63,7 +63,9 @@ public final class SniperGameController {
                 }
             }
         } catch (Exception e) {
+            DebugLogger.logException("SniperGameController.java", e);
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("SniperGameController.java", e);
         }
         return result;
     }
@@ -354,7 +356,9 @@ public final class SniperGameController {
                 HelperUtils.yieldToOtherThreads();
             }
         } catch (Exception e) {
+            DebugLogger.logException("SniperGameController.java", e);
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("SniperGameController.java", e);
         }
         return -1;
     }

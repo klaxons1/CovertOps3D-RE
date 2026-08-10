@@ -22,6 +22,7 @@ public final class LevelResourceManager {
 
     public void initializeGameResources(HudRenderer hudRenderer) {
         try {
+            DebugLogger.log("LevelResourceManager", "initializeGameResources start");
             Image statusBar = Image.createImage("/gamedata/sprites/bar.png");
             Image crosshair = Image.createImage("/gamedata/sprites/aim.png");
             hudRenderer.setStatusBarImage(statusBar);
@@ -32,8 +33,11 @@ public final class LevelResourceManager {
 
             MathUtils.initializeMathTables();
             GameEngine.initializeEngine();
+            DebugLogger.log("LevelResourceManager", "initializeGameResources ok");
         } catch (Exception e) {
+            DebugLogger.logException("LevelResourceManager.init", e);
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("LevelResourceManager.init", e);
         }
     }
 
@@ -45,8 +49,12 @@ public final class LevelResourceManager {
                 if (MainGameCanvas.previousLevelId > -1) {
                     cachedStaticObjects = LevelLoader.gameWorld.staticObjects;
                 }
-                if (!LevelLoader.loadMapData(fullLevelPath, nextLevelObjects == null)) {
-                    CovertOps3D.exitApplication();
+                boolean mapLoaded = LevelLoader.loadMapData(fullLevelPath, nextLevelObjects == null);
+                if (!mapLoaded) {
+                    DebugLogger.log("LevelResourceManager", "loadMapData FAILED path=" + fullLevelPath);
+                    // Don't exit immediately, keep logging visible for debugging
+                    // CovertOps3D.exitApplication();
+                    return;
                 }
                 if (nextLevelObjects != null) {
                     LevelLoader.gameWorld.staticObjects = nextLevelObjects;
@@ -57,8 +65,10 @@ public final class LevelResourceManager {
                 }
             } else {
                 nextLevelObjects = LevelLoader.gameWorld.staticObjects;
-                if (!LevelLoader.loadMapData(fullLevelPath, cachedStaticObjects == null)) {
-                    CovertOps3D.exitApplication();
+                boolean mapLoaded = LevelLoader.loadMapData(fullLevelPath, cachedStaticObjects == null);
+                if (!mapLoaded) {
+                    DebugLogger.log("LevelResourceManager", "loadMapData FAILED backtrack path=" + fullLevelPath);
+                    return;
                 }
                 if (cachedStaticObjects != null) {
                     LevelLoader.gameWorld.staticObjects = cachedStaticObjects;
@@ -229,14 +239,19 @@ public final class LevelResourceManager {
 
             HelperUtils.freeMemory();
 
-            if (!LevelLoader.loadGameAssets("/gamedata/textures/tx", 4, "/gamedata/textures/sp", 4)) {
-                CovertOps3D.exitApplication();
+            boolean assetsLoaded = LevelLoader.loadGameAssets("/gamedata/textures/tx", 4, "/gamedata/textures/sp", 4);
+            if (!assetsLoaded) {
+                DebugLogger.log("LevelResourceManager", "loadGameAssets FAILED");
+                return;
             }
 
             GameEngine.changeSkyboxTexture((byte)25);
             HelperUtils.freeMemory();
+            DebugLogger.log("LevelResourceManager", "loadLevelResources ok id=" + MainGameCanvas.currentLevelId);
         } catch (Exception e) {
+            DebugLogger.logException("LevelResourceManager.loadLevel", e);
         } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("LevelResourceManager.loadLevel", e);
         }
     }
 }
