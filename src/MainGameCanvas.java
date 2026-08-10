@@ -370,9 +370,6 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                             drawMultiLineMessage(graphics, GameEngine.messageText);
                         }
 
-                        // Draw last error on top for debugging
-                        DebugLogger.drawLastError(graphics, fontRenderer);
-
                         flushScreenBuffer();
                         HelperUtils.yieldToOtherThreads();
                     } catch (Exception innerEx) {
