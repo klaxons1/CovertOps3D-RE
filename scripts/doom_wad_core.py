@@ -38,6 +38,12 @@ DOOM_DOOR_SPECIALS = (1, 2, 3, 4, 16, 26, 27, 28, 31, 32, 33, 34)
 
 # First playable mapping: use the existing enemy AI categories while drawing
 # one genuine Doom billboard per monster family through sprite.<slot>.
+# Native Doom patches describe original 56-ish unit monsters. The inherited
+# Covert billboard projection is tuned for much larger textures, so normalize
+# Doom actors to this physical art height during conversion instead of baking a
+# per-frame scale cost into the Java ME renderer.
+DOOM_RUNTIME_SPRITE_HEIGHT = 96
+
 DOOM_ENEMIES = {
     3001: dict(engine_type=3001, sprite='TROOA1', label='imp'),
     3004: dict(engine_type=3004, sprite='POSSA1', label='zombieman'),
@@ -372,6 +378,7 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
         material_lines.append('sprite.%s=%d' % (info['sprite'], slot))
     report['enemies'] = sum(1 for thing in doom_map.things if thing['type'] in enemy_sprite_slots)
     report['enemy_sprite_materials'] = len(enemy_sprite_slots)
+    report['enemy_sprite_height'] = DOOM_RUNTIME_SPRITE_HEIGHT
 
     _write_text(os.path.join(package_dir, 'materials.c3m'), '\n'.join(manifest_lines) + '\n')
     _write_text(os.path.join(package_dir, 'doom_materials.ini'), '\n'.join(material_lines) + '\n')
@@ -445,7 +452,8 @@ def _export_runtime_enemy_sprites(wad, palette, package_dir):
         except Exception as error:
             raise DoomWadError('enemy sprite %s: %s' % (info['sprite'], error))
         filename = '%02d_%s.bmp' % (slot, _safe_name(info['sprite']))
-        _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels)
+        _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
+                          DOOM_RUNTIME_SPRITE_HEIGHT)
         slots[doom_type] = slot
         slot += 1
     return slots
@@ -594,7 +602,13 @@ def _write_world_bmp(path, pixels, source_width, source_height, target_width, ta
     TEXTURES.write_bmp4(path, target_width, target_height, palette, indices)
 
 
-def _write_sprite_bmp(path, width, height, pixels):
+def _write_sprite_bmp(path, width, height, pixels, target_height=0):
+    if target_height > 0 and height != target_height:
+        target_width = max(1, (width * target_height + (height >> 1)) // height)
+        pixels = TEXTURES.resize_rgba(pixels, width, height, target_width, target_height,
+                                      fit=False)
+        width = target_width
+        height = target_height
     opaque = [(red, green, blue) for red, green, blue, alpha in pixels if alpha >= 128]
     if not opaque:
         opaque = [(0, 0, 0)]

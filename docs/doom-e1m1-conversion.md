@@ -64,11 +64,13 @@ sector остаётся закрытым, а клавиша `1` поднимае
 делает Doom stairs проходимыми в CovertOps collision model.
 
 E1M1 imp, zombieman и shotgun guy переносятся как существующие CovertOps AI
-типы с собственными Doom billboard BMP4 (`sprite.<slot>`). Для стабильного
-первого импорта один Doom frame повторяется во всех AI frame indexes; обычный
-combat/movement уже работает через `GameEngine`. Doom elevators, switches,
-keys, exit scripting и остальные thing остаются metadata в `doom_things.ini`
-до отдельного этапа точного Doom gameplay.
+типы с собственными Doom billboard BMP4 (`sprite.<slot>`). Их исходные Doom
+patches масштабируются до 96px высоты при конвертации: это соответствует
+физическому масштабу inherited renderer и не требует per-frame масштабирования
+на Java ME. Для стабильного первого импорта один Doom frame повторяется во
+всех AI frame indexes; обычный combat/movement уже работает через `GameEngine`.
+Doom elevators, switches, keys, exit scripting и остальные thing остаются
+metadata в `doom_things.ini` до отдельного этапа точного Doom gameplay.
 
 `--sprites used|all` по-прежнему экспортирует дополнительные quantized Doom
 patch BMP4 для редактора и будущей покадровой анимации, но не нужен для уже

@@ -56,7 +56,7 @@ def main():
         for key in sprite_keys:
             sprite = open(os.path.join(directory, materials[key]), 'rb').read()
             width, height, planes, bpp = struct.unpack_from('<iiHH', sprite, 18)
-            assert 1 <= width <= 255 and 1 <= height <= 255
+            assert 1 <= width <= 255 and height == DOOM.DOOM_RUNTIME_SPRITE_HEIGHT
             assert (planes, bpp) == (1, 4)
         source = C3.load_source(os.path.join(directory, 'level.c3d.json'))
         assert len(source.level.objects) == 33

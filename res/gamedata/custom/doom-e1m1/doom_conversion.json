@@ -7,6 +7,7 @@
   "c3b": "level.c3b",
   "doors": 8,
   "enemies": 29,
+  "enemy_sprite_height": 96,
   "enemy_sprite_materials": 3,
   "flats": 21,
   "height_scale": 0.5,
