@@ -219,7 +219,7 @@ public final class JavaMeSmokeTest {
         assertTrue("Doom E1M1 enemy sprite texture", LevelLoader.getTexture((byte)-1) != null
                 && LevelLoader.getTexture((byte)-1).pixelData != null);
         assertTrue("Doom E1M1 enemy sprite frame", world.staticObjects[0]
-                .getCurrentUpperBodySpriteId() != 0);
+                .getCurrentLowerBodySpriteId() != 0);
         assertTrue("Doom E1M1 flat texture", world.sectors[0].ceilingTexture != null
                 && world.sectors[0].ceilingTexture.flatColors != null);
         assertTrue("Doom E1M1 spawn sector", world.getSectorDataAtPoint(

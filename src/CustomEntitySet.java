@@ -109,7 +109,11 @@ public final class CustomEntitySet {
         if (spriteSlot <= 0) return;
         byte textureId = (byte)-spriteSlot;
         for (int frame = 0; frame < 7; ++frame) {
-            object.addSpriteFrame(textureId, (byte)0);
+            // Floor billboards use the lower-body projection path. Its
+            // rounding is stable for small Doom patch dimensions; the upper
+            // path intentionally subtracts a half-pixel and can become -1 at
+            // a distance, which made the custom enemy disappear.
+            object.addSpriteFrame((byte)0, textureId);
         }
     }
 

@@ -223,7 +223,9 @@ public final class CustomLevelLoader {
             if (pvsByteCount != expectedPvsBytes) throw new IOException("Bad C3B PVS size");
             byte[] pvs = new byte[pvsByteCount];
             input.readFully(pvs, 0, pvsByteCount);
-            applyVisibility(sectors, pvs);
+            int visiblePairs = applyVisibility(sectors, pvs);
+            DebugLogger.log("CustomLevelLoader", "C3B PVS visible=" + visiblePairs
+                    + "/" + (sectorCount * sectorCount));
 
             LevelLoader.finishCustomMapLoad(world);
             return true;
@@ -307,9 +309,14 @@ public final class CustomLevelLoader {
         return 0x8000 | leaf;
     }
 
-    /** C3B stores natural from->to visibility; current runtime stores inverse to->from flags. */
-    private static void applyVisibility(SectorData[] sectors, byte[] pvs) {
+    /**
+     * C3B stores natural from->to visibility; current runtime stores inverse
+     * to->from flags. Returns the count for one load-time diagnostic, which is
+     * useful when distinguishing actual portal artifacts from PVS culling.
+     */
+    private static int applyVisibility(SectorData[] sectors, byte[] pvs) {
         int sectorCount = sectors.length;
+        int visiblePairs = 0;
         for (int to = 0; to < sectorCount; ++to) {
             sectors[to].visitedFlags = new boolean[sectorCount];
         }
@@ -317,9 +324,11 @@ public final class CustomLevelLoader {
             for (int to = 0; to < sectorCount; ++to) {
                 int bit = from * sectorCount + to;
                 boolean visible = (pvs[bit >> 3] & (1 << (bit & 7))) != 0;
+                if (visible) ++visiblePairs;
                 sectors[to].visitedFlags[from] = !visible;
             }
         }
+        return visiblePairs;
     }
 
     private static String resolvePath(String levelPath, String relativePath) {

@@ -701,6 +701,14 @@ public class PortalRenderer {
      */
     private static void drawSprite(Texture texture, int lightLevel, int screenX, int screenY,
                                    int depth, int spriteWidth, int spriteHeight) {
+        // Small custom billboards can quantize below one screen pixel at a
+        // distance. The legacy formulas may then produce -1 dimensions, and
+        // spriteWidth + 1 used to divide by zero below. Dropping a sub-pixel
+        // sprite is both visually correct and keeps one malformed/far enemy
+        // from aborting the complete HUD/world frame.
+        if (texture == null || spriteWidth <= 0 || spriteHeight <= 0) {
+            return;
+        }
 
         // Apply horizontal offset
         if (texture.horizontalOffset > 0) {
