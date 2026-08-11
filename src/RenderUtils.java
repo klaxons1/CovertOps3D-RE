@@ -152,7 +152,10 @@ public final class RenderUtils {
         int viewportHeight = PortalRenderer.VIEWPORT_HEIGHT;
         boolean texturedFlats = SaveSystem.texturedFlatsEnabled != 0;
 
-        // Render floor spans (scanlines 0 to halfScreenHeight-1)
+        // Legacy naming is vertically inverted: these upper screen spans are
+        // the physical ceiling but use SectorData.floorTexture. Keep that
+        // convention here for stock maps; CustomLevelLoader adapts C3D fields
+        // once while loading instead of paying any cost per frame.
         for (int scanline = 0; scanline < halfViewportHeight; ++scanline) {
             currentSpan = this.renderSpans[scanline];
 
@@ -184,7 +187,8 @@ public final class RenderUtils {
             }
         }
 
-        // Render ceiling spans (scanlines halfScreenHeight to screenHeight-1)
+        // Likewise, these lower physical-floor spans use ceilingTexture in
+        // the inherited renderer data layout.
         for (int scanline = halfViewportHeight; scanline < viewportHeight; ++scanline) {
             currentSpan = this.renderSpans[scanline];
 

@@ -26,6 +26,7 @@ public final class JavaMeSmokeTest {
         testPaletteLighting();
         testLanguageSwitch();
         testExternalMaterials();
+        testExternalEntities();
         testC3BLevel();
         testC3BFrameRenders();
         testRendererFastPaths();
@@ -133,6 +134,11 @@ public final class JavaMeSmokeTest {
         materials.installSkyTexture();
     }
 
+    private static void testExternalEntities() throws Exception {
+        CustomEntitySet entities = CustomEntitySet.load("/gamedata/custom/demo/entities.ini");
+        assertEquals("custom entity count", 1, entities.getEntityCount());
+    }
+
     private static void testC3BLevel() {
         MathUtils.initializeMathTables();
         assertTrue("C3B level load", CustomLevelLoader.load(
@@ -141,9 +147,17 @@ public final class JavaMeSmokeTest {
         assertTrue("C3B world", world != null && world.vertices.length == 4
                 && world.bspNodes.length == 1 && world.bspSectors.length == 2);
         world.initializeWorld();
+        assertTrue("C3B external spawn", world.worldOrigin != null
+                && world.worldOrigin.x == 0 && world.worldOrigin.z == 0);
+        assertEquals("C3B external static objects", 0, world.staticObjects.length);
         assertTrue("C3B wall material", LevelLoader.getTexture((byte)1).width == 64);
-        assertTrue("C3B flat material", world.sectors[0].floorTexture != null
-                && world.sectors[0].floorTexture.flatColors != null);
+        // PortalRenderer's inherited field names are vertically inverted.
+        // CustomLevelLoader adapts exactly once so C3D floor material renders
+        // below the horizon and C3D ceiling sky renders above it.
+        assertTrue("C3B floor material", world.sectors[0].ceilingTexture != null
+                && world.sectors[0].ceilingTexture.flatColors != null);
+        assertTrue("C3B ceiling sky", world.sectors[0].floorTexture == null
+                && world.sectors[0].floorTextureId == 51);
         assertTrue("C3B explicit leaf sector", world.getRootBSPNode()
                 .findSectorAtPoint(0, 0) == world.sectors[0]);
     }

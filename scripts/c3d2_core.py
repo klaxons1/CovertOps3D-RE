@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 """C3D2 custom-level source and C3B runtime compiler.
 
-The editor-facing C3D source is JSON and intentionally contains only authored
-geometry/material references. BSP, leaves, segments and natural PVS are
-compiled deterministically into C3B with the pure-Python Doom-style builder
+The editor-facing C3D source is JSON and intentionally contains authored
+geometry/material references; editable entity placement lives in a companion
+UTF-8 INI. BSP, leaves, segments and natural PVS are compiled deterministically
+into C3B with the pure-Python Doom-style builder
 from co3d_level_core. No shapely dependency is required.
 
 Usage:
@@ -21,18 +22,28 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import co3d_level_core as LEGACY
+import c3d2_entities as ENTITIES
 
 MAGIC = b'C3B1'
 VERSION = 1
 SOURCE_FORMAT = 'C3D2-SOURCE-1'
-FLAG_CEILING_SKY = 1
-FLAG_FLOOR_SKY = 2
+
+# C3B header flags.  The v1 header reserved this byte specifically so a
+# package can evolve without making geometry depend on editor-only data.
+HEADER_FLAG_EXTERNAL_ENTITIES = 1
+
+# Per-sector flags, stored in the sector record rather than in the header.
+SECTOR_FLAG_CEILING_SKY = 1
+SECTOR_FLAG_FLOOR_SKY = 2
 
 
 class C3DDocument(object):
-    def __init__(self, level=None, materials='materials.c3m'):
+    def __init__(self, level=None, materials='materials.c3m', entities=None):
         self.level = level if level is not None else LEGACY.Level()
         self.materials = materials
+        # None means a pre-sidecar C3D source with inline legacy objects.
+        # New documents always use a relative INI sidecar.
+        self.entities = entities
 
 
 def new_document():
@@ -51,9 +62,12 @@ def new_document():
         lv.surfaces.append(dict(ox=0, oy=0, upper=1, lower=1, main=1, sector=0))
         lv.walls.append(dict(sv=edge[0], ev=edge[1], flags=1, type=0,
                              special=0, front=i, back=-1))
+    # Entity placement deliberately stays outside geometry JSON/C3B.  Keep the
+    # records in Level while editing so preview/BSP helpers can still use them,
+    # then write them to entities.ini when creating or saving a package.
     lv.objects.append(dict(x=0, z=0, angle=0, type=1, param=0))
     lv.pvs = [bytearray(1)]
-    return C3DDocument(lv)
+    return C3DDocument(lv, entities='entities.ini')
 
 
 def load_source(path):
@@ -100,14 +114,24 @@ def load_source(path):
             tag=_int(sector, 'tag', 0),
             type=_int(sector, 'type', 0)))
 
-    lv.objects = []
-    for obj in source.get('objects', []):
-        lv.objects.append(dict(x=_int(obj, 'x'), z=_int(obj, 'z'),
-                               angle=_int(obj, 'angle', 0),
-                               type=_int(obj, 'type'), param=_int(obj, 'param', 0)))
+    # New C3D sources keep entity coordinates in their own INI.  Retain the
+    # old inline JSON object reader only as a migration path for early C3D1
+    # experiments; its C3B output remains readable by the runtime.
+    entity_path = source.get('entities')
+    if entity_path is not None:
+        if 'objects' in source:
+            raise ValueError('C3D cannot contain both entities and inline objects')
+        entity_path = _relative_path(entity_path, 'entities')
+        lv.objects = ENTITIES.load_entities(os.path.join(os.path.dirname(path), entity_path))
+    else:
+        lv.objects = []
+        for obj in source.get('objects', []):
+            lv.objects.append(dict(x=_int(obj, 'x'), z=_int(obj, 'z'),
+                                   angle=_int(obj, 'angle', 0),
+                                   type=_int(obj, 'type'), param=_int(obj, 'param', 0)))
 
     _validate_authored_level(lv)
-    return C3DDocument(lv, source.get('materials', 'materials.c3m'))
+    return C3DDocument(lv, source.get('materials', 'materials.c3m'), entity_path)
 
 
 def dump_source(document, path):
@@ -133,9 +157,13 @@ def dump_source(document, path):
                for w in lv.walls],
         surfaces=[dict(offset=[s['ox'], s['oy']], upper=s['upper'], lower=s['lower'],
                        main=s['main'], sector=s['sector']) for s in lv.surfaces],
-        sectors=sectors,
-        objects=[dict(x=o['x'], z=o['z'], angle=o['angle'], type=o['type'],
-                      param=o['param']) for o in lv.objects])
+        sectors=sectors)
+    if document.entities is None:
+        # Compatibility for an early source that has not yet been migrated.
+        source['objects'] = [dict(x=o['x'], z=o['z'], angle=o['angle'], type=o['type'],
+                                  param=o['param']) for o in lv.objects]
+    else:
+        source['entities'] = _relative_path(document.entities, 'entities')
     with open(path, 'w', encoding='utf-8') as stream:
         json.dump(source, stream, ensure_ascii=False, indent=2, sort_keys=True)
         stream.write('\n')
@@ -153,26 +181,39 @@ def compile_source(source_path, output_path=None):
             output_path = source_path[:-9] + '.c3b'
         else:
             output_path = source_path + '.c3b'
-    dump_c3b(level, document.materials, output_path)
+    dump_c3b(level, document.materials, output_path, document.entities)
     return output_path, report
 
 
-def dump_c3b(level, materials_path, output_path):
+def dump_c3b(level, materials_path, output_path, entities_path=None):
+    """Writes C3B geometry; entities_path moves placement records into INI."""
     _validate_compiled_level(level)
     material_bytes = materials_path.encode('utf-8')
     if len(material_bytes) > 65535:
         raise ValueError('material path слишком длинный')
 
+    external_entities = entities_path is not None
+    entity_bytes = b''
+    if external_entities:
+        entities_path = _relative_path(entities_path, 'entities')
+        entity_bytes = entities_path.encode('utf-8')
+        if len(entity_bytes) == 0 or len(entity_bytes) > 65535:
+            raise ValueError('entity path слишком длинный')
+
     leaf_sectors = LEGACY.leaf_sectors(level)
     if any(v < 0 for v in leaf_sectors):
         raise ValueError('BSP leaves without sector')
 
-    header = struct.pack('<4sBBh8H', MAGIC, VERSION, 0, len(level.nodes) - 1,
-                         len(level.vertices), len(level.walls), len(level.objects),
+    header_flags = HEADER_FLAG_EXTERNAL_ENTITIES if external_entities else 0
+    object_count = 0 if external_entities else len(level.objects)
+    header = struct.pack('<4sBBh8H', MAGIC, VERSION, header_flags, len(level.nodes) - 1,
+                         len(level.vertices), len(level.walls), object_count,
                          len(level.surfaces), len(level.sectors), len(level.nodes),
                          len(level.leaves), len(level.segments))
     out = bytearray(header)
     out += struct.pack('<H', len(material_bytes)) + material_bytes
+    if external_entities:
+        out += struct.pack('<H', len(entity_bytes)) + entity_bytes
 
     for x, z in level.vertices:
         out += struct.pack('<hh', _i16(x), _i16(z))
@@ -180,16 +221,17 @@ def dump_c3b(level, materials_path, output_path):
         out += struct.pack('<HHhhBBBB', wall['sv'], wall['ev'], wall['front'], wall['back'],
                            wall['flags'] & 255, wall['type'] & 255,
                            wall['special'] & 255, 0)
-    for obj in level.objects:
-        out += struct.pack('<hhhhh', _i16(obj['x']), _i16(obj['z']), _i16(obj['angle']),
-                           _i16(obj['type']), _i16(obj['param']))
+    if not external_entities:
+        for obj in level.objects:
+            out += struct.pack('<hhhhh', _i16(obj['x']), _i16(obj['z']), _i16(obj['angle']),
+                               _i16(obj['type']), _i16(obj['param']))
     for surface in level.surfaces:
         out += struct.pack('<hhBBBBH', _i16(surface['ox']), _i16(surface['oy']),
                            surface['upper'] & 255, surface['lower'] & 255,
                            surface['main'] & 255, 0, surface['sector'])
     for sector in level.sectors:
-        flags = (FLAG_CEILING_SKY if sector['ceil_tex'] == 51 else 0)
-        flags |= FLAG_FLOOR_SKY if sector['floor_tex'] == 51 else 0
+        flags = (SECTOR_FLAG_CEILING_SKY if sector['ceil_tex'] == 51 else 0)
+        flags |= SECTOR_FLAG_FLOOR_SKY if sector['floor_tex'] == 51 else 0
         out += struct.pack('<hhBBBBhh', _i16(sector['floor']), _i16(sector['ceil']),
                            0 if sector['floor_tex'] == 51 else sector['floor_tex'] & 255,
                            0 if sector['ceil_tex'] == 51 else sector['ceil_tex'] & 255,
@@ -216,14 +258,26 @@ def read_c3b(path):
     offset += struct.calcsize('<4sBBh8H')
     if magic != MAGIC or version != VERSION:
         raise ValueError('not C3B1')
+    if flags & ~HEADER_FLAG_EXTERNAL_ENTITIES:
+        raise ValueError('unsupported C3B header flags: %d' % flags)
     material_len, = struct.unpack_from('<H', data, offset)
     offset += 2
     material = data[offset:offset + material_len].decode('utf-8')
     offset += material_len
+    entities = None
+    if flags & HEADER_FLAG_EXTERNAL_ENTITIES:
+        if no != 0:
+            raise ValueError('external-entity C3B must not contain inline objects')
+        entity_len, = struct.unpack_from('<H', data, offset)
+        offset += 2
+        entities = data[offset:offset + entity_len].decode('utf-8')
+        offset += entity_len
+        if not entities:
+            raise ValueError('C3B external entity path is empty')
     return dict(version=version, flags=flags, root=root, materials=material,
-                vertices=nv, walls=nw, objects=no, surfaces=nsf, sectors=nsec,
-                nodes=nn, leaves=nl, segments=nsg, header_size=offset,
-                total_size=len(data))
+                entities=entities, vertices=nv, walls=nw, objects=no,
+                surfaces=nsf, sectors=nsec, nodes=nn, leaves=nl,
+                segments=nsg, header_size=offset, total_size=len(data))
 
 
 def create_demo(directory):
@@ -232,6 +286,8 @@ def create_demo(directory):
     document = new_document()
     source = os.path.join(directory, 'level.c3d.json')
     dump_source(document, source)
+    ENTITIES.dump_entities(document.level.objects,
+                           os.path.join(directory, document.entities))
     output, report = compile_source(source, os.path.join(directory, 'level.c3b'))
     return source, output, report
 
@@ -273,6 +329,7 @@ def _validate_authored_level(level):
         for key in ('upper', 'lower', 'main'):
             if not 0 <= surface[key] <= 127:
                 raise ValueError('material slot must be 0..127')
+    ENTITIES.validate_entities(level.objects)
     _validate_sector_winding(level)
 
 
@@ -331,6 +388,16 @@ def _validate_compiled_level(level):
         _i16(sector['floor']); _i16(sector['ceil']); _i16(sector['tag']); _i16(sector['type'])
     for node in level.nodes:
         _i16(node[0]); _i16(node[1]); _i16(node[2]); _i16(node[3])
+
+
+def _relative_path(value, name):
+    if not isinstance(value, str) or not value:
+        raise ValueError(name + ' path must be a non-empty string')
+    normalized = value.replace('\\', '/')
+    parts = normalized.split('/')
+    if normalized[0] == '/' or any(part == '' or part == '.' or part == '..' for part in parts):
+        raise ValueError(name + ' path must be a clean relative C3B-package path')
+    return normalized
 
 
 def _int(mapping, key, default=None):

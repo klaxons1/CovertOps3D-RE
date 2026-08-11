@@ -1,15 +1,7 @@
 {
+  "entities": "entities.ini",
   "format": "C3D2-SOURCE-1",
   "materials": "materials.c3m",
-  "objects": [
-    {
-      "angle": 0,
-      "param": 0,
-      "type": 1,
-      "x": 0,
-      "z": 0
-    }
-  ],
   "sectors": [
     {
       "ceiling_height": 96,

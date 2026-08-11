@@ -902,7 +902,8 @@ public class PortalRenderer {
                     }
                 }
 
-                // Draw skybox for floor if no floor texture
+                // The inherited field naming is inverted: a missing
+                // floorTexture means the upper physical ceiling is sky.
                 if (floorTexture == null) {
                     drawSkyboxColumn(column, 0, screenCeilingY, viewAngle);
                 }
@@ -927,7 +928,7 @@ public class PortalRenderer {
                     }
                 }
 
-                // Draw skybox for ceiling if no ceiling texture
+                // A missing ceilingTexture means the lower physical floor is sky.
                 if (ceilingTexture == null) {
                     drawSkyboxColumn(column, screenFloorY + 1, MAX_VIEWPORT_Y, viewAngle);
                 }
