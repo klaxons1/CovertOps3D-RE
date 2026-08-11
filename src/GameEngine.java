@@ -86,8 +86,7 @@ public final class GameEngine {
         player = new PhysicsBody(0, 1572864, 0, 65536);
         tempTransform = new Transform3D(0, 0, 0, 0);
 
-        PortalRenderer.floorClipHistory = new Vector();
-        PortalRenderer.ceilingClipHistory = new Vector();
+        PortalRenderer.initializeClipHistory();
         doorControllers = new Vector();
         elevatorControllers = new Vector();
 

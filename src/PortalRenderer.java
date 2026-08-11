@@ -57,11 +57,15 @@ public class PortalRenderer {
     /** Screen pixel buffer for rendering */
     public static int[] screenBuffer;
 
-    /** History of floor clipping arrays for each visible sector */
-    public static Vector floorClipHistory;
-
-    /** History of ceiling clipping arrays for each visible sector */
-    public static Vector ceilingClipHistory;
+    /**
+     * Saved clip state for each traversed sector. Plain arrays avoid Vector's
+     * synchronized size/elementAt calls in the per-frame portal traversal.
+     * Inner arrays are still allocated lazily, exactly when a sector becomes
+     * visible for the first time.
+     */
+    private static short[][] floorClipHistory;
+    private static short[][] ceilingClipHistory;
+    private static final int INITIAL_CLIP_HISTORY_CAPACITY = 8;
 
     /** Flag indicating if gun fire lighting effect is active */
     public static boolean gunFireLighting = false;
@@ -142,6 +146,41 @@ public class PortalRenderer {
 
     /** Lookup table for reciprocal values (1/x) */
     static int[] reciprocalTable;
+
+    /** Allocates only the small outer clip-history arrays during engine setup. */
+    static void initializeClipHistory() {
+        floorClipHistory = new short[INITIAL_CLIP_HISTORY_CAPACITY][];
+        ceilingClipHistory = new short[INITIAL_CLIP_HISTORY_CAPACITY][];
+    }
+
+    /**
+     * Ensures a reusable pair of clip snapshots exists for a visible-sector
+     * index. The normal frame path only performs two array reads here.
+     */
+    private static void ensureClipHistory(int sectorIndex) {
+        if (floorClipHistory == null || ceilingClipHistory == null) {
+            initializeClipHistory();
+        }
+
+        if (sectorIndex >= floorClipHistory.length) {
+            int newCapacity = floorClipHistory.length;
+            while (sectorIndex >= newCapacity) {
+                newCapacity <<= 1;
+            }
+
+            short[][] expandedFloor = new short[newCapacity][];
+            short[][] expandedCeiling = new short[newCapacity][];
+            System.arraycopy(floorClipHistory, 0, expandedFloor, 0, floorClipHistory.length);
+            System.arraycopy(ceilingClipHistory, 0, expandedCeiling, 0, ceilingClipHistory.length);
+            floorClipHistory = expandedFloor;
+            ceilingClipHistory = expandedCeiling;
+        }
+
+        if (floorClipHistory[sectorIndex] == null) {
+            floorClipHistory[sectorIndex] = new short[VIEWPORT_WIDTH];
+            ceilingClipHistory[sectorIndex] = new short[VIEWPORT_WIDTH];
+        }
+    }
 
     /**
      * Clips a wall segment to the near clipping plane and projects it to screen coordinates.
@@ -423,10 +462,13 @@ public class PortalRenderer {
 
         SectorData sectorData = sector.getSectorData();
         Vector dynamicObjects = sector.dynamicObjects;
+        int dynamicObjectCount = dynamicObjects.size();
         visibleObjectsCount = 0;
 
-        // Transform objects to view space and collect visible ones
-        for (int i = 0; i < dynamicObjects.size(); i++) {
+        // Transform objects to view space and collect visible ones.
+        // Vector.size() is synchronized on CLDC, so read it once: this method
+        // does not mutate the sector list during rendering.
+        for (int i = 0; i < dynamicObjectCount; i++) {
             GameObject gameObject = (GameObject)dynamicObjects.elementAt(i);
             Transform3D transform = gameObject.transform;
 
@@ -474,6 +516,14 @@ public class PortalRenderer {
             }
         }
 
+        if (visibleObjectsCount == 0) {
+            return;
+        }
+
+        // All collected objects belong to this sector, so their light is the
+        // same for the whole pass. Avoid calling getLightLevel per sprite.
+        int lightLevel = sectorData.getLightLevel();
+
         // Sort objects by depth (insertion sort)
         for (int i = 1; i < visibleObjectsCount; i++) {
             GameObject currentObject = visibleGameObjects[i];
@@ -492,7 +542,6 @@ public class PortalRenderer {
             GameObject gameObject = visibleGameObjects[i];
 
             if (gameObject.projectToScreen()) {
-                int lightLevel = sectorData.getLightLevel();
                 int screenX = (gameObject.projectionData.x >> 16) + HALF_VIEWPORT_WIDTH;
                 int screenY = (gameObject.screenY >> 16) + HALF_VIEWPORT_HEIGHT;
                 int depth = gameObject.projectionData.y;
@@ -549,19 +598,13 @@ public class PortalRenderer {
                 break;
             }
 
-            // Expand clip history if needed
-            if (sectorIndex >= floorClipHistory.size()) {
-                short[] floorClipCopy = new short[VIEWPORT_WIDTH];
-                short[] ceilingClipCopy = new short[VIEWPORT_WIDTH];
-                floorClipHistory.addElement(floorClipCopy);
-                ceilingClipHistory.addElement(ceilingClipCopy);
-            }
+            ensureClipHistory(sectorIndex);
+            short[] savedFloorClip = floorClipHistory[sectorIndex];
+            short[] savedCeilingClip = ceilingClipHistory[sectorIndex];
 
-            // Save current clip state
-            System.arraycopy(Sector.floorClip, 0,
-                    (short[])floorClipHistory.elementAt(sectorIndex), 0, VIEWPORT_WIDTH);
-            System.arraycopy(Sector.ceilingClip, 0,
-                    (short[])ceilingClipHistory.elementAt(sectorIndex), 0, VIEWPORT_WIDTH);
+            // Save current clip state.
+            System.arraycopy(Sector.floorClip, 0, savedFloorClip, 0, VIEWPORT_WIDTH);
+            System.arraycopy(Sector.ceilingClip, 0, savedCeilingClip, 0, VIEWPORT_WIDTH);
 
             // Render all walls in sector
             WallSegment[] walls = currentSector.walls;
@@ -578,10 +621,10 @@ public class PortalRenderer {
         for (int sectorIndex = BSPNode.visibleSectorsCount - 1; sectorIndex >= 0; sectorIndex--) {
             Sector currentSector = BSPNode.visibleSectorsList[sectorIndex];
 
-            // Restore clip state for this sector
-            System.arraycopy(floorClipHistory.elementAt(sectorIndex), 0,
+            // Restore clip state for this sector.
+            System.arraycopy(floorClipHistory[sectorIndex], 0,
                     Sector.floorClip, 0, VIEWPORT_WIDTH);
-            System.arraycopy(ceilingClipHistory.elementAt(sectorIndex), 0,
+            System.arraycopy(ceilingClipHistory[sectorIndex], 0,
                     Sector.ceilingClip, 0, VIEWPORT_WIDTH);
 
             renderDynamicObjects(currentSector, playerX, playerY, playerZ,
@@ -647,6 +690,7 @@ public class PortalRenderer {
         int textureStepU = (textureWidth << 16) / (spriteWidth + 1);
         int textureU = clipLeft * textureStepU;
         int textureColumn = textureU >>> 16;
+        byte[][] textureColumns = texture.pixelData;
 
         // Calculate light level with depth attenuation
         int depthFactor = depth >> 22;
@@ -656,13 +700,24 @@ public class PortalRenderer {
         } else {
             effectiveLightLevel = lightLevel - depthFactor;
         }
-        effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
+        if (effectiveLightLevel < 0) {
+            effectiveLightLevel = 0;
+        } else if (effectiveLightLevel > 15) {
+            effectiveLightLevel = 15;
+        }
 
         int[] colorPalette = texture.colorPalettes[effectiveLightLevel];
         int bottomY = screenY + spriteHeight;
 
         for (int column = clipLeft; column <= clipRight; column++) {
-            drawSpriteColumn(texture.getPixelRow(textureColumn), textureColumn & 1, colorPalette,
+            // Normally textureColumn is in [0, width): textureStepU divides
+            // by spriteWidth + 1, so even the final source column cannot
+            // reach width. Keep the old wrapped accessor as a defensive
+            // fallback for malformed/custom sprite dimensions.
+            byte[] textureColumnPixels = textureColumn < textureWidth
+                    ? textureColumns[textureColumn >> 1]
+                    : texture.getPixelRow(textureColumn);
+            drawSpriteColumn(textureColumnPixels, textureColumn & 1, colorPalette,
                     column + screenX, screenY, bottomY, 0, textureHeight);
             textureU += textureStepU;
             textureColumn = textureU >>> 16;
@@ -779,7 +834,11 @@ public class PortalRenderer {
                 } else {
                     effectiveLightLevel = lightLevel - depthFactor;
                 }
-                effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
+                if (effectiveLightLevel < 0) {
+                    effectiveLightLevel = 0;
+                } else if (effectiveLightLevel > 15) {
+                    effectiveLightLevel = 15;
+                }
 
                 int screenCeilingY = ceilingY >> 16;
                 int screenUpperBottomY = upperBottomY >> 16;
@@ -903,7 +962,11 @@ public class PortalRenderer {
         } else {
             effectiveLightLevel = lightLevel - depthFactor;
         }
-        effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
+        if (effectiveLightLevel < 0) {
+            effectiveLightLevel = 0;
+        } else if (effectiveLightLevel > 15) {
+            effectiveLightLevel = 15;
+        }
 
         int[] colorPalette = colorPalettes[effectiveLightLevel];
 
