@@ -26,6 +26,7 @@ public final class JavaMeSmokeTest {
         testPaletteLighting();
         testLanguageSwitch();
         testExternalMaterials();
+        testC3BLevel();
         testRendererFastPaths();
         testFlatSpriteColors();
         testAllShippedLevels();
@@ -129,6 +130,21 @@ public final class JavaMeSmokeTest {
         materials.installWallTextures();
         assertTrue("custom wall installed", LevelLoader.getTexture((byte)1) == wall);
         materials.installSkyTexture();
+    }
+
+    private static void testC3BLevel() {
+        MathUtils.initializeMathTables();
+        assertTrue("C3B level load", CustomLevelLoader.load(
+                "/gamedata/custom/demo/level.c3b", true));
+        GameWorld world = LevelLoader.gameWorld;
+        assertTrue("C3B world", world != null && world.vertices.length == 4
+                && world.bspNodes.length == 1 && world.bspSectors.length == 2);
+        world.initializeWorld();
+        assertTrue("C3B wall material", LevelLoader.getTexture((byte)1).width == 64);
+        assertTrue("C3B flat material", world.sectors[0].floorTexture != null
+                && world.sectors[0].floorTexture.flatColors != null);
+        assertTrue("C3B explicit leaf sector", world.getRootBSPNode()
+                .findSectorAtPoint(0, 0) == world.sectors[0]);
     }
 
     /** Verifies the MascotME-inspired bulk clear and unrolled opaque-flat path. */

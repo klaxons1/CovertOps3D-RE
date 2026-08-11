@@ -74,6 +74,20 @@ public final class LevelLoader {
         paletteCache = null;
     }
 
+    /** Resets shared render resources before a C3B custom map is loaded. */
+    static void prepareCustomMapLoad() {
+        if (spriteTable == null || textureTable == null) {
+            initResourceArrays();
+        }
+        unloadAllResources();
+    }
+
+    /** Publishes a fully parsed C3B map; all materials are already available. */
+    static void finishCustomMapLoad(GameWorld world) {
+        gameWorld = world;
+        resourceLoadState = 2;
+    }
+
     private static void unloadAllResources() {
         gameWorld = null;
         resourceLoadState = 0;
@@ -186,7 +200,8 @@ public final class LevelLoader {
                 byte mainTex = remapLegacyTextureId(dataIn.readByte());
                 byte sectorLinkId = dataIn.readByte();
 
-                wallSurfaces[i] = new WallSurface(upperTex, mainTex, lowerTex, sectorLinkId, texOffsetX, texOffsetY);
+                wallSurfaces[i] = new WallSurface(upperTex, mainTex, lowerTex,
+                        sectorLinkId & 0xFF, texOffsetX, texOffsetY);
 
                 if (upperTex != 0) preloadTexture(upperTex);
                 if (lowerTex != 0) preloadTexture(lowerTex);

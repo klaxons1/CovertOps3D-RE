@@ -1,0 +1,124 @@
+{
+  "format": "C3D2-SOURCE-1",
+  "materials": "materials.c3m",
+  "objects": [
+    {
+      "angle": 0,
+      "param": 0,
+      "type": 1,
+      "x": 0,
+      "z": 0
+    }
+  ],
+  "sectors": [
+    {
+      "ceiling_height": 96,
+      "ceiling_material": 0,
+      "ceiling_sky": true,
+      "floor_height": 0,
+      "floor_material": 1,
+      "floor_sky": false,
+      "light": 8,
+      "tag": 0,
+      "type": 0
+    }
+  ],
+  "surfaces": [
+    {
+      "lower": 1,
+      "main": 1,
+      "offset": [
+        0,
+        0
+      ],
+      "sector": 0,
+      "upper": 1
+    },
+    {
+      "lower": 1,
+      "main": 1,
+      "offset": [
+        0,
+        0
+      ],
+      "sector": 0,
+      "upper": 1
+    },
+    {
+      "lower": 1,
+      "main": 1,
+      "offset": [
+        0,
+        0
+      ],
+      "sector": 0,
+      "upper": 1
+    },
+    {
+      "lower": 1,
+      "main": 1,
+      "offset": [
+        0,
+        0
+      ],
+      "sector": 0,
+      "upper": 1
+    }
+  ],
+  "vertices": [
+    [
+      -128,
+      -128
+    ],
+    [
+      128,
+      -128
+    ],
+    [
+      128,
+      128
+    ],
+    [
+      -128,
+      128
+    ]
+  ],
+  "walls": [
+    {
+      "back": -1,
+      "end": 1,
+      "flags": 1,
+      "front": 0,
+      "special": 0,
+      "start": 0,
+      "type": 0
+    },
+    {
+      "back": -1,
+      "end": 2,
+      "flags": 1,
+      "front": 1,
+      "special": 0,
+      "start": 1,
+      "type": 0
+    },
+    {
+      "back": -1,
+      "end": 3,
+      "flags": 1,
+      "front": 2,
+      "special": 0,
+      "start": 2,
+      "type": 0
+    },
+    {
+      "back": -1,
+      "end": 0,
+      "flags": 1,
+      "front": 3,
+      "special": 0,
+      "start": 3,
+      "type": 0
+    }
+  ]
+}

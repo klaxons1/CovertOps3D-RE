@@ -77,6 +77,7 @@ public final class GameWorld {
     public BSPNode[] bspNodes;
     public Sector[] bspSectors;
     public WallSegment[] wallSegments;
+    private int rootBSPNodeIndex = -1;
 
     public GameWorld() {
         this.projectiles = new Vector();
@@ -85,7 +86,16 @@ public final class GameWorld {
     }
 
     public final BSPNode getRootBSPNode() {
-        return this.bspNodes[this.bspNodes.length - 1];
+        int root = rootBSPNodeIndex >= 0 ? rootBSPNodeIndex : this.bspNodes.length - 1;
+        return this.bspNodes[root];
+    }
+
+    /** C3B supplies an explicit root; legacy maps retain the final-node convention. */
+    public final void setRootBSPNodeIndex(int rootNodeIndex) {
+        if (rootNodeIndex < 0 || rootNodeIndex >= this.bspNodes.length) {
+            throw new IllegalArgumentException("Invalid BSP root");
+        }
+        rootBSPNodeIndex = rootNodeIndex;
     }
 
     public final void setVertices(Point2D[] newVertices) {

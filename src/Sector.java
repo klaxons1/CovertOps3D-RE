@@ -4,6 +4,8 @@ public final class Sector {
 
     private short wallCount;
     private short wallArrayOffset;
+    private short explicitSectorId;
+    private SectorData explicitSectorData;
 
     public WallSegment[] walls;
 
@@ -20,7 +22,14 @@ public final class Sector {
     public Vector dynamicObjects;
     public boolean[] visibilityMask;
 
+    /** Legacy leaf: sector identity is derived from its first wall segment. */
     public Sector(short wallCount, short wallArrayOffset) {
+        this((short)-1, wallCount, wallArrayOffset);
+    }
+
+    /** C3B leaf: carries an explicit sector ID, independent of wall ordering. */
+    public Sector(short sectorId, short wallCount, short wallArrayOffset) {
+        this.explicitSectorId = sectorId;
         this.wallCount = wallCount;
         this.wallArrayOffset = wallArrayOffset;
         this.dynamicObjects = new Vector();
@@ -67,7 +76,7 @@ public final class Sector {
     }
 
     public final SectorData getSectorData() {
-        return this.walls[0].getWallSector();
+        return explicitSectorData != null ? explicitSectorData : this.walls[0].getWallSector();
     }
 
     public final void clearDynamicObjects() {
@@ -86,10 +95,13 @@ public final class Sector {
         for (int i = 0; i < count; i++) {
             this.walls[i] = world.wallSegments[baseIndex + i];
         }
+        if (explicitSectorId >= 0) {
+            explicitSectorData = world.sectors[explicitSectorId & 0xFFFF];
+        }
     }
 
     public final boolean[] getVisibilityMask() {
-        this.visibilityMask = this.walls[0].getWallSector().visitedFlags;
+        this.visibilityMask = getSectorData().visitedFlags;
         return this.visibilityMask;
     }
 }

@@ -41,6 +41,31 @@ public final class LevelResourceManager {
         }
     }
 
+    /**
+     * Loads a standalone C3B level package with its external BMP materials.
+     * This is the entry point used by the forthcoming C3D2 editor/browser;
+     * stock campaign loading below remains legacy-compatible.
+     */
+    public boolean loadCustomLevelResources(String c3bPath) {
+        try {
+            HelperUtils.freeMemory();
+            if (!CustomLevelLoader.load(c3bPath, true)) {
+                DebugLogger.log("LevelResourceManager", "C3B load failed: " + c3bPath);
+                return false;
+            }
+            GameEngine.resetLevelState();
+            HelperUtils.freeMemory();
+            DebugLogger.log("LevelResourceManager", "C3B load ok: " + c3bPath);
+            return true;
+        } catch (Exception e) {
+            DebugLogger.logException("LevelResourceManager.loadCustom", e);
+            return false;
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("LevelResourceManager.loadCustom", e);
+            return false;
+        }
+    }
+
     public void loadLevelResources() {
         try {
             HelperUtils.freeMemory();

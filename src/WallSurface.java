@@ -4,7 +4,7 @@ public final class WallSurface {
     public byte  mainTextureId;    // Main wall texture (middle)
     public byte  lowerTextureId;   // Texture for lower part (below player view)
 
-    private byte sectorLinkId;     // Index in GameWorld.sectors[] — which sector this side faces
+    private short sectorLinkId;    // Index in GameWorld.sectors[] — which sector this side faces
 
     public SectorData linkedSector; // Resolved after resolveSectorLink() — adjacent sector (portal)
 
@@ -22,11 +22,11 @@ public final class WallSurface {
      * @param offsetY   Y texture offset
      */
     public WallSurface(byte upperTex, byte mainTex, byte lowerTex,
-                       byte linkId, short offsetX, short offsetY) {
+                       int linkId, short offsetX, short offsetY) {
         this.upperTextureId = upperTex;
         this.mainTextureId  = mainTex;
         this.lowerTextureId = lowerTex;
-        this.sectorLinkId   = linkId;
+        this.sectorLinkId   = (short)linkId;
         this.textureOffsetX = offsetX;
         this.textureOffsetY = offsetY;
     }
@@ -37,6 +37,6 @@ public final class WallSurface {
      * This is the core of the portal system — every wall side knows which sector it "opens" into.
      */
     public final void resolveSectorLink(GameWorld world) {
-        this.linkedSector = world.sectors[this.sectorLinkId & 0xFF];
+        this.linkedSector = world.sectors[this.sectorLinkId & 0xFFFF];
     }
 }

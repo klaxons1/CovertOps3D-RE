@@ -50,10 +50,63 @@ res/gamedata/custom/demo/materials.c3m
 res/gamedata/custom/demo/textures/
 ```
 
-## План C3B
+## Runtime entry point
 
-`level.c3b` будет компактным бинарным runtime-пакетом с прямыми node/leaf
-ссылками и explicit root index. BSP построитель останется integer,
-Doom-style и детерминированным. `shapely` допустим как опциональный
-валидатор геометрии в редакторе, но не как обязательная зависимость и не как
-основа BSP: float-геометрия даёт sliver-сегменты и нестабильные texture offset.
+Java ME code can load a package directly through:
+
+```java
+levelResourceManager.loadCustomLevelResources(
+    "/gamedata/custom/demo/level.c3b"
+);
+```
+
+This loads `level.c3b`, resolves its relative `materials.c3m`, installs loose
+wall/flat/sky BMPs, builds `GameWorld`, and then uses the existing
+`PortalRenderer`. Stock campaign loading remains unchanged.
+
+## C3B v1 runtime layout
+
+`level.c3b` уже генерируется `scripts/c3d2_core.py`. Он little-endian и не
+использует legacy section-size blocks.
+
+```text
+C3B1 magic          4 bytes
+version             u8 (=1)
+flags               u8 (зарезервировано)
+rootNode            s16
+counts              8 x u16
+materialPathLength  u16
+materialPath        UTF-8 bytes, relative to C3B
+vertices            x,z: s16,s16
+walls               start,end:u16; front,back:s16; flags,type,special,reserved:u8
+objects             x,z,angle,type,param: s16
+surfaces            offsetX,offsetY:s16; upper,lower,main,reserved:u8; sector:u16
+sectors             floor,ceiling:s16; floorSlot,ceilingSlot,light,flags:u8; tag,type:s16
+nodes               x,z,dx,dz,frontChild,backChild: s16
+leaves              sector,firstSegment,segmentCount: u16
+segments            start,end,definition:u16; frontFacing:u8; textureOffset:s16
+pvsByteCount        u32
+PVS                 LSB-first, bit from*sectorCount+to, 1=visible
+```
+
+Node children не используют `0x8000` на диске: `>=0` означает node index,
+`<0` означает leaf index `-child-1`. Корень хранится явно, поэтому node array
+можно свободно перестраивать. Для текущего Java renderer loader преобразует
+эти ссылки во внутреннее legacy-представление только в памяти.
+
+### Преимущества перед legacy
+
+| Legacy | C3D2/C3B |
+| --- | --- |
+| размер каждой секции хранится в байтах, поля надо знать вручную | фиксированные records и явные counts |
+| root = последний node, leaf sector выводится из первого сегмента | explicit root и explicit `leaf.sectorId` |
+| child использует high-bit tag, PVS имеет обратную семантику | signed child refs, PVS `1=visible` |
+| surface может ссылаться только на byte sector ID | surface sector ID `u16` |
+| текстуры требуют глобальных tx/sp atlas | отдельный manifest и BMP рядом с уровнем |
+| формат данных и формат редактора смешаны | JSON source отдельно от compiled C3B |
+| BSP rebuild привязан к байт-в-байт legacy compatibility | чистый deterministic integer builder |
+
+BSP построитель остаётся integer, Doom-style и детерминированным. `shapely`
+допустим как **опциональный** валидатор геометрии в редакторе, но не как
+обязательная зависимость и не как основа BSP: float-геометрия даёт
+sliver-сегменты и нестабильные texture offset.
