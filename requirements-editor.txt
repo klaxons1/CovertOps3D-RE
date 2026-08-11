@@ -1,0 +1,4 @@
+# Optional dependencies for scripts/c3d2_editor.py only.
+# They are intentionally not required for C3B compilation or Java ME runtime.
+pygame>=2.1
+Pillow>=9.0
