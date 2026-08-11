@@ -1,6 +1,6 @@
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
 
 /**
  * Loads level geometry, objects and texture/sprite atlases.
@@ -23,7 +23,13 @@ public final class LevelLoader {
     private static int resourceLoadState; // 0=empty, 1=map loaded, 2=assets loaded
     private static Sprite[] spriteTable;
     static Texture[] textureTable;
-    private static Hashtable paletteCache;
+
+    // Palette indexes are dense in the atlas files. Keeping their resolved
+    // data in an array avoids Hashtable/Byte/Integer/String allocation while
+    // a level is loading on a very small Java ME heap.
+    private static int[][][] paletteCache;
+    private static final int NO_PALETTE = -1;
+
     static Texture defaultErrorTexture;
 
     // Exact file header magics (big-endian short), verified against the shipped atlases:
@@ -58,7 +64,7 @@ public final class LevelLoader {
     static void initResourceArrays() {
         spriteTable = new Sprite[128];
         textureTable = new Texture[256];
-        paletteCache = new Hashtable();
+        paletteCache = null;
     }
 
     private static void unloadAllResources() {
@@ -71,7 +77,10 @@ public final class LevelLoader {
         for (int i = 0; i < 256; ++i) {
             textureTable[i] = null;
         }
-        paletteCache.clear();
+        // Drop all palette references in one operation. This is cheaper than
+        // clearing boxed Hashtable entries and makes the previous level
+        // collectible before the next one is decoded.
+        paletteCache = null;
     }
 
     // ==================== Map loading ====================
@@ -79,9 +88,13 @@ public final class LevelLoader {
     public static boolean loadMapData(String levelFilePath, boolean shouldLoadObjects) {
         unloadAllResources();
 
+        DataInputStream dataIn = null;
         try {
-            InputStream rawStream = (new Object()).getClass().getResourceAsStream(levelFilePath);
-            DataInputStream dataIn = new DataInputStream(rawStream);
+            InputStream rawStream = LevelLoader.class.getResourceAsStream(levelFilePath);
+            if (rawStream == null) {
+                throw new IllegalStateException("Missing map: " + levelFilePath);
+            }
+            dataIn = new DataInputStream(rawStream);
 
             gameWorld = new GameWorld();
             dataIn.readByte(); // skip version/header byte
@@ -232,10 +245,15 @@ public final class LevelLoader {
             for (int i = 0; i < segCount; ++i) {
                 short startVertex = BinaryUtils.readShortLE(dataIn);
                 short endVertex = BinaryUtils.readShortLE(dataIn);
-                short texOffset = BinaryUtils.readShortLE(dataIn);
-                boolean isFrontFacing = dataIn.readByte() == 0;
+                // On disk the definition index precedes the facing byte, and
+                // the texture offset comes last (the old local names were
+                // reversed, although the constructor arguments happened to
+                // put both values in the right fields).
                 short wallDefIdx = BinaryUtils.readShortLE(dataIn);
-                wallSegments[i] = new WallSegment(startVertex, endVertex, texOffset, isFrontFacing, wallDefIdx);
+                boolean isFrontFacing = dataIn.readByte() == 0;
+                short texOffset = BinaryUtils.readShortLE(dataIn);
+                wallSegments[i] = new WallSegment(startVertex, endVertex,
+                        wallDefIdx, isFrontFacing, texOffset);
             }
             gameWorld.wallSegments = wallSegments;
 
@@ -260,19 +278,14 @@ public final class LevelLoader {
                 gameWorld.sectors[i].visitedFlags = visibilityMatrix[i];
             }
 
-            dataIn.close();
         } catch (Exception loadEx) {
             DebugLogger.logException("LevelLoader.loadMapData", loadEx);
             return false;
         } catch (OutOfMemoryError oom) {
             DebugLogger.logOutOfMemory("LevelLoader.loadMapData", oom);
             return false;
-        }
-
-        // Strip directory from path (kept for original side-effect compatibility)
-        int lastSlash = levelFilePath.lastIndexOf('/');
-        if (lastSlash != -1) {
-            levelFilePath.substring(0, lastSlash + 1);
+        } finally {
+            closeDataInputStream(dataIn);
         }
 
         resourceLoadState = 1;
@@ -322,168 +335,163 @@ public final class LevelLoader {
 
         try {
             int globalPaletteIndex = 0;
-            Hashtable textureIdToPaletteIndex = new Hashtable();
-            int fileNumber = 1;
+            int[] spritePaletteIndexes = createPaletteIndexArray(spriteTable.length);
+            int[] texturePaletteIndexes = createPaletteIndexArray(textureTable.length);
+            paletteCache = null;
 
             // ---- Load texture atlases (TX) ----
-            while (true) {
-                if (fileNumber > textureFileCount) {
-                    break;
-                }
+            for (int fileNumber = 1; fileNumber <= textureFileCount; ++fileNumber) {
                 String fullPath = texturePathPrefix + Integer.toString(fileNumber);
-                InputStream fileStream = (new Object()).getClass().getResourceAsStream(fullPath);
+                InputStream fileStream = LevelLoader.class.getResourceAsStream(fullPath);
                 if (fileStream == null) throw new IllegalStateException("Missing TX: " + fullPath);
 
                 DataInputStream dataIn = new DataInputStream(fileStream);
-                int magic = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
-                if (magic != MAGIC_TX_ATLAS) throw new IllegalStateException("Bad magic TX: " + magic);
+                try {
+                    int magic = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                    if (magic != MAGIC_TX_ATLAS) throw new IllegalStateException("Bad magic TX: " + magic);
 
-                short spriteEntryCount = BinaryUtils.readShortBE(dataIn);
-                short paletteEntryCount = BinaryUtils.readShortBE(dataIn);
-                BinaryUtils.readIntBE(dataIn); // skip pixel-data offset
+                    int textureEntryCount = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                    int paletteEntryCount = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                    BinaryUtils.readIntBE(dataIn); // pixel-data offset; entries are read sequentially
+                    boolean[] referencedPalettes = new boolean[paletteEntryCount];
 
-                // TX entries have a 9-byte header: id, width, height, paletteOffset, bitDepth.
-                // (No anchor offsets here - those only exist in SP entries.)
-                for (int entryIdx = 0; entryIdx < spriteEntryCount; ++entryIdx) {
-                    byte rawId = dataIn.readByte();
-                    short width = BinaryUtils.readShortBE(dataIn);
-                    short height = BinaryUtils.readShortBE(dataIn);
-                    short paletteOffset = BinaryUtils.readShortBE(dataIn);
-                    short bitDepth = BinaryUtils.readShortBE(dataIn);
+                    // TX entries have a 9-byte header: id, width, height,
+                    // paletteOffset, bitDepth. Anchor offsets exist only in SP.
+                    for (int entryIdx = 0; entryIdx < textureEntryCount; ++entryIdx) {
+                        byte rawId = dataIn.readByte();
+                        int width = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                        int height = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                        int paletteOffset = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                        int bitDepth = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                        int pixelCount = getPixelCount(width, height, fullPath);
+                        int packedBytes = getPackedByteCount(pixelCount, bitDepth, fullPath);
+                        int paletteIndex = getPaletteIndex(globalPaletteIndex, paletteOffset,
+                                paletteEntryCount, fullPath);
 
-                    int pixelCount = width * height * bitDepth;
-                    int packedBytes = pixelCount / 8 + (pixelCount % 8 > 0 ? 1 : 0);
+                        if (isSpriteRegistered(rawId)) {
+                            // Positive-id 64x64 floor/ceiling sprites live in TX.
+                            if (width != 64 || height != 64) {
+                                throw new IllegalStateException("Sprite must be 64x64");
+                            }
 
-                    if (isSpriteRegistered(rawId)) {
-                        // Positive-id 64x64 floor/ceiling sprite stored inside the texture atlas
-                        if (width != 64 || height != 64) throw new IllegalStateException("Sprite must be 64x64");
+                            byte[] packedData = new byte[packedBytes];
+                            byte[] unpacked = new byte[pixelCount];
+                            dataIn.readFully(packedData, 0, packedBytes);
+                            decompressSprite(packedData, 0, unpacked, 0, pixelCount, bitDepth);
 
-                        byte[] packedData = new byte[packedBytes];
-                        byte[] unpacked = new byte[width * height];
-                        dataIn.readFully(packedData, 0, packedBytes);
-                        decompressSprite(packedData, 0, unpacked, 0, width * height, bitDepth);
+                            spriteTable[rawId] = new Sprite(rawId, unpacked);
+                            spritePaletteIndexes[rawId] = paletteIndex;
+                            referencedPalettes[paletteOffset] = true;
+                        } else if (isTextureRegistered(rawId)) {
+                            Texture tex = new Texture(rawId, width, height, 0, 0);
+                            byte[] packedData = new byte[packedBytes];
+                            dataIn.readFully(packedData, 0, packedBytes);
 
-                        spriteTable[rawId] = new Sprite(rawId, unpacked);
-                        textureIdToPaletteIndex.put(new Byte(rawId), new Integer(globalPaletteIndex + paletteOffset));
-                    } else if (isTextureRegistered(rawId)) {
-                        Texture tex = new Texture(rawId, width, height, 0, 0);
-                        byte[] packedData = new byte[packedBytes];
-                        dataIn.readFully(packedData, 0, packedBytes);
-
-                        byte[] rowBuffer = null;
-                        for (int x = 0; x < width; ++x) {
-                            if ((x & 1) == 0) rowBuffer = new byte[height];
-                            decompressTexture(packedData, x * height, rowBuffer, 0, height, bitDepth, x & 1);
-                            tex.setPixelData(x, rowBuffer);
+                            byte[] rowBuffer = null;
+                            for (int x = 0; x < width; ++x) {
+                                if ((x & 1) == 0) rowBuffer = new byte[height];
+                                decompressTexture(packedData, x * height, rowBuffer, 0,
+                                        height, bitDepth, x & 1);
+                                tex.setPixelData(x, rowBuffer);
+                            }
+                            textureTable[rawId + 128] = tex;
+                            texturePaletteIndexes[rawId + 128] = paletteIndex;
+                            referencedPalettes[paletteOffset] = true;
+                        } else {
+                            BinaryUtils.skipBytes(dataIn, packedBytes);
                         }
-                        textureTable[rawId + 128] = tex;
-                        textureIdToPaletteIndex.put(new Byte(rawId), new Integer(globalPaletteIndex + paletteOffset));
-                    } else {
-                        BinaryUtils.skipBytes(dataIn, packedBytes);
                     }
-                }
 
-                // palette entries
-                for (int pIdx = 0; pIdx < paletteEntryCount; ++pIdx) {
-                    int colorCount = BinaryUtils.readIntBE(dataIn);
-                    if (!textureIdToPaletteIndex.contains(new Integer(globalPaletteIndex + pIdx))) {
-                        BinaryUtils.skipBytes(dataIn, 4 * colorCount);
-                    } else {
-                        int[] colors = new int[colorCount];
-                        for (int c = 0; c < colorCount; ++c) colors[c] = BinaryUtils.readIntBE(dataIn);
-                        int[][] shaded = Texture.createColorPalettes(colors);
-                        paletteCache.put(Integer.toString(globalPaletteIndex + pIdx), shaded);
-                    }
+                    readReferencedPalettes(dataIn, referencedPalettes, globalPaletteIndex);
+                    globalPaletteIndex += paletteEntryCount;
+                    DebugLogger.log("LevelLoader", "atlas ok " + fullPath + " entries=" + textureEntryCount);
+                } finally {
+                    closeDataInputStream(dataIn);
                 }
-
-                globalPaletteIndex += paletteEntryCount;
-                dataIn.close();
-                DebugLogger.log("LevelLoader", "atlas ok " + fullPath + " entries=" + spriteEntryCount);
-                ++fileNumber;
             }
 
-            // ---- Load sprite atlases (SP) ----
-            for (fileNumber = 1; fileNumber <= spriteFileCount; ++fileNumber) {
+            // ---- Load object-sprite atlases (SP) ----
+            for (int fileNumber = 1; fileNumber <= spriteFileCount; ++fileNumber) {
                 String fullPath = spritePathPrefix + Integer.toString(fileNumber);
-                InputStream fileStream = (new Object()).getClass().getResourceAsStream(fullPath);
+                InputStream fileStream = LevelLoader.class.getResourceAsStream(fullPath);
                 if (fileStream == null) throw new IllegalStateException("Missing SP: " + fullPath);
 
                 DataInputStream dataIn = new DataInputStream(fileStream);
-                int magic = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
-                if (magic != MAGIC_SP_ATLAS) throw new IllegalStateException("Bad magic SP: " + magic);
+                try {
+                    int magic = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                    if (magic != MAGIC_SP_ATLAS) throw new IllegalStateException("Bad magic SP: " + magic);
 
-                short spriteEntryCount = BinaryUtils.readShortBE(dataIn);
-                short paletteEntryCount = BinaryUtils.readShortBE(dataIn);
-                BinaryUtils.readIntBE(dataIn); // skip pixel-data offset
+                    int spriteEntryCount = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                    int paletteEntryCount = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                    BinaryUtils.readIntBE(dataIn); // pixel-data offset; entries are read sequentially
+                    boolean[] referencedPalettes = new boolean[paletteEntryCount];
 
-                // SP entries have a 13-byte header:
-                // id, width, height, hOffset, vOffset, paletteOffset, bitDepth
+                    // SP entries have a 13-byte header: id, width, height,
+                    // hOffset, vOffset, paletteOffset, bitDepth.
+                    for (int entryIdx = 0; entryIdx < spriteEntryCount; ++entryIdx) {
+                        byte rawId = dataIn.readByte();
+                        int width = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                        int height = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                        short hOffset = BinaryUtils.readShortBE(dataIn);
+                        short vOffset = BinaryUtils.readShortBE(dataIn);
+                        int paletteOffset = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                        int bitDepth = BinaryUtils.readShortBE(dataIn) & 0xFFFF;
+                        int pixelCount = getPixelCount(width, height, fullPath);
+                        int packedBytes = getPackedByteCount(pixelCount, bitDepth, fullPath);
+                        int paletteIndex = getPaletteIndex(globalPaletteIndex, paletteOffset,
+                                paletteEntryCount, fullPath);
 
-                for (int entryIdx = 0; entryIdx < spriteEntryCount; ++entryIdx) {
-                    byte rawId = dataIn.readByte();
-                    short width = BinaryUtils.readShortBE(dataIn);
-                    short height = BinaryUtils.readShortBE(dataIn);
-                    short hOffset = BinaryUtils.readShortBE(dataIn);
-                    short vOffset = BinaryUtils.readShortBE(dataIn);
-                    short paletteOffset = BinaryUtils.readShortBE(dataIn);
-                    short bitDepth = BinaryUtils.readShortBE(dataIn);
+                        if (isSpriteRegistered(rawId)) {
+                            if (width != 64 || height != 64) {
+                                throw new IllegalStateException("Sprite must be 64x64");
+                            }
 
-                    int pixelCount = width * height * bitDepth;
-                    int packedBytes = pixelCount / 8 + (pixelCount % 8 > 0 ? 1 : 0);
+                            byte[] packedData = new byte[packedBytes];
+                            byte[] unpacked = new byte[pixelCount];
+                            dataIn.readFully(packedData, 0, packedBytes);
+                            decompressSprite(packedData, 0, unpacked, 0, pixelCount, bitDepth);
 
-                    if (isSpriteRegistered(rawId)) {
-                        if (width != 64 || height != 64) throw new IllegalStateException("Sprite must be 64x64");
-
-                        byte[] packedData = new byte[packedBytes];
-                        byte[] unpacked = new byte[width * height];
-                        dataIn.readFully(packedData, 0, packedBytes);
-                        decompressSprite(packedData, 0, unpacked, 0, width * height, bitDepth);
-
-                        spriteTable[rawId] = new Sprite(rawId, unpacked);
-                        textureIdToPaletteIndex.put(new Byte(rawId), new Integer(globalPaletteIndex + paletteOffset));
-                    } else if (isTextureRegistered(rawId)) {
-                        // Negative-id object/enemy sprite textures; keep the anchor
-                        // offsets from the header, PortalRenderer uses them for billboards.
-                        Texture tex = new Texture(rawId, width, height, hOffset, vOffset);
-                        byte[] packedData = new byte[packedBytes];
-                        dataIn.readFully(packedData, 0, packedBytes);
-                        byte[] rowBuffer = null;
-                        for (int x = 0; x < width; ++x) {
-                            if ((x & 1) == 0) rowBuffer = new byte[height];
-                            decompressTexture(packedData, x * height, rowBuffer, 0, height, bitDepth, x & 1);
-                            tex.setPixelData(x, rowBuffer);
+                            spriteTable[rawId] = new Sprite(rawId, unpacked);
+                            spritePaletteIndexes[rawId] = paletteIndex;
+                            referencedPalettes[paletteOffset] = true;
+                        } else if (isTextureRegistered(rawId)) {
+                            // Negative-id object/enemy sprite textures keep their
+                            // header anchors; PortalRenderer uses them for billboards.
+                            Texture tex = new Texture(rawId, width, height, hOffset, vOffset);
+                            byte[] packedData = new byte[packedBytes];
+                            dataIn.readFully(packedData, 0, packedBytes);
+                            byte[] rowBuffer = null;
+                            for (int x = 0; x < width; ++x) {
+                                if ((x & 1) == 0) rowBuffer = new byte[height];
+                                decompressTexture(packedData, x * height, rowBuffer, 0,
+                                        height, bitDepth, x & 1);
+                                tex.setPixelData(x, rowBuffer);
+                            }
+                            textureTable[rawId + 128] = tex;
+                            texturePaletteIndexes[rawId + 128] = paletteIndex;
+                            referencedPalettes[paletteOffset] = true;
+                        } else {
+                            BinaryUtils.skipBytes(dataIn, packedBytes);
                         }
-                        textureTable[rawId + 128] = tex;
-                        textureIdToPaletteIndex.put(new Byte(rawId), new Integer(globalPaletteIndex + paletteOffset));
-                    } else {
-                        BinaryUtils.skipBytes(dataIn, packedBytes);
                     }
-                }
 
-                for (int pIdx = 0; pIdx < paletteEntryCount; ++pIdx) {
-                    int colorCount = BinaryUtils.readIntBE(dataIn);
-                    if (!textureIdToPaletteIndex.contains(new Integer(globalPaletteIndex + pIdx))) {
-                        BinaryUtils.skipBytes(dataIn, 4 * colorCount);
-                    } else {
-                        int[] colors = new int[colorCount];
-                        for (int c = 0; c < colorCount; ++c) colors[c] = BinaryUtils.readIntBE(dataIn);
-                        int[][] shaded = Texture.createColorPalettes(colors);
-                        paletteCache.put(Integer.toString(globalPaletteIndex + pIdx), shaded);
-                    }
+                    readReferencedPalettes(dataIn, referencedPalettes, globalPaletteIndex);
+                    globalPaletteIndex += paletteEntryCount;
+                    DebugLogger.log("LevelLoader", "atlas ok " + fullPath + " entries=" + spriteEntryCount);
+                } finally {
+                    closeDataInputStream(dataIn);
                 }
-
-                globalPaletteIndex += paletteEntryCount;
-                dataIn.close();
-                DebugLogger.log("LevelLoader", "atlas ok " + fullPath + " entries=" + spriteEntryCount);
             }
 
-            // ---- Link sprites to palettes ----
-            for (int spriteId = 0; spriteId < 128; ++spriteId) {
+            // ---- Link sprites to their palettes ----
+            for (int spriteId = 0; spriteId < spriteTable.length; ++spriteId) {
                 Sprite spr = spriteTable[spriteId];
                 if (spr != null) {
-                    if (spr.pixelData == null) throw new IllegalStateException("Sprite without pixels: " + spriteId);
-                    Integer paletteIdx = (Integer)textureIdToPaletteIndex.get(new Byte(spr.spriteId));
-                    spr.colorPalettes = (int[][])paletteCache.get(paletteIdx.toString());
+                    if (spr.pixelData == null) {
+                        throw new IllegalStateException("Sprite without pixels: " + spriteId);
+                    }
+                    spr.colorPalettes = getResolvedPalette(spritePaletteIndexes[spriteId],
+                            "Sprite", spriteId);
                 }
             }
 
@@ -494,7 +502,7 @@ public final class LevelLoader {
             if ((tmp = textureTable[174]) != null) base46Pixels = tmp.pixelData;
             if ((tmp = textureTable[177]) != null) base49Pixels = tmp.pixelData;
 
-            for (int texIdx = 0; texIdx < 256; ++texIdx) {
+            for (int texIdx = 0; texIdx < textureTable.length; ++texIdx) {
                 Texture tex = textureTable[texIdx];
                 if (tex == null) continue;
 
@@ -553,8 +561,8 @@ public final class LevelLoader {
                 }
 
                 if (tex.width != 0) {
-                    Integer paletteIdx = (Integer)textureIdToPaletteIndex.get(new Byte(texType));
-                    tex.colorPalettes = (int[][])paletteCache.get(paletteIdx.toString());
+                    tex.colorPalettes = getResolvedPalette(texturePaletteIndexes[texType + 128],
+                            "Texture", texType);
                 }
             }
 
@@ -575,6 +583,102 @@ public final class LevelLoader {
 
         resourceLoadState = 2;
         return true;
+    }
+
+    /** Creates a primitive index table initialized to the missing-palette value. */
+    private static int[] createPaletteIndexArray(int length) {
+        int[] indexes = new int[length];
+        for (int i = 0; i < length; ++i) {
+            indexes[i] = NO_PALETTE;
+        }
+        return indexes;
+    }
+
+    /** Validates a per-file palette offset and turns it into a global index. */
+    private static int getPaletteIndex(int firstPaletteIndex, int paletteOffset,
+                                       int paletteCount, String atlasPath) {
+        if (paletteOffset >= paletteCount) {
+            throw new IllegalStateException("Bad palette offset in " + atlasPath);
+        }
+        return firstPaletteIndex + paletteOffset;
+    }
+
+    /** Checks dimensions before allocating unpacked pixels or skipping packed data. */
+    private static int getPixelCount(int width, int height, String atlasPath) {
+        long pixelCount = (long)width * (long)height;
+        if (width <= 0 || height <= 0 || pixelCount > Integer.MAX_VALUE) {
+            throw new IllegalStateException("Bad dimensions in " + atlasPath);
+        }
+        return (int)pixelCount;
+    }
+
+    private static int getPackedByteCount(int pixelCount, int bitDepth, String atlasPath) {
+        long bitCount = (long)pixelCount * (long)bitDepth;
+        if (bitDepth <= 0 || bitCount > (long)Integer.MAX_VALUE * 8L) {
+            throw new IllegalStateException("Bad bit depth in " + atlasPath);
+        }
+        return (int)((bitCount + 7L) >> 3);
+    }
+
+    /**
+     * Reads only the palettes used by preloaded resources in the current
+     * atlas. The reference bitmap replaces a Hashtable membership lookup for
+     * each palette and avoids all boxed keys in the loading path.
+     */
+    private static void readReferencedPalettes(DataInputStream dataIn,
+                                               boolean[] referencedPalettes,
+                                               int firstPaletteIndex) throws IOException {
+        ensurePaletteCacheCapacity(firstPaletteIndex + referencedPalettes.length);
+
+        for (int paletteOffset = 0; paletteOffset < referencedPalettes.length; ++paletteOffset) {
+            int colorCount = BinaryUtils.readIntBE(dataIn);
+            if (colorCount < 0 || colorCount > Integer.MAX_VALUE / 4) {
+                throw new IllegalStateException("Bad palette length");
+            }
+
+            if (!referencedPalettes[paletteOffset]) {
+                BinaryUtils.skipBytes(dataIn, colorCount * 4);
+            } else {
+                int[] colors = new int[colorCount];
+                for (int color = 0; color < colorCount; ++color) {
+                    colors[color] = BinaryUtils.readIntBE(dataIn);
+                }
+                paletteCache[firstPaletteIndex + paletteOffset] = Texture.createColorPalettes(colors);
+            }
+        }
+    }
+
+    private static void ensurePaletteCacheCapacity(int requiredLength) {
+        if (requiredLength <= 0) return;
+        if (paletteCache != null && paletteCache.length >= requiredLength) return;
+
+        int newLength = paletteCache == null ? 16 : paletteCache.length;
+        while (newLength < requiredLength) {
+            newLength <<= 1;
+        }
+
+        int[][][] expanded = new int[newLength][][];
+        if (paletteCache != null) {
+            System.arraycopy(paletteCache, 0, expanded, 0, paletteCache.length);
+        }
+        paletteCache = expanded;
+    }
+
+    private static int[][] getResolvedPalette(int paletteIndex, String resourceType, int resourceId) {
+        if (paletteIndex < 0 || paletteCache == null
+                || paletteIndex >= paletteCache.length || paletteCache[paletteIndex] == null) {
+            throw new IllegalStateException(resourceType + " without palette: " + resourceId);
+        }
+        return paletteCache[paletteIndex];
+    }
+
+    private static void closeDataInputStream(DataInputStream dataIn) {
+        if (dataIn == null) return;
+        try {
+            dataIn.close();
+        } catch (IOException ignored) {
+            // A resource stream has no useful recovery path at this point.
+        }
     }
 
     public static void preloadTexture(byte textureId) {

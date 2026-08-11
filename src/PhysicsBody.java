@@ -58,11 +58,7 @@ public final class PhysicsBody extends Transform3D {
         this.velocityY = MathUtils.fixedPointMultiply(this.velocityY, scaleY);
         this.angularVelocity = MathUtils.fixedPointMultiply(this.angularVelocity, scaleRot);
 
-        // Apply velocity threshold - set to zero if below threshold
-        // Note: Duplicate velocityX check appears in original game code
-        if (this.velocityX < VELOCITY_THRESHOLD && this.velocityX > -VELOCITY_THRESHOLD) {
-            this.velocityX = 0;
-        }
+        // Apply velocity threshold - set to zero if below threshold.
         if (this.velocityX < VELOCITY_THRESHOLD && this.velocityX > -VELOCITY_THRESHOLD) {
             this.velocityX = 0;
         }

@@ -70,7 +70,7 @@ public final class BMPLoader {
     public static BMPLoader loadBMP(String name) throws IOException {
         if (name == null) throw new NullPointerException();
 
-        InputStream is = (new Object()).getClass().getResourceAsStream(name);
+        InputStream is = BMPLoader.class.getResourceAsStream(name);
         if (is == null) throw new IOException("Resource not found: " + name);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

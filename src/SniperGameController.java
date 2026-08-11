@@ -26,7 +26,7 @@ public final class SniperGameController {
     private static int[] loadSpriteRaw(String path, boolean flip) {
         int[] result = null;
         try {
-            InputStream stream = (new Object()).getClass().getResourceAsStream(path);
+            InputStream stream = SniperGameController.class.getResourceAsStream(path);
             DataInputStream dataInput = new DataInputStream(stream);
             dataInput.skipBytes(1);
             byte compression = dataInput.readByte();

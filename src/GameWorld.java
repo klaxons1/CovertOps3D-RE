@@ -79,7 +79,6 @@ public final class GameWorld {
     public WallSegment[] wallSegments;
 
     public GameWorld() {
-        new Point2D(0, 0);
         this.projectiles = new Vector();
         this.pickupItems = new Vector();
         this.lastWallIndex = -1;
