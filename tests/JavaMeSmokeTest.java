@@ -23,6 +23,7 @@ public final class JavaMeSmokeTest {
     public static void main(String[] args) throws Exception {
         testBinaryUtils();
         testRotationNormalization();
+        testPaletteLighting();
         testAllShippedLevels();
         System.out.println("Java ME smoke test: OK");
     }
@@ -75,6 +76,19 @@ public final class JavaMeSmokeTest {
         transform.setPosition(0, 0, 0, 5);
         transform.applyMovement(0, 0, 0, -fullCircle * 5 - 7);
         assertEquals("multiple negative wraps", fullCircle - 2, transform.rotation);
+    }
+
+    private static void testPaletteLighting() {
+        // Warm, highlight-rich color: it makes a hard additive clip obvious.
+        int[][] palettes = Texture.createColorPalettes(new int[]{0x00dc6e28});
+        assertEquals("palette rows", 16, palettes.length);
+        assertEquals("neutral authored color", 0xffdc6e28, palettes[8][0]);
+        assertEquals("linear shadow exposure", 0xff4e270e, palettes[0][0]);
+        assertEquals("soft highlight rolloff", 0xfff5b04d, palettes[15][0]);
+
+        assertTrue("shadow is darker", (palettes[0][0] & 0x00ffffff)
+                < (palettes[8][0] & 0x00ffffff));
+        assertTrue("highlight preserves red detail", ((palettes[15][0] >> 16) & 0xff) < 255);
     }
 
     private static void testAllShippedLevels() {

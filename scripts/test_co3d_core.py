@@ -5,12 +5,13 @@
 
 Проверяет:
   1) parse/dump roundtrip всех карт (байт-в-байт);
-  2) парсинг атласов + разрешение всех текстур, реально используемых картами;
-  3) ребилд сегментов/BSP/PVS для каждой карты: дерево обязано классифицировать
+  2) контрольные цвета 16-уровневой палитры, общей для Java и превью;
+  3) парсинг атласов + разрешение всех текстур, реально используемых картами;
+  4) ребилд сегментов/BSP/PVS для каждой карты: дерево обязано классифицировать
      контрольные точки (объекты + внутренние точки секторов) так же, как
      точечный тест принадлежности сектору; результат можно сохранить и снова
      прогнать roundtrip;
-  4) рендер кадров из точек спавна в BMP (для визуальной проверки).
+  5) рендер кадров из точек спавна в BMP (для визуальной проверки).
 BMP складываются в scripts/_test_out/.
 """
 
@@ -35,6 +36,19 @@ def test_roundtrip():
         same = C.dump_level(lv) == data
         ok &= same
         print('  %-10s %s' % (name, 'OK' if same else 'MISMATCH'))
+    return ok
+
+
+def test_palette_lighting():
+    print('== palette lighting ==')
+    pal = C.create_color_palettes([0x00dc6e28])
+    expected = (0xff4e270e, 0xffdc6e28, 0xfff5b04d)
+    actual = (0xff000000 | pal[0][0],
+              0xff000000 | pal[8][0],
+              0xff000000 | pal[15][0])
+    ok = len(pal) == 16 and actual == expected
+    print('  shadow=%08x neutral=%08x highlight=%08x %s' %
+          (actual[0], actual[1], actual[2], 'OK' if ok else 'MISMATCH'))
     return ok
 
 
@@ -120,6 +134,7 @@ def test_render():
 if __name__ == '__main__':
     ok = True
     ok &= test_roundtrip()
+    ok &= test_palette_lighting()
     ok &= test_texture_refs()
     ok &= test_rebuild()
     ok &= test_render()
