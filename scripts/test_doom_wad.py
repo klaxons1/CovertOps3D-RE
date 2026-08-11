@@ -35,6 +35,7 @@ def main():
         assert report['pvs_visible_pairs'] == 6021
         assert (report['wall_textures'], report['flats']) == (32, 21)
         assert (report['doors'], report['enemies'], report['enemy_sprite_materials']) == (8, 29, 3)
+        assert report['hud_weapon_frames'] == 16
         info = C3.read_c3b(os.path.join(directory, 'level.c3b'))
         assert info['entities'] == 'entities.ini'
         committed = os.path.join(ROOT, 'res', 'gamedata', 'custom', 'doom-e1m1')
@@ -54,6 +55,9 @@ def main():
                    for path in materials.values())
         sprite_keys = sorted(key for key in materials if key.startswith('sprite.'))
         assert sprite_keys == ['sprite.1', 'sprite.2', 'sprite.3']
+        for weapon in ('fist', 'pistol', 'shotgun', 'chaingun', 'rocket', 'plasma', 'bfg', 'chainsaw'):
+            for frame in ('a', 'b'):
+                assert os.path.exists(os.path.join(directory, 'hud', weapon + '_' + frame + '.bmp'))
         for key in sprite_keys:
             sprite = open(os.path.join(directory, materials[key]), 'rb').read()
             width, height, planes, bpp = struct.unpack_from('<iiHH', sprite, 18)

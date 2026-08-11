@@ -42,7 +42,21 @@ DOOM_DOOR_SPECIALS = (1, 2, 3, 4, 16, 26, 27, 28, 31, 32, 33, 34)
 # Covert billboard projection is tuned for much larger textures, so normalize
 # Doom actors to this physical art height during conversion instead of baking a
 # per-frame scale cost into the Java ME renderer.
-DOOM_RUNTIME_SPRITE_HEIGHT = 96
+DOOM_RUNTIME_SPRITE_HEIGHT = 160
+
+# First-person weapon patches are separate from world billboards. Keeping two
+# neutral/firing frames per weapon is enough for the current compact Java ME
+# weapon animation while a later Doom state machine can consume all frames.
+DOOM_HUD_WEAPONS = (
+    ('fist', 'PUNGA0', 'PUNGB0'),
+    ('pistol', 'PISGA0', 'PISGB0'),
+    ('shotgun', 'SHTGA0', 'SHTGB0'),
+    ('chaingun', 'CHGGA0', 'CHGGB0'),
+    ('rocket', 'MISGA0', 'MISGB0'),
+    ('plasma', 'PLSGA0', 'PLSGB0'),
+    ('bfg', 'BFGGA0', 'BFGGB0'),
+    ('chainsaw', 'SAWGA0', 'SAWGB0'),
+)
 
 DOOM_ENEMIES = {
     3001: dict(engine_type=3001, sprite='TROOA1', label='imp'),
@@ -386,9 +400,11 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
         filename = 'sprites/doom/%02d_%s.bmp' % (slot, _safe_name(info['sprite']))
         manifest_lines.append('sprite.%d=%s' % (slot, filename))
         material_lines.append('sprite.%s=%d' % (info['sprite'], slot))
+    hud_weapon_count = _export_hud_weapon_sprites(wad, palette, package_dir)
     report['enemies'] = sum(1 for thing in doom_map.things if thing['type'] in enemy_sprite_slots)
     report['enemy_sprite_materials'] = len(enemy_sprite_slots)
     report['enemy_sprite_height'] = DOOM_RUNTIME_SPRITE_HEIGHT
+    report['hud_weapon_frames'] = hud_weapon_count
 
     _write_text(os.path.join(package_dir, 'materials.c3m'), '\n'.join(manifest_lines) + '\n')
     _write_text(os.path.join(package_dir, 'doom_materials.ini'), '\n'.join(material_lines) + '\n')
@@ -538,6 +554,24 @@ def _export_runtime_enemy_sprites(wad, palette, package_dir):
         slots[doom_type] = slot
         slot += 1
     return slots
+
+
+def _export_hud_weapon_sprites(wad, palette, package_dir):
+    """Exports the two primary first-person frames for all Doom weapons."""
+    hud_dir = os.path.join(package_dir, 'hud')
+    if not os.path.isdir(hud_dir):
+        os.makedirs(hud_dir)
+    count = 0
+    for weapon, idle_lump, fire_lump in DOOM_HUD_WEAPONS:
+        for suffix, lump in (('a', idle_lump), ('b', fire_lump)):
+            try:
+                width, height, _left, _top, pixels = decode_patch(wad.lump(lump), palette)
+            except Exception as error:
+                raise DoomWadError('HUD weapon patch %s: %s' % (lump, error))
+            _write_sprite_bmp(os.path.join(hud_dir, weapon + '_' + suffix + '.bmp'),
+                              width, height, pixels)
+            count += 1
+    return count
 
 
 def export_sprites(wad, doom_map, package_dir, palette, mode='used'):

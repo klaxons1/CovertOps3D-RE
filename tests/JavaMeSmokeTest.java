@@ -27,6 +27,7 @@ public final class JavaMeSmokeTest {
         testLanguageSwitch();
         testExternalMaterials();
         testExternalEntities();
+        testDoomLoadout();
         testC3BLevel();
         testC3BFrameRenders();
         testDoomE1M1Level();
@@ -138,6 +139,17 @@ public final class JavaMeSmokeTest {
     private static void testExternalEntities() throws Exception {
         CustomEntitySet entities = CustomEntitySet.load("/gamedata/custom/demo/entities.ini");
         assertEquals("custom entity count", 1, entities.getEntityCount());
+    }
+
+    private static void testDoomLoadout() {
+        DoomGameMode.setActive(true);
+        DoomGameMode.configurePlayerLoadout(null);
+        for (int i = 0; i < WeaponFactory.WEAPON_COUNT; ++i) {
+            assertTrue("Doom weapon available " + i, GameEngine.weaponsAvailable[i]);
+        }
+        assertEquals("Doom current weapon", WeaponFactory.PISTOL, GameEngine.currentWeapon);
+        assertEquals("Doom bullets", 200, GameEngine.ammoCounts[WeaponFactory.PISTOL]);
+        assertEquals("Doom shells", 50, GameEngine.ammoCounts[WeaponFactory.SHOTGUN]);
     }
 
     private static void testC3BLevel() {

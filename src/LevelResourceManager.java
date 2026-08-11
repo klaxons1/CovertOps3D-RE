@@ -48,12 +48,17 @@ public final class LevelResourceManager {
      */
     public boolean loadCustomLevelResources(String c3bPath) {
         try {
+            boolean doomMode = DoomGameMode.isDoomLevelPath(c3bPath);
+            DoomGameMode.setActive(doomMode);
             HelperUtils.freeMemory();
             if (!CustomLevelLoader.load(c3bPath, true)) {
                 DebugLogger.log("LevelResourceManager", "C3B load failed: " + c3bPath);
                 return false;
             }
             GameEngine.resetLevelState();
+            if (doomMode) {
+                DoomGameMode.configurePlayerLoadout(weaponManager);
+            }
             HelperUtils.freeMemory();
             DebugLogger.log("LevelResourceManager", "C3B load ok: " + c3bPath);
             return true;
@@ -85,6 +90,7 @@ public final class LevelResourceManager {
                 return;
             }
 
+            DoomGameMode.setActive(false);
             if (MainGameCanvas.previousLevelId < MainGameCanvas.currentLevelId) {
                 if (MainGameCanvas.previousLevelId > -1) {
                     cachedStaticObjects = LevelLoader.gameWorld.staticObjects;

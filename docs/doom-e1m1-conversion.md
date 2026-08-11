@@ -28,6 +28,7 @@ textures/*.bmp       # 16-цветные indexed BMP4
 
 doom_materials.ini   # Doom texture/flat name → C3D material slot
 doom_things.ini      # остальные Doom things как source metadata
+hud/*.bmp             # fist/pistol/shotgun/... HUD frames из WAD
 doom_conversion.json # размеры, hash исходника и BSP report
 ```
 
@@ -41,6 +42,8 @@ doom_conversion.json # размеры, hash исходника и BSP report
   lumps;
 - использованные 64×64 flats и `SKY1` → C3D sky;
 - игроки Doom things `1..4` → `entities.ini`;
+- 16 HUD weapon frames: fist, pistol, shotgun, chaingun, rocket, plasma,
+  BFG и chainsaw;
 - свет секторов `0..255` → C3D `0..15`;
 - необязательные Doom sprite patch lumps (`--sprites used|all`).
 
@@ -75,6 +78,12 @@ patches масштабируются до 96px высоты при конвер�
 всех AI frame indexes; обычный combat/movement уже работает через `GameEngine`.
 Doom elevators, switches, keys, exit scripting и остальные thing остаются
 metadata в `doom_things.ini` до отдельного этапа точного Doom gameplay.
+
+Все восемь Doom weapon slots доступны игроку сразу в E1M1 sandbox:
+fist, pistol, shotgun, chaingun, rocket launcher, plasma rifle, BFG9000 и
+chainsaw. Их HUD BMP4 patch frames выгружаются в `hud/`; текущий переходный
+fire path уже использует Doom damage/ammo definitions, а точные projectile,
+spread и BFG tracer states будут следующим gameplay-проходом.
 
 `--sprites used|all` по-прежнему экспортирует дополнительные quantized Doom
 patch BMP4 для редактора и будущей покадровой анимации, но не нужен для уже

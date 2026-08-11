@@ -965,7 +965,9 @@ public final class GameWorld {
     }
 
     /**
-     * Fires the player's current weapon.
+     * Fires a Doom-profile weapon. Projectile visuals and BFG tracers will be
+     * expanded in the Doom gameplay pass; this compact first pass gives every
+     * weapon a deterministic hitscan/close-range attack immediately.
      */
     public final void fireWeapon() {
         int currentWeaponId = GameEngine.currentWeapon;
@@ -973,110 +975,36 @@ public final class GameWorld {
         int sinAngle = MathUtils.fastSin(ANGLE_90_DEGREES - playerAngle);
         int cosAngle = MathUtils.fastCos(ANGLE_90_DEGREES - playerAngle);
 
-        boolean isShortRangeWeapon = currentWeaponId == WeaponFactory.FIST
-                || currentWeaponId == WeaponFactory.PANZERFAUST
-                || currentWeaponId == WeaponFactory.SONIC;
-        int weaponRange = isShortRangeWeapon ? OBJECT_COLLISION_RADIUS : MAX_HITSCAN_RANGE;
-
+        boolean closeWeapon = currentWeaponId == WeaponFactory.FIST
+                || currentWeaponId == WeaponFactory.CHAINSAW;
+        int weaponRange = closeWeapon ? OBJECT_COLLISION_RADIUS << 2 : MAX_HITSCAN_RANGE;
         int targetX = GameEngine.player.x + MathUtils.fixedPointMultiply(weaponRange, cosAngle);
         int targetZ = GameEngine.player.z + MathUtils.fixedPointMultiply(weaponRange, sinAngle);
 
-        if (currentWeaponId == WeaponFactory.PANZERFAUST) {
-            HelperUtils.playSound(4, false, 100, 2);
-            Transform3D rocketTransform = new Transform3D(targetX,
-                    GameEngine.cameraHeight - COLLISION_RADIUS, targetZ, playerAngle);
-
-            if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
-                    rocketTransform.x, rocketTransform.z, rocketTransform.y)) {
-                GameObject rocket = new GameObject(rocketTransform, 0, 100, 0);
-                rocket.addSpriteFrame((byte)0, (byte)-44);
-                rocket.addSpriteFrame((byte)0, (byte)-45);
-                rocket.spriteFrameIndex = 0;
-                this.projectiles.addElement(rocket);
-            }
-            return;
-        }
-
-        if (currentWeaponId == WeaponFactory.SONIC) {
-            HelperUtils.playSound(5, false, 100, 2);
-
-            sinAngle = MathUtils.fastSin(playerAngle);
-            cosAngle = MathUtils.fastCos(playerAngle);
-            int offsetX = 10 * cosAngle;
-            int offsetZ = -10 * sinAngle;
-
-            Transform3D leftTransform = new Transform3D(targetX - offsetX,
-                    GameEngine.cameraHeight - COLLISION_RADIUS, targetZ - offsetZ, playerAngle);
-            if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
-                    leftTransform.x, leftTransform.z, leftTransform.y)) {
-                GameObject leftProjectile = new GameObject(leftTransform, 0, 102, 0);
-                leftProjectile.addSpriteFrame((byte)0, (byte)-71);
-                leftProjectile.spriteFrameIndex = 0;
-                this.projectiles.addElement(leftProjectile);
-            }
-
-            Transform3D rightTransform = new Transform3D(targetX + offsetX,
-                    GameEngine.cameraHeight - COLLISION_RADIUS, targetZ + offsetZ, playerAngle);
-            if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
-                    rightTransform.x, rightTransform.z, rightTransform.y)) {
-                GameObject rightProjectile = new GameObject(rightTransform, 0, 102, 0);
-                rightProjectile.addSpriteFrame((byte)0, (byte)-71);
-                rightProjectile.spriteFrameIndex = 0;
-                this.projectiles.addElement(rightProjectile);
-            }
-            return;
-        }
-
+        Weapon weapon = MainGameCanvas.weaponManager.getCurrentWeapon();
+        int pelletCount = currentWeaponId == WeaponFactory.SHOTGUN ? 7
+                : (currentWeaponId == WeaponFactory.BFG9000 ? 8 : 1);
+        int damage = weapon.getDamage(GameEngine.difficultyLevel);
         boolean hitEnemy = false;
-        Weapon currentWeapon = MainGameCanvas.weaponManager.getCurrentWeapon();
 
-        for (int i = 0; i < this.staticObjects.length; i++) {
-            GameObject enemy = this.staticObjects[i];
-            if (enemy == null || enemy.aiState == -1) continue;
-
-            Transform3D enemyTransform = enemy.transform;
-
-            if (!this.checkLineOfSight(GameEngine.player, enemyTransform)) continue;
-
-            if (doesLineIntersectCircle(GameEngine.player.x, GameEngine.player.z,
-                    targetX, targetZ, enemyTransform.x, enemyTransform.z, ENEMY_HIT_RADIUS)) {
-
-                int damage = currentWeapon.getDamage(GameEngine.difficultyLevel);
-                int hitSound = 0;
-
-                switch (currentWeaponId) {
-                    case WeaponFactory.FIST:
-                        break;
-
-                    case WeaponFactory.LUGER:
-                    case WeaponFactory.MAUSER:
-                        hitSound = 7;
-                        break;
-
-                    case WeaponFactory.RIFLE:
-                    case WeaponFactory.STEN:
-                        hitSound = 9;
-                        break;
-                }
-
-                if (hitSound != 0) {
-                    HelperUtils.playSound(hitSound, false, 100, 1);
+        for (int pellet = 0; pellet < pelletCount; ++pellet) {
+            for (int i = 0; i < this.staticObjects.length; i++) {
+                GameObject enemy = this.staticObjects[i];
+                if (enemy == null || enemy.aiState == -1) continue;
+                Transform3D enemyTransform = enemy.transform;
+                if (!this.checkLineOfSight(GameEngine.player, enemyTransform)) continue;
+                if (doesLineIntersectCircle(GameEngine.player.x, GameEngine.player.z,
+                        targetX, targetZ, enemyTransform.x, enemyTransform.z, ENEMY_HIT_RADIUS)) {
+                    applyDamageToEnemy(enemy, damage);
                     hitEnemy = true;
+                    break;
                 }
-
-                applyDamageToEnemy(enemy, damage);
-                break;
             }
         }
 
-        if (!hitEnemy) {
-            if (currentWeaponId == WeaponFactory.LUGER || currentWeaponId == WeaponFactory.MAUSER) {
-                HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
-            }
-            if (currentWeaponId == WeaponFactory.RIFLE || currentWeaponId == WeaponFactory.STEN) {
-                HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
-            }
-        }
+        // Reuse the tiny existing sound table until Doom sound extraction is
+        // migrated; no CovertOps weapon branching remains in the fire path.
+        HelperUtils.playSound(hitEnemy ? 7 : 2, false, 100, 1);
     }
 
     /**
