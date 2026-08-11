@@ -16,6 +16,8 @@
   "map": "E1M1",
   "minimum_clearance": 64,
   "missing_wall_textures": [],
+  "projectile_sprite_height": 32,
+  "projectile_sprite_materials": 4,
   "pvs_mode": "doom-reject",
   "pvs_visible_pairs": 6021,
   "sectors": 83,

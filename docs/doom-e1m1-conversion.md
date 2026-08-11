@@ -81,9 +81,10 @@ metadata в `doom_things.ini` до отдельного этапа точног�
 
 Все восемь Doom weapon slots доступны игроку сразу в E1M1 sandbox:
 fist, pistol, shotgun, chaingun, rocket launcher, plasma rifle, BFG9000 и
-chainsaw. Их HUD BMP4 patch frames выгружаются в `hud/`; текущий переходный
-fire path уже использует Doom damage/ammo definitions, а точные projectile,
-spread и BFG tracer states будут следующим gameplay-проходом.
+chainsaw. Их HUD BMP4 patch frames выгружаются в `hud/`. Rocket, plasma и BFG
+сразу создают видимый world projectile с отдельным Doom BMP4, а imp использует
+`BAL1A0` fireball вместо legacy Covert projectile. Точные spread, splash
+falloff и BFG tracer states останутся следующим gameplay-проходом.
 
 `--sprites used|all` по-прежнему экспортирует дополнительные quantized Doom
 patch BMP4 для редактора и будущей покадровой анимации, но не нужен для уже

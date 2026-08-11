@@ -2,6 +2,10 @@ public final class GameObject {
     public Transform3D transform;
     public int objectType;
     public int detonationTimer;
+    // Optional Doom projectile data. Zero keeps all legacy projectiles on
+    // their original behavior without allocating a separate subtype.
+    public int projectileDamage;
+    public boolean projectileFromPlayer;
     // Sprite frame id lists: plain arrays instead of Vector - these are read
     // every frame in the renderer and Vector.elementAt is synchronized + boxes
     // every id into a Byte. Counts stay tiny (<=7 frames), arrays are exact.
@@ -27,6 +31,8 @@ public final class GameObject {
         this.projectionData = new Point2D(0, 0);
         this.objectType = type;
         this.detonationTimer = fuseTime;
+        this.projectileDamage = 0;
+        this.projectileFromPlayer = false;
         this.upperBodySpriteIds = new byte[4];
         this.lowerBodySpriteIds = new byte[4];
         this.spriteFrameCount = 0;

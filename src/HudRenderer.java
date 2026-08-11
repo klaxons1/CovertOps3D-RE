@@ -12,6 +12,13 @@ public final class HudRenderer {
     private Image statusBarImage;
     private Image crosshairImage;
 
+    // Render-frame counter, independent of the fixed 20 Hz game tick. Values
+    // are cached once per half second so the overlay allocates no String each
+    // frame on CLDC.
+    private long fpsWindowStart;
+    private int fpsFrames;
+    private String fpsText = "FPS --";
+
     public HudRenderer(FontRenderer fontRenderer) {
         this.fontRenderer = fontRenderer;
     }
@@ -58,6 +65,7 @@ public final class HudRenderer {
                 graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, MainGameCanvas.UI_HEIGHT);
             }
 
+            drawFrameCounter(graphics);
             return headBob;
         } catch (Exception e) {
             DebugLogger.logException("HudRenderer", e);
@@ -66,6 +74,27 @@ public final class HudRenderer {
             DebugLogger.logOutOfMemory("HudRenderer", e);
             return 0;
         }
+    }
+
+    /** Draws a cached render FPS counter in the upper-left world corner. */
+    private void drawFrameCounter(Graphics graphics) {
+        long now = System.currentTimeMillis();
+        if (fpsWindowStart == 0L) {
+            fpsWindowStart = now;
+        }
+        ++fpsFrames;
+        long elapsed = now - fpsWindowStart;
+        if (elapsed >= 500L) {
+            int fps = (int)((long)fpsFrames * 1000L / elapsed);
+            fpsText = "FPS " + fps;
+            fpsFrames = 0;
+            fpsWindowStart = now;
+        }
+
+        graphics.setColor(0x000000);
+        graphics.fillRect(0, 0, 58, 13);
+        graphics.setColor(0xE8E8E8);
+        graphics.drawString(fpsText, 2, 1, Graphics.TOP | Graphics.LEFT);
     }
 
     /** Compact Doom-style status strip; avoids the old CovertOps bar asset. */

@@ -233,6 +233,8 @@ public final class JavaMeSmokeTest {
                 && LevelLoader.getTexture((byte)1).pixelData != null);
         assertTrue("Doom E1M1 enemy sprite texture", LevelLoader.getTexture((byte)-1) != null
                 && LevelLoader.getTexture((byte)-1).pixelData != null);
+        assertTrue("Doom E1M1 projectile sprite texture", LevelLoader.getTexture((byte)-4) != null
+                && LevelLoader.getTexture((byte)-7).pixelData != null);
         assertTrue("Doom E1M1 enemy sprite frame", world.staticObjects[0]
                 .getCurrentLowerBodySpriteId() != 0);
         assertTrue("Doom E1M1 flat texture", world.sectors[0].ceilingTexture != null

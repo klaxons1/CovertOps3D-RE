@@ -57,3 +57,7 @@ sky=textures/sky.bmp
 sprite.1=sprites/doom/01_sposa1.bmp
 sprite.2=sprites/doom/02_trooa1.bmp
 sprite.3=sprites/doom/03_possa1.bmp
+sprite.4=sprites/doom/04_rocket.bmp
+sprite.5=sprites/doom/05_plasma.bmp
+sprite.6=sprites/doom/06_bfg.bmp
+sprite.7=sprites/doom/07_imp_fireball.bmp

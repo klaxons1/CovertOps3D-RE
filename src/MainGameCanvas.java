@@ -47,18 +47,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     public static boolean mapEnabled = false;
 
-    public static final int[] DAMAGE_3003 = new int[]{10, 15, 20};
-    public static final int[] DAMAGE_3004 = new int[]{15, 20, 25};
+    // Doom E1 actor tuning: type 3003 = shotgun guy, 3004 = zombieman.
+    public static final int[] DAMAGE_3003 = new int[]{15, 15, 15};
+    public static final int[] DAMAGE_3004 = new int[]{5, 5, 5};
     public static final int[] DAMAGE_3005 = new int[]{20, 25, 30};
     public static final int[] DAMAGE_3006 = new int[]{25, 30, 40};
     public static final int[] SNIPER_DAMAGE_SMALL = new int[]{1, 2, 3};
     public static final int[] SNIPER_DAMAGE_MEDIUM = new int[]{2, 4, 5};
     public static final int[] SNIPER_DAMAGE_LARGE = new int[]{3, 5, 7};
-    public static final int[] HP_3003 = new int[]{50, 100, 150};
-    public static final int[] HP_3004 = new int[]{100, 200, 300};
+    public static final int[] HP_3003 = new int[]{30, 30, 30};
+    public static final int[] HP_3004 = new int[]{20, 20, 20};
     public static final int[] HP_3005 = new int[]{100, 200, 300};
     public static final int[] HP_3006 = new int[]{100, 200, 300};
-    public static final int[] HP_3001 = new int[]{200, 400, 600};
+    public static final int[] HP_3001 = new int[]{60, 60, 60};
     public static final int[] HP_3002 = new int[]{300, 600, 900};
     public static final int[] ENEMY_STATE_TRANSITION_TIME = new int[]{64, 64, 64};
     public static final int[] ENEMY_ATTACK_DELAY_MIN = new int[]{6, 4, 2};
@@ -68,11 +69,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] ENEMY_SPAWN_DELAY_VARIANCE = new int[]{128, 128, 128};
     public static final int[] ENEMY_ATTACK_DELAY_BASE = new int[]{128, 64, 32};
     public static final int[] ENEMY_ATTACK_DELAY_VARIANCE = new int[]{32, 32, 32};
-    public static final int[] SPEED_3003 = new int[]{131072, 196608, 262144};
-    public static final int[] SPEED_3004 = new int[]{131072, 196608, 262144};
+    public static final int[] SPEED_3003 = new int[]{131072, 131072, 131072};
+    public static final int[] SPEED_3004 = new int[]{131072, 131072, 131072};
     public static final int[] SPEED_3005 = new int[]{196608, 262144, 327680};
     public static final int[] SPEED_3006 = new int[]{196608, 262144, 327680};
-    public static final int[] SPEED_3001 = new int[]{196608, 262144, 327680};
+    public static final int[] SPEED_3001 = new int[]{131072, 131072, 131072};
     public static final int[] SPEED_3002 = new int[]{196608, 262144, 327680};
     public static final int[] ENEMY_STRAFE_CHANCE_DIVISOR = new int[]{4, 3, 2};
 

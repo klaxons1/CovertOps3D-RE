@@ -892,8 +892,10 @@ public final class GameWorld {
         Transform3D projectileTransform = new Transform3D(spawnX, spawnY, spawnZ, angleToPlayer);
 
         GameObject projectile = new GameObject(projectileTransform, 0, 101, 0);
-        projectile.addSpriteFrame((byte)0, (byte)-46);
-        projectile.addSpriteFrame((byte)0, (byte)-47);
+        projectile.projectileDamage = 12;
+        projectile.projectileFromPlayer = false;
+        projectile.addSpriteFrame((byte)0, DoomGameMode.IMP_FIREBALL_SPRITE);
+        projectile.addSpriteFrame((byte)0, DoomGameMode.IMP_FIREBALL_SPRITE);
         projectile.spriteFrameIndex = 0;
 
         this.projectiles.addElement(projectile);
@@ -964,11 +966,28 @@ public final class GameWorld {
         return false;
     }
 
-    /**
-     * Fires a Doom-profile weapon. Projectile visuals and BFG tracers will be
-     * expanded in the Doom gameplay pass; this compact first pass gives every
-     * weapon a deterministic hitscan/close-range attack immediately.
-     */
+    /** Spawns a player-owned Doom projectile using the fixed-point world path. */
+    private void spawnDoomProjectile(int objectType, int damage, byte spriteTextureId) {
+        int playerAngle = GameEngine.player.rotation;
+        int forwardX = MathUtils.fastSin(playerAngle);
+        int forwardZ = MathUtils.fastCos(playerAngle);
+        int spawnX = GameEngine.player.x + 20 * forwardX;
+        int spawnZ = GameEngine.player.z + 20 * forwardZ;
+        int spawnY = GameEngine.cameraHeight - (10 << 16);
+
+        GameObject projectile = new GameObject(
+                new Transform3D(spawnX, spawnY, spawnZ, playerAngle), 0, objectType, 0);
+        projectile.projectileDamage = damage;
+        projectile.projectileFromPlayer = true;
+        // Type 100 toggles its frame each render, so store the same texture
+        // twice. This keeps the Doom rocket visible without allocating frames.
+        projectile.addSpriteFrame((byte)0, spriteTextureId);
+        projectile.addSpriteFrame((byte)0, spriteTextureId);
+        projectile.spriteFrameIndex = 0;
+        this.projectiles.addElement(projectile);
+    }
+
+    /** Fires a Doom-profile weapon. */
     public final void fireWeapon() {
         int currentWeaponId = GameEngine.currentWeapon;
         int playerAngle = GameEngine.player.rotation;
@@ -982,8 +1001,23 @@ public final class GameWorld {
         int targetZ = GameEngine.player.z + MathUtils.fixedPointMultiply(weaponRange, sinAngle);
 
         Weapon weapon = MainGameCanvas.weaponManager.getCurrentWeapon();
-        int pelletCount = currentWeaponId == WeaponFactory.SHOTGUN ? 7
-                : (currentWeaponId == WeaponFactory.BFG9000 ? 8 : 1);
+        if (currentWeaponId == WeaponFactory.ROCKET_LAUNCHER) {
+            spawnDoomProjectile(100, weapon.getDamage(GameEngine.difficultyLevel),
+                    DoomGameMode.ROCKET_SPRITE);
+            return;
+        }
+        if (currentWeaponId == WeaponFactory.PLASMA_RIFLE) {
+            spawnDoomProjectile(102, weapon.getDamage(GameEngine.difficultyLevel),
+                    DoomGameMode.PLASMA_SPRITE);
+            return;
+        }
+        if (currentWeaponId == WeaponFactory.BFG9000) {
+            spawnDoomProjectile(102, weapon.getDamage(GameEngine.difficultyLevel),
+                    DoomGameMode.BFG_SPRITE);
+            return;
+        }
+
+        int pelletCount = currentWeaponId == WeaponFactory.SHOTGUN ? 7 : 1;
         int damage = weapon.getDamage(GameEngine.difficultyLevel);
         boolean hitEnemy = false;
 
@@ -1139,14 +1173,19 @@ public final class GameWorld {
             int newZ = projTransform.z;
             boolean projectileHit = false;
 
-            int projectileDamage;
-            if (projectile.objectType == 102) {
-                projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.SONIC).getDamage(GameEngine.difficultyLevel);
-            } else {
-                projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.PANZERFAUST).getDamage(GameEngine.difficultyLevel);
+            int projectileDamage = projectile.projectileDamage;
+            if (projectileDamage <= 0) {
+                if (projectile.objectType == 102) {
+                    projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.PLASMA_RIFLE)
+                            .getDamage(GameEngine.difficultyLevel);
+                } else {
+                    projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.ROCKET_LAUNCHER)
+                            .getDamage(GameEngine.difficultyLevel);
+                }
             }
 
-            if (doesLineIntersectCircle(prevX, prevZ, newX, newZ,
+            if (!projectile.projectileFromPlayer
+                    && doesLineIntersectCircle(prevX, prevZ, newX, newZ,
                     GameEngine.player.x, GameEngine.player.z, COLLISION_RADIUS)) {
                 if (projectile.objectType == 101) {
                     HelperUtils.playSound(4, false, 100, 2);
@@ -1158,17 +1197,19 @@ public final class GameWorld {
                 projectileHit = true;
             }
 
-            for (int j = 0; j < this.staticObjects.length; j++) {
-                GameObject enemy = this.staticObjects[j];
-                if (enemy == null || enemy.aiState == -1) continue;
+            if (projectile.projectileFromPlayer) {
+                for (int j = 0; j < this.staticObjects.length; j++) {
+                    GameObject enemy = this.staticObjects[j];
+                    if (enemy == null || enemy.aiState == -1) continue;
 
-                Transform3D enemyTransform = enemy.transform;
-                int hitRadius = (projectile.objectType == 102) ? COLLISION_RADIUS : ENEMY_HIT_RADIUS;
+                    Transform3D enemyTransform = enemy.transform;
+                    int hitRadius = (projectile.objectType == 102) ? COLLISION_RADIUS : ENEMY_HIT_RADIUS;
 
-                if (doesLineIntersectCircle(prevX, prevZ, newX, newZ,
-                        enemyTransform.x, enemyTransform.z, hitRadius)) {
-                    applyDamageToEnemy(enemy, projectileDamage);
-                    projectileHit = true;
+                    if (doesLineIntersectCircle(prevX, prevZ, newX, newZ,
+                            enemyTransform.x, enemyTransform.z, hitRadius)) {
+                        applyDamageToEnemy(enemy, projectileDamage);
+                        projectileHit = true;
+                    }
                 }
             }
 

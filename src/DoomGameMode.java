@@ -7,6 +7,12 @@
  */
 public final class DoomGameMode {
 
+    // Must match converter slots: enemy sprites 1..3, then projectiles 4..6.
+    public static final byte ROCKET_SPRITE = -4;
+    public static final byte PLASMA_SPRITE = -5;
+    public static final byte BFG_SPRITE = -6;
+    public static final byte IMP_FIREBALL_SPRITE = -7;
+
     private static boolean active;
 
     private DoomGameMode() {

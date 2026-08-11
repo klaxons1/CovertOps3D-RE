@@ -58,10 +58,20 @@ DOOM_HUD_WEAPONS = (
     ('chainsaw', 'SAWGA0', 'SAWGB0'),
 )
 
+# World projectile sprites are kept separate from HUD patches. Slots begin
+# after the three enemy billboard materials.
+DOOM_PROJECTILES = (
+    ('rocket', 'MISLA1'),
+    ('plasma', 'PLSSA0'),
+    ('bfg', 'BFUGA0'),
+    ('imp_fireball', 'BAL1A0'),
+)
+DOOM_RUNTIME_PROJECTILE_HEIGHT = 32
+
 DOOM_ENEMIES = {
     3001: dict(engine_type=3001, sprite='TROOA1', label='imp'),
     3004: dict(engine_type=3004, sprite='POSSA1', label='zombieman'),
-    9: dict(engine_type=3004, sprite='SPOSA1', label='shotgun_guy'),
+    9: dict(engine_type=3003, sprite='SPOSA1', label='shotgun_guy'),
 }
 
 THING_SPRITES = {
@@ -400,10 +410,18 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
         filename = 'sprites/doom/%02d_%s.bmp' % (slot, _safe_name(info['sprite']))
         manifest_lines.append('sprite.%d=%s' % (slot, filename))
         material_lines.append('sprite.%s=%d' % (info['sprite'], slot))
+    projectile_sprite_slots = _export_runtime_projectile_sprites(wad, palette, package_dir,
+                                                                   len(enemy_sprite_slots) + 1)
+    for name, slot in projectile_sprite_slots.items():
+        filename = 'sprites/doom/%02d_%s.bmp' % (slot, name)
+        manifest_lines.append('sprite.%d=%s' % (slot, filename))
+        material_lines.append('projectile.%s=%d' % (name, slot))
     hud_weapon_count = _export_hud_weapon_sprites(wad, palette, package_dir)
     report['enemies'] = sum(1 for thing in doom_map.things if thing['type'] in enemy_sprite_slots)
     report['enemy_sprite_materials'] = len(enemy_sprite_slots)
     report['enemy_sprite_height'] = DOOM_RUNTIME_SPRITE_HEIGHT
+    report['projectile_sprite_materials'] = len(projectile_sprite_slots)
+    report['projectile_sprite_height'] = DOOM_RUNTIME_PROJECTILE_HEIGHT
     report['hud_weapon_frames'] = hud_weapon_count
 
     _write_text(os.path.join(package_dir, 'materials.c3m'), '\n'.join(manifest_lines) + '\n')
@@ -552,6 +570,25 @@ def _export_runtime_enemy_sprites(wad, palette, package_dir):
         _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
                           DOOM_RUNTIME_SPRITE_HEIGHT)
         slots[doom_type] = slot
+        slot += 1
+    return slots
+
+
+def _export_runtime_projectile_sprites(wad, palette, package_dir, first_slot):
+    """Exports visible Doom rocket, plasma and BFG projectiles for C3B."""
+    slots = {}
+    sprite_dir = os.path.join(package_dir, 'sprites', 'doom')
+    if not os.path.isdir(sprite_dir):
+        os.makedirs(sprite_dir)
+    slot = first_slot
+    for name, lump in DOOM_PROJECTILES:
+        try:
+            width, height, _left, _top, pixels = decode_patch(wad.lump(lump), palette)
+        except Exception as error:
+            raise DoomWadError('projectile sprite %s: %s' % (lump, error))
+        _write_sprite_bmp(os.path.join(sprite_dir, '%02d_%s.bmp' % (slot, name)),
+                          width, height, pixels, DOOM_RUNTIME_PROJECTILE_HEIGHT)
+        slots[name] = slot
         slot += 1
     return slots
 
