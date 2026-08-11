@@ -32,12 +32,14 @@ public final class HudRenderer {
             weaponManager.render(graphics, headBob);
 
             graphics.drawImage(statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
-            fontRenderer.drawCenteredNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
-            fontRenderer.drawCenteredNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
+            int hudTextY = PortalRenderer.VIEWPORT_HEIGHT
+                    + (MainGameCanvas.STATUS_BAR_HEIGHT - fontRenderer.getLargeCharHeight()) / 2;
+            fontRenderer.drawCenteredNumber(GameEngine.playerHealth, graphics, 58, hudTextY);
+            fontRenderer.drawCenteredNumber(GameEngine.playerArmor, graphics, 138, hudTextY);
 
             int ammoType = weaponManager.getDisplayAmmoType();
             if (ammoType >= 0) {
-                fontRenderer.drawCenteredNumber(GameEngine.ammoCounts[ammoType], graphics, 218, PortalRenderer.VIEWPORT_HEIGHT + 6);
+                fontRenderer.drawCenteredNumber(GameEngine.ammoCounts[ammoType], graphics, 218, hudTextY);
             }
 
             if (weaponManager.getCurrentWeaponId() > 0 && GameEngine.messageTimer == 0 && !MainGameCanvas.mapEnabled) {

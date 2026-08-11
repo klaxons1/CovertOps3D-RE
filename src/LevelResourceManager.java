@@ -27,7 +27,7 @@ public final class LevelResourceManager {
             Image crosshair = Image.createImage("/gamedata/sprites/aim.png");
             hudRenderer.setStatusBarImage(statusBar);
             hudRenderer.setCrosshairImage(crosshair);
-            fontRenderer.loadLargeFont("/gamedata/sprites/font.png");
+            fontRenderer.loadFont(TextStrings.getFontConfigPath());
 
             weaponManager.initialize();
 

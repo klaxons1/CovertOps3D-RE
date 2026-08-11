@@ -349,8 +349,10 @@ public final class SniperGameController {
                         0, 0, PortalRenderer.VIEWPORT_WIDTH, PortalRenderer.VIEWPORT_HEIGHT, false);
                 graphics.drawImage(sightImage, sightX, sightY, 20);
                 graphics.drawImage(statusBarImage, 0, PortalRenderer.VIEWPORT_HEIGHT, 0);
-                fontRenderer.drawCenteredNumber(GameEngine.playerHealth, graphics, 58, PortalRenderer.VIEWPORT_HEIGHT + 6);
-                fontRenderer.drawCenteredNumber(GameEngine.playerArmor, graphics, 138, PortalRenderer.VIEWPORT_HEIGHT + 6);
+                int hudTextY = PortalRenderer.VIEWPORT_HEIGHT
+                        + (MainGameCanvas.STATUS_BAR_HEIGHT - fontRenderer.getLargeCharHeight()) / 2;
+                fontRenderer.drawCenteredNumber(GameEngine.playerHealth, graphics, 58, hudTextY);
+                fontRenderer.drawCenteredNumber(GameEngine.playerArmor, graphics, 138, hudTextY);
                 canvas.flushGraphicsPublic();
 
                 HelperUtils.yieldToOtherThreads();

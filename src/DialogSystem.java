@@ -161,7 +161,6 @@ public final class DialogSystem {
 
         try {
             String version = MainGameCanvas.mainMidlet.getAppProperty("MIDlet-Version");
-            fontRenderer.loadSmallFont("/gamedata/sprites/font_cut.png");
 
             int textY = UI_HEIGHT - MENU_ITEM_HEIGHT;
             int halfScreenBuffer = PortalRenderer.VIEWPORT_WIDTH * HALF_UI_HEIGHT;
@@ -311,7 +310,6 @@ public final class DialogSystem {
                     ? Image.createImage("/gamedata/sprites/doctor.png")
                     : null;
 
-            fontRenderer.loadSmallFont("/gamedata/sprites/font_cut.png");
             int smallH = fontRenderer.getSmallCharHeight();
             int smallSpace = fontRenderer.getSmallSpaceWidth();
 

@@ -208,11 +208,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
             DebugLogger.log("MainGameCanvas", "splash");
             drawSplash(graphics);
+            // Settings must be available before resources so the selected
+            // language picks the correct bitmap-font configuration.
+            DebugLogger.log("MainGameCanvas", "loadSettings");
+            SaveSystem.loadSettingsFromRMS();
+            TextStrings.setLanguage(SaveSystem.language);
             DebugLogger.log("MainGameCanvas", "initResources");
             initializeGameResources();
             DebugLogger.log("MainGameCanvas", "loadSave");
             SaveSystem.loadSaveData();
-            SaveSystem.loadSettingsFromRMS();
             this.areResourcesLoaded = true;
             sniperController = new SniperGameController(this, sniperMiniGame, fontRenderer, hudRenderer.getStatusBarImage());
 

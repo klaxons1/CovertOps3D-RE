@@ -19,7 +19,8 @@ public final class MenuSystem {
     private static final int SETTINGS_SKY_MODE = 54;
     private static final int SETTINGS_MUZZLE_LIGHT_MODE = 55;
     private static final int SETTINGS_SCREEN_EFFECTS_MODE = 56;
-    private static final int SETTINGS_ITEM_COUNT = 10;
+    private static final int SETTINGS_LANGUAGE_MODE = 57;
+    private static final int SETTINGS_ITEM_COUNT = 11;
 
     private final FontRenderer fontRenderer;
     private final MainGameCanvas canvas; // for flushGraphics and timing fields access
@@ -52,7 +53,8 @@ public final class MenuSystem {
                 + (SaveSystem.muzzleLightingEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
         settingsMenuItems[8] = TextStrings.SCREEN_EFFECTS
                 + (SaveSystem.screenEffectsEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
-        settingsMenuItems[9] = TextStrings.BACK;
+        settingsMenuItems[9] = TextStrings.LANGUAGE + TextStrings.getLanguageName();
+        settingsMenuItems[10] = TextStrings.BACK;
     }
 
     public void drawStripedBackground(Graphics graphics, Image background) {
@@ -138,15 +140,23 @@ public final class MenuSystem {
                         itemIndex = i + scrollOffset;
                     }
                     String itemText = menuItems[itemIndex];
-                    int textX = (PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(itemText)) / 2;
+                    int textWidth = fontRenderer.getLargeTextWidth(itemText);
+                    int textX = (PortalRenderer.VIEWPORT_WIDTH - textWidth) / 2;
+                    boolean selectedItem = (menuMode & 15) == itemIndex;
+                    int textY = menuY + (MENU_ITEM_HEIGHT - fontRenderer.getLargeCharHeight()) / 2;
 
-                    if ((menuMode & 15) == itemIndex) {
-                        int boxWidth = 4 * 30;
+                    if (selectedItem) {
+                        int boxWidth = textWidth + 16;
+                        if (boxWidth < 80) boxWidth = 80;
+                        if (boxWidth > PortalRenderer.VIEWPORT_WIDTH - 8) {
+                            boxWidth = PortalRenderer.VIEWPORT_WIDTH - 8;
+                        }
                         graphics.fillRoundRect((PortalRenderer.VIEWPORT_WIDTH - boxWidth) / 2, menuY,
-                                boxWidth, MENU_ITEM_HEIGHT, 10, 10);
+                                boxWidth, MENU_ITEM_HEIGHT, 8, 8);
                     }
 
-                    fontRenderer.drawLargeString(itemText, graphics, textX, menuY);
+                    fontRenderer.drawLargeString(itemText, graphics, textX, textY,
+                            selectedItem ? FontRenderer.STYLE_SELECTED : FontRenderer.STYLE_NORMAL);
                     menuY += MENU_ITEM_HEIGHT;
                 }
 
@@ -158,10 +168,11 @@ public final class MenuSystem {
 
                 String actionText = menuItems == settingsMenuItems ? TextStrings.CHANGE :
                         (menuItems == TextStrings.CONFIRMATION_MENU_ITEMS ? TextStrings.YES : TextStrings.SELECT);
-                fontRenderer.drawLargeString(actionText, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
+                fontRenderer.drawLargeString(actionText, graphics, 3,
+                        UI_HEIGHT - MENU_ITEM_HEIGHT - 3, FontRenderer.STYLE_SELECTED);
                 fontRenderer.drawLargeString(menuItems[totalItems], graphics,
                         PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(menuItems[totalItems]) - 3,
-                        UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
+                        UI_HEIGHT - MENU_ITEM_HEIGHT - 3, FontRenderer.STYLE_NORMAL);
                 canvas.flushGraphicsPublic();
                 HelperUtils.yieldToOtherThreads();
 
@@ -300,6 +311,15 @@ public final class MenuSystem {
                             SaveSystem.saveSettingsToRMS();
                             break;
 
+                        case SETTINGS_LANGUAGE_MODE:
+                            SaveSystem.language = (byte)(SaveSystem.language == TextStrings.LANGUAGE_RUSSIAN
+                                    ? TextStrings.LANGUAGE_ENGLISH : TextStrings.LANGUAGE_RUSSIAN);
+                            TextStrings.setLanguage(SaveSystem.language);
+                            fontRenderer.loadFont(TextStrings.getFontConfigPath());
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
                         case 66: case 67: case 68: case 69: case 70: case 71: case 72: case 73: case 74:
                             if (!canvas.chapterMenuItems[menuMode - 64].equals(TextStrings.UNAVAILABLE)) {
                                 HelperUtils.stopCurrentSound();
@@ -322,8 +342,9 @@ public final class MenuSystem {
 
                 if (GameEngine.inputBack) {
                     GameEngine.inputBack = false;
-                    if (menuItems[menuItems.length - 1] != TextStrings.BACK && !menuItems[menuItems.length - 1].equals("no")) {
-                        if (menuItems[menuItems.length - 1] == TextStrings.QUIT) {
+                    if (!menuItems[menuItems.length - 1].equals(TextStrings.BACK)
+                            && !menuItems[menuItems.length - 1].equals(TextStrings.NO)) {
+                        if (menuItems[menuItems.length - 1].equals(TextStrings.QUIT)) {
                             stackData = new Object[4];
                             stackData[0] = menuItems;
                             stackData[1] = new Integer(menuMode);

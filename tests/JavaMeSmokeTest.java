@@ -24,6 +24,7 @@ public final class JavaMeSmokeTest {
         testBinaryUtils();
         testRotationNormalization();
         testPaletteLighting();
+        testLanguageSwitch();
         testRendererFastPaths();
         testFlatSpriteColors();
         testAllShippedLevels();
@@ -91,6 +92,22 @@ public final class JavaMeSmokeTest {
         assertTrue("shadow is darker", (palettes[0][0] & 0x00ffffff)
                 < (palettes[8][0] & 0x00ffffff));
         assertTrue("highlight preserves red detail", ((palettes[15][0] >> 16) & 0xff) < 255);
+    }
+
+    private static void testLanguageSwitch() {
+        TextStrings.setLanguage(TextStrings.LANGUAGE_RUSSIAN);
+        assertEquals("russian menu", "новая игра", TextStrings.mainMenuItems[0]);
+        assertEquals("russian font config", "/gamedata/font/ru_font.txt",
+                TextStrings.getFontConfigPath());
+        assertEquals("russian language name", "русский", TextStrings.getLanguageName());
+
+        TextStrings.setLanguage(TextStrings.LANGUAGE_ENGLISH);
+        assertEquals("english menu", "new game", TextStrings.mainMenuItems[0]);
+        assertEquals("english font config", "/gamedata/font/en_font.txt",
+                TextStrings.getFontConfigPath());
+
+        // Keep the test process aligned with the application's first-run default.
+        TextStrings.setLanguage(TextStrings.LANGUAGE_RUSSIAN);
     }
 
     /** Verifies the MascotME-inspired bulk clear and unrolled opaque-flat path. */
@@ -255,6 +272,13 @@ public final class JavaMeSmokeTest {
 
     private static void assertEquals(String name, int expected, int actual) {
         if (expected != actual) {
+            throw new RuntimeException("Assertion failed: " + name
+                    + ", expected=" + expected + ", actual=" + actual);
+        }
+    }
+
+    private static void assertEquals(String name, String expected, String actual) {
+        if (expected == null ? actual != null : !expected.equals(actual)) {
             throw new RuntimeException("Assertion failed: " + name
                     + ", expected=" + expected + ", actual=" + actual);
         }

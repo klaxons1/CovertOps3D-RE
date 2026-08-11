@@ -15,6 +15,9 @@ public class SaveSystem {
     public static byte muzzleLightingEnabled = 1;
     public static byte screenEffectsEnabled = 1;
 
+    // Russian is the first-run default for this localized edition.
+    public static byte language = TextStrings.LANGUAGE_RUSSIAN;
+
     public static byte gameProgressFlags = 0;
 
     // ==================== Save Data Fields ====================
@@ -42,8 +45,9 @@ public class SaveSystem {
     private static final int SETTINGS_OFF_TEXTURED_SKY = 5;
     private static final int SETTINGS_OFF_MUZZLE_LIGHT = 6;
     private static final int SETTINGS_OFF_SCREEN_EFFECTS = 7;
+    private static final int SETTINGS_OFF_LANGUAGE = 8;
     private static final int SETTINGS_OFF_VERSION = SETTINGS_RECORD_SIZE - 1;
-    private static final byte SETTINGS_VERSION = 2;
+    private static final byte SETTINGS_VERSION = 3;
 
     // Byte Offsets in Save Record
     private static final int OFF_HEALTH = 0;
@@ -171,6 +175,7 @@ public class SaveSystem {
         texturedSkyEnabled = 1;
         muzzleLightingEnabled = 1;
         screenEffectsEnabled = 1;
+        language = TextStrings.LANGUAGE_RUSSIAN;
 
         try {
             RecordStore store = RecordStore.openRecordStore(STORE_SETTINGS, true);
@@ -185,11 +190,15 @@ public class SaveSystem {
                 }
 
                 if (data.length > SETTINGS_OFF_VERSION
-                        && data[SETTINGS_OFF_VERSION] >= SETTINGS_VERSION) {
+                        && data[SETTINGS_OFF_VERSION] >= 2) {
                     texturedFlatsEnabled = normalizeToggle(data[SETTINGS_OFF_TEXTURED_FLATS]);
                     texturedSkyEnabled = normalizeToggle(data[SETTINGS_OFF_TEXTURED_SKY]);
                     muzzleLightingEnabled = normalizeToggle(data[SETTINGS_OFF_MUZZLE_LIGHT]);
                     screenEffectsEnabled = normalizeToggle(data[SETTINGS_OFF_SCREEN_EFFECTS]);
+                }
+                if (data.length > SETTINGS_OFF_LANGUAGE
+                        && data[SETTINGS_OFF_VERSION] >= SETTINGS_VERSION) {
+                    language = normalizeLanguage(data[SETTINGS_OFF_LANGUAGE]);
                 }
             }
 
@@ -217,6 +226,7 @@ public class SaveSystem {
             data[SETTINGS_OFF_TEXTURED_SKY] = texturedSkyEnabled;
             data[SETTINGS_OFF_MUZZLE_LIGHT] = muzzleLightingEnabled;
             data[SETTINGS_OFF_SCREEN_EFFECTS] = screenEffectsEnabled;
+            data[SETTINGS_OFF_LANGUAGE] = language;
             data[SETTINGS_OFF_VERSION] = SETTINGS_VERSION;
 
             if (records > 0) {
@@ -234,6 +244,11 @@ public class SaveSystem {
     /** Treat every non-zero persisted value as enabled. */
     private static byte normalizeToggle(byte value) {
         return value == 0 ? (byte)0 : (byte)1;
+    }
+
+    private static byte normalizeLanguage(byte value) {
+        return value == TextStrings.LANGUAGE_ENGLISH
+                ? TextStrings.LANGUAGE_ENGLISH : TextStrings.LANGUAGE_RUSSIAN;
     }
 
     /**
