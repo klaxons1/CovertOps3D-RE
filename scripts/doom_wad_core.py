@@ -137,6 +137,9 @@ class DoomMap(object):
         self.sidedefs = []
         self.sectors = []
         self.things = []
+        # Classic Doom REJECT bit matrix: 1 means the sector pair cannot see
+        # each other in the original map.
+        self.reject = b''
 
 
 def load_map(wad, map_name='E1M1'):
@@ -158,6 +161,11 @@ def load_map(wad, map_name='E1M1'):
     result.sidedefs = [_sidedef(record) for record in _records(lumps['SIDEDEFS'], 30)]
     result.sectors = [_sector(record) for record in _records(lumps['SECTORS'], 26)]
     result.things = [_thing(record) for record in _records(lumps['THINGS'], 10)]
+    result.reject = lumps['REJECT']
+
+    expected_reject_bytes = (len(result.sectors) * len(result.sectors) + 7) >> 3
+    if len(result.reject) < expected_reject_bytes:
+        raise DoomWadError('REJECT matrix is shorter than sector count requires')
 
     for index, line in enumerate(result.linedefs):
         if line['start'] >= len(result.vertices) or line['end'] >= len(result.vertices):
@@ -286,12 +294,14 @@ def decode_flat(wad, name, palette):
 
 
 def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
-                minimum_clearance=64, extract_sprites='none'):
+                minimum_clearance=64, extract_sprites='none', pvs_mode='doom-reject'):
     """Converts a parsed classic Doom map into a complete compact C3D package."""
     if height_scale <= 0 or world_scale <= 0:
         raise DoomWadError('height/world scale must be positive')
     if minimum_clearance < 50:
         raise DoomWadError('minimum clearance must be at least 50 for this engine')
+    if pvs_mode not in ('doom-reject', 'all-visible'):
+        raise DoomWadError('pvs_mode must be doom-reject or all-visible')
 
     palette = parse_palette(wad)
     texture_defs = parse_texture_definitions(wad)
@@ -401,6 +411,10 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
 
     c3b_path, bsp_report = C3.compile_source(os.path.join(package_dir, 'level.c3d.json'),
                                               os.path.join(package_dir, 'level.c3b'))
+    if pvs_mode == 'doom-reject':
+        visible_pairs = _install_doom_reject_pvs(c3b_path, doom_map)
+    else:
+        visible_pairs = len(doom_map.sectors) * len(doom_map.sectors)
     c3b_info = C3.read_c3b(c3b_path)
     report['c3b'] = os.path.basename(c3b_path)
     report['bsp_nodes'] = c3b_info['nodes']
@@ -408,13 +422,80 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     report['bsp_segments'] = c3b_info['segments']
     report['bsp_splits'] = bsp_report.splits
     report['bsp_failures'] = len(bsp_report.fail_samples)
-    # Deliberately do not trust Doom REJECT after replacing scripted doors with
-    # dynamic C3D portals. Full natural visibility is conservative: it can cost
-    # draw time but can never hide a sector or create PVS culling holes.
-    report['pvs_mode'] = 'conservative_all_visible'
+    report['pvs_mode'] = pvs_mode
+    report['pvs_visible_pairs'] = visible_pairs
     _write_text(os.path.join(package_dir, 'doom_conversion.json'),
                 json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + '\n')
     return report
+
+
+def _install_doom_reject_pvs(c3b_path, doom_map):
+    """Installs a conservative symmetric version of Doom's REJECT matrix.
+
+    The C3D renderer benefits from not traversing every outdoor sky sector in
+    E1M1. A raw REJECT bit can be directional or stale around a moving door, so
+    a pair is rejected only when *both* Doom directions reject it. Direct
+    portal neighbors are always retained; doors stay visible/openable.
+    """
+    data = bytearray(open(c3b_path, 'rb').read())
+    header_size = struct.calcsize('<4sBBh8H')
+    magic, version, flags, root, nv, nw, no, nsf, nsec, nn, nl, nsg = \
+            struct.unpack_from('<4sBBh8H', data, 0)
+    if magic != C3.MAGIC or version != C3.VERSION or nsec != len(doom_map.sectors):
+        raise DoomWadError('C3B layout does not match converted Doom map')
+
+    offset = header_size
+    material_length, = struct.unpack_from('<H', data, offset)
+    offset += 2 + material_length
+    if flags & C3.HEADER_FLAG_EXTERNAL_ENTITIES:
+        entity_length, = struct.unpack_from('<H', data, offset)
+        offset += 2 + entity_length
+
+    offset += nv * 4
+    offset += nw * 12
+    offset += no * 10
+    offset += nsf * 10
+    offset += nsec * 12
+    offset += nn * 12
+    offset += nl * 6
+    offset += nsg * 9
+    pvs_bytes, = struct.unpack_from('<I', data, offset)
+    offset += 4
+    expected_bytes = (nsec * nsec + 7) >> 3
+    if pvs_bytes != expected_bytes or offset + pvs_bytes != len(data):
+        raise DoomWadError('unexpected C3B PVS layout')
+
+    neighbors = [set() for unused in range(nsec)]
+    for line in doom_map.linedefs:
+        if line['right'] < 0 or line['left'] < 0:
+            continue
+        first = doom_map.sidedefs[line['right']]['sector']
+        second = doom_map.sidedefs[line['left']]['sector']
+        if first != second:
+            neighbors[first].add(second)
+            neighbors[second].add(first)
+
+    pvs = bytearray(pvs_bytes)
+    visible_pairs = 0
+    for source in range(nsec):
+        for target in range(nsec):
+            visible = source == target or target in neighbors[source]
+            if not visible:
+                visible = not (_doom_reject_hidden(doom_map.reject, nsec, source, target)
+                               and _doom_reject_hidden(doom_map.reject, nsec, target, source))
+            if visible:
+                bit = source * nsec + target
+                pvs[bit >> 3] |= 1 << (bit & 7)
+                visible_pairs += 1
+    data[offset:offset + pvs_bytes] = pvs
+    with open(c3b_path, 'wb') as stream:
+        stream.write(data)
+    return visible_pairs
+
+
+def _doom_reject_hidden(reject, sector_count, source, target):
+    bit = source * sector_count + target
+    return (reject[bit >> 3] & (1 << (bit & 7))) != 0
 
 
 def _find_closed_door_targets(doom_map):

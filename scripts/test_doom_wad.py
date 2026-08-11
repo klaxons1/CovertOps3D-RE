@@ -31,7 +31,8 @@ def main():
         report = DOOM.convert_map(wad, doom_map, directory, extract_sprites='none')
         assert report['missing_wall_textures'] == []
         assert report['bsp_failures'] == 0
-        assert report['pvs_mode'] == 'conservative_all_visible'
+        assert report['pvs_mode'] == 'doom-reject'
+        assert report['pvs_visible_pairs'] == 6021
         assert (report['wall_textures'], report['flats']) == (32, 21)
         assert (report['doors'], report['enemies'], report['enemy_sprite_materials']) == (8, 29, 3)
         info = C3.read_c3b(os.path.join(directory, 'level.c3b'))

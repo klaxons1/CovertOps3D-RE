@@ -51,10 +51,12 @@ doom_conversion.json # размеры, hash исходника и BSP report
 
 Classic Doom в этом WAD не имеет slope-поверхностей: сектор хранит только
 горизонтальные `floorHeight` и `ceilingHeight`. Поэтому slope support для
-E1M1 не нужен и не добавляется в Java ME renderer hot path. Конвертер также
-не использует Doom `REJECT` как жёсткий C3D PVS: после упрощения doors такой
-REJECT мог бы скрыть уже открытый портал. C3B получает консервативное
-`all-visible` PVS — оно не может создать PVS-hole/исчезновение геометрии.
+E1M1 не нужен и не добавляется в Java ME renderer hot path. По умолчанию
+конвертер переносит Doom `REJECT` в симметричный C3D PVS: пара отсекается
+только если Doom отвергает её в обе стороны, а прямые portal neighbors всегда
+остаются видимыми, в том числе для двери. Это убирает лишние outdoor sky
+leaves, которые могли выглядеть как PVS-артефакты. Для диагностики доступен
+полностью консервативный режим `--pvs all-visible`.
 
 Обычные E1M1 door lines (`special 1` и совместимые classic door specials)
 переносятся в существующий `GameEngine` type-1 door controller: закрытый Doom

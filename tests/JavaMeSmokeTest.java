@@ -209,11 +209,14 @@ public final class JavaMeSmokeTest {
         }
         assertEquals("Doom E1M1 door triggers", 8, doomDoorWalls);
         world.initializeWorld();
+        int doomVisiblePairs = 0;
         for (int sector = 0; sector < world.sectors.length; ++sector) {
+            assertTrue("Doom E1M1 PVS diagonal", !world.sectors[sector].visitedFlags[sector]);
             for (int from = 0; from < world.sectors.length; ++from) {
-                assertTrue("Doom E1M1 conservative PVS", !world.sectors[sector].visitedFlags[from]);
+                if (!world.sectors[sector].visitedFlags[from]) ++doomVisiblePairs;
             }
         }
+        assertEquals("Doom E1M1 symmetric reject PVS", 6021, doomVisiblePairs);
         assertTrue("Doom E1M1 wall texture", LevelLoader.getTexture((byte)1) != null
                 && LevelLoader.getTexture((byte)1).pixelData != null);
         assertTrue("Doom E1M1 enemy sprite texture", LevelLoader.getTexture((byte)-1) != null

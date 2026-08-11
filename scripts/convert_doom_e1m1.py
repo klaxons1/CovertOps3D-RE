@@ -36,6 +36,8 @@ def main(argv=None):
                         help='minimum ceiling clearance in C3D units; default 64')
     parser.add_argument('--sprites', choices=('none', 'used', 'all'), default='none',
                         help='optional Doom patch sprite export; default none keeps JAR compact')
+    parser.add_argument('--pvs', choices=('doom-reject', 'all-visible'), default='doom-reject',
+                        help='PVS source; symmetric Doom REJECT is default, all-visible is a debug fallback')
     args = parser.parse_args(argv)
 
     try:
@@ -45,7 +47,8 @@ def main(argv=None):
                                   height_scale=args.height_scale,
                                   world_scale=args.world_scale,
                                   minimum_clearance=args.clearance,
-                                  extract_sprites=args.sprites)
+                                  extract_sprites=args.sprites,
+                                  pvs_mode=args.pvs)
     except Exception as error:
         print('Doom conversion failed: %s' % error, file=sys.stderr)
         return 2
@@ -57,6 +60,8 @@ def main(argv=None):
           (report['wall_textures'], report['flats'], report['enemy_sprite_materials'],
            report['sprites']))
     print('gameplay: doors=%d enemies=%d' % (report['doors'], report['enemies']))
+    print('PVS: %s visible=%d/%d' % (report['pvs_mode'], report['pvs_visible_pairs'],
+          report['sectors'] * report['sectors']))
     print('C3B: nodes=%d leaves=%d segments=%d splits=%d failures=%d' %
           (report['bsp_nodes'], report['bsp_leaves'], report['bsp_segments'],
            report['bsp_splits'], report['bsp_failures']))
