@@ -50,13 +50,12 @@ public final class Texture {
      * @return Pixel data for the requested row
      */
     public final byte[] getPixelRow(int row) {
-        // Handle wrap-around for repeating textures
-        if (row >= this.width) {
-            row %= this.width;
-        }
-
-        while(row < 0) {
-            row = (row + this.width * 1000) % this.width;
+        // Handle wrap-around for repeating textures.
+        // Java % truncates toward zero, so one modulo plus a conditional add
+        // produces exactly the non-negative residue the old while-loop
+        // converged to (identical modular arithmetic), just without looping.
+        if ((row %= this.width) < 0) {
+            row += this.width;
         }
 
         return this.pixelData[row >> 1];

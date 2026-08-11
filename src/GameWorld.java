@@ -51,6 +51,20 @@ public final class GameWorld {
     private Point2D collisionTestPoint = new Point2D(0, 0);
     private int lastWallIndex;
 
+    // ---- Per-wall broadphase bounds (level geometry is static, computed once) ----
+    // True AABBs for line-of-sight/projectile segment tests, plus the exact
+    // truncated center/half extents used by resolveWallCollision(), so the hot
+    // loops can reject far-away walls with a few int compares instead of full
+    // segment/point tests. Rejected walls provably produce no side effects.
+    private int[] wallMinXs;
+    private int[] wallMinZs;
+    private int[] wallMaxXs;
+    private int[] wallMaxZs;
+    private int[] wallCenterXs;
+    private int[] wallCenterZs;
+    private int[] wallHalfXs;
+    private int[] wallHalfZs;
+
     public Point2D[] vertices;
     private Point2D[] transformedVertices;
     public WallDefinition[] wallDefinitions;
@@ -191,6 +205,59 @@ public final class GameWorld {
     }
 
     /**
+     * Precomputes per-wall bounding data. Walls never move, so this runs once per level.
+     */
+    private void ensureWallBounds() {
+        if (this.wallMinXs != null) {
+            return;
+        }
+
+        int count = this.wallDefinitions.length;
+        this.wallMinXs = new int[count];
+        this.wallMinZs = new int[count];
+        this.wallMaxXs = new int[count];
+        this.wallMaxZs = new int[count];
+        this.wallCenterXs = new int[count];
+        this.wallCenterZs = new int[count];
+        this.wallHalfXs = new int[count];
+        this.wallHalfZs = new int[count];
+
+        for (int i = 0; i < count; i++) {
+            WallDefinition wall = this.wallDefinitions[i];
+            Point2D startVertex = this.vertices[wall.startVertexId & 0xFFFF];
+            Point2D endVertex = this.vertices[wall.endVertexId & 0xFFFF];
+
+            this.wallMinXs[i] = startVertex.x < endVertex.x ? startVertex.x : endVertex.x;
+            this.wallMaxXs[i] = startVertex.x > endVertex.x ? startVertex.x : endVertex.x;
+            this.wallMinZs[i] = startVertex.y < endVertex.y ? startVertex.y : endVertex.y;
+            this.wallMaxZs[i] = startVertex.y > endVertex.y ? startVertex.y : endVertex.y;
+
+            // Exact replica of the truncated arithmetic in resolveWallCollision()
+            int wallDeltaX = endVertex.x - startVertex.x;
+            int wallDeltaY = endVertex.y - startVertex.y;
+            this.wallCenterXs[i] = startVertex.x + (wallDeltaX >> 1);
+            this.wallCenterZs[i] = startVertex.y + (wallDeltaY >> 1);
+            this.wallHalfXs[i] = wallDeltaX >= 0 ? wallDeltaX >> 1 : -(wallDeltaX >> 1);
+            this.wallHalfZs[i] = wallDeltaY >= 0 ? wallDeltaY >> 1 : -(wallDeltaY >> 1);
+        }
+    }
+
+    /**
+     * Broadphase test identical to the two early-outs at the top of
+     * resolveWallCollision(): walls failing it return false there without
+     * touching the collision point, so skipping them changes nothing.
+     */
+    private boolean wallBroadphaseReject(int index) {
+        int relativeX = this.collisionTestPoint.x - this.wallCenterXs[index];
+        if (relativeX < 0) relativeX = -relativeX;
+        if (this.wallHalfXs[index] + COLLISION_RADIUS - relativeX <= 0) return true;
+
+        int relativeZ = this.collisionTestPoint.y - this.wallCenterZs[index];
+        if (relativeZ < 0) relativeZ = -relativeZ;
+        return this.wallHalfZs[index] + COLLISION_RADIUS - relativeZ <= 0;
+    }
+
+    /**
      * Checks if an entity can move to the proposed position.
      * Returns false if collision with blocking object occurs.
      */
@@ -198,7 +265,9 @@ public final class GameWorld {
         this.collisionTestPoint.x = proposedPos.x;
         this.collisionTestPoint.y = proposedPos.z;
 
+        this.ensureWallBounds();
         for (int i = 0; i < this.wallDefinitions.length; i++) {
+            if (this.wallBroadphaseReject(i)) continue;
             WallDefinition wall = this.wallDefinitions[i];
             if (wall.isCollidable() || isWallPassableForSector(currentSector, wall)) {
                 this.resolveWallCollision(wall);
@@ -260,8 +329,10 @@ public final class GameWorld {
             }
         }
 
+        this.ensureWallBounds();
         for (int i = 0; i < this.wallDefinitions.length; i++) {
             if (i == this.lastWallIndex) continue;
+            if (this.wallBroadphaseReject(i)) continue;
 
             WallDefinition wall = this.wallDefinitions[i];
             if ((wall.isPassable() || isWallPassableForSector(currentSector, wall))
@@ -764,7 +835,22 @@ public final class GameWorld {
      * Checks if there's an unobstructed line of sight between two points.
      */
     public final boolean checkLineOfSight(Transform3D from, Transform3D to) {
+        this.ensureWallBounds();
+
+        // Broadphase box of the query segment: two segments can only
+        // intersect when their bounding boxes overlap, so walls outside the
+        // box provably return false from the exact test and can be skipped.
+        int minX = from.x < to.x ? from.x : to.x;
+        int maxX = from.x > to.x ? from.x : to.x;
+        int minZ = from.z < to.z ? from.z : to.z;
+        int maxZ = from.z > to.z ? from.z : to.z;
+
         for (int i = 0; i < this.wallDefinitions.length; i++) {
+            if (this.wallMinXs[i] > maxX || this.wallMaxXs[i] < minX
+                    || this.wallMinZs[i] > maxZ || this.wallMaxZs[i] < minZ) {
+                continue;
+            }
+
             WallDefinition wall = this.wallDefinitions[i];
             if (wall.isSolid() || isWallSolid(wall)) {
                 Point2D wallStart = this.vertices[wall.startVertexId & 0xFFFF];
@@ -843,7 +929,18 @@ public final class GameWorld {
     private boolean isProjectilePathBlocked(int startX, int startZ, int endX, int endZ, int height) {
         int heightInUnits = height >> 16;
 
+        this.ensureWallBounds();
+        int minX = startX < endX ? startX : endX;
+        int maxX = startX > endX ? startX : endX;
+        int minZ = startZ < endZ ? startZ : endZ;
+        int maxZ = startZ > endZ ? startZ : endZ;
+
         for (int i = 0; i < this.wallDefinitions.length; i++) {
+            if (this.wallMinXs[i] > maxX || this.wallMaxXs[i] < minX
+                    || this.wallMinZs[i] > maxZ || this.wallMaxZs[i] < minZ) {
+                continue;
+            }
+
             WallDefinition wall = this.wallDefinitions[i];
             if (wall.isSolid() || isWallHeightBlocking(heightInUnits, wall)) {
                 Point2D wallStart = this.vertices[wall.startVertexId & 0xFFFF];
@@ -1137,9 +1234,20 @@ public final class GameWorld {
             }
 
             if (!projectileHit) {
+                this.ensureWallBounds();
                 int projectileHeight = projTransform.y >> 16;
 
+                int minX = prevX < newX ? prevX : newX;
+                int maxX = prevX > newX ? prevX : newX;
+                int minZ = prevZ < newZ ? prevZ : newZ;
+                int maxZ = prevZ > newZ ? prevZ : newZ;
+
                 for (int j = 0; j < this.wallDefinitions.length; j++) {
+                    if (this.wallMinXs[j] > maxX || this.wallMaxXs[j] < minX
+                            || this.wallMinZs[j] > maxZ || this.wallMaxZs[j] < minZ) {
+                        continue;
+                    }
+
                     WallDefinition wall = this.wallDefinitions[j];
                     if (wall.isSolid() || isWallHeightBlocking(projectileHeight, wall)) {
                         Point2D wallStart = this.vertices[wall.startVertexId & 0xFFFF];

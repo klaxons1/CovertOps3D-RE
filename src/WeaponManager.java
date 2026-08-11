@@ -334,7 +334,14 @@ public class WeaponManager {
 
     public void render(Graphics graphics, int headBob) {
         Weapon weapon = getCurrentWeapon();
-        Image sprite = weapon.getSprite(spriteFrame);
+
+        // Sector light drives the palette of BMP weapon sprites (like world textures)
+        int sectorLight = 16;
+        if (GameEngine.currentSector != null) {
+            sectorLight = GameEngine.currentSector.getLightLevel();
+        }
+
+        Image sprite = weapon.getSprite(spriteFrame, sectorLight);
 
         if (sprite == null) {
             return;
