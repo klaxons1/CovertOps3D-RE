@@ -64,6 +64,10 @@ This loads `level.c3b`, resolves its relative `materials.c3m`, installs loose
 wall/flat/sky BMPs, builds `GameWorld`, and then uses the existing
 `PortalRenderer`. Stock campaign loading remains unchanged.
 
+The repository currently routes campaign slot 0 (New Game) to the demo C3B
+package, so the complete custom path is exercised by normal game startup.
+The legacy `level_01a` is retained as an import/compatibility asset.
+
 ## C3B v1 runtime layout
 
 `level.c3b` уже генерируется `scripts/c3d2_core.py`. Он little-endian и не

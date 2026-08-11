@@ -12,8 +12,9 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int HALF_UI_HEIGHT = UI_HEIGHT / 2;
 
     public static final String LEVEL_PATH_PREFIX = "/gamedata/levels/level_";
+    public static final String CUSTOM_DEMO_LEVEL_PATH = "/gamedata/custom/demo/level.c3b";
     public static final String[] LEVEL_FILE_NAMES = new String[]{
-            "01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
+            CUSTOM_DEMO_LEVEL_PATH, "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
     };
 
     public static WeaponManager weaponManager;

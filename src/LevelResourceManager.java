@@ -69,7 +69,22 @@ public final class LevelResourceManager {
     public void loadLevelResources() {
         try {
             HelperUtils.freeMemory();
-            String fullLevelPath = MainGameCanvas.LEVEL_PATH_PREFIX + MainGameCanvas.LEVEL_FILE_NAMES[MainGameCanvas.currentLevelId];
+            String levelEntry = MainGameCanvas.LEVEL_FILE_NAMES[MainGameCanvas.currentLevelId];
+            boolean customC3B = endsWith(levelEntry, ".c3b");
+            String fullLevelPath = customC3B ? levelEntry
+                    : MainGameCanvas.LEVEL_PATH_PREFIX + levelEntry;
+
+            if (customC3B) {
+                // C3B owns its objects and external material set; campaign
+                // object backtracking and legacy atlas preloading do not apply.
+                cachedStaticObjects = null;
+                nextLevelObjects = null;
+                GameEngine.keysCollected[0] = false;
+                GameEngine.keysCollected[1] = false;
+                if (!loadCustomLevelResources(fullLevelPath)) return;
+                return;
+            }
+
             if (MainGameCanvas.previousLevelId < MainGameCanvas.currentLevelId) {
                 if (MainGameCanvas.previousLevelId > -1) {
                     cachedStaticObjects = LevelLoader.gameWorld.staticObjects;
@@ -278,5 +293,10 @@ public final class LevelResourceManager {
         } catch (OutOfMemoryError e) {
             DebugLogger.logOutOfMemory("LevelResourceManager.loadLevel", e);
         }
+    }
+
+    private static boolean endsWith(String text, String suffix) {
+        return text.length() >= suffix.length()
+                && text.substring(text.length() - suffix.length()).equals(suffix);
     }
 }
