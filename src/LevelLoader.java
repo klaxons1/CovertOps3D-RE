@@ -492,6 +492,7 @@ public final class LevelLoader {
                     }
                     spr.colorPalettes = getResolvedPalette(spritePaletteIndexes[spriteId],
                             "Sprite", spriteId);
+                    spr.buildFlatColors();
                 }
             }
 

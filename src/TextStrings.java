@@ -23,6 +23,13 @@ public class TextStrings {
     public static final String ABOUT = "about";
     public static final String MUSIC = "music: ";
     public static final String VIBRATION = "vibration: ";
+    public static final String FLOORS = "floors: ";
+    public static final String SKY = "sky: ";
+    public static final String MUZZLE_LIGHT = "muzzle light: ";
+    public static final String SCREEN_EFFECTS = "screen fx: ";
+    public static final String TEXTURED = "textured";
+    public static final String FLAT = "flat";
+    public static final String SOLID = "solid";
     public static final String EMPTY_SPACE = "";
     public static final String SETTINGS = "settings";
     public static final String PLEASE_WAIT = "please wait...";

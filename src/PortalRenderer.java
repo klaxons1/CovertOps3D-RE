@@ -117,6 +117,9 @@ public class PortalRenderer {
     /** Current skybox texture */
     private static Texture skyboxTexture;
 
+    /** Average neutral sky color used by the optional flat-sky mode. */
+    private static int skyFlatColor = 0xFF405070;
+
     /** Depth buffer for span rendering */
     static short[] depthBuffer;
 
@@ -584,7 +587,8 @@ public class PortalRenderer {
         int sinAngle = MathUtils.fastSin(playerAngle);
         int cosAngle = MathUtils.fastCos(playerAngle);
 
-        gunFireLighting = MainGameCanvas.weaponSpriteFrame == 1 && GameEngine.currentWeapon != 0;
+        gunFireLighting = SaveSystem.muzzleLightingEnabled != 0
+                && MainGameCanvas.weaponSpriteFrame == 1 && GameEngine.currentWeapon != 0;
 
         renderUtils.resetRenderer();
         Sector.resetClipArrays();
@@ -639,6 +643,49 @@ public class PortalRenderer {
      */
     static void setSkyboxTexture(Texture texture) {
         skyboxTexture = texture;
+        skyFlatColor = calculateTextureAverageColor(texture, 8, skyFlatColor);
+    }
+
+    /**
+     * Computes a representative texture color once when the sky is assigned.
+     * Texture data is packed as two horizontal texels per byte.
+     */
+    private static int calculateTextureAverageColor(Texture texture, int lightLevel, int fallback) {
+        if (texture == null || texture.pixelData == null || texture.colorPalettes == null) {
+            return fallback;
+        }
+
+        int[] palette = texture.colorPalettes[lightLevel];
+        byte[][] columns = texture.pixelData;
+        int textureWidth = texture.width;
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+        int pixels = 0;
+
+        for (int pair = 0; pair < columns.length; ++pair) {
+            byte[] column = columns[pair];
+            for (int y = 0; y < column.length; ++y) {
+                int packed = column[y] & 0xFF;
+                int high = palette[(packed >> 4) & 15];
+                red += (high >> 16) & 0xFF;
+                green += (high >> 8) & 0xFF;
+                blue += high & 0xFF;
+                pixels++;
+
+                if ((pair << 1) + 1 < textureWidth) {
+                    int low = palette[packed & 15];
+                    red += (low >> 16) & 0xFF;
+                    green += (low >> 8) & 0xFF;
+                    blue += low & 0xFF;
+                    pixels++;
+                }
+            }
+        }
+
+        if (pixels == 0) return fallback;
+        return 0xFF000000 | ((red / pixels) << 16)
+                | ((green / pixels) << 8) | (blue / pixels);
     }
 
     /**
@@ -1020,6 +1067,40 @@ public class PortalRenderer {
     }
 
     /**
+     * Fast optional floor/ceiling mode: preserve the same per-row distance
+     * lighting, but fill a representative color instead of texture-mapping
+     * every pixel in the span.
+     */
+    public static void drawFlatColorSpan(int startColumn, int endColumn, int row,
+                                         int[] flatColors, int lightLevel, int heightOffset) {
+        if (endColumn < startColumn || flatColors == null) return;
+
+        int rowFromCenter = row - HALF_VIEWPORT_HEIGHT;
+        int perspectiveFactor = rowFromCenter < 0
+                ? -reciprocalTable[-rowFromCenter]
+                : reciprocalTable[rowFromCenter];
+        int scaledPerspective = (heightOffset * perspectiveFactor) >> 8;
+        int depthFactor = scaledPerspective >> 14;
+        int effectiveLightLevel;
+
+        if (gunFireLighting && depthFactor < 3) {
+            effectiveLightLevel = lightLevel + (4 >> depthFactor);
+        } else {
+            effectiveLightLevel = lightLevel - depthFactor;
+        }
+        if (effectiveLightLevel < 0) {
+            effectiveLightLevel = 0;
+        } else if (effectiveLightLevel >= flatColors.length) {
+            effectiveLightLevel = flatColors.length - 1;
+        }
+
+        int startPixelIndex = row * VIEWPORT_WIDTH + startColumn;
+        int pixelCount = endColumn - startColumn + 1;
+        screenBuffer[startPixelIndex] = flatColors[effectiveLightLevel];
+        HelperUtils.fastArrayFill(screenBuffer, startPixelIndex, pixelCount);
+    }
+
+    /**
      * Updates the ceiling span tracking for span-based rendering.
      *
      * @param sectorId   Current sector ID
@@ -1346,7 +1427,19 @@ public class PortalRenderer {
         if (bottomY > ceilingClipY) {
             clippedBottomY = ceilingClipY;
         }
+        if (clippedTopY > clippedBottomY) {
+            return;
+        }
 
+        if (SaveSystem.texturedSkyEnabled == 0) {
+            int startPixelIndex = clippedTopY * VIEWPORT_WIDTH + column;
+            int endPixelIndex = clippedBottomY * VIEWPORT_WIDTH + column;
+            int[] buffer = screenBuffer;
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
+                buffer[pixelIndex] = skyFlatColor;
+            }
+            return;
+        }
 
         int columnAngle = MathUtils.fixedPointMultiply((column - HALF_VIEWPORT_WIDTH) << 16, skyboxAngleFactor);
         int angleCos = MathUtils.fastCos(columnAngle);

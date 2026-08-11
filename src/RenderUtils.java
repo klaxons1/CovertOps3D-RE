@@ -150,6 +150,7 @@ public final class RenderUtils {
 
         int halfViewportHeight = PortalRenderer.HALF_VIEWPORT_HEIGHT;
         int viewportHeight = PortalRenderer.VIEWPORT_HEIGHT;
+        boolean texturedFlats = SaveSystem.texturedFlatsEnabled != 0;
 
         // Render floor spans (scanlines 0 to halfScreenHeight-1)
         for (int scanline = 0; scanline < halfViewportHeight; ++scanline) {
@@ -162,15 +163,23 @@ public final class RenderUtils {
                 }
 
                 sector = LevelLoader.gameWorld.sectors[span.sectorId];
-                PortalRenderer.drawFlatSurface(
-                        span.startX, span.endX, scanline,
-                        sector.floorTexture.pixelData,
-                        sector.floorTexture.colorPalettes,
-                        sector.lightLevel,
-                        cameraX, cameraY, cameraZ,
-                        sector.floorOffsetX,
-                        cameraAngle
-                );
+                if (texturedFlats || sector.floorTexture.flatColors == null) {
+                    PortalRenderer.drawFlatSurface(
+                            span.startX, span.endX, scanline,
+                            sector.floorTexture.pixelData,
+                            sector.floorTexture.colorPalettes,
+                            sector.lightLevel,
+                            cameraX, cameraY, cameraZ,
+                            sector.floorOffsetX,
+                            cameraAngle
+                    );
+                } else {
+                    PortalRenderer.drawFlatColorSpan(
+                            span.startX, span.endX, scanline,
+                            sector.floorTexture.flatColors,
+                            sector.lightLevel, sector.floorOffsetX
+                    );
+                }
                 currentSpan = span.next;
             }
         }
@@ -186,15 +195,23 @@ public final class RenderUtils {
                 }
 
                 sector = LevelLoader.gameWorld.sectors[span.sectorId];
-                PortalRenderer.drawFlatSurface(
-                        span.startX, span.endX, scanline,
-                        sector.ceilingTexture.pixelData,
-                        sector.ceilingTexture.colorPalettes,
-                        sector.lightLevel,
-                        cameraX, cameraY, cameraZ,
-                        sector.ceilingOffsetX,
-                        cameraAngle
-                );
+                if (texturedFlats || sector.ceilingTexture.flatColors == null) {
+                    PortalRenderer.drawFlatSurface(
+                            span.startX, span.endX, scanline,
+                            sector.ceilingTexture.pixelData,
+                            sector.ceilingTexture.colorPalettes,
+                            sector.lightLevel,
+                            cameraX, cameraY, cameraZ,
+                            sector.ceilingOffsetX,
+                            cameraAngle
+                    );
+                } else {
+                    PortalRenderer.drawFlatColorSpan(
+                            span.startX, span.endX, scanline,
+                            sector.ceilingTexture.flatColors,
+                            sector.lightLevel, sector.ceilingOffsetX
+                    );
+                }
                 currentSpan = span.next;
             }
         }

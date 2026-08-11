@@ -1176,7 +1176,9 @@ public final class GameWorld {
                     }
                 }
 
-                GameEngine.screenShake = 16;
+                if (SaveSystem.screenEffectsEnabled != 0) {
+                    GameEngine.screenShake = 16;
+                }
 
                 if (MainGameCanvas.currentLevelId == 4) {
                     Transform3D grenadePos = projectile.transform;

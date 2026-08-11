@@ -7,6 +7,14 @@ public class SaveSystem {
     public static byte soundEnabled = 1;
     public static byte musicEnabled = 1;
     public static byte vibrationEnabled = 1;
+
+    // Renderer and visual settings. Defaults preserve the full-quality
+    // original presentation; faster modes are explicit player choices.
+    public static byte texturedFlatsEnabled = 1;
+    public static byte texturedSkyEnabled = 1;
+    public static byte muzzleLightingEnabled = 1;
+    public static byte screenEffectsEnabled = 1;
+
     public static byte gameProgressFlags = 0;
 
     // ==================== Save Data Fields ====================
@@ -23,6 +31,19 @@ public class SaveSystem {
     private static final int SAVE_SLOTS_COUNT = 9;
     private static final int SAVE_RECORD_SIZE = 30;
     private static final int SETTINGS_RECORD_SIZE = 16;
+
+    // Settings record layout. The version marker prevents an old record's
+    // unused zero bytes from accidentally disabling new visual defaults.
+    private static final int SETTINGS_OFF_SOUND = 0;
+    private static final int SETTINGS_OFF_MUSIC = 1;
+    private static final int SETTINGS_OFF_VIBRATION = 2;
+    private static final int SETTINGS_OFF_PROGRESS = 3;
+    private static final int SETTINGS_OFF_TEXTURED_FLATS = 4;
+    private static final int SETTINGS_OFF_TEXTURED_SKY = 5;
+    private static final int SETTINGS_OFF_MUZZLE_LIGHT = 6;
+    private static final int SETTINGS_OFF_SCREEN_EFFECTS = 7;
+    private static final int SETTINGS_OFF_VERSION = SETTINGS_RECORD_SIZE - 1;
+    private static final byte SETTINGS_VERSION = 2;
 
     // Byte Offsets in Save Record
     private static final int OFF_HEALTH = 0;
@@ -144,15 +165,32 @@ public class SaveSystem {
      * Loads global settings (Sound, Music, Vibration) from RMS.
      */
     public static void loadSettingsFromRMS() {
+        // Older records do not contain the version marker, so start from the
+        // full-quality defaults before selectively reading a newer layout.
+        texturedFlatsEnabled = 1;
+        texturedSkyEnabled = 1;
+        muzzleLightingEnabled = 1;
+        screenEffectsEnabled = 1;
+
         try {
             RecordStore store = RecordStore.openRecordStore(STORE_SETTINGS, true);
 
             if (store.getNumRecords() > 0) {
                 byte[] data = store.getRecord(1);
-                soundEnabled = data[0];
-                musicEnabled = data[1];
-                vibrationEnabled = data[2];
-                gameProgressFlags = data[3];
+                if (data.length > SETTINGS_OFF_PROGRESS) {
+                    soundEnabled = normalizeToggle(data[SETTINGS_OFF_SOUND]);
+                    musicEnabled = normalizeToggle(data[SETTINGS_OFF_MUSIC]);
+                    vibrationEnabled = normalizeToggle(data[SETTINGS_OFF_VIBRATION]);
+                    gameProgressFlags = data[SETTINGS_OFF_PROGRESS];
+                }
+
+                if (data.length > SETTINGS_OFF_VERSION
+                        && data[SETTINGS_OFF_VERSION] >= SETTINGS_VERSION) {
+                    texturedFlatsEnabled = normalizeToggle(data[SETTINGS_OFF_TEXTURED_FLATS]);
+                    texturedSkyEnabled = normalizeToggle(data[SETTINGS_OFF_TEXTURED_SKY]);
+                    muzzleLightingEnabled = normalizeToggle(data[SETTINGS_OFF_MUZZLE_LIGHT]);
+                    screenEffectsEnabled = normalizeToggle(data[SETTINGS_OFF_SCREEN_EFFECTS]);
+                }
             }
 
             store.closeRecordStore();
@@ -171,10 +209,15 @@ public class SaveSystem {
             int records = store.getNumRecords();
 
             byte[] data = new byte[SETTINGS_RECORD_SIZE];
-            data[0] = soundEnabled;
-            data[1] = musicEnabled;
-            data[2] = vibrationEnabled;
-            data[3] = gameProgressFlags;
+            data[SETTINGS_OFF_SOUND] = soundEnabled;
+            data[SETTINGS_OFF_MUSIC] = musicEnabled;
+            data[SETTINGS_OFF_VIBRATION] = vibrationEnabled;
+            data[SETTINGS_OFF_PROGRESS] = gameProgressFlags;
+            data[SETTINGS_OFF_TEXTURED_FLATS] = texturedFlatsEnabled;
+            data[SETTINGS_OFF_TEXTURED_SKY] = texturedSkyEnabled;
+            data[SETTINGS_OFF_MUZZLE_LIGHT] = muzzleLightingEnabled;
+            data[SETTINGS_OFF_SCREEN_EFFECTS] = screenEffectsEnabled;
+            data[SETTINGS_OFF_VERSION] = SETTINGS_VERSION;
 
             if (records > 0) {
                 store.setRecord(1, data, 0, SETTINGS_RECORD_SIZE);
@@ -186,6 +229,11 @@ public class SaveSystem {
         } catch (RecordStoreException e) {
         } catch (OutOfMemoryError e) {
         }
+    }
+
+    /** Treat every non-zero persisted value as enabled. */
+    private static byte normalizeToggle(byte value) {
+        return value == 0 ? (byte)0 : (byte)1;
     }
 
     /**

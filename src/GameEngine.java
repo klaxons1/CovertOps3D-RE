@@ -186,10 +186,14 @@ public final class GameEngine {
         cameraBobTimer += (deltaTime * movementSpeed) >> 2;
         int headBobOffset = MathUtils.fastSin(cameraBobTimer);
 
-        // Apply screen shake effect
-        int shakeOffset = screenShake << 15;
-        if ((screenShake & 1) > 0) {
-            shakeOffset = -shakeOffset;
+        // Apply optional screen shake effect. Gameplay state still advances
+        // normally when disabled; only the visual camera offset is omitted.
+        int shakeOffset = 0;
+        if (SaveSystem.screenEffectsEnabled != 0) {
+            shakeOffset = screenShake << 15;
+            if ((screenShake & 1) > 0) {
+                shakeOffset = -shakeOffset;
+            }
         }
 
         cameraHeight = ((currentSector.floorHeight + GameWorld.PLAYER_HEIGHT_OFFSET) << 16)
@@ -198,11 +202,14 @@ public final class GameEngine {
         // Render the 3D world
         PortalRenderer.renderWorld(player.x, -cameraHeight, player.z, player.rotation);
 
-        // Apply damage flash effect
+        // Apply optional damage flash effect. Skipping it saves a full
+        // framebuffer pass on damage-heavy scenes without affecting damage.
         if (damageFlash) {
-            int pixelCount = PortalRenderer.SCREEN_BUFFER_SIZE;
-            for (int i = 0; i < pixelCount; i++) {
-                PortalRenderer.screenBuffer[i] |= 0xFF0000;
+            if (SaveSystem.screenEffectsEnabled != 0) {
+                int pixelCount = PortalRenderer.SCREEN_BUFFER_SIZE;
+                for (int i = 0; i < pixelCount; i++) {
+                    PortalRenderer.screenBuffer[i] |= 0xFF0000;
+                }
             }
             damageFlash = false;
         }

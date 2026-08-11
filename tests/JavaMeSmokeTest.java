@@ -25,6 +25,7 @@ public final class JavaMeSmokeTest {
         testRotationNormalization();
         testPaletteLighting();
         testRendererFastPaths();
+        testFlatSpriteColors();
         testAllShippedLevels();
         System.out.println("Java ME smoke test: OK");
     }
@@ -159,6 +160,30 @@ public final class JavaMeSmokeTest {
             textureU += textureStepU;
             textureV += textureStepV;
         }
+
+        int[] flatColors = new int[16];
+        for (int light = 0; light < flatColors.length; ++light) {
+            flatColors[light] = 0xff000000 | (light << 8) | light;
+        }
+        PortalRenderer.drawFlatColorSpan(startColumn, endColumn, row,
+                flatColors, 8, heightOffset);
+        for (int column = startColumn; column <= endColumn; ++column) {
+            assertEquals("fast flat color " + column, flatColors[effectiveLight],
+                    PortalRenderer.screenBuffer[rowOffset + column]);
+        }
+    }
+
+    private static void testFlatSpriteColors() {
+        Sprite sprite = new Sprite((byte)1);
+        sprite.pixelData = new byte[]{0, 1, 0, 1};
+        sprite.colorPalettes = new int[16][2];
+        for (int level = 0; level < sprite.colorPalettes.length; ++level) {
+            sprite.colorPalettes[level][0] = 0xff102030;
+            sprite.colorPalettes[level][1] = 0xff304050;
+        }
+        sprite.buildFlatColors();
+        assertEquals("flat sprite colors", 16, sprite.flatColors.length);
+        assertEquals("flat sprite average", 0xff203040, sprite.flatColors[8]);
     }
 
     private static void testAllShippedLevels() {
@@ -211,11 +236,13 @@ public final class JavaMeSmokeTest {
             SectorData sector = world.sectors[index];
             if (sector.floorTextureId != 0 && sector.floorTextureId != 51) {
                 assertTrue("floor sprite " + levelName + "/" + index,
-                        sector.floorTexture != null && sector.floorTexture.colorPalettes != null);
+                        sector.floorTexture != null && sector.floorTexture.colorPalettes != null
+                        && sector.floorTexture.flatColors != null);
             }
             if (sector.ceilingTextureId != 0 && sector.ceilingTextureId != 51) {
                 assertTrue("ceiling sprite " + levelName + "/" + index,
-                        sector.ceilingTexture != null && sector.ceilingTexture.colorPalettes != null);
+                        sector.ceilingTexture != null && sector.ceilingTexture.colorPalettes != null
+                        && sector.ceilingTexture.flatColors != null);
             }
         }
     }

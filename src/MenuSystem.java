@@ -12,6 +12,15 @@ public final class MenuSystem {
     private static final int MENU_ITEM_HEIGHT = 23;
     private static final int UI_HEIGHT = 320;
 
+    private static final int SETTINGS_SOUND_MODE = 50;
+    private static final int SETTINGS_MUSIC_MODE = 51;
+    private static final int SETTINGS_VIBRATION_MODE = 52;
+    private static final int SETTINGS_FLOORS_MODE = 53;
+    private static final int SETTINGS_SKY_MODE = 54;
+    private static final int SETTINGS_MUZZLE_LIGHT_MODE = 55;
+    private static final int SETTINGS_SCREEN_EFFECTS_MODE = 56;
+    private static final int SETTINGS_ITEM_COUNT = 10;
+
     private final FontRenderer fontRenderer;
     private final MainGameCanvas canvas; // for flushGraphics and timing fields access
     private String[] settingsMenuItems;
@@ -19,6 +28,31 @@ public final class MenuSystem {
     public MenuSystem(FontRenderer fontRenderer, MainGameCanvas canvas) {
         this.fontRenderer = fontRenderer;
         this.canvas = canvas;
+    }
+
+    /** Refreshes the persistent visual/performance settings shown in the menu. */
+    private void updateSettingsMenuItems() {
+        if (settingsMenuItems == null || settingsMenuItems.length != SETTINGS_ITEM_COUNT) {
+            settingsMenuItems = new String[SETTINGS_ITEM_COUNT];
+        }
+
+        settingsMenuItems[0] = TextStrings.SETTINGS;
+        settingsMenuItems[1] = TextStrings.EMPTY_SPACE;
+        settingsMenuItems[2] = TextStrings.SOUND
+                + (SaveSystem.soundEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[3] = TextStrings.MUSIC
+                + (SaveSystem.musicEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[4] = TextStrings.VIBRATION
+                + (SaveSystem.vibrationEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[5] = TextStrings.FLOORS
+                + (SaveSystem.texturedFlatsEnabled == 1 ? TextStrings.TEXTURED : TextStrings.FLAT);
+        settingsMenuItems[6] = TextStrings.SKY
+                + (SaveSystem.texturedSkyEnabled == 1 ? TextStrings.TEXTURED : TextStrings.SOLID);
+        settingsMenuItems[7] = TextStrings.MUZZLE_LIGHT
+                + (SaveSystem.muzzleLightingEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[8] = TextStrings.SCREEN_EFFECTS
+                + (SaveSystem.screenEffectsEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[9] = TextStrings.BACK;
     }
 
     public void drawStripedBackground(Graphics graphics, Image background) {
@@ -154,13 +188,7 @@ public final class MenuSystem {
 
                         case 1:
                         case 34:
-                            settingsMenuItems = new String[6];
-                            settingsMenuItems[0] = TextStrings.SETTINGS;
-                            settingsMenuItems[1] = TextStrings.EMPTY_SPACE;
-                            settingsMenuItems[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
-                            settingsMenuItems[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
-                            settingsMenuItems[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
-                            settingsMenuItems[5] = TextStrings.BACK;
+                            updateSettingsMenuItems();
                             stackData = new Object[4];
                             stackData[0] = menuItems;
                             stackData[1] = new Integer(menuMode);
@@ -214,9 +242,8 @@ public final class MenuSystem {
                             menuMode = 66;
                             break;
 
-                        case 50:
+                        case SETTINGS_SOUND_MODE:
                             SaveSystem.soundEnabled = (byte)(SaveSystem.soundEnabled ^ 1);
-                            settingsMenuItems[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.musicEnabled != 1) {
                                 if (SaveSystem.soundEnabled == 1) {
                                     HelperUtils.playSound(1, false, 80, 0);
@@ -224,27 +251,52 @@ public final class MenuSystem {
                                     HelperUtils.stopCurrentSound();
                                 }
                             }
+                            updateSettingsMenuItems();
                             SaveSystem.saveSettingsToRMS();
                             break;
 
-                        case 51:
+                        case SETTINGS_MUSIC_MODE:
                             SaveSystem.musicEnabled = (byte)(SaveSystem.musicEnabled ^ 1);
-                            settingsMenuItems[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.musicEnabled == 1) {
                                 HelperUtils.stopCurrentSound();
                                 HelperUtils.playSound(0, true, 80, 2);
                             } else {
                                 HelperUtils.stopCurrentSound();
                             }
+                            updateSettingsMenuItems();
                             SaveSystem.saveSettingsToRMS();
                             break;
 
-                        case 52:
+                        case SETTINGS_VIBRATION_MODE:
                             SaveSystem.vibrationEnabled = (byte)(SaveSystem.vibrationEnabled ^ 1);
-                            settingsMenuItems[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.vibrationEnabled == 1) {
                                 HelperUtils.vibrateDevice(100);
                             }
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_FLOORS_MODE:
+                            SaveSystem.texturedFlatsEnabled = (byte)(SaveSystem.texturedFlatsEnabled ^ 1);
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_SKY_MODE:
+                            SaveSystem.texturedSkyEnabled = (byte)(SaveSystem.texturedSkyEnabled ^ 1);
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_MUZZLE_LIGHT_MODE:
+                            SaveSystem.muzzleLightingEnabled = (byte)(SaveSystem.muzzleLightingEnabled ^ 1);
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_SCREEN_EFFECTS_MODE:
+                            SaveSystem.screenEffectsEnabled = (byte)(SaveSystem.screenEffectsEnabled ^ 1);
+                            updateSettingsMenuItems();
                             SaveSystem.saveSettingsToRMS();
                             break;
 

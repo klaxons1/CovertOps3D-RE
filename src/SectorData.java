@@ -31,9 +31,9 @@ public final class SectorData {
         this.visitedFlags     = null;
     }
 
-    /** Returns current light level (0-16) with screen-shake flash effect */
+    /** Returns current light level (0-16), including optional explosion flash. */
     public final int getLightLevel() {
-        if (GameEngine.screenShake > 0) {
+        if (SaveSystem.screenEffectsEnabled != 0 && GameEngine.screenShake > 0) {
             int boosted = (baseLightLevel & 0xFFFF) + (GameEngine.screenShake >> 1);
             return (boosted > 16) ? 16 : boosted;
         }
