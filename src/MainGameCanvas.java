@@ -12,9 +12,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int HALF_UI_HEIGHT = UI_HEIGHT / 2;
 
     public static final String LEVEL_PATH_PREFIX = "/gamedata/levels/level_";
-    public static final String CUSTOM_DEMO_LEVEL_PATH = "/gamedata/custom/demo/level.c3b";
+    // Compact C3D2 conversion of classic Doom E1M1. The source DOOM.WAD stays
+    // in docs for the converter and is never loaded or bundled as a game map.
+    public static final String DOOM_E1M1_LEVEL_PATH = "/gamedata/custom/doom-e1m1/level.c3b";
     public static final String[] LEVEL_FILE_NAMES = new String[]{
-            CUSTOM_DEMO_LEVEL_PATH, "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
+            DOOM_E1M1_LEVEL_PATH, "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
     };
 
     public static WeaponManager weaponManager;

@@ -8,7 +8,7 @@ this tool.
 
 Run from the repository root::
 
-    python3 scripts/c3d2_editor.py res/gamedata/custom/demo
+    python3 scripts/c3d2_editor.py res/gamedata/custom/doom-e1m1
 
 Optional editor-only dependencies::
 
@@ -44,7 +44,7 @@ except ImportError:
 
 
 APP_TITLE = 'C3D2 Editor — CovertOps3D'
-DEFAULT_PACKAGE = os.path.join(ROOT, 'res', 'gamedata', 'custom', 'demo')
+DEFAULT_PACKAGE = os.path.join(ROOT, 'res', 'gamedata', 'custom', 'doom-e1m1')
 MAP_BACKGROUND = (19, 24, 30)
 GRID_COLOR = (38, 48, 60)
 TEXT_COLOR = (225, 232, 240)

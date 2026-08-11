@@ -29,6 +29,7 @@ public final class JavaMeSmokeTest {
         testExternalEntities();
         testC3BLevel();
         testC3BFrameRenders();
+        testDoomE1M1Level();
         testRendererFastPaths();
         testFlatSpriteColors();
         testAllShippedLevels();
@@ -186,6 +187,28 @@ public final class JavaMeSmokeTest {
             }
         }
         assertTrue("C3B frame contains world pixels", coloredPixels > 1024);
+    }
+
+    /**
+     * Loads the compact WAD conversion rather than the 10 MB source WAD. It
+     * exercises a real-sized custom map: composite Doom wall BMPs, flats,
+     * explicit BSP leaf sectors and player starts from entities.ini.
+     */
+    private static void testDoomE1M1Level() {
+        LevelLoader.levelVariant = 0;
+        assertTrue("Doom E1M1 C3B load", CustomLevelLoader.load(
+                "/gamedata/custom/doom-e1m1/level.c3b", true));
+        GameWorld world = LevelLoader.gameWorld;
+        assertTrue("Doom E1M1 geometry", world != null && world.wallDefinitions.length == 452
+                && world.sectors.length == 83 && world.bspNodes.length > 100);
+        assertTrue("Doom E1M1 spawn", world.worldOrigin != null);
+        world.initializeWorld();
+        assertTrue("Doom E1M1 wall texture", LevelLoader.getTexture((byte)1) != null
+                && LevelLoader.getTexture((byte)1).pixelData != null);
+        assertTrue("Doom E1M1 flat texture", world.sectors[0].ceilingTexture != null
+                && world.sectors[0].ceilingTexture.flatColors != null);
+        assertTrue("Doom E1M1 spawn sector", world.getSectorDataAtPoint(
+                world.worldOrigin.x, world.worldOrigin.z) != null);
     }
 
     /** Verifies the MascotME-inspired bulk clear and unrolled opaque-flat path. */

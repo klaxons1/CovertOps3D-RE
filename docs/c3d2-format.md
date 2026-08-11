@@ -123,9 +123,10 @@ packages, `entities.ini`, installs loose wall/flat/sky BMPs, builds
 `GameWorld`, and then uses the existing `PortalRenderer`. Stock campaign
 loading remains unchanged.
 
-The repository currently routes campaign slot 0 (New Game) to the demo C3B
-package, so the complete custom path is exercised by normal game startup.
-The legacy `level_01a` is retained as an import/compatibility asset.
+The repository currently routes campaign slot 0 (New Game) to the compact
+C3D2 conversion of Doom E1M1, so the complete custom path is exercised by
+normal game startup. The tiny `custom/demo` package remains a pipeline fixture;
+legacy `level_01a` is retained as an import/compatibility asset.
 
 ## C3B v1 runtime layout
 
@@ -185,3 +186,10 @@ sliver-сегменты и нестабильные texture offset.
 обновление `materials.c3m` и 3D flythrough. Инструкции и клавиши — в
 [`c3d2-editor.md`](c3d2-editor.md). Старый `level_editor.py` остаётся только
 legacy-редактором/импортёром.
+
+## Doom E1M1 import
+
+`scripts/convert_doom_e1m1.py` переводит classic `docs/DOOM.WAD` в компактный
+C3D2 package с BSP, внешними BMP4 world textures и player spawn без чтения WAD
+на Java ME. Размеры, ограничения и намеренно отложенные Doom gameplay/sprite
+возможности описаны в [`doom-e1m1-conversion.md`](doom-e1m1-conversion.md).

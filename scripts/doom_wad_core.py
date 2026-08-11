@@ -1,0 +1,661 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Classic Doom WAD -> compact C3D2 package converter.
+
+The converter intentionally targets the original binary Doom map format used
+by E1M1. Classic Doom sectors are horizontal floor/ceiling planes, so no slopes
+are required for this source format. It emits a C3D source, C3B, BMP4 material
+set and player starts; the game never reads the WAD at runtime.
+
+Only data needed to walk the map is put under ``res/gamedata/custom``:
+geometry, used wall textures, used flats, sky and C3D entity starts. Doom
+things are preserved in a small metadata INI for future custom-sprite work,
+but are not injected as unsupported CovertOps gameplay entities.
+"""
+
+import hashlib
+import json
+import os
+import struct
+
+import c3d2_core as C3
+import c3d2_entities as ENTITIES
+import c3d2_texture_tools as TEXTURES
+import co3d_level_core as LEGACY
+from png_to_bmp4 import write_bmp4 as write_transparent_bmp4
+
+
+class DoomWadError(ValueError):
+    pass
+
+
+# These are only used by optional sprite extraction. The gameplay runtime does
+# not yet consume custom Doom billboards, so the default compact conversion
+# leaves sprites outside the JAR package.
+THING_SPRITES = {
+    9: 'SPOS', 10: 'PLAY', 11: 'PLAY', 12: 'PLAY', 13: 'PLAY',
+    14: 'PLAY', 15: 'PLAY', 16: 'PLAY', 17: 'CELP', 18: 'POSS',
+    19: 'SPOS', 20: 'TROO', 21: 'SARG', 22: 'HEAD', 23: 'SKUL',
+    24: 'POL5', 25: 'POL1', 26: 'POL6', 27: 'POL4', 28: 'POL2',
+    29: 'POL3', 30: 'COL1', 31: 'COL2', 32: 'COL3', 33: 'COL4',
+    34: 'CAND', 35: 'CBRA', 36: 'COL5', 37: 'COL6', 38: 'COLU',
+    39: 'COLU', 40: 'COLU', 41: 'CEYE', 42: 'FSKU', 43: 'TBLU',
+    44: 'TGRN', 45: 'TRE1', 46: 'TRE2', 47: 'ELEC', 48: 'ELEC',
+    49: 'GOR1', 50: 'GOR2', 51: 'GOR3', 52: 'GOR4', 53: 'GOR5',
+    54: 'TRE1', 55: 'TRE2', 56: 'TRE3', 57: 'TRE4', 58: 'SARG',
+    59: 'HDB1', 60: 'HDB2', 61: 'POB1', 62: 'POB2', 63: 'POB3',
+    64: 'POB4', 65: 'POB5', 66: 'POL1', 67: 'POL2', 68: 'POL3',
+    69: 'POL4', 70: 'POL5', 71: 'POL6', 72: 'HDB3', 73: 'HDB4',
+    74: 'HDB5', 75: 'HDB6', 76: 'POB1', 77: 'POB2', 78: 'POB3',
+    79: 'POB4', 80: 'POB5', 81: 'POB6', 82: 'HDB1', 83: 'HDB2',
+    84: 'HDB3', 85: 'HDB4', 86: 'HDB5', 87: 'HDB6', 88: 'BBRN',
+    89: 'BRS1',
+    2001: 'SHOT', 2002: 'MGUN', 2003: 'LAUN', 2004: 'PLAS',
+    2005: 'CSAW', 2006: 'BFUG', 2007: 'CLIP', 2008: 'SHEL',
+    2010: 'ROCK', 2011: 'STIM', 2012: 'MEDI', 2013: 'SOUL',
+    2014: 'BON1', 2015: 'BON2', 2017: 'CEYE', 2018: 'ARM1',
+    2019: 'ARM2', 2022: 'PINV', 2023: 'PSTR', 2024: 'PINS',
+    2025: 'SUIT', 2026: 'PMAP', 2028: 'COLU', 2035: 'BAR1',
+    2045: 'PVIS', 2046: 'BROK', 2047: 'CELL', 2048: 'AMMO',
+    2049: 'SBOX', 3001: 'TROO', 3002: 'SARG', 3003: 'BOSS',
+    3004: 'POSS', 3005: 'HEAD', 3006: 'SKUL',
+}
+
+
+class WadFile(object):
+    def __init__(self, path):
+        self.path = path
+        with open(path, 'rb') as stream:
+            self.data = stream.read()
+        if len(self.data) < 12:
+            raise DoomWadError('file is too short for a WAD header')
+        magic, count, directory_offset = struct.unpack_from('<4sii', self.data, 0)
+        if magic not in (b'IWAD', b'PWAD'):
+            raise DoomWadError('not an IWAD/PWAD: %r' % magic)
+        if count < 0 or directory_offset < 0 or directory_offset + count * 16 > len(self.data):
+            raise DoomWadError('invalid WAD directory')
+        self.magic = magic.decode('ascii')
+        self.lumps = []
+        self.by_name = {}
+        for index in range(count):
+            offset, size, raw_name = struct.unpack_from('<ii8s', self.data,
+                                                        directory_offset + index * 16)
+            if offset < 0 or size < 0 or offset + size > len(self.data):
+                raise DoomWadError('invalid lump bounds at index %d' % index)
+            name = _lump_name(raw_name)
+            entry = dict(index=index, name=name, offset=offset, size=size)
+            self.lumps.append(entry)
+            self.by_name.setdefault(name, []).append(entry)
+
+    def lump(self, name, occurrence=-1):
+        entries = self.by_name.get(name.upper())
+        if not entries:
+            raise DoomWadError('missing lump: ' + name)
+        entry = entries[occurrence]
+        return self.data[entry['offset']:entry['offset'] + entry['size']]
+
+    def lump_entry(self, name, occurrence=-1):
+        entries = self.by_name.get(name.upper())
+        if not entries:
+            raise DoomWadError('missing lump: ' + name)
+        return entries[occurrence]
+
+    def namespace(self, start_name, end_name):
+        start = self.lump_entry(start_name)['index']
+        end = self.lump_entry(end_name)['index']
+        if end <= start:
+            raise DoomWadError('bad namespace %s..%s' % (start_name, end_name))
+        return self.lumps[start + 1:end]
+
+    def sha256(self):
+        return hashlib.sha256(self.data).hexdigest()
+
+
+class DoomMap(object):
+    def __init__(self):
+        self.name = ''
+        self.vertices = []
+        self.linedefs = []
+        self.sidedefs = []
+        self.sectors = []
+        self.things = []
+
+
+def load_map(wad, map_name='E1M1'):
+    marker = wad.lump_entry(map_name.upper())
+    start = marker['index']
+    expected = ('THINGS', 'LINEDEFS', 'SIDEDEFS', 'VERTEXES', 'SEGS',
+                'SSECTORS', 'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP')
+    found = wad.lumps[start + 1:start + 1 + len(expected)]
+    if len(found) != len(expected) or tuple(item['name'] for item in found) != expected:
+        raise DoomWadError('%s is not a classic Doom map marker' % map_name)
+    lumps = {}
+    for item in found:
+        lumps[item['name']] = wad.data[item['offset']:item['offset'] + item['size']]
+
+    result = DoomMap()
+    result.name = map_name.upper()
+    result.vertices = [_vertex(record) for record in _records(lumps['VERTEXES'], 4)]
+    result.linedefs = [_linedef(record) for record in _records(lumps['LINEDEFS'], 14)]
+    result.sidedefs = [_sidedef(record) for record in _records(lumps['SIDEDEFS'], 30)]
+    result.sectors = [_sector(record) for record in _records(lumps['SECTORS'], 26)]
+    result.things = [_thing(record) for record in _records(lumps['THINGS'], 10)]
+
+    for index, line in enumerate(result.linedefs):
+        if line['start'] >= len(result.vertices) or line['end'] >= len(result.vertices):
+            raise DoomWadError('linedef %d has invalid vertex' % index)
+        for side in (line['right'], line['left']):
+            if side >= len(result.sidedefs):
+                raise DoomWadError('linedef %d has invalid sidedef' % index)
+    for index, side in enumerate(result.sidedefs):
+        if side['sector'] >= len(result.sectors):
+            raise DoomWadError('sidedef %d has invalid sector' % index)
+    return result
+
+
+def parse_palette(wad):
+    data = wad.lump('PLAYPAL')
+    if len(data) < 768:
+        raise DoomWadError('PLAYPAL is too short')
+    return [tuple(data[index:index + 3]) for index in range(0, 768, 3)]
+
+
+def parse_texture_definitions(wad):
+    pnames = wad.lump('PNAMES')
+    if len(pnames) < 4:
+        raise DoomWadError('PNAMES is too short')
+    count, = struct.unpack_from('<I', pnames, 0)
+    if 4 + count * 8 > len(pnames):
+        raise DoomWadError('PNAMES is truncated')
+    patch_names = [_lump_name(pnames[4 + index * 8:12 + index * 8])
+                   for index in range(count)]
+
+    textures = {}
+    for lump_name in ('TEXTURE1', 'TEXTURE2'):
+        if lump_name not in wad.by_name:
+            continue
+        data = wad.lump(lump_name)
+        if len(data) < 4:
+            raise DoomWadError(lump_name + ' is too short')
+        texture_count, = struct.unpack_from('<I', data, 0)
+        if 4 + texture_count * 4 > len(data):
+            raise DoomWadError(lump_name + ' offsets are truncated')
+        for index in range(texture_count):
+            offset, = struct.unpack_from('<I', data, 4 + index * 4)
+            if offset + 22 > len(data):
+                raise DoomWadError('bad texture offset in ' + lump_name)
+            name = _lump_name(data[offset:offset + 8])
+            width, height = struct.unpack_from('<hh', data, offset + 12)
+            patch_count, = struct.unpack_from('<h', data, offset + 20)
+            if width <= 0 or height <= 0 or patch_count < 0:
+                raise DoomWadError('bad texture dimensions: ' + name)
+            end = offset + 22 + patch_count * 10
+            if end > len(data):
+                raise DoomWadError('truncated texture patches: ' + name)
+            patches = []
+            for patch_index in range(patch_count):
+                px, py, patch_number, step_dir, color_map = struct.unpack_from(
+                    '<hhHhh', data, offset + 22 + patch_index * 10)
+                if patch_number >= len(patch_names):
+                    raise DoomWadError('texture %s has invalid patch index' % name)
+                patches.append(dict(x=px, y=py, name=patch_names[patch_number],
+                                    step=step_dir, color_map=color_map))
+            textures[name] = dict(name=name, width=width, height=height, patches=patches)
+    return textures
+
+
+def decode_patch(data, palette):
+    if len(data) < 8:
+        raise DoomWadError('patch is too short')
+    width, height, left_offset, top_offset = struct.unpack_from('<HHhh', data, 0)
+    if width <= 0 or height <= 0 or 8 + width * 4 > len(data):
+        raise DoomWadError('invalid patch header')
+    pixels = [(0, 0, 0, 0)] * (width * height)
+    for x in range(width):
+        offset, = struct.unpack_from('<I', data, 8 + x * 4)
+        if offset >= len(data):
+            raise DoomWadError('patch column outside lump')
+        cursor = offset
+        while True:
+            if cursor >= len(data):
+                raise DoomWadError('unterminated patch column')
+            top_delta = data[cursor]
+            cursor += 1
+            if top_delta == 255:
+                break
+            if cursor + 2 > len(data):
+                raise DoomWadError('truncated patch post')
+            length = data[cursor]
+            cursor += 2  # length + unused byte
+            if cursor + length + 1 > len(data):
+                raise DoomWadError('truncated patch pixels')
+            for y in range(length):
+                output_y = top_delta + y
+                if 0 <= output_y < height:
+                    red, green, blue = palette[data[cursor + y]]
+                    pixels[output_y * width + x] = (red, green, blue, 255)
+            cursor += length + 1  # pixels + trailing unused byte
+    return width, height, left_offset, top_offset, pixels
+
+
+def render_texture(wad, texture, palette):
+    pixels = [(0, 0, 0, 255)] * (texture['width'] * texture['height'])
+    for patch_info in texture['patches']:
+        patch = wad.lump(patch_info['name'])
+        width, height, _left, _top, patch_pixels = decode_patch(patch, palette)
+        for y in range(height):
+            target_y = patch_info['y'] + y
+            if target_y < 0 or target_y >= texture['height']:
+                continue
+            source_offset = y * width
+            target_offset = target_y * texture['width']
+            for x in range(width):
+                target_x = patch_info['x'] + x
+                if target_x < 0 or target_x >= texture['width']:
+                    continue
+                color = patch_pixels[source_offset + x]
+                if color[3]:
+                    pixels[target_offset + target_x] = color
+    return texture['width'], texture['height'], pixels
+
+
+def decode_flat(wad, name, palette):
+    data = wad.lump(name)
+    if len(data) != 4096:
+        raise DoomWadError('flat %s is not 64x64' % name)
+    return 64, 64, [(palette[index][0], palette[index][1], palette[index][2], 255)
+                    for index in data]
+
+
+def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
+                minimum_clearance=64, extract_sprites='none'):
+    """Converts a parsed classic Doom map into a complete compact C3D package."""
+    if height_scale <= 0 or world_scale <= 0:
+        raise DoomWadError('height/world scale must be positive')
+    if minimum_clearance < 50:
+        raise DoomWadError('minimum clearance must be at least 50 for this engine')
+
+    palette = parse_palette(wad)
+    texture_defs = parse_texture_definitions(wad)
+    wall_names = _used_wall_texture_names(doom_map)
+    flat_names = _used_flat_names(doom_map)
+    sky_names = set(name for name in flat_names if name == 'F_SKY1')
+    flat_names -= sky_names
+    if not wall_names:
+        raise DoomWadError('map has no wall textures')
+    if len(wall_names) > 127 or len(flat_names) > 127:
+        raise DoomWadError('map exceeds C3D 127 material slots')
+
+    if not os.path.isdir(package_dir):
+        os.makedirs(package_dir)
+    texture_dir = os.path.join(package_dir, 'textures')
+    if not os.path.isdir(texture_dir):
+        os.makedirs(texture_dir)
+
+    wall_slots = dict((name, index + 1) for index, name in enumerate(sorted(wall_names)))
+    flat_slots = dict((name, index + 1) for index, name in enumerate(sorted(flat_names)))
+    fallback_wall = sorted(wall_names)[0]
+
+    report = dict(map=doom_map.name, wad_sha256=wad.sha256(),
+                  vertices=len(doom_map.vertices), linedefs=len(doom_map.linedefs),
+                  sidedefs=len(doom_map.sidedefs), sectors=len(doom_map.sectors),
+                  things=len(doom_map.things), wall_textures=len(wall_slots),
+                  flats=len(flat_slots), height_scale=height_scale,
+                  world_scale=world_scale, minimum_clearance=minimum_clearance,
+                  missing_wall_textures=[], sprites=0)
+
+    manifest_lines = [
+        '# Generated by scripts/convert_doom_e1m1.py from %s.' % doom_map.name,
+        '# Indexed BMP4 only; source WAD is never read by the Java ME runtime.',
+    ]
+    material_lines = ['[doom_materials]', 'format=DOOM-C3D-MATERIALS-1']
+
+    for name in sorted(wall_slots):
+        slot = wall_slots[name]
+        filename = 'wall_%03d_%s.bmp' % (slot, _safe_name(name))
+        destination = os.path.join(texture_dir, filename)
+        try:
+            texture = texture_defs[name]
+            width, height, pixels = render_texture(wad, texture, palette)
+        except Exception as error:
+            width, height, pixels = 64, 128, _placeholder_rgba(64, 128)
+            report['missing_wall_textures'].append('%s: %s' % (name, error))
+        target_width, target_height = _wall_target(width, height)
+        _write_world_bmp(destination, pixels, width, height, target_width, target_height)
+        relative = 'textures/' + filename
+        manifest_lines.append('wall.%d=%s' % (slot, relative))
+        material_lines.append('wall.%s=%d' % (name, slot))
+
+    for name in sorted(flat_slots):
+        slot = flat_slots[name]
+        filename = 'flat_%03d_%s.bmp' % (slot, _safe_name(name))
+        destination = os.path.join(texture_dir, filename)
+        width, height, pixels = decode_flat(wad, name, palette)
+        _write_world_bmp(destination, pixels, width, height, 64, 64)
+        relative = 'textures/' + filename
+        manifest_lines.append('flat.%d=%s' % (slot, relative))
+        material_lines.append('flat.%s=%d' % (name, slot))
+
+    sky_texture = texture_defs.get('SKY1')
+    sky_destination = os.path.join(texture_dir, 'sky.bmp')
+    if sky_texture is not None:
+        sky_width, sky_height, sky_pixels = render_texture(wad, sky_texture, palette)
+    else:
+        sky_width, sky_height, sky_pixels = 64, 128, _placeholder_rgba(64, 128, sky=True)
+        report['missing_wall_textures'].append('SKY1: texture not found')
+    _write_world_bmp(sky_destination, sky_pixels, sky_width, sky_height, 64, 128)
+    manifest_lines.append('sky=textures/sky.bmp')
+    material_lines.append('sky=SKY1')
+
+    _write_text(os.path.join(package_dir, 'materials.c3m'), '\n'.join(manifest_lines) + '\n')
+    _write_text(os.path.join(package_dir, 'doom_materials.ini'), '\n'.join(material_lines) + '\n')
+
+    document, doom_things = _build_c3d_document(doom_map, wall_slots, flat_slots,
+                                                 fallback_wall, height_scale, world_scale,
+                                                 minimum_clearance)
+    document.materials = 'materials.c3m'
+    document.entities = 'entities.ini'
+    C3.dump_source(document, os.path.join(package_dir, 'level.c3d.json'))
+    ENTITIES.dump_entities(document.level.objects, os.path.join(package_dir, 'entities.ini'))
+    _write_doom_things(os.path.join(package_dir, 'doom_things.ini'), doom_things)
+
+    if extract_sprites not in ('none', 'used', 'all'):
+        raise DoomWadError('extract_sprites must be none, used or all')
+    if extract_sprites != 'none':
+        report['sprites'] = export_sprites(wad, doom_map, package_dir, palette,
+                                           extract_sprites)
+
+    c3b_path, bsp_report = C3.compile_source(os.path.join(package_dir, 'level.c3d.json'),
+                                              os.path.join(package_dir, 'level.c3b'))
+    c3b_info = C3.read_c3b(c3b_path)
+    report['c3b'] = os.path.basename(c3b_path)
+    report['bsp_nodes'] = c3b_info['nodes']
+    report['bsp_leaves'] = c3b_info['leaves']
+    report['bsp_segments'] = c3b_info['segments']
+    report['bsp_splits'] = bsp_report.splits
+    report['bsp_failures'] = len(bsp_report.fail_samples)
+    _write_text(os.path.join(package_dir, 'doom_conversion.json'),
+                json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + '\n')
+    return report
+
+
+def export_sprites(wad, doom_map, package_dir, palette, mode='used'):
+    """Optional compact Doom patch sprite export for future custom billboards."""
+    try:
+        entries = wad.namespace('S_START', 'S_END')
+    except DoomWadError:
+        # Some WADs use the extended marker names.
+        entries = wad.namespace('SS_START', 'SS_END')
+    wanted_prefixes = None
+    if mode == 'used':
+        wanted_prefixes = set()
+        for thing in doom_map.things:
+            prefix = THING_SPRITES.get(thing['type'])
+            if prefix:
+                wanted_prefixes.add(prefix)
+    sprite_dir = os.path.join(package_dir, 'sprites', 'doom')
+    if not os.path.isdir(sprite_dir):
+        os.makedirs(sprite_dir)
+    output_lines = ['[doom_sprites]', 'format=DOOM-C3D-SPRITES-1']
+    count = 0
+    for entry in entries:
+        name = entry['name']
+        if entry['size'] < 8:
+            continue
+        if wanted_prefixes is not None and name[:4] not in wanted_prefixes:
+            continue
+        try:
+            width, height, _left, _top, pixels = decode_patch(
+                wad.data[entry['offset']:entry['offset'] + entry['size']], palette)
+        except Exception:
+            continue
+        destination_name = _safe_name(name) + '.bmp'
+        destination = os.path.join(sprite_dir, destination_name)
+        _write_sprite_bmp(destination, width, height, pixels)
+        output_lines.append('%s=sprites/doom/%s' % (name, destination_name))
+        count += 1
+    _write_text(os.path.join(sprite_dir, 'sprites.ini'), '\n'.join(output_lines) + '\n')
+    return count
+
+
+def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
+                        height_scale, world_scale, minimum_clearance):
+    level = LEGACY.Level()
+    # Doom y grows north; C3D z uses the opposite axis. Reversing each Doom
+    # linedef below preserves Doom's right sidedef as C3D's front/right side.
+    level.vertices = [(int(round(x * world_scale)), int(round(-y * world_scale)))
+                      for x, y in doom_map.vertices]
+
+    for raw in doom_map.sectors:
+        floor = int(round(raw['floor'] * height_scale))
+        ceiling = int(round(raw['ceiling'] * height_scale))
+        if ceiling < floor + minimum_clearance:
+            ceiling = floor + minimum_clearance
+        floor_texture = 51 if raw['floor_texture'] == 'F_SKY1' else flat_slots.get(raw['floor_texture'], 0)
+        ceiling_texture = 51 if raw['ceiling_texture'] == 'F_SKY1' else flat_slots.get(raw['ceiling_texture'], 0)
+        light = _clamp((raw['light'] + 8) // 17, 0, 15)
+        # Doom specials/tags drive Doom doors, lifts and scripts. They are
+        # deliberately not copied into CovertOps game logic; converted portals
+        # are static/open so the player can explore E1M1 immediately.
+        level.sectors.append(dict(floor=floor, ceil=ceiling,
+                                  floor_tex=floor_texture, ceil_tex=ceiling_texture,
+                                  light_packed=light << 4, tag=0, type=0))
+
+    surface_by_side = {}
+
+    def convert_side(index):
+        if index < 0:
+            return -1
+        cached = surface_by_side.get(index)
+        if cached is not None:
+            return cached
+        raw = doom_map.sidedefs[index]
+        main = wall_slots.get(raw['middle'], wall_slots[fallback_wall])
+        upper = wall_slots.get(raw['upper'], main)
+        lower = wall_slots.get(raw['lower'], main)
+        surface_by_side[index] = len(level.surfaces)
+        level.surfaces.append(dict(ox=int(round(raw['x_offset'] * world_scale)),
+                                   oy=int(round(raw['y_offset'] * height_scale)),
+                                   upper=upper, lower=lower, main=main,
+                                   sector=raw['sector']))
+        return surface_by_side[index]
+
+    for raw in doom_map.linedefs:
+        right = raw['right']
+        left = raw['left']
+        if right >= 0:
+            # y -> -z mirrors the map, so reverse vertices. Doom right side
+            # then remains C3D front/right with no semantic ambiguity.
+            start = raw['end']
+            end = raw['start']
+            front = convert_side(right)
+            back = convert_side(left)
+        elif left >= 0:
+            # Rare one-sided line with only a Doom left sidedef: do not mirror
+            # its endpoints a second time; its left side becomes C3D front.
+            start = raw['start']
+            end = raw['end']
+            front = convert_side(left)
+            back = -1
+        else:
+            continue
+        level.walls.append(dict(sv=start, ev=end, flags=1 if back < 0 else 0,
+                                type=0, special=0, front=front, back=back))
+
+    entities = []
+    doom_things = []
+    for raw in doom_map.things:
+        converted_x = int(round(raw['x'] * world_scale))
+        converted_z = int(round(-raw['y'] * world_scale))
+        converted_angle = _normalize_angle(90 - raw['angle'])
+        doom_things.append(dict(x=converted_x, z=converted_z, doom_angle=raw['angle'],
+                                type=raw['type'], flags=raw['flags'],
+                                sprite=THING_SPRITES.get(raw['type'], '')))
+        if 1 <= raw['type'] <= 4:
+            entities.append(dict(x=converted_x, z=converted_z,
+                                 angle=converted_angle, type=raw['type'], param=0))
+    if not entities:
+        raise DoomWadError('map has no Doom player starts (things 1..4)')
+    level.objects = entities
+    level.pvs = [bytearray(len(level.sectors)) for _index in level.sectors]
+    return C3.C3DDocument(level, materials='materials.c3m', entities='entities.ini'), doom_things
+
+
+def _write_world_bmp(path, pixels, source_width, source_height, target_width, target_height):
+    resized = TEXTURES.resize_rgba(pixels, source_width, source_height,
+                                   target_width, target_height, fit=False)
+    palette, indices = TEXTURES.kmeans_quantize(TEXTURES.rgba_to_rgb(resized), 16, 24)
+    TEXTURES.write_bmp4(path, target_width, target_height, palette, indices)
+
+
+def _write_sprite_bmp(path, width, height, pixels):
+    opaque = [(red, green, blue) for red, green, blue, alpha in pixels if alpha >= 128]
+    if not opaque:
+        opaque = [(0, 0, 0)]
+    palette, _unused = TEXTURES.kmeans_quantize(opaque, 15, 20)
+    indices = []
+    for red, green, blue, alpha in pixels:
+        if alpha < 128:
+            indices.append(0)
+        else:
+            indices.append(_nearest_palette((red, green, blue), palette) + 1)
+    write_transparent_bmp4(path, width, height, palette, indices)
+
+
+def _used_wall_texture_names(doom_map):
+    names = set()
+    for side in doom_map.sidedefs:
+        for key in ('upper', 'lower', 'middle'):
+            name = side[key]
+            if name and name != '-':
+                names.add(name)
+    return names
+
+
+def _used_flat_names(doom_map):
+    names = set()
+    for sector in doom_map.sectors:
+        names.add(sector['floor_texture'])
+        names.add(sector['ceiling_texture'])
+    return names
+
+
+def _wall_target(width, height):
+    target_width = 2
+    while target_width < width:
+        target_width <<= 1
+    if height <= 16:
+        target_height = 16
+    elif height <= 64:
+        target_height = 64
+    else:
+        target_height = 128
+    return target_width, target_height
+
+
+def _placeholder_rgba(width, height, sky=False):
+    pixels = []
+    for y in range(height):
+        for x in range(width):
+            if sky:
+                pixels.append((30 + (y * 100 // max(1, height)),
+                               65 + (y * 100 // max(1, height)), 120 + (y * 90 // max(1, height)), 255))
+            else:
+                shade = 70 if ((x >> 4) ^ (y >> 4)) & 1 else 130
+                pixels.append((shade, 0, shade, 255))
+    return pixels
+
+
+def _write_doom_things(path, things):
+    lines = ['# Source metadata; C3D runtime entities.ini contains player starts only.',
+             '[doom_things]', 'format=DOOM-C3D-THINGS-1']
+    for index, thing in enumerate(things):
+        lines.extend(('', '[thing.%d]' % index,
+                      'x=%d' % thing['x'], 'z=%d' % thing['z'],
+                      'angle=%d' % thing['doom_angle'], 'type=%d' % thing['type'],
+                      'flags=%d' % thing['flags']))
+        if thing['sprite']:
+            lines.append('sprite=%s' % thing['sprite'])
+    _write_text(path, '\n'.join(lines) + '\n')
+
+
+def _records(data, size):
+    if len(data) % size:
+        raise DoomWadError('lump length %d is not divisible by record size %d' %
+                           (len(data), size))
+    return [data[offset:offset + size] for offset in range(0, len(data), size)]
+
+
+def _vertex(data):
+    return struct.unpack_from('<hh', data, 0)
+
+
+def _linedef(data):
+    start, end, flags, special, tag, right, left = struct.unpack_from('<HHHHHhh', data, 0)
+    return dict(start=start, end=end, flags=flags, special=special, tag=tag,
+                right=right, left=left)
+
+
+def _sidedef(data):
+    x_offset, y_offset, upper, lower, middle, sector = struct.unpack_from('<hh8s8s8sH', data, 0)
+    return dict(x_offset=x_offset, y_offset=y_offset, upper=_lump_name(upper),
+                lower=_lump_name(lower), middle=_lump_name(middle), sector=sector)
+
+
+def _sector(data):
+    floor, ceiling, floor_texture, ceiling_texture, light, special, tag = struct.unpack_from(
+        '<hh8s8shhh', data, 0)
+    return dict(floor=floor, ceiling=ceiling, floor_texture=_lump_name(floor_texture),
+                ceiling_texture=_lump_name(ceiling_texture), light=light,
+                special=special, tag=tag)
+
+
+def _thing(data):
+    x, y, angle, thing_type, flags = struct.unpack_from('<hhHHH', data, 0)
+    return dict(x=x, y=y, angle=angle, type=thing_type, flags=flags)
+
+
+def _lump_name(data):
+    return data.split(b'\0', 1)[0].decode('ascii', 'replace').strip().upper()
+
+
+def _safe_name(name):
+    output = []
+    for char in name.lower():
+        output.append(char if char.isalnum() or char in ('_', '-') else '_')
+    return ''.join(output) or 'unnamed'
+
+
+def _normalize_angle(angle):
+    angle = int(round(angle)) % 360
+    return angle
+
+
+def _nearest_palette(color, palette):
+    best = 0
+    best_distance = _distance2(color, palette[0])
+    for index in range(1, len(palette)):
+        distance = _distance2(color, palette[index])
+        if distance < best_distance:
+            best = index
+            best_distance = distance
+    return best
+
+
+def _distance2(first, second):
+    red = first[0] - second[0]
+    green = first[1] - second[1]
+    blue = first[2] - second[2]
+    return red * red + green * green + blue * blue
+
+
+def _clamp(value, lower, upper):
+    return lower if value < lower else upper if value > upper else value
+
+
+def _write_text(path, content):
+    parent = os.path.dirname(path)
+    if parent and not os.path.isdir(parent):
+        os.makedirs(parent)
+    with open(path, 'w', encoding='utf-8') as stream:
+        stream.write(content)

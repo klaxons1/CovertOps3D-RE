@@ -8,14 +8,14 @@
 python3 -m pip install -r requirements-editor.txt
 # Эквивалентно: python3 -m pip install pygame pillow
 
-# Открыть demo-пакет
-python3 scripts/c3d2_editor.py res/gamedata/custom/demo
+# Открыть сконвертированный E1M1 package
+python3 scripts/c3d2_editor.py res/gamedata/custom/doom-e1m1
 
 # Создать пакет в пустой папке
 python3 scripts/c3d2_editor.py /path/to/my_map --new
 
 # Проверить package без Pygame (подходит для CI)
-python3 scripts/c3d2_editor.py res/gamedata/custom/demo --validate
+python3 scripts/c3d2_editor.py res/gamedata/custom/doom-e1m1 --validate
 ```
 
 `pygame` нужен только самому окну и 3D-пролёту. `Pillow` нужен для импорта
@@ -148,7 +148,8 @@ Flythrough является быстрым Pygame-превью для автор
 python3 scripts/test_c3d2.py
 python3 scripts/test_c3d2_texture_tools.py
 python3 scripts/test_c3d2_editor.py
+python3 scripts/test_doom_wad.py
 ```
 
-Последние две не требуют установленного Pygame/Pillow: проверяются модель
+Последние три не требуют установленного Pygame/Pillow: проверяются модель
 package, entity sidecar, K-means, BMP4 и обновление manifest.
