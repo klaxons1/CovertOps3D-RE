@@ -24,6 +24,7 @@ public final class JavaMeSmokeTest {
         testBinaryUtils();
         testRotationNormalization();
         testPaletteLighting();
+        testRendererFastPaths();
         testAllShippedLevels();
         System.out.println("Java ME smoke test: OK");
     }
@@ -89,6 +90,75 @@ public final class JavaMeSmokeTest {
         assertTrue("shadow is darker", (palettes[0][0] & 0x00ffffff)
                 < (palettes[8][0] & 0x00ffffff));
         assertTrue("highlight preserves red detail", ((palettes[15][0] >> 16) & 0xff) < 255);
+    }
+
+    /** Verifies the MascotME-inspired bulk clear and unrolled opaque-flat path. */
+    private static void testRendererFastPaths() {
+        Sector.resetClipArrays();
+        Sector.floorClip[7] = 123;
+        Sector.ceilingClip[7] = 0;
+        Sector.resetClipArrays();
+        assertEquals("clip floor reset", 0, Sector.floorClip[7]);
+        assertEquals("clip ceiling reset", PortalRenderer.MAX_VIEWPORT_Y, Sector.ceilingClip[7]);
+
+        int viewportWidth = PortalRenderer.VIEWPORT_WIDTH;
+        PortalRenderer.screenBuffer = new int[PortalRenderer.SCREEN_BUFFER_SIZE];
+        PortalRenderer.reciprocalTable = new int[PortalRenderer.VIEWPORT_HEIGHT + 1];
+        PortalRenderer.angleCorrectionTable = new int[viewportWidth];
+        for (int i = 1; i < PortalRenderer.reciprocalTable.length; ++i) {
+            PortalRenderer.reciprocalTable[i] = 65536 / i;
+        }
+        for (int i = 0; i < viewportWidth; ++i) {
+            PortalRenderer.angleCorrectionTable[i] = (i - PortalRenderer.HALF_VIEWPORT_WIDTH) << 8;
+        }
+        PortalRenderer.gunFireLighting = false;
+
+        byte[] pixels = new byte[4096];
+        for (int i = 0; i < pixels.length; ++i) {
+            pixels[i] = (byte)(i & 15);
+        }
+        int[][] palettes = new int[16][16];
+        for (int light = 0; light < palettes.length; ++light) {
+            for (int color = 0; color < palettes[light].length; ++color) {
+                palettes[light][color] = 0xff000000 | (light << 16) | color;
+            }
+        }
+
+        int startColumn = 5;
+        int endColumn = 230;
+        int row = 200;
+        int sinAngle = 42000;
+        int cosAngle = 49000;
+        int cameraX = 123456;
+        int heightOffset = 1310720;
+        int cameraZ = -654321;
+        PortalRenderer.drawFlatSurface(startColumn, endColumn, row, pixels, palettes,
+                8, sinAngle, cosAngle, cameraX, heightOffset, cameraZ);
+
+        int rowFromCenter = row - PortalRenderer.HALF_VIEWPORT_HEIGHT;
+        int perspective = PortalRenderer.reciprocalTable[rowFromCenter];
+        int scaledPerspective = (heightOffset * perspective) >> 8;
+        int effectiveLight = 8 - (scaledPerspective >> 14);
+        if (effectiveLight < 0) effectiveLight = 0;
+        else if (effectiveLight > 15) effectiveLight = 15;
+        int startAngle = PortalRenderer.angleCorrectionTable[startColumn];
+        int endAngle = PortalRenderer.angleCorrectionTable[endColumn];
+        int textureU = ((sinAngle + (cosAngle * startAngle >> 14)) * scaledPerspective - cameraX) >> 6;
+        int textureV = (cosAngle - (sinAngle * startAngle >> 14)) * scaledPerspective - cameraZ;
+        int angleDelta = (endAngle - startAngle)
+                * PortalRenderer.reciprocalTable[endColumn - startColumn + 1] >> 16;
+        int textureStepU = ((cosAngle * angleDelta >> 14) * scaledPerspective) >> 6;
+        int textureStepV = (-sinAngle * angleDelta >> 14) * scaledPerspective;
+        int rowOffset = row * viewportWidth;
+
+        for (int column = startColumn; column <= endColumn; ++column) {
+            int expected = palettes[effectiveLight][pixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            assertEquals("opaque flat " + column, expected,
+                    PortalRenderer.screenBuffer[rowOffset + column]);
+            textureU += textureStepU;
+            textureV += textureStepV;
+        }
     }
 
     private static void testAllShippedLevels() {

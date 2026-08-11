@@ -11,6 +11,12 @@ public final class Sector {
     public static short[] ceilingClip;
     public static short[] floorClip;
 
+    // MascotME's renderer uses bulk copies for repeat framebuffer clears on
+    // devices where native arraycopy outperforms a Java per-pixel loop. The
+    // same applies to these fixed-size per-frame clip resets.
+    private static short[] initialFloorClip;
+    private static short[] initialCeilingClip;
+
     public Vector dynamicObjects;
     public boolean[] visibilityMask;
 
@@ -38,17 +44,26 @@ public final class Sector {
      */
     public static void resetClipArrays() {
         int viewportWidth = PortalRenderer.VIEWPORT_WIDTH;
-        int maxViewportY = PortalRenderer.MAX_VIEWPORT_Y;
 
         if (floorClip == null) {
             floorClip = new short[viewportWidth];
             ceilingClip = new short[viewportWidth];
         }
+        if (initialFloorClip == null) {
+            initialFloorClip = new short[viewportWidth];
+            initialCeilingClip = new short[viewportWidth];
 
-        for (int x = 0; x < viewportWidth; x++) {
-            floorClip[x] = 0;
-            ceilingClip[x] = (short)maxViewportY;
+            short maxViewportY = (short)PortalRenderer.MAX_VIEWPORT_Y;
+            for (int x = 0; x < viewportWidth; x++) {
+                initialCeilingClip[x] = maxViewportY;
+            }
         }
+
+        // Keep the old values and bounds exactly, but hand the fixed-size
+        // copies to the VM's optimized arraycopy implementation instead of
+        // performing 480 Java assignments every frame.
+        System.arraycopy(initialFloorClip, 0, floorClip, 0, viewportWidth);
+        System.arraycopy(initialCeilingClip, 0, ceilingClip, 0, viewportWidth);
     }
 
     public final SectorData getSectorData() {

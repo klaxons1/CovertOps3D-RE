@@ -984,8 +984,36 @@ public class PortalRenderer {
         int endPixelIndex = endColumn + rowOffset;
         int[] buffer = screenBuffer;
 
-        for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex++) {
-            buffer[pixelIndex] = colorPalette[texturePixels[(textureU & 16515072) + (textureV & 1056964608) >> 18]];
+        // Opaque flats are the common case. Following MascotME's rasterizer
+        // fast path, process four texels per loop to reduce loop-control work
+        // while retaining the exact same U/V update order.
+        int pixelIndex = startPixelIndex;
+        int unrolledEnd = endPixelIndex - 3;
+        while (pixelIndex <= unrolledEnd) {
+            buffer[pixelIndex++] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+
+            buffer[pixelIndex++] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+
+            buffer[pixelIndex++] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+
+            buffer[pixelIndex++] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+        }
+
+        for (; pixelIndex <= endPixelIndex; pixelIndex++) {
+            buffer[pixelIndex] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
             textureU += textureStepU;
             textureV += textureStepV;
         }
