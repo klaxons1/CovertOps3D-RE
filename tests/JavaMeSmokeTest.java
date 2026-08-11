@@ -27,6 +27,7 @@ public final class JavaMeSmokeTest {
         testLanguageSwitch();
         testExternalMaterials();
         testC3BLevel();
+        testC3BFrameRenders();
         testRendererFastPaths();
         testFlatSpriteColors();
         testAllShippedLevels();
@@ -145,6 +146,32 @@ public final class JavaMeSmokeTest {
                 && world.sectors[0].floorTexture.flatColors != null);
         assertTrue("C3B explicit leaf sector", world.getRootBSPNode()
                 .findSectorAtPoint(0, 0) == world.sectors[0]);
+    }
+
+    /**
+     * Loads the demo through the actual game setup and renders one frame.
+     * This catches C3D wall-winding mistakes: the BSP can still be valid, but
+     * PortalRenderer rejects every right-to-left projected front segment and
+     * otherwise leaves the frame buffer black.
+     */
+    private static void testC3BFrameRenders() {
+        GameEngine.initializeEngine();
+        assertTrue("C3B frame level load", CustomLevelLoader.load(
+                "/gamedata/custom/demo/level.c3b", true));
+        GameEngine.resetLevelState();
+
+        int playerY = -((GameEngine.currentSector.floorHeight
+                + GameWorld.PLAYER_HEIGHT_OFFSET) << 16);
+        PortalRenderer.renderWorld(GameEngine.player.x, playerY,
+                GameEngine.player.z, GameEngine.player.rotation);
+
+        int coloredPixels = 0;
+        for (int i = 0; i < PortalRenderer.screenBuffer.length; ++i) {
+            if ((PortalRenderer.screenBuffer[i] & 0x00FFFFFF) != 0) {
+                ++coloredPixels;
+            }
+        }
+        assertTrue("C3B frame contains world pixels", coloredPixels > 1024);
     }
 
     /** Verifies the MascotME-inspired bulk clear and unrolled opaque-flat path. */

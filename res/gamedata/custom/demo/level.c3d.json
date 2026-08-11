@@ -86,7 +86,7 @@
   "walls": [
     {
       "back": -1,
-      "end": 1,
+      "end": 3,
       "flags": 1,
       "front": 0,
       "special": 0,
@@ -99,12 +99,12 @@
       "flags": 1,
       "front": 1,
       "special": 0,
-      "start": 1,
+      "start": 3,
       "type": 0
     },
     {
       "back": -1,
-      "end": 3,
+      "end": 1,
       "flags": 1,
       "front": 2,
       "special": 0,
@@ -117,7 +117,7 @@
       "flags": 1,
       "front": 3,
       "special": 0,
-      "start": 3,
+      "start": 1,
       "type": 0
     }
   ]

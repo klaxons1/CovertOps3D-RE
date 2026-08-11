@@ -41,9 +41,15 @@ def new_document():
     lv.vertices = [(-128, -128), (128, -128), (128, 128), (-128, 128)]
     lv.sectors = [dict(floor=0, ceil=96, floor_tex=1, ceil_tex=51,
                        light_packed=8 << 4, tag=0, type=0)]
-    for i in range(4):
+    # A front wall side is rendered only from the sector on its right.  The
+    # room boundary must therefore be clockwise in the x,z plane (the stock
+    # maps use the same convention).  Counter-clockwise walls are accepted by
+    # the BSP builder, but are back-to-front after projection and render no
+    # columns at all.
+    clockwise_edges = ((0, 3), (3, 2), (2, 1), (1, 0))
+    for i, edge in enumerate(clockwise_edges):
         lv.surfaces.append(dict(ox=0, oy=0, upper=1, lower=1, main=1, sector=0))
-        lv.walls.append(dict(sv=i, ev=(i + 1) & 3, flags=1, type=0,
+        lv.walls.append(dict(sv=edge[0], ev=edge[1], flags=1, type=0,
                              special=0, front=i, back=-1))
     lv.objects.append(dict(x=0, z=0, angle=0, type=1, param=0))
     lv.pvs = [bytearray(1)]
@@ -267,6 +273,50 @@ def _validate_authored_level(level):
         for key in ('upper', 'lower', 'main'):
             if not 0 <= surface[key] <= 127:
                 raise ValueError('material slot must be 0..127')
+    _validate_sector_winding(level)
+
+
+def _validate_sector_winding(level):
+    """Checks the front-side orientation required by PortalRenderer.
+
+    A front segment is stored in wall start->end order and its sector is on
+    the right of that directed edge.  Back segments use the reverse direction.
+    Consequently a normal closed sector has a negative signed area in x,z
+    coordinates (clockwise outer contour).  The BSP compiler can partition a
+    counter-clockwise room, but PortalRenderer rejects its projected segments
+    as back-to-front, producing a black frame.  Catch that authoring mistake
+    before a C3B is written instead of silently shipping unusable geometry.
+    """
+    signed_areas = [0] * len(level.sectors)
+    side_counts = [0] * len(level.sectors)
+
+    for wall in level.walls:
+        start = level.vertices[wall['sv']]
+        end = level.vertices[wall['ev']]
+        for surface_index, front_side in ((wall['front'], True), (wall['back'], False)):
+            if surface_index < 0:
+                continue
+            sector_index = level.surfaces[surface_index]['sector']
+            if front_side:
+                x1, z1 = start
+                x2, z2 = end
+            else:
+                x1, z1 = end
+                x2, z2 = start
+            signed_areas[sector_index] += x1 * z2 - x2 * z1
+            side_counts[sector_index] += 1
+
+    for sector_index in range(len(level.sectors)):
+        if side_counts[sector_index] == 0:
+            raise ValueError('sector %d has no wall sides' % sector_index)
+        area = signed_areas[sector_index]
+        if area == 0:
+            raise ValueError('sector %d has zero signed area; close its wall boundary'
+                             % sector_index)
+        if area > 0:
+            raise ValueError('sector %d is counter-clockwise; front surfaces must keep '
+                             'their sector on the right (use clockwise walls)'
+                             % sector_index)
 
 
 def _validate_compiled_level(level):
