@@ -1,0 +1,5 @@
+# C3D loose-material manifest v1
+# Paths are relative to this file. Runtime assets are indexed BMP4/BMP8.
+wall.1=textures/wall.bmp
+flat.1=textures/floor.bmp
+sky=textures/sky.bmp

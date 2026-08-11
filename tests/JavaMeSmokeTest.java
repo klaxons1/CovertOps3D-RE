@@ -25,6 +25,7 @@ public final class JavaMeSmokeTest {
         testRotationNormalization();
         testPaletteLighting();
         testLanguageSwitch();
+        testExternalMaterials();
         testRendererFastPaths();
         testFlatSpriteColors();
         testAllShippedLevels();
@@ -108,6 +109,26 @@ public final class JavaMeSmokeTest {
 
         // Keep the test process aligned with the application's first-run default.
         TextStrings.setLanguage(TextStrings.LANGUAGE_RUSSIAN);
+    }
+
+    private static void testExternalMaterials() throws Exception {
+        LevelLoader.initResourceArrays();
+        CustomMaterialSet materials = CustomMaterialSet.load("/gamedata/custom/demo/materials.c3m");
+        assertEquals("custom wall material count", 1, materials.getWallTextureCount());
+        assertEquals("custom flat material count", 1, materials.getFlatTextureCount());
+
+        Texture wall = materials.getWallTexture(1);
+        assertTrue("custom wall loaded", wall != null && wall.width == 64 && wall.height == 128
+                && wall.pixelData != null && wall.colorPalettes != null);
+        Sprite flat = materials.getFlatTexture(1);
+        assertTrue("custom flat loaded", flat != null && flat.pixelData != null
+                && flat.colorPalettes != null && flat.flatColors != null);
+        Texture sky = materials.getSkyTexture();
+        assertTrue("custom sky loaded", sky != null && sky.width == 64 && sky.height == 128);
+
+        materials.installWallTextures();
+        assertTrue("custom wall installed", LevelLoader.getTexture((byte)1) == wall);
+        materials.installSkyTexture();
     }
 
     /** Verifies the MascotME-inspired bulk clear and unrolled opaque-flat path. */

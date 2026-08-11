@@ -61,6 +61,13 @@ public final class LevelLoader {
         return (tex != null && tex.width > 0) ? tex : defaultErrorTexture;
     }
 
+    /** Registers one loose custom BMP wall material for the current custom map. */
+    static void registerExternalTexture(byte textureId, Texture texture) {
+        if (texture == null) throw new NullPointerException();
+        if (textureTable == null) throw new IllegalStateException("Resources not initialized");
+        textureTable[textureId + 128] = texture;
+    }
+
     static void initResourceArrays() {
         spriteTable = new Sprite[128];
         textureTable = new Texture[256];
