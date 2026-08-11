@@ -35,6 +35,8 @@ doom_conversion.json # размеры, hash исходника и BSP report
 
 - classic Doom `VERTEXES`, `LINEDEFS`, `SIDEDEFS`, `SECTORS`;
 - front/back стороны, upper/lower/middle wall texture slots;
+- Doom `x/y` сохраняются как C3D `x/z` без зеркалирования; player angle
+  компенсируется под систему углов движка;
 - использованные composite `TEXTURE1` wall textures через `PNAMES` и patch
   lumps;
 - использованные 64×64 flats и `SKY1` → C3D sky;

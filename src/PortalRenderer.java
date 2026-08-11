@@ -357,6 +357,18 @@ public class PortalRenderer {
         int backCeilingHeight = -cameraY + (-backSector.ceilingHeight << 16);
         int backFloorHeight = -cameraY + (-backSector.floorHeight << 16);
 
+        // Doom's F_SKY1 convention treats neighboring sky ceilings as one
+        // infinite sky plane even when their numeric ceiling heights differ.
+        // Without this, a portal between two outdoor sectors grows a tall
+        // upper wall into the horizon (the visible stripe in E1M1's yard).
+        // Inherited field naming is inverted: floorTextureId == 51 means the
+        // physical ceiling is sky.
+        boolean sharedSkyCeiling = frontSector.floorTextureId == 51
+                && backSector.floorTextureId == 51;
+        if (sharedSkyCeiling) {
+            backCeilingHeight = frontCeilingHeight;
+        }
+
         int startVertexIndex = wallSegment.startVertexIndex & 0xFFFF;
         int endVertexIndex = wallSegment.endVertexIndex & 0xFFFF;
         int textureOffset = wallSegment.textureOffset & 0xFFFF;
@@ -380,7 +392,8 @@ public class PortalRenderer {
             int backCeilingEndY = (MathUtils.fixedPointDivide(backCeilingHeight, screenEnd.y) * HALF_VIEWPORT_WIDTH + HALF_VIEWPORT_HEIGHT_FP) >> 16;
             int backFloorEndY = (MathUtils.fixedPointDivide(backFloorHeight, screenEnd.y) * HALF_VIEWPORT_WIDTH + HALF_VIEWPORT_HEIGHT_FP) >> 16;
 
-            int upperWallHeight = frontSector.ceilingHeight - backSector.ceilingHeight;
+            int upperWallHeight = sharedSkyCeiling ? 0
+                    : frontSector.ceilingHeight - backSector.ceilingHeight;
             int lowerWallHeight = backSector.floorHeight - frontSector.floorHeight;
 
             Texture upperTexture = LevelLoader.getTexture(frontSurface.upperTextureId);

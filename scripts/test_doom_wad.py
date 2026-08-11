@@ -61,9 +61,19 @@ def main():
             assert (planes, bpp) == (1, 4)
         source = C3.load_source(os.path.join(directory, 'level.c3d.json'))
         assert len(source.level.objects) == 33
+        assert source.level.objects[0] == dict(x=1056, z=-3616, angle=180, type=1, param=0)
         assert sum(1 for entity in source.level.objects if entity.get('sprite', 0)) == 29
         door_walls = [wall for wall in source.level.walls if wall['type'] == 1]
         assert len(door_walls) == 8
+        shared_sky_portals = 0
+        for wall in source.level.walls:
+            if wall['back'] < 0:
+                continue
+            front = source.level.sectors[source.level.surfaces[wall['front']]['sector']]
+            back = source.level.sectors[source.level.surfaces[wall['back']]['sector']]
+            if front['ceil_tex'] == 51 and back['ceil_tex'] == 51 and front['ceil'] != back['ceil']:
+                shared_sky_portals += 1
+        assert shared_sky_portals == 6
         for wall in door_walls:
             front = source.level.sectors[source.level.surfaces[wall['front']]['sector']]
             back = source.level.sectors[source.level.surfaces[wall['back']]['sector']]

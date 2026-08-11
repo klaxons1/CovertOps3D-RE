@@ -583,9 +583,10 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
                         height_scale, world_scale, minimum_clearance, door_targets,
                         enemy_sprite_slots):
     level = LEGACY.Level()
-    # Doom y grows north; C3D z uses the opposite axis. Reversing each Doom
-    # linedef below preserves Doom's right sidedef as C3D's front/right side.
-    level.vertices = [(int(round(x * world_scale)), int(round(-y * world_scale)))
+    # Keep Doom's x/y plane directly as C3D x/z. Classic Doom front/right
+    # sidedefs then retain their original winding, so the imported E1M1 is not
+    # mirrored and its player starts match the source automap.
+    level.vertices = [(int(round(x * world_scale)), int(round(y * world_scale)))
                       for x, y in doom_map.vertices]
 
     closed_door_sectors = set(door_targets.values())
@@ -630,17 +631,17 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
         right = raw['right']
         left = raw['left']
         if right >= 0:
-            # y -> -z mirrors the map, so reverse vertices. Doom right side
-            # then remains C3D front/right with no semantic ambiguity.
-            start = raw['end']
-            end = raw['start']
+            # Doom's right sidedef is exactly C3D's front/right side when
+            # vertices use x,y -> x,z without a reflection.
+            start = raw['start']
+            end = raw['end']
             front = convert_side(right)
             back = convert_side(left)
         elif left >= 0:
-            # Rare one-sided line with only a Doom left sidedef: do not mirror
-            # its endpoints a second time; its left side becomes C3D front.
-            start = raw['start']
-            end = raw['end']
+            # Rare one-sided line with only a Doom left sidedef: reverse it so
+            # that this side becomes the required C3D front/right side.
+            start = raw['end']
+            end = raw['start']
             front = convert_side(left)
             back = -1
         else:
@@ -655,8 +656,11 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
     doom_things = []
     for raw in doom_map.things:
         converted_x = int(round(raw['x'] * world_scale))
-        converted_z = int(round(-raw['y'] * world_scale))
-        converted_angle = _normalize_angle(90 - raw['angle'])
+        converted_z = int(round(raw['y'] * world_scale))
+        # Engine rotation turns toward -Z, while Doom angles turn toward +Y.
+        # With direct x/y -> x/z coordinates the loader's 90-raw transform
+        # needs this compensated raw value to preserve the original heading.
+        converted_angle = _normalize_angle(90 + raw['angle'])
         doom_things.append(dict(x=converted_x, z=converted_z, doom_angle=raw['angle'],
                                 type=raw['type'], flags=raw['flags'],
                                 sprite=THING_SPRITES.get(raw['type'], '')))
