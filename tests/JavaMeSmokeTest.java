@@ -202,9 +202,24 @@ public final class JavaMeSmokeTest {
         assertTrue("Doom E1M1 geometry", world != null && world.wallDefinitions.length == 452
                 && world.sectors.length == 83 && world.bspNodes.length > 100);
         assertTrue("Doom E1M1 spawn", world.worldOrigin != null);
+        assertEquals("Doom E1M1 enemy count", 29, world.staticObjects.length);
+        int doomDoorWalls = 0;
+        for (int i = 0; i < world.wallDefinitions.length; ++i) {
+            if (world.wallDefinitions[i].getWallType() == 1) ++doomDoorWalls;
+        }
+        assertEquals("Doom E1M1 door triggers", 8, doomDoorWalls);
         world.initializeWorld();
+        for (int sector = 0; sector < world.sectors.length; ++sector) {
+            for (int from = 0; from < world.sectors.length; ++from) {
+                assertTrue("Doom E1M1 conservative PVS", !world.sectors[sector].visitedFlags[from]);
+            }
+        }
         assertTrue("Doom E1M1 wall texture", LevelLoader.getTexture((byte)1) != null
                 && LevelLoader.getTexture((byte)1).pixelData != null);
+        assertTrue("Doom E1M1 enemy sprite texture", LevelLoader.getTexture((byte)-1) != null
+                && LevelLoader.getTexture((byte)-1).pixelData != null);
+        assertTrue("Doom E1M1 enemy sprite frame", world.staticObjects[0]
+                .getCurrentUpperBodySpriteId() != 0);
         assertTrue("Doom E1M1 flat texture", world.sectors[0].ceilingTexture != null
                 && world.sectors[0].ceilingTexture.flatColors != null);
         assertTrue("Doom E1M1 spawn sector", world.getSectorDataAtPoint(

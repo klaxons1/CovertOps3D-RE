@@ -6,7 +6,7 @@ import java.io.InputStream;
  * External C3D entity-placement sidecar.
  *
  * C3B contains static geometry only when its external-entities header flag is
- * set.  This UTF-8 INI stores editable x/z/angle/type/param records without
+ * set.  This UTF-8 INI stores editable x/z/angle/type/param/sprite records without
  * forcing every spawn or gameplay tweak to rebuild BSP geometry.  Parsing is
  * load-time only and uses primitive arrays afterwards, so there is no cost in
  * the frame or collision hot paths.
@@ -24,6 +24,8 @@ public final class CustomEntitySet {
     private final short[] angles;
     private final short[] types;
     private final short[] parameters;
+    // Optional manifest sprite slot. Slot N is installed in texture id -N.
+    private final short[] spriteSlots;
     private final int count;
 
     private CustomEntitySet(int count) {
@@ -33,6 +35,7 @@ public final class CustomEntitySet {
         this.angles = new short[count];
         this.types = new short[count];
         this.parameters = new short[count];
+        this.spriteSlots = new short[count];
     }
 
     /** Loads and validates a C3D entity INI resource. */
@@ -81,8 +84,10 @@ public final class CustomEntitySet {
                 int type = types[i];
                 if (type < 1 || type > 4) {
                     short rawAngle = angles[i];
-                    objects[objectIndex++] = new GameObject(createTransform(i), rawAngle,
+                    GameObject object = new GameObject(createTransform(i), rawAngle,
                             type, parameters[i]);
+                    addExternalSpriteFrames(object, spriteSlots[i]);
+                    objects[objectIndex++] = object;
                 }
             }
         }
@@ -93,6 +98,19 @@ public final class CustomEntitySet {
         short angle = angles[index];
         return new Transform3D(xs[index] << 16, 0, zs[index] << 16,
                 -angle * 1144 + 102943);
+    }
+
+    /**
+     * Enemy AI switches among frame indexes 0..6. Reusing one authored Doom
+     * billboard across those indexes keeps the object visible even before a
+     * future frame-by-frame Doom animation importer is added.
+     */
+    private static void addExternalSpriteFrames(GameObject object, short spriteSlot) {
+        if (spriteSlot <= 0) return;
+        byte textureId = (byte)-spriteSlot;
+        for (int frame = 0; frame < 7; ++frame) {
+            object.addSpriteFrame(textureId, (byte)0);
+        }
     }
 
     private static int countEntitySections(String text, String path) throws IOException {
@@ -240,6 +258,14 @@ public final class CustomEntitySet {
         if (key.equals("param")) {
             entities.parameters[index] = number;
             return 16;
+        }
+        if (key.equals("sprite")) {
+            if (number < 0 || number > 127) {
+                throw new IOException(path + ":" + lineNumber
+                        + " sprite must be a material slot 0..127");
+            }
+            entities.spriteSlots[index] = number;
+            return 32;
         }
         throw new IOException(path + ":" + lineNumber + " unknown entity key: " + key);
     }

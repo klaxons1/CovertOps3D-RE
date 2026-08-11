@@ -50,7 +50,7 @@ python3 scripts/c3d2_editor.py res/gamedata/custom/doom-e1m1 --validate
 | `F5` | сохранить и собрать C3B/BSP/PVS |
 | `F3` | начать 3D пролёт |
 | `I` | выбрать исходную картинку и импортировать материал |
-| `M` | применить выбранный материал к стене/сектору |
+| `M` | применить выбранный material к стене/сектору или sprite к entity |
 | `R` | развернуть выбранную стену |
 | `P` | переключить `main / upper / lower` часть стены |
 | `H` | выбрать `floor / ceiling` у сектора |
@@ -80,6 +80,7 @@ C3B: компилятор дополнительно проверит winding. �
 | wall | power-of-two ширина, высота `16/64/128` | `textures/wall_<slot>.bmp` | `wall.<slot>` |
 | flat | `64x64` | `textures/flat_<slot>.bmp` | `flat.<slot>` |
 | sky | `64x128` | `textures/sky.bmp` | `sky` |
+| sprite | `64x64` по умолчанию | `sprites/custom/sprite_<slot>.bmp` | `sprite.<slot>` |
 
 Новый package сразу получает рабочие placeholder `wall.1`, `flat.1` и `sky`,
 поэтому его можно собрать и открыть до импорта графики. Они лежат в

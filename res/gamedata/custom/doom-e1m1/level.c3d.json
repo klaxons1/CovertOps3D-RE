@@ -257,7 +257,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 52,
+      "ceiling_height": -12,
       "ceiling_material": 8,
       "ceiling_sky": false,
       "floor_height": -12,
@@ -279,7 +279,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 52,
+      "ceiling_height": -12,
       "ceiling_material": 6,
       "ceiling_sky": false,
       "floor_height": -12,
@@ -345,7 +345,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 52,
+      "ceiling_height": -12,
       "ceiling_material": 6,
       "ceiling_sky": false,
       "floor_height": -12,
@@ -796,7 +796,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 64,
+      "ceiling_height": 0,
       "ceiling_material": 6,
       "ceiling_sky": false,
       "floor_height": 0,
@@ -10252,20 +10252,20 @@
     {
       "back": 208,
       "end": 121,
-      "flags": 0,
+      "flags": 8,
       "front": 207,
       "special": 0,
       "start": 122,
-      "type": 0
+      "type": 1
     },
     {
       "back": 210,
       "end": 123,
-      "flags": 0,
+      "flags": 8,
       "front": 209,
       "special": 0,
       "start": 124,
-      "type": 0
+      "type": 1
     },
     {
       "back": -1,
@@ -11116,20 +11116,20 @@
     {
       "back": 345,
       "end": 208,
-      "flags": 0,
+      "flags": 8,
       "front": 344,
       "special": 0,
       "start": 167,
-      "type": 0
+      "type": 1
     },
     {
       "back": 347,
       "end": 206,
-      "flags": 0,
+      "flags": 8,
       "front": 346,
       "special": 0,
       "start": 207,
-      "type": 0
+      "type": 1
     },
     {
       "back": -1,
@@ -11818,20 +11818,20 @@
     {
       "back": 446,
       "end": 263,
-      "flags": 0,
+      "flags": 8,
       "front": 445,
       "special": 0,
       "start": 260,
-      "type": 0
+      "type": 1
     },
     {
       "back": 448,
       "end": 259,
-      "flags": 0,
+      "flags": 8,
       "front": 447,
       "special": 0,
       "start": 258,
-      "type": 0
+      "type": 1
     },
     {
       "back": -1,
@@ -11962,20 +11962,20 @@
     {
       "back": 465,
       "end": 271,
-      "flags": 0,
+      "flags": 8,
       "front": 464,
       "special": 0,
       "start": 270,
-      "type": 0
+      "type": 1
     },
     {
       "back": 467,
       "end": 272,
-      "flags": 0,
+      "flags": 8,
       "front": 466,
       "special": 0,
       "start": 273,
-      "type": 0
+      "type": 1
     },
     {
       "back": 469,

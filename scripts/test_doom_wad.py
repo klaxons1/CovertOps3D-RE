@@ -31,7 +31,9 @@ def main():
         report = DOOM.convert_map(wad, doom_map, directory, extract_sprites='none')
         assert report['missing_wall_textures'] == []
         assert report['bsp_failures'] == 0
+        assert report['pvs_mode'] == 'conservative_all_visible'
         assert (report['wall_textures'], report['flats']) == (32, 21)
+        assert (report['doors'], report['enemies'], report['enemy_sprite_materials']) == (8, 29, 3)
         info = C3.read_c3b(os.path.join(directory, 'level.c3b'))
         assert info['entities'] == 'entities.ini'
         committed = os.path.join(ROOT, 'res', 'gamedata', 'custom', 'doom-e1m1')
@@ -46,10 +48,26 @@ def main():
         assert os.path.getsize(os.path.join(directory, 'level.c3b')) < 32768
         assert os.path.getsize(os.path.join(directory, 'materials.c3m')) > 1000
         materials = TEXTURES.load_manifest(os.path.join(directory, 'materials.c3m'))
-        assert len(materials) == 54
+        assert len(materials) == 57
         assert all(os.path.exists(os.path.join(directory, path))
                    for path in materials.values())
+        sprite_keys = sorted(key for key in materials if key.startswith('sprite.'))
+        assert sprite_keys == ['sprite.1', 'sprite.2', 'sprite.3']
+        for key in sprite_keys:
+            sprite = open(os.path.join(directory, materials[key]), 'rb').read()
+            width, height, planes, bpp = struct.unpack_from('<iiHH', sprite, 18)
+            assert 1 <= width <= 255 and 1 <= height <= 255
+            assert (planes, bpp) == (1, 4)
         source = C3.load_source(os.path.join(directory, 'level.c3d.json'))
+        assert len(source.level.objects) == 33
+        assert sum(1 for entity in source.level.objects if entity.get('sprite', 0)) == 29
+        door_walls = [wall for wall in source.level.walls if wall['type'] == 1]
+        assert len(door_walls) == 8
+        for wall in door_walls:
+            front = source.level.sectors[source.level.surfaces[wall['front']]['sector']]
+            back = source.level.sectors[source.level.surfaces[wall['back']]['sector']]
+            assert back['ceil'] == back['floor']
+            assert front['ceil'] - max(front['floor'], back['floor']) >= 50
         for surface in source.level.surfaces:
             for slot in (surface['upper'], surface['lower'], surface['main']):
                 if slot:

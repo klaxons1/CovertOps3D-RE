@@ -24,7 +24,10 @@ import os
 FORMAT = 'C3D-ENTITIES-1'
 _REQUIRED_KEYS = ('x', 'z', 'type')
 _OPTIONAL_DEFAULTS = {'angle': 0, 'param': 0}
-_ALL_KEYS = _REQUIRED_KEYS + tuple(_OPTIONAL_DEFAULTS.keys())
+# sprite is optional and intentionally omitted when zero so old entity sidecars
+# stay byte-for-byte familiar. A nonzero slot maps to manifest sprite.<slot>.
+_OPTIONAL_KEYS = tuple(_OPTIONAL_DEFAULTS.keys()) + ('sprite',)
+_ALL_KEYS = _REQUIRED_KEYS + _OPTIONAL_KEYS
 
 
 def load_entities(path):
@@ -134,6 +137,8 @@ def dump_entities(entities, path):
             stream.write('angle=%d\n' % int(entity.get('angle', 0)))
             stream.write('type=%d\n' % int(entity['type']))
             stream.write('param=%d\n' % int(entity.get('param', 0)))
+            if int(entity.get('sprite', 0)) != 0:
+                stream.write('sprite=%d\n' % int(entity['sprite']))
 
 
 def validate_entities(entities):
@@ -154,6 +159,8 @@ def validate_entities(entities):
         for key in _ALL_KEYS:
             if key in entity:
                 _i16(entity[key], 'entity %d %s' % (index, key))
+        if 'sprite' in entity and (int(entity['sprite']) < 0 or int(entity['sprite']) > 127):
+            raise ValueError('entity %d sprite must be 0..127' % index)
         entity_type = int(entity['type'])
         if 1 <= entity_type <= 4:
             has_spawn = True

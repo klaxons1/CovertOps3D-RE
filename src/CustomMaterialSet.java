@@ -14,6 +14,7 @@ import java.io.InputStream;
  *   wall.1=textures/brick.bmp
  *   flat.1=textures/floor.bmp
  *   sky=textures/sky.bmp
+ *   sprite.1=sprites/doom/imp.bmp
  */
 public final class CustomMaterialSet {
 
@@ -24,9 +25,13 @@ public final class CustomMaterialSet {
 
     private Texture[] wallTextures = new Texture[SLOT_COUNT];
     private Sprite[] flatTextures = new Sprite[SLOT_COUNT];
+    // External billboards use negative texture ids so they cannot collide with
+    // positive wall slots in LevelLoader.textureTable.
+    private Texture[] spriteTextures = new Texture[SLOT_COUNT];
     private Texture skyTexture;
     private int wallTextureCount;
     private int flatTextureCount;
+    private int spriteTextureCount;
 
     private CustomMaterialSet() {
     }
@@ -71,6 +76,13 @@ public final class CustomMaterialSet {
                 }
                 materials.flatTextures[slot] = loadFlatTexture(texturePath, (byte)slot);
                 materials.flatTextureCount++;
+            } else if (startsWith(key, "sprite.")) {
+                int slot = parseSlot(key.substring(7));
+                if (materials.spriteTextures[slot] != null) {
+                    throw new IOException("Duplicate sprite texture slot: " + slot);
+                }
+                materials.spriteTextures[slot] = loadSpriteTexture(texturePath, (byte)slot);
+                materials.spriteTextureCount++;
             } else if (key.equals("sky")) {
                 if (materials.skyTexture != null) throw new IOException("Duplicate sky texture");
                 materials.skyTexture = loadSkyTexture(texturePath);
@@ -92,6 +104,16 @@ public final class CustomMaterialSet {
         }
     }
 
+    /** Registers external billboard textures under negative texture ids. */
+    public void installSpriteTextures() {
+        for (int slot = 1; slot < SLOT_COUNT; ++slot) {
+            Texture texture = spriteTextures[slot];
+            if (texture != null) {
+                LevelLoader.registerExternalTexture((byte)-slot, texture);
+            }
+        }
+    }
+
     /** Installs the manifest sky texture, if present. */
     public void installSkyTexture() {
         if (skyTexture != null) {
@@ -107,6 +129,10 @@ public final class CustomMaterialSet {
         return slot > 0 && slot < SLOT_COUNT ? flatTextures[slot] : null;
     }
 
+    public Texture getSpriteTexture(int slot) {
+        return slot > 0 && slot < SLOT_COUNT ? spriteTextures[slot] : null;
+    }
+
     public Texture getSkyTexture() {
         return skyTexture;
     }
@@ -117,6 +143,10 @@ public final class CustomMaterialSet {
 
     public int getFlatTextureCount() {
         return flatTextureCount;
+    }
+
+    public int getSpriteTextureCount() {
+        return spriteTextureCount;
     }
 
     private static Texture loadWallTexture(String path, byte slot) throws IOException {
@@ -154,6 +184,31 @@ public final class CustomMaterialSet {
         sprite.colorPalettes = Texture.createColorPalettes(first16Colors(bmp.palette));
         sprite.buildFlatColors();
         return sprite;
+    }
+
+    /**
+     * Loads one transparent-index billboard. Sprite rendering accepts arbitrary
+     * dimensions, unlike walls which must use a fast power-of-two layout.
+     */
+    private static Texture loadSpriteTexture(String path, byte slot) throws IOException {
+        BMPLoader bmp = BMPLoader.loadBMP(path);
+        validatePaletteIndices(bmp, path);
+        if (bmp.width < 1 || bmp.height < 1 || bmp.width > 255 || bmp.height > 255) {
+            throw new IOException("Sprite dimensions must be 1..255: " + path);
+        }
+
+        Texture texture = new Texture((byte)-slot, bmp.width, bmp.height, 0, 0,
+                first16Colors(bmp.palette));
+        for (int x = 0; x < bmp.width; x += 2) {
+            byte[] column = new byte[bmp.height];
+            for (int y = 0; y < bmp.height; ++y) {
+                int high = bmp.indices[y * bmp.width + x] & 15;
+                int low = x + 1 < bmp.width ? bmp.indices[y * bmp.width + x + 1] & 15 : 0;
+                column[y] = (byte)((high << 4) | low);
+            }
+            texture.setPixelData(x, column);
+        }
+        return texture;
     }
 
     private static Texture loadSkyTexture(String path) throws IOException {

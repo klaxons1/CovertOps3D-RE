@@ -75,6 +75,7 @@ public final class CustomLevelLoader {
 
             CustomMaterialSet materials = CustomMaterialSet.load(resolvePath(levelPath, materialPath));
             materials.installWallTextures();
+            materials.installSpriteTextures();
             materials.installSkyTexture();
 
             GameWorld world = new GameWorld();

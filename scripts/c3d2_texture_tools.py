@@ -24,7 +24,8 @@ class TextureError(ValueError):
 MATERIAL_WALL = 'wall'
 MATERIAL_FLAT = 'flat'
 MATERIAL_SKY = 'sky'
-VALID_MATERIAL_KINDS = (MATERIAL_WALL, MATERIAL_FLAT, MATERIAL_SKY)
+MATERIAL_SPRITE = 'sprite'
+VALID_MATERIAL_KINDS = (MATERIAL_WALL, MATERIAL_FLAT, MATERIAL_SKY, MATERIAL_SPRITE)
 WALL_HEIGHTS = (16, 64, 128)
 
 
@@ -40,13 +41,17 @@ def target_size(kind, wall_width=64, wall_height=128):
         return 64, 64
     if kind == MATERIAL_SKY:
         return 64, 128
+    if kind == MATERIAL_SPRITE:
+        # A compact editor default. Runtime sprite loader permits 1..255, but
+        # 64x64 keeps J2ME heap usage predictable and matches classic sprites.
+        return 64, 64
     raise TextureError('unknown material kind: %s' % kind)
 
 
 def material_key(kind, slot=None):
     if kind == MATERIAL_SKY:
         return 'sky'
-    if kind not in (MATERIAL_WALL, MATERIAL_FLAT):
+    if kind not in (MATERIAL_WALL, MATERIAL_FLAT, MATERIAL_SPRITE):
         raise TextureError('unknown material kind: %s' % kind)
     if slot is None:
         raise TextureError('%s material needs a slot' % kind)
@@ -409,11 +414,16 @@ def import_material(package_dir, source_path, kind, slot=1, wall_width=64,
     key = material_key(kind, slot)
     if kind == MATERIAL_SKY:
         filename = 'sky.bmp'
+        relative_path = 'textures/' + filename
     elif kind == MATERIAL_WALL:
         filename = 'wall_%d.bmp' % int(slot)
-    else:
+        relative_path = 'textures/' + filename
+    elif kind == MATERIAL_FLAT:
         filename = 'flat_%d.bmp' % int(slot)
-    relative_path = 'textures/' + filename
+        relative_path = 'textures/' + filename
+    else:
+        filename = 'sprite_%d.bmp' % int(slot)
+        relative_path = 'sprites/custom/' + filename
     destination = os.path.join(package_dir, *relative_path.split('/'))
     result = convert_texture(source_path, destination, kind, wall_width, wall_height,
                              fit, iterations)

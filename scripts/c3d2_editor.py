@@ -750,10 +750,17 @@ class EditorApp(object):
             parameter = _tk_integer(APP_TITLE, 'Param entity', entity.get('param', 0))
             if parameter is None:
                 return
+            sprite = _tk_integer(APP_TITLE, 'Sprite material slot (0 = none)', entity.get('sprite', 0))
+            if sprite is None:
+                return
             self.snapshot()
             entity['type'] = _clamp(entity_type, -32768, 32767)
             entity['angle'] = _clamp(angle, -32768, 32767)
             entity['param'] = _clamp(parameter, -32768, 32767)
+            if sprite > 0:
+                entity['sprite'] = _clamp(sprite, 1, 127)
+            elif 'sprite' in entity:
+                del entity['sprite']
             self.entity_type = entity['type']
             self.entity_angle = entity['angle']
             self.entity_param = entity['param']
@@ -817,6 +824,10 @@ class EditorApp(object):
                 sector['ceil_tex'] = 51 if self.current_kind == TEXTURES.MATERIAL_SKY else int(self.current_slot)
             self.mark_geometry_changed()
             self.log('%s материал применён к сектору %d' % (self.flat_target, index))
+        elif kind == 'entity' and self.current_kind == TEXTURES.MATERIAL_SPRITE:
+            level.objects[index]['sprite'] = int(self.current_slot)
+            self.model.mark_dirty()
+            self.log('sprite.%d применён к entity.%d' % (self.current_slot, index))
         else:
             self.undo_stack.pop()
             self.log('Выбранный material несовместим с элементом', WARNING)
@@ -1200,7 +1211,7 @@ class EditorApp(object):
 
         self.draw_text(self.screen, 'Texture import', 18, (12, y), ACCENT)
         y += 23
-        kind_label = {'wall': 'WALL', 'flat': 'FLAT', 'sky': 'SKY'}[self.current_kind]
+        kind_label = {'wall': 'WALL', 'flat': 'FLAT', 'sky': 'SKY', 'sprite': 'SPRITE'}[self.current_kind]
         self.draw_button(self.screen, pygame.Rect(10, y, 100, 27), 'Kind: ' + kind_label, 'kind')
         self.draw_button(self.screen, pygame.Rect(115, y, 91, 27), 'Import I', 'import')
         self.draw_button(self.screen, pygame.Rect(211, y, 95, 27),
@@ -1259,8 +1270,9 @@ class EditorApp(object):
         if kind == 'entity' and index < len(level.objects):
             entity = level.objects[index]
             return ['entity.%d' % index, 'x=%d  z=%d' % (entity['x'], entity['z']),
-                    'type=%d angle=%d param=%d' %
-                    (entity['type'], entity.get('angle', 0), entity.get('param', 0))]
+                    'type=%d angle=%d param=%d sprite=%d' %
+                    (entity['type'], entity.get('angle', 0), entity.get('param', 0),
+                     entity.get('sprite', 0))]
         if kind == 'wall' and index < len(level.walls):
             wall = level.walls[index]
             surface = level.surfaces[wall['front']]
@@ -1346,7 +1358,8 @@ class EditorApp(object):
             self.log('Выбрано sky')
             return
         prefix, slot = key.split('.', 1)
-        if prefix in (TEXTURES.MATERIAL_WALL, TEXTURES.MATERIAL_FLAT):
+        if prefix in (TEXTURES.MATERIAL_WALL, TEXTURES.MATERIAL_FLAT,
+                      TEXTURES.MATERIAL_SPRITE):
             self.current_kind = prefix
             self.current_slot = int(slot)
             self.log('Выбрано ' + key)
@@ -1377,7 +1390,7 @@ def _material_sort_key(key):
     if key == 'sky':
         return (2, 0)
     prefix, dot, suffix = key.partition('.')
-    order = 0 if prefix == 'wall' else 1
+    order = 0 if prefix == 'wall' else (1 if prefix == 'flat' else 2)
     try:
         return order, int(suffix)
     except ValueError:

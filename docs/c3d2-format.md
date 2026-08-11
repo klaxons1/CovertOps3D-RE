@@ -39,8 +39,9 @@ custom/<name>/
 
 `entities.ini` — UTF-8, комментарии начинаются с `#` или `;`. У каждого
 объекта есть отдельная секция; `x`, `z` и `type` обязательны, `angle` и
-`param` по умолчанию равны нулю. Все значения — signed `int16`, как и в
-runtime.
+`param` по умолчанию равны нулю. Необязательный `sprite=1..127` связывает
+billboard с `sprite.<slot>` из material manifest. Все значения — signed
+`int16`, как и в runtime.
 
 ```ini
 # C3D entity placement v1
@@ -53,6 +54,9 @@ z=0
 angle=0
 type=1
 param=0
+
+# Optional custom billboard for a non-player object:
+# sprite=1
 ```
 
 `type=1..4` — точки старта игрока по вариантам сложности. При компиляции C3B
@@ -61,10 +65,12 @@ param=0
 перемещение спавна/предмета не меняет геометрию или BSP. Ранние C3B v1 с
 inline-объектами (`flags=0`) остаются читаемы для совместимости.
 
-Сейчас external material pipeline поставляет wall/flat/sky; позиции любых
-типов объектов уже читаются из INI, но полноценные custom sprite/material
-описания для врагов и предметов будут добавлены отдельным этапом. Spawn-точки
-работают полностью уже сейчас.
+External material pipeline поставляет wall/flat/sky и optional
+`sprite.<slot>` billboards. Entity с `sprite=<slot>` получает texture id
+`-slot`, поэтому не конфликтует с положительными wall slots; для AI frames
+один bitmap безопасно повторяется. Это позволяет Doom E1M1 показать imp,
+zombieman и shotgun guy уже сейчас, а покадровая анимация остаётся следующим
+этапом.
 
 ## Внешние материалы
 
@@ -77,6 +83,7 @@ wall.2=textures/steel_door.bmp
 flat.1=textures/floor.bmp
 flat.2=textures/ceiling.bmp
 sky=textures/sky.bmp
+sprite.1=sprites/doom/imp.bmp
 ```
 
 Ограничения runtime (они намеренно простые и детерминированные):
@@ -86,6 +93,7 @@ sky=textures/sky.bmp
 | `wall.<slot>` | indexed BMP4/BMP8, используются индексы 0..15 | power-of-two ширина, высота 16/64/128 |
 | `flat.<slot>` | indexed BMP4/BMP8, используются индексы 0..15 | 64×64 |
 | `sky` | indexed BMP4/BMP8, используются индексы 0..15 | 64×128 |
+| `sprite.<slot>` | indexed BMP4/BMP8, index 0 прозрачен | 1..255 × 1..255 |
 
 PNG остаётся удобным исходником для художника и редактора, но экспортируется
 в BMP4 через `scripts/png_to_bmp4.py`. В Java ME `CustomMaterialSet` грузит

@@ -16,8 +16,10 @@ def main():
     assert T.target_size(T.MATERIAL_WALL, 64, 128) == (64, 128)
     assert T.target_size(T.MATERIAL_FLAT) == (64, 64)
     assert T.target_size(T.MATERIAL_SKY) == (64, 128)
+    assert T.target_size(T.MATERIAL_SPRITE) == (64, 64)
     assert T.material_key(T.MATERIAL_WALL, 12) == 'wall.12'
     assert T.material_key(T.MATERIAL_FLAT, 3) == 'flat.3'
+    assert T.material_key(T.MATERIAL_SPRITE, 3) == 'sprite.3'
     assert T.material_key(T.MATERIAL_SKY) == 'sky'
 
     # A deliberately varied image exercises all 16 K-means clusters.

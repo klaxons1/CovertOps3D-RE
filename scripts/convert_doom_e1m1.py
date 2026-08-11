@@ -53,8 +53,10 @@ def main(argv=None):
     print('Converted %s -> %s' % (args.map.upper(), args.output))
     print('geometry: vertices=%d linedefs=%d sectors=%d' %
           (report['vertices'], report['linedefs'], report['sectors']))
-    print('assets: wall=%d flat=%d sprites=%d' %
-          (report['wall_textures'], report['flats'], report['sprites']))
+    print('assets: wall=%d flat=%d enemySprites=%d optionalSprites=%d' %
+          (report['wall_textures'], report['flats'], report['enemy_sprite_materials'],
+           report['sprites']))
+    print('gameplay: doors=%d enemies=%d' % (report['doors'], report['enemies']))
     print('C3B: nodes=%d leaves=%d segments=%d splits=%d failures=%d' %
           (report['bsp_nodes'], report['bsp_leaves'], report['bsp_segments'],
            report['bsp_splits'], report['bsp_failures']))

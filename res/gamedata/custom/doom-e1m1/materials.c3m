@@ -54,3 +54,6 @@ flat.19=textures/flat_019_tlite6_4.bmp
 flat.20=textures/flat_020_tlite6_5.bmp
 flat.21=textures/flat_021_tlite6_6.bmp
 sky=textures/sky.bmp
+sprite.1=sprites/doom/01_sposa1.bmp
+sprite.2=sprites/doom/02_trooa1.bmp
+sprite.3=sprites/doom/03_possa1.bmp

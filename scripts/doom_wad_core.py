@@ -7,10 +7,10 @@ by E1M1. Classic Doom sectors are horizontal floor/ceiling planes, so no slopes
 are required for this source format. It emits a C3D source, C3B, BMP4 material
 set and player starts; the game never reads the WAD at runtime.
 
-Only data needed to walk the map is put under ``res/gamedata/custom``:
-geometry, used wall textures, used flats, sky and C3D entity starts. Doom
-things are preserved in a small metadata INI for future custom-sprite work,
-but are not injected as unsupported CovertOps gameplay entities.
+Only data needed to walk and fight in the map is put under
+``res/gamedata/custom``: geometry, used wall textures, used flats, sky, player
+starts and three compact Doom enemy billboard families. Remaining Doom things
+are preserved in a small metadata INI for later gameplay conversion.
 """
 
 import hashlib
@@ -32,6 +32,18 @@ class DoomWadError(ValueError):
 # These are only used by optional sprite extraction. The gameplay runtime does
 # not yet consume custom Doom billboards, so the default compact conversion
 # leaves sprites outside the JAR package.
+# Classic Doom lines that are ordinary vertical doors in the first episode.
+# Their closed sector is mapped to the existing CovertOps door controller.
+DOOM_DOOR_SPECIALS = (1, 2, 3, 4, 16, 26, 27, 28, 31, 32, 33, 34)
+
+# First playable mapping: use the existing enemy AI categories while drawing
+# one genuine Doom billboard per monster family through sprite.<slot>.
+DOOM_ENEMIES = {
+    3001: dict(engine_type=3001, sprite='TROOA1', label='imp'),
+    3004: dict(engine_type=3004, sprite='POSSA1', label='zombieman'),
+    9: dict(engine_type=3004, sprite='SPOSA1', label='shotgun_guy'),
+}
+
 THING_SPRITES = {
     9: 'SPOS', 10: 'PLAY', 11: 'PLAY', 12: 'PLAY', 13: 'PLAY',
     14: 'PLAY', 15: 'PLAY', 16: 'PLAY', 17: 'CELP', 18: 'POSS',
@@ -279,6 +291,10 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     texture_defs = parse_texture_definitions(wad)
     wall_names = _used_wall_texture_names(doom_map)
     flat_names = _used_flat_names(doom_map)
+    # A door sector is initially closed in Doom (ceiling == floor). Keep that
+    # state instead of applying the generic walkability clearance, then map the
+    # trigger line to GameEngine's existing type-1 door controller.
+    door_targets = _find_closed_door_targets(doom_map)
     sky_names = set(name for name in flat_names if name == 'F_SKY1')
     flat_names -= sky_names
     if not wall_names:
@@ -300,7 +316,8 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
                   vertices=len(doom_map.vertices), linedefs=len(doom_map.linedefs),
                   sidedefs=len(doom_map.sidedefs), sectors=len(doom_map.sectors),
                   things=len(doom_map.things), wall_textures=len(wall_slots),
-                  flats=len(flat_slots), height_scale=height_scale,
+                  flats=len(flat_slots), doors=len(door_targets), enemies=0,
+                  height_scale=height_scale,
                   world_scale=world_scale, minimum_clearance=minimum_clearance,
                   missing_wall_textures=[], sprites=0)
 
@@ -347,12 +364,22 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     manifest_lines.append('sky=textures/sky.bmp')
     material_lines.append('sky=SKY1')
 
+    enemy_sprite_slots = _export_runtime_enemy_sprites(wad, palette, package_dir)
+    for doom_type, slot in enemy_sprite_slots.items():
+        info = DOOM_ENEMIES[doom_type]
+        filename = 'sprites/doom/%02d_%s.bmp' % (slot, _safe_name(info['sprite']))
+        manifest_lines.append('sprite.%d=%s' % (slot, filename))
+        material_lines.append('sprite.%s=%d' % (info['sprite'], slot))
+    report['enemies'] = sum(1 for thing in doom_map.things if thing['type'] in enemy_sprite_slots)
+    report['enemy_sprite_materials'] = len(enemy_sprite_slots)
+
     _write_text(os.path.join(package_dir, 'materials.c3m'), '\n'.join(manifest_lines) + '\n')
     _write_text(os.path.join(package_dir, 'doom_materials.ini'), '\n'.join(material_lines) + '\n')
 
     document, doom_things = _build_c3d_document(doom_map, wall_slots, flat_slots,
                                                  fallback_wall, height_scale, world_scale,
-                                                 minimum_clearance)
+                                                 minimum_clearance, door_targets,
+                                                 enemy_sprite_slots)
     document.materials = 'materials.c3m'
     document.entities = 'entities.ini'
     C3.dump_source(document, os.path.join(package_dir, 'level.c3d.json'))
@@ -374,9 +401,54 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     report['bsp_segments'] = c3b_info['segments']
     report['bsp_splits'] = bsp_report.splits
     report['bsp_failures'] = len(bsp_report.fail_samples)
+    # Deliberately do not trust Doom REJECT after replacing scripted doors with
+    # dynamic C3D portals. Full natural visibility is conservative: it can cost
+    # draw time but can never hide a sector or create PVS culling holes.
+    report['pvs_mode'] = 'conservative_all_visible'
     _write_text(os.path.join(package_dir, 'doom_conversion.json'),
                 json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + '\n')
     return report
+
+
+def _find_closed_door_targets(doom_map):
+    """Returns classic door trigger line index -> closed Doom sector ID.
+
+    Doom E1M1's normal DR/D1 door lines have the room on the right side and a
+    zero-height door sector on the left. C3D mirrors Y into Z and reverses the
+    line, so that left sector becomes the C3D back side expected by GameEngine
+    type 1 doors. Lines with a non-closed/ambiguous neighbor stay ordinary
+    portals rather than guessing a destructive door mapping.
+    """
+    targets = {}
+    for line_index, line in enumerate(doom_map.linedefs):
+        if line['special'] not in DOOM_DOOR_SPECIALS or line['left'] < 0:
+            continue
+        left_sector = doom_map.sidedefs[line['left']]['sector']
+        sector = doom_map.sectors[left_sector]
+        if sector['ceiling'] <= sector['floor']:
+            targets[line_index] = left_sector
+    return targets
+
+
+def _export_runtime_enemy_sprites(wad, palette, package_dir):
+    """Exports one compact transparent billboard for each E1M1 enemy family."""
+    slots = {}
+    sprite_dir = os.path.join(package_dir, 'sprites', 'doom')
+    if not os.path.isdir(sprite_dir):
+        os.makedirs(sprite_dir)
+    slot = 1
+    for doom_type in sorted(DOOM_ENEMIES):
+        info = DOOM_ENEMIES[doom_type]
+        try:
+            data = wad.lump(info['sprite'])
+            width, height, _left, _top, pixels = decode_patch(data, palette)
+        except Exception as error:
+            raise DoomWadError('enemy sprite %s: %s' % (info['sprite'], error))
+        filename = '%02d_%s.bmp' % (slot, _safe_name(info['sprite']))
+        _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels)
+        slots[doom_type] = slot
+        slot += 1
+    return slots
 
 
 def export_sprites(wad, doom_map, package_dir, palette, mode='used'):
@@ -419,18 +491,23 @@ def export_sprites(wad, doom_map, package_dir, palette, mode='used'):
 
 
 def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
-                        height_scale, world_scale, minimum_clearance):
+                        height_scale, world_scale, minimum_clearance, door_targets,
+                        enemy_sprite_slots):
     level = LEGACY.Level()
     # Doom y grows north; C3D z uses the opposite axis. Reversing each Doom
     # linedef below preserves Doom's right sidedef as C3D's front/right side.
     level.vertices = [(int(round(x * world_scale)), int(round(-y * world_scale)))
                       for x, y in doom_map.vertices]
 
-    for raw in doom_map.sectors:
+    closed_door_sectors = set(door_targets.values())
+    for sector_index, raw in enumerate(doom_map.sectors):
         floor = int(round(raw['floor'] * height_scale))
         ceiling = int(round(raw['ceiling'] * height_scale))
-        if ceiling < floor + minimum_clearance:
+        if sector_index not in closed_door_sectors and ceiling < floor + minimum_clearance:
             ceiling = floor + minimum_clearance
+        elif sector_index in closed_door_sectors:
+            # Closed vertical door: GameEngine opens this ceiling on use.
+            ceiling = floor
         floor_texture = 51 if raw['floor_texture'] == 'F_SKY1' else flat_slots.get(raw['floor_texture'], 0)
         ceiling_texture = 51 if raw['ceiling_texture'] == 'F_SKY1' else flat_slots.get(raw['ceiling_texture'], 0)
         light = _clamp((raw['light'] + 8) // 17, 0, 15)
@@ -460,7 +537,7 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
                                    sector=raw['sector']))
         return surface_by_side[index]
 
-    for raw in doom_map.linedefs:
+    for line_index, raw in enumerate(doom_map.linedefs):
         right = raw['right']
         left = raw['left']
         if right >= 0:
@@ -479,8 +556,11 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
             back = -1
         else:
             continue
-        level.walls.append(dict(sv=start, ev=end, flags=1 if back < 0 else 0,
-                                type=0, special=0, front=front, back=back))
+        door_sector = door_targets.get(line_index)
+        is_door = door_sector is not None and back >= 0 \
+                and level.surfaces[back]['sector'] == door_sector
+        level.walls.append(dict(sv=start, ev=end, flags=8 if is_door else (1 if back < 0 else 0),
+                                type=1 if is_door else 0, special=0, front=front, back=back))
 
     entities = []
     doom_things = []
@@ -494,6 +574,12 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
         if 1 <= raw['type'] <= 4:
             entities.append(dict(x=converted_x, z=converted_z,
                                  angle=converted_angle, type=raw['type'], param=0))
+        elif raw['type'] in enemy_sprite_slots:
+            enemy = DOOM_ENEMIES[raw['type']]
+            entities.append(dict(x=converted_x, z=converted_z,
+                                 angle=converted_angle,
+                                 type=enemy['engine_type'], param=0,
+                                 sprite=enemy_sprite_slots[raw['type']]))
     if not entities:
         raise DoomWadError('map has no Doom player starts (things 1..4)')
     level.objects = entities

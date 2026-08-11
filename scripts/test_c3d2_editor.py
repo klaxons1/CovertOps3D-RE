@@ -36,6 +36,9 @@ def main():
         assert imported['relative_path'] == 'textures/flat_7.bmp'
         assert os.path.exists(os.path.join(package, 'textures', 'flat_7.bmp'))
         assert model.materials['flat.7'] == 'textures/flat_7.bmp'
+        sprite = model.import_material(source_image, 'sprite', 8)
+        assert sprite['relative_path'] == 'sprites/custom/sprite_8.bmp'
+        assert model.materials['sprite.8'] == 'sprites/custom/sprite_8.bmp'
 
         model.level.objects[0]['x'] = 24
         model.level.objects[0]['z'] = -16

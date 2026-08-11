@@ -51,16 +51,25 @@ doom_conversion.json # размеры, hash исходника и BSP report
 
 Classic Doom в этом WAD не имеет slope-поверхностей: сектор хранит только
 горизонтальные `floorHeight` и `ceilingHeight`. Поэтому slope support для
-E1M1 не нужен и не добавляется в Java ME renderer hot path.
+E1M1 не нужен и не добавляется в Java ME renderer hot path. Конвертер также
+не использует Doom `REJECT` как жёсткий C3D PVS: после упрощения doors такой
+REJECT мог бы скрыть уже открытый портал. C3B получает консервативное
+`all-visible` PVS — оно не может создать PVS-hole/исчезновение геометрии.
 
-Doom line specials, двери, лифты, ключи, монстры и combat-логика не
-переносятся в CovertOps gameplay. Конвертер делает двусторонние линии
-статическими порталами, уменьшает Doom высоты в 2 раза и гарантирует минимум
-64 единицы clearance. Это сохраняет планировку, лестницы и возможность ходить
-по E1M1 без реализации Doom scripting/doors. Исходные thing и special данные
-сохраняются в metadata-файлах, чтобы их можно было добавить отдельным этапом.
+Обычные E1M1 door lines (`special 1` и совместимые classic door specials)
+переносятся в существующий `GameEngine` type-1 door controller: закрытый Doom
+sector остаётся закрытым, а клавиша `1` поднимает его ceiling. Двусторонние
+линии без door special остаются статическими порталами. Высоты Doom уменьшаются
+в 2 раза, а не-дверные сектора получают минимум 64 единицы clearance — это
+делает Doom stairs проходимыми в CovertOps collision model.
 
-Custom object sprite runtime пока не включён: `--sprites` экспортирует
-квантованные Doom patch BMP4 для редактора/будущего материала, но не добавляет
-их как игровых врагов. Для первой цели — загрузка уровня, текстур и spawn,
-чтобы походить — это намеренно не требуется.
+E1M1 imp, zombieman и shotgun guy переносятся как существующие CovertOps AI
+типы с собственными Doom billboard BMP4 (`sprite.<slot>`). Для стабильного
+первого импорта один Doom frame повторяется во всех AI frame indexes; обычный
+combat/movement уже работает через `GameEngine`. Doom elevators, switches,
+keys, exit scripting и остальные thing остаются metadata в `doom_things.ini`
+до отдельного этапа точного Doom gameplay.
+
+`--sprites used|all` по-прежнему экспортирует дополнительные quantized Doom
+patch BMP4 для редактора и будущей покадровой анимации, но не нужен для уже
+включённых E1M1 врагов.

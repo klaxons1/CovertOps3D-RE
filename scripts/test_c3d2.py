@@ -35,7 +35,7 @@ def main():
     with tempfile.TemporaryDirectory() as temp:
         entity_roundtrip = [
             dict(x=-12, z=42, angle=-5, type=1, param=7),
-            dict(x=30, z=-8, angle=0, type=5, param=0),
+            dict(x=30, z=-8, angle=0, type=5, param=0, sprite=7),
         ]
         entity_file = os.path.join(temp, 'entities.ini')
         C3.ENTITIES.dump_entities(entity_roundtrip, entity_file)
