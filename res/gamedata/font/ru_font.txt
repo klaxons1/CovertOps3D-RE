@@ -1,0 +1,5 @@
+IMG=/languages/font.png
+SELECTED_IMG=/languages/gfont.png
+ACTIVE_IMG=/languages/rfont.png
+CHARS=ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞ‗אבגדהוזחטיךכלםמןנסעףפץצקרשתûü‎‏ÿ0123456789!"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_abcdefghijklmnopqrstuvwxyz{|}¸¨
+
