@@ -36,8 +36,8 @@ def main(argv=None):
                         help='minimum ceiling clearance in C3D units; default 64')
     parser.add_argument('--sprites', choices=('none', 'used', 'all'), default='none',
                         help='optional Doom patch sprite export; default none keeps JAR compact')
-    parser.add_argument('--pvs', choices=('doom-reject', 'all-visible'), default='doom-reject',
-                        help='PVS source; symmetric Doom REJECT is default, all-visible is a debug fallback')
+    parser.add_argument('--pvs', choices=('auto', 'doom-reject', 'all-visible'), default='auto',
+                        help='PVS source; auto keeps E1M1 REJECT and uses all-visible for artifact-safe E1M2')
     args = parser.parse_args(argv)
 
     try:

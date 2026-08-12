@@ -18,6 +18,15 @@ public final class DoomGameMode {
 
     /** Three 20 Hz simulation ticks per genuine Doom death pose. */
     public static final int ACTOR_DEATH_FRAME_TICKS = 3;
+    /** Five 20 Hz ticks matches Doom's classic eight-tic material cadence. */
+    public static final int TEXTURE_ANIMATION_TICKS = 5;
+    /** Doom damage floors apply their percentage-like damage about once a second. */
+    public static final int FLOOR_DAMAGE_TICKS = 20;
+
+    // Must match the compact C3D sector types emitted by doom_wad_core.py.
+    public static final int SECTOR_DAMAGE_5 = 705;
+    public static final int SECTOR_DAMAGE_10 = 710;
+    public static final int SECTOR_DAMAGE_20 = 720;
 
     /** Custom entity type = DOOM_ITEM_BASE + original Doom thing type. */
     public static final int DOOM_ITEM_BASE = 9000;
@@ -61,12 +70,27 @@ public final class DoomGameMode {
         godMode = false;
     }
 
+    /** Returns the fixed Doom damage-floor amount for a C3D sector type. */
+    public static int getFloorDamage(int sectorType) {
+        switch (sectorType) {
+            case SECTOR_DAMAGE_5:
+                return 5;
+            case SECTOR_DAMAGE_10:
+                return 10;
+            case SECTOR_DAMAGE_20:
+                return 20;
+            default:
+                return 0;
+        }
+    }
+
     /** Gives every Doom weapon immediately, as requested for the conversion sandbox. */
     public static void configurePlayerLoadout(WeaponManager weaponManager) {
         GameEngine.playerHealth = 100;
         GameEngine.playerArmor = 0;
-        GameEngine.keysCollected[0] = false;
-        GameEngine.keysCollected[1] = false;
+        for (int i = 0; i < GameEngine.keysCollected.length; ++i) {
+            GameEngine.keysCollected[i] = false;
+        }
 
         for (int i = 0; i < GameEngine.weaponsAvailable.length; ++i) {
             GameEngine.weaponsAvailable[i] = true;
@@ -93,6 +117,15 @@ public final class DoomGameMode {
         if (!active || objectType < DOOM_ITEM_BASE) return false;
         int thingType = objectType - DOOM_ITEM_BASE;
         switch (thingType) {
+            case 5: // blue keycard
+                GameEngine.keysCollected[0] = true;
+                return true;
+            case 6: // yellow keycard
+                GameEngine.keysCollected[2] = true;
+                return true;
+            case 13: // red keycard
+                GameEngine.keysCollected[1] = true;
+                return true;
             case 8: // backpack: compact engine has no ammo-capacity table
                 GameEngine.ammoCounts[WeaponFactory.PISTOL] += 10;
                 GameEngine.ammoCounts[WeaponFactory.SHOTGUN] += 4;

@@ -97,6 +97,10 @@ flat.1=textures/floor.bmp
 flat.2=textures/ceiling.bmp
 sky=textures/sky.bmp
 sprite.1=sprites/doom/imp.bmp
+# Animation values are slot lists, not filesystem paths. Their target slot
+# is the authored initial frame and rotates at the fixed game tick.
+anim.wall.12=12,13,14
+anim.flat.18=18,16,17
 ```
 
 Ограничения runtime (они намеренно простые и детерминированные):
@@ -107,6 +111,12 @@ sprite.1=sprites/doom/imp.bmp
 | `flat.<slot>` | indexed BMP4/BMP8, используются индексы 0..15 | 64×64 |
 | `sky` | indexed BMP4/BMP8, используются индексы 0..15 | 64×128 |
 | `sprite.<slot>` | indexed BMP4/BMP8, index 0 прозрачен | 1..255 × 1..255 |
+| `anim.wall.<slot>` | comma-separated existing `wall` slots | same dimensions as target `wall.<slot>` |
+| `anim.flat.<slot>` | comma-separated existing `flat` slots | all frames 64×64 |
+
+`anim.*` entries are parsed at level load. `GameWorld` swaps only the existing
+pixel/palette references once per fixed game tick; `PortalRenderer` retains its
+normal branch-free material lookup.
 
 PNG остаётся удобным исходником для художника и редактора, но экспортируется
 в BMP4 через `scripts/png_to_bmp4.py`. В Java ME `CustomMaterialSet` грузит

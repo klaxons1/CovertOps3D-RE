@@ -79,10 +79,26 @@ public final class GameWorld {
     public WallSegment[] wallSegments;
     private int rootBSPNodeIndex = -1;
 
+    // Doom custom-material animations. Targets stay registered in the normal
+    // renderer tables; only their backing pixel/palette references rotate at
+    // the fixed game tick, so the portal renderer gets no new hot-path branch.
+    private Texture[] animatedWallTargets;
+    private Texture[][] animatedWallFrames;
+    private Sprite[] animatedFlatTargets;
+    private Sprite[][] animatedFlatFrames;
+    private int textureAnimationTimer;
+    private int textureAnimationFrame;
+
     public GameWorld() {
         this.projectiles = new Vector();
         this.pickupItems = new Vector();
         this.lastWallIndex = -1;
+        this.animatedWallTargets = null;
+        this.animatedWallFrames = null;
+        this.animatedFlatTargets = null;
+        this.animatedFlatFrames = null;
+        this.textureAnimationTimer = 0;
+        this.textureAnimationFrame = 0;
     }
 
     public final BSPNode getRootBSPNode() {
@@ -160,6 +176,54 @@ public final class GameWorld {
 
         this.updateWorld();
         this.getRootBSPNode().calculateVisibleSectors();
+    }
+
+    /** Installs load-time decoded custom texture animation references. */
+    public final void installTextureAnimations(Texture[] wallTargets, Texture[][] wallFrames,
+                                               Sprite[] flatTargets, Sprite[][] flatFrames) {
+        this.animatedWallTargets = wallTargets;
+        this.animatedWallFrames = wallFrames;
+        this.animatedFlatTargets = flatTargets;
+        this.animatedFlatFrames = flatFrames;
+        this.textureAnimationTimer = 0;
+        this.textureAnimationFrame = 0;
+    }
+
+    /**
+     * Advances Doom wall/fluid material frames at a stable gameplay cadence.
+     * It swaps only existing arrays/references; no renderer allocations or
+     * material parsing occurs during play.
+     */
+    public final void advanceTextureAnimations() {
+        if ((animatedWallTargets == null || animatedWallTargets.length == 0)
+                && (animatedFlatTargets == null || animatedFlatTargets.length == 0)) {
+            return;
+        }
+        if (++textureAnimationTimer < DoomGameMode.TEXTURE_ANIMATION_TICKS) {
+            return;
+        }
+        textureAnimationTimer = 0;
+        ++textureAnimationFrame;
+
+        if (animatedWallTargets != null) {
+            for (int index = 0; index < animatedWallTargets.length; ++index) {
+                Texture[] frames = animatedWallFrames[index];
+                Texture frame = frames[textureAnimationFrame % frames.length];
+                Texture target = animatedWallTargets[index];
+                target.pixelData = frame.pixelData;
+                target.colorPalettes = frame.colorPalettes;
+            }
+        }
+        if (animatedFlatTargets != null) {
+            for (int index = 0; index < animatedFlatTargets.length; ++index) {
+                Sprite[] frames = animatedFlatFrames[index];
+                Sprite frame = frames[textureAnimationFrame % frames.length];
+                Sprite target = animatedFlatTargets[index];
+                target.pixelData = frame.pixelData;
+                target.colorPalettes = frame.colorPalettes;
+                target.flatColors = frame.flatColors;
+            }
+        }
     }
 
     /**

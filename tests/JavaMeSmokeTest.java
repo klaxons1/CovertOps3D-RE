@@ -151,6 +151,9 @@ public final class JavaMeSmokeTest {
         assertEquals("Doom current weapon", WeaponFactory.PISTOL, GameEngine.currentWeapon);
         assertEquals("Doom bullets", 200, GameEngine.ammoCounts[WeaponFactory.PISTOL]);
         assertEquals("Doom shells", 50, GameEngine.ammoCounts[WeaponFactory.SHOTGUN]);
+        assertTrue("Doom red key collection", DoomGameMode.collectDoomItem(
+                DoomGameMode.DOOM_ITEM_BASE + 13) && GameEngine.keysCollected[1]);
+        GameEngine.keysCollected[1] = false;
         assertTrue("Doom god toggle", DoomGameMode.toggleGodMode() && DoomGameMode.isGodMode());
         int healthBeforeGodDamage = GameEngine.playerHealth;
         assertTrue("Doom god damage blocked", !GameEngine.applyDamage(99));
@@ -236,6 +239,21 @@ public final class JavaMeSmokeTest {
             }
         }
         assertEquals("Doom E1M1 symmetric reject PVS", 6021, doomVisiblePairs);
+        Sprite acidTexture = null;
+        int acidSectorCount = 0;
+        for (int sector = 0; sector < world.sectors.length; ++sector) {
+            if (DoomGameMode.getFloorDamage(world.sectors[sector].getSectorType()) == 5) {
+                acidTexture = world.sectors[sector].ceilingTexture;
+                ++acidSectorCount;
+            }
+        }
+        assertEquals("Doom E1M1 acid sectors", 4, acidSectorCount);
+        assertTrue("Doom E1M1 acid texture", acidTexture != null && acidTexture.pixelData != null);
+        byte[] acidPixels = acidTexture.pixelData;
+        for (int tick = 0; tick < DoomGameMode.TEXTURE_ANIMATION_TICKS; ++tick) {
+            world.advanceTextureAnimations();
+        }
+        assertTrue("Doom E1M1 NUKAGE animation", acidTexture.pixelData != acidPixels);
         assertTrue("Doom E1M1 wall texture", LevelLoader.getTexture((byte)1) != null
                 && LevelLoader.getTexture((byte)1).pixelData != null);
         assertTrue("Doom E1M1 enemy sprite texture", LevelLoader.getTexture((byte)-1) != null
@@ -284,12 +302,34 @@ public final class JavaMeSmokeTest {
         GameWorld world = LevelLoader.gameWorld;
         assertTrue("Doom E1M2 geometry", world != null && world.wallDefinitions.length == 1033
                 && world.sectors.length == 200 && world.bspNodes.length > 400);
-        assertEquals("Doom E1M2 actors and items", 227, world.staticObjects.length);
+        assertEquals("Doom E1M2 actors and items", 228, world.staticObjects.length);
+        int e1m2VisiblePairs = 0;
+        int e1m2AcidSectors = 0;
+        boolean redKey = false;
+        for (int sector = 0; sector < world.sectors.length; ++sector) {
+            if (DoomGameMode.getFloorDamage(world.sectors[sector].getSectorType()) == 5) {
+                ++e1m2AcidSectors;
+            }
+            for (int from = 0; from < world.sectors.length; ++from) {
+                if (!world.sectors[sector].visitedFlags[from]) ++e1m2VisiblePairs;
+            }
+        }
+        for (int object = 0; object < world.staticObjects.length; ++object) {
+            if (world.staticObjects[object].objectType == DoomGameMode.DOOM_ITEM_BASE + 13) {
+                redKey = true;
+            }
+        }
+        assertEquals("Doom E1M2 all-visible PVS", 40000, e1m2VisiblePairs);
+        assertEquals("Doom E1M2 acid sectors", 5, e1m2AcidSectors);
+        assertTrue("Doom E1M2 red keycard", redKey);
         int exitWalls = 0;
+        int redDoors = 0;
         for (int i = 0; i < world.wallDefinitions.length; ++i) {
             if (world.wallDefinitions[i].getWallType() == 11) ++exitWalls;
+            if (world.wallDefinitions[i].getWallType() == 28) ++redDoors;
         }
         assertEquals("Doom E1M2 exit switch", 1, exitWalls);
+        assertEquals("Doom E1M2 red key doors", 2, redDoors);
         assertTrue("Doom E1M2 spawn", world.worldOrigin != null);
         assertTrue("Doom E1M2 BFG projectile", LevelLoader.getTexture(DoomGameMode.BFG_SPRITE) != null);
     }

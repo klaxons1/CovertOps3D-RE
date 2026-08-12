@@ -94,8 +94,9 @@ public final class LevelResourceManager {
                 // object backtracking and legacy atlas preloading do not apply.
                 cachedStaticObjects = null;
                 nextLevelObjects = null;
-                GameEngine.keysCollected[0] = false;
-                GameEngine.keysCollected[1] = false;
+                for (int i = 0; i < GameEngine.keysCollected.length; ++i) {
+                    GameEngine.keysCollected[i] = false;
+                }
                 if (!loadCustomLevelResources(fullLevelPath)) return;
                 return;
             }
@@ -116,8 +117,9 @@ public final class LevelResourceManager {
                     LevelLoader.gameWorld.staticObjects = nextLevelObjects;
                     nextLevelObjects = null;
                 } else {
-                    GameEngine.keysCollected[0] = false;
-                    GameEngine.keysCollected[1] = false;
+                    for (int i = 0; i < GameEngine.keysCollected.length; ++i) {
+                        GameEngine.keysCollected[i] = false;
+                    }
                 }
             } else {
                 nextLevelObjects = LevelLoader.gameWorld.staticObjects;

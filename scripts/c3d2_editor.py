@@ -1237,7 +1237,9 @@ class EditorApp(object):
 
         self.draw_text(self.screen, 'Materials', 18, (12, y), ACCENT)
         y += 22
-        keys = sorted(self.model.materials.keys(), key=_material_sort_key)
+        # anim.wall/anim.flat are runtime slot sequences, not image paths.
+        keys = sorted([key for key in self.model.materials.keys()
+                       if not key.startswith('anim.')], key=_material_sort_key)
         if not keys:
             self.draw_text(self.screen, 'Импортируйте BMP/PNG/JPEG…', 15, (12, y), MUTED_TEXT)
             y += 22

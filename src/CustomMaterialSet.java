@@ -28,6 +28,11 @@ public final class CustomMaterialSet {
     // External billboards use negative texture ids so they cannot collide with
     // positive wall slots in LevelLoader.textureTable.
     private Texture[] spriteTextures = new Texture[SLOT_COUNT];
+    // Each animation entry points at already-loaded material slots. The target
+    // object stays registered in LevelLoader; GameWorld swaps its pixel/palette
+    // references at a fixed tick, so PortalRenderer keeps its branch-free path.
+    private Texture[][] animatedWallFrames = new Texture[SLOT_COUNT][];
+    private Sprite[][] animatedFlatFrames = new Sprite[SLOT_COUNT][];
     private Texture skyTexture;
     private int wallTextureCount;
     private int flatTextureCount;
@@ -86,6 +91,20 @@ public final class CustomMaterialSet {
             } else if (key.equals("sky")) {
                 if (materials.skyTexture != null) throw new IOException("Duplicate sky texture");
                 materials.skyTexture = loadSkyTexture(texturePath);
+            } else if (startsWith(key, "anim.wall.")) {
+                int slot = parseSlot(key.substring(10));
+                if (materials.animatedWallFrames[slot] != null) {
+                    throw new IOException("Duplicate wall animation slot: " + slot);
+                }
+                materials.animatedWallFrames[slot] = parseWallAnimation(value,
+                        materials.wallTextures, slot);
+            } else if (startsWith(key, "anim.flat.")) {
+                int slot = parseSlot(key.substring(10));
+                if (materials.animatedFlatFrames[slot] != null) {
+                    throw new IOException("Duplicate flat animation slot: " + slot);
+                }
+                materials.animatedFlatFrames[slot] = parseFlatAnimation(value,
+                        materials.flatTextures, slot);
             } else {
                 throw new IOException("Unknown material key: " + key);
             }
@@ -121,6 +140,36 @@ public final class CustomMaterialSet {
         }
     }
 
+    /** Installs compact Doom wall/flat animation references into one world. */
+    public void installTextureAnimations(GameWorld world) {
+        if (world == null) throw new NullPointerException();
+        int wallCount = 0;
+        int flatCount = 0;
+        for (int slot = 1; slot < SLOT_COUNT; ++slot) {
+            if (animatedWallFrames[slot] != null) ++wallCount;
+            if (animatedFlatFrames[slot] != null) ++flatCount;
+        }
+        if (wallCount == 0 && flatCount == 0) return;
+
+        Texture[] wallTargets = new Texture[wallCount];
+        Texture[][] wallFrames = new Texture[wallCount][];
+        Sprite[] flatTargets = new Sprite[flatCount];
+        Sprite[][] flatFrames = new Sprite[flatCount][];
+        int wallIndex = 0;
+        int flatIndex = 0;
+        for (int slot = 1; slot < SLOT_COUNT; ++slot) {
+            if (animatedWallFrames[slot] != null) {
+                wallTargets[wallIndex] = wallTextures[slot];
+                wallFrames[wallIndex++] = animatedWallFrames[slot];
+            }
+            if (animatedFlatFrames[slot] != null) {
+                flatTargets[flatIndex] = flatTextures[slot];
+                flatFrames[flatIndex++] = animatedFlatFrames[slot];
+            }
+        }
+        world.installTextureAnimations(wallTargets, wallFrames, flatTargets, flatFrames);
+    }
+
     public Texture getWallTexture(int slot) {
         return slot > 0 && slot < SLOT_COUNT ? wallTextures[slot] : null;
     }
@@ -147,6 +196,14 @@ public final class CustomMaterialSet {
 
     public int getSpriteTextureCount() {
         return spriteTextureCount;
+    }
+
+    public int getAnimatedWallCount() {
+        return countAnimations(animatedWallFrames);
+    }
+
+    public int getAnimatedFlatCount() {
+        return countAnimations(animatedFlatFrames);
     }
 
     private static Texture loadWallTexture(String path, byte slot) throws IOException {
@@ -238,6 +295,72 @@ public final class CustomMaterialSet {
 
     private static boolean isPowerOfTwo(int value) {
         return (value & (value - 1)) == 0;
+    }
+
+    private static Texture[] parseWallAnimation(String value, Texture[] textures, int targetSlot)
+            throws IOException {
+        Texture target = textures[targetSlot];
+        if (target == null) {
+            throw new IOException("Animated wall target must be defined first: " + targetSlot);
+        }
+        int[] slots = parseAnimationSlots(value);
+        Texture[] frames = new Texture[slots.length];
+        for (int i = 0; i < slots.length; ++i) {
+            Texture frame = textures[slots[i]];
+            if (frame == null) {
+                throw new IOException("Animated wall frame is missing: " + slots[i]);
+            }
+            if (frame.width != target.width || frame.height != target.height) {
+                throw new IOException("Animated wall frame size differs at slot: " + slots[i]);
+            }
+            frames[i] = frame;
+        }
+        return frames;
+    }
+
+    private static Sprite[] parseFlatAnimation(String value, Sprite[] sprites, int targetSlot)
+            throws IOException {
+        if (sprites[targetSlot] == null) {
+            throw new IOException("Animated flat target must be defined first: " + targetSlot);
+        }
+        int[] slots = parseAnimationSlots(value);
+        Sprite[] frames = new Sprite[slots.length];
+        for (int i = 0; i < slots.length; ++i) {
+            Sprite frame = sprites[slots[i]];
+            if (frame == null || frame.pixelData == null || frame.pixelData.length != 4096) {
+                throw new IOException("Animated flat frame is missing: " + slots[i]);
+            }
+            frames[i] = frame;
+        }
+        return frames;
+    }
+
+    /** Parses a compact comma-separated material slot list without String.split. */
+    private static int[] parseAnimationSlots(String value) throws IOException {
+        int count = 1;
+        for (int index = 0; index < value.length(); ++index) {
+            if (value.charAt(index) == ',') ++count;
+        }
+        if (count < 2) throw new IOException("Animation needs at least two frames: " + value);
+        int[] slots = new int[count];
+        int start = 0;
+        for (int index = 0; index < count; ++index) {
+            int end = value.indexOf(',', start);
+            if (end < 0) end = value.length();
+            String number = value.substring(start, end).trim();
+            if (number.length() == 0) throw new IOException("Empty animation frame: " + value);
+            slots[index] = parseSlot(number);
+            start = end + 1;
+        }
+        return slots;
+    }
+
+    private static int countAnimations(Object[] animations) {
+        int count = 0;
+        for (int index = 1; index < animations.length; ++index) {
+            if (animations[index] != null) ++count;
+        }
+        return count;
     }
 
     private static int parseSlot(String value) throws IOException {

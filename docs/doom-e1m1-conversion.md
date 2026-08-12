@@ -13,6 +13,10 @@ python3 scripts/convert_doom_e1m1.py docs/DOOM.WAD \
 python3 scripts/convert_doom_e1m1.py docs/DOOM.WAD \
     res/gamedata/custom/doom-e1m2 --map E1M2
 
+# PVS: auto (default) keeps compact REJECT for E1M1 and selects
+# all-visible for E1M2, where Doom REJECT produces visual holes.
+# Explicit debug options remain available: --pvs doom-reject / --pvs all-visible
+
 # Необязательная выгрузка Doom patch sprites для дальнейшей работы
 python3 scripts/convert_doom_e1m1.py --sprites used
 # --sprites all экспортирует весь S_START..S_END namespace, но не нужен для ходьбы.
@@ -44,6 +48,10 @@ doom_conversion.json # размеры, hash исходника и BSP report
 - использованные composite `TEXTURE1` wall textures через `PNAMES` и patch
   lumps;
 - использованные 64×64 flats и `SKY1` → C3D sky;
+- classic animated flat/wall sequences, используемые картой (`NUKAGE`, `SLADRIP`
+  и доступные `LAVA`/`BLOOD`/`FIREWALL` sequences), как компактные `anim.*`
+  slot references в manifest;
+- sector specials 4/5/7/16 → Doom 20/10/5% damage floors;
 - игроки Doom things `1..4` → `entities.ini`;
 - 16 HUD weapon frames: fist, pistol, shotgun, chaingun, rocket, plasma,
   BFG и chainsaw;
@@ -62,12 +70,12 @@ doom_conversion.json # размеры, hash исходника и BSP report
 
 Classic Doom в этом WAD не имеет slope-поверхностей: сектор хранит только
 горизонтальные `floorHeight` и `ceilingHeight`. Поэтому slope support для
-E1M1 не нужен и не добавляется в Java ME renderer hot path. По умолчанию
-конвертер переносит Doom `REJECT` в симметричный C3D PVS: пара отсекается
-только если Doom отвергает её в обе стороны, а прямые portal neighbors всегда
-остаются видимыми, в том числе для двери. Это убирает лишние outdoor sky
-leaves, которые могли выглядеть как PVS-артефакты. Для диагностики доступен
-полностью консервативный режим `--pvs all-visible`.
+E1M1 не нужен и не добавляется в Java ME renderer hot path. `--pvs auto`
+оставляет симметричный Doom `REJECT` для компактного E1M1, но сознательно
+выбирает `all-visible` для E1M2: REJECT — это таблица зрения AI, а не строгий
+portal PVS, и на большой связной карте E1M2 он давал пропадающие сектора.
+BSP/clip renderer всё ещё отсекает закрытый экран, поэтому это исправление
+геометрических артефактов не добавляет renderer work в каждый пиксель.
 
 Обычные door lines (`special 1` и совместимые classic door specials)
 переносятся в существующий `GameEngine` type-1 door controller: закрытый Doom
@@ -77,15 +85,20 @@ sector остаётся закрытым, а клавиша `1` поднимае
 делает Doom stairs проходимыми в CovertOps collision model.
 
 Imp, zombieman и shotgun guy переносятся как существующие AI-типы с
-собственными Doom billboard BMP4 (`sprite.<slot>`). Их state patches
-масштабируются до 160px высоты при конвертации; статические pickups, barrels
-и decorations — до 128px, поэтому не исчезают на расстоянии и не требуют
-per-frame scale в Java ME. Для каждого actor выгружаются семь state frames и
-четыре промежуточные death frames: runtime проигрывает полный I→J→K→L→M→N
-strip перед трупом. `special 11/52` exit switch сохраняется как C3D wall type
-11 и запускает normal E1M1→E1M2 transition с сохранением HP/ammo/weapon.
-Doom elevators, switches, keys и остальные specials остаются следующим этапом
-точного Doom gameplay.
+собственными Doom billboard BMP4 (`sprite.<slot>`). Их state patches теперь
+масштабируются до 128px высоты; tall decorations остаются 128px, но pickups
+экспортируются в 80px, а barrels — в 96px. Это сохраняет читаемость декора,
+не превращая аптечки и ammo в полноразмерные препятствия. Для каждого actor
+выгружаются семь state frames и четыре промежуточные death frames: runtime
+проигрывает полный I→J→K→L→M→N strip перед трупом.
+
+`NUKAGE`/`LAVA` sectors со special 7/5/4/16 получают 5/10/20 damage раз в
+секунду; same fixed tick переключает frames animated materials без аллокаций
+в renderer. `special 11/52` exit switch сохраняется как C3D wall type 11 и
+запускает normal E1M1→E1M2 transition с сохранением HP/ammo/weapon. E1M2
+также переносит red keycard (`RKEY`) как collectable Doom item и red locked
+Doors (`special 28`) как type-28 key doors. Doom elevators и остальные specials
+остаются следующим этапом точного Doom gameplay.
 
 Все восемь Doom weapon slots доступны игроку сразу в E1M1 sandbox:
 fist, pistol, shotgun, chaingun, rocket launcher, plasma rifle, BFG9000 и

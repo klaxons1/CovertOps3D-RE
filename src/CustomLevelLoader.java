@@ -227,6 +227,9 @@ public final class CustomLevelLoader {
             DebugLogger.log("CustomLevelLoader", "C3B PVS visible=" + visiblePairs
                     + "/" + (sectorCount * sectorCount));
 
+            // Animation frame data was decoded with the external materials.
+            // Attach only reference arrays now that this GameWorld exists.
+            materials.installTextureAnimations(world);
             LevelLoader.finishCustomMapLoad(world);
             return true;
         } catch (Exception e) {

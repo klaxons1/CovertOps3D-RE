@@ -45,8 +45,9 @@ DOOM_EXIT_SPECIALS = (11, 52)
 # Native Doom patches describe original 56-ish unit monsters. The inherited
 # Covert billboard projection is tuned for much larger textures, so normalize
 # Doom actors to this physical art height during conversion instead of baking a
-# per-frame scale cost into the Java ME renderer.
-DOOM_RUNTIME_SPRITE_HEIGHT = 160
+# per-frame scale cost into the Java ME renderer. 160px proved oversized once
+# the dedicated floor-centred billboard path landed, so actors use 128px.
+DOOM_RUNTIME_SPRITE_HEIGHT = 128
 # Some classic death poses spread horizontally across several monster widths.
 # C3D billboards accept at most 255 source pixels, so preserve aspect and cap
 # only those frames instead of rejecting the whole map at runtime.
@@ -76,18 +77,61 @@ DOOM_PROJECTILES = (
     ('imp_fireball', 'BAL1A0'),
 )
 DOOM_RUNTIME_PROJECTILE_HEIGHT = 32
-# The initial 64-unit conversion made every static prop half the size of the
-# Doom actors. Keep the scale baked into BMPs (no Java ME per-frame cost), but
-# double props/pickups so barrels, medikits and decorations read at gameplay
-# distance. A 192px source-width cap protects the fixed-point sprite loop and
-# remains inside CustomMaterialSet's 255px runtime limit.
-DOOM_RUNTIME_ITEM_HEIGHT = 128
+# Decoration has a different physical scale from a pickup. Keeping this split
+# in the converter costs nothing in the Java ME renderer: lamps/columns remain
+# readable at 128px, while medikits/ammo no longer fill a corridor and barrels
+# sit between both classes.
+DOOM_RUNTIME_ITEM_HEIGHT = 128       # backward-compatible decoration default
 DOOM_RUNTIME_ITEM_MAX_WIDTH = 192
+DOOM_RUNTIME_DECORATION_HEIGHT = 128
+DOOM_RUNTIME_DECORATION_MAX_WIDTH = 192
+DOOM_RUNTIME_PICKUP_HEIGHT = 80
+DOOM_RUNTIME_PICKUP_MAX_WIDTH = 160
+DOOM_RUNTIME_BARREL_HEIGHT = 96
+DOOM_RUNTIME_BARREL_MAX_WIDTH = 160
 DOOM_ITEM_BASE = 9000
+
+# Doom's shareware IWAD has no ANIMATED lump: these classic sequences were
+# hard-coded by the original executable. Export a sequence only when one of its
+# frames is actually used by a converted map.
+DOOM_FLAT_ANIMATIONS = (
+    ('NUKAGE1', 'NUKAGE2', 'NUKAGE3'),
+    ('FWATER1', 'FWATER2', 'FWATER3', 'FWATER4'),
+    ('LAVA1', 'LAVA2', 'LAVA3', 'LAVA4'),
+    ('BLOOD1', 'BLOOD2', 'BLOOD3'),
+)
+DOOM_WALL_ANIMATIONS = (
+    ('BLODRIP1', 'BLODRIP2', 'BLODRIP3'),
+    ('SLADRIP1', 'SLADRIP2', 'SLADRIP3'),
+    ('FIREWALA', 'FIREWALB', 'FIREWALL'),
+)
+
+# C3D sector type values reserved for Doom damage floors. The source sector
+# special chooses the rate; Java applies this amount once per second.
+DOOM_SECTOR_DAMAGE_5 = 705
+DOOM_SECTOR_DAMAGE_10 = 710
+DOOM_SECTOR_DAMAGE_20 = 720
+DOOM_DAMAGE_SECTOR_SPECIALS = {
+    4: DOOM_SECTOR_DAMAGE_20,
+    5: DOOM_SECTOR_DAMAGE_10,
+    7: DOOM_SECTOR_DAMAGE_5,
+    16: DOOM_SECTOR_DAMAGE_20,
+}
 
 # Multiplayer starts have a Doom player sprite prefix but should not become
 # world props in the single-player E1M1 import.
-DOOM_NON_WORLD_THING_TYPES = (1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16)
+DOOM_NON_WORLD_THING_TYPES = (1, 2, 3, 4, 10, 11, 12, 14, 15, 16)
+
+# Things that should remain compact pickups rather than tall set dressing.
+# 13 is the red keycard (not a multiplayer start), so it deliberately remains
+# in the world set and can be collected by the Doom profile.
+DOOM_PICKUP_THING_TYPES = (
+    5, 6, 8, 13, 17,
+    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+    2010, 2011, 2012, 2013, 2014, 2015, 2017, 2018, 2019,
+    2022, 2023, 2024, 2025, 2026, 2045, 2046, 2047, 2048, 2049,
+)
+DOOM_BARREL_THING_TYPE = 2035
 
 DOOM_ENEMIES = {
     # ``frames`` map directly to GameEngine's 0..6 actor state indexes:
@@ -107,7 +151,8 @@ DOOM_ENEMIES = {
 }
 
 THING_SPRITES = {
-    8: 'BPAK', 9: 'SPOS', 10: 'PLAY', 11: 'PLAY', 12: 'PLAY', 13: 'PLAY',
+    5: 'BKEY', 6: 'YKEY', 8: 'BPAK', 9: 'SPOS', 10: 'PLAY', 11: 'PLAY', 12: 'PLAY',
+    13: 'RKEY',
     14: 'PLAY', 15: 'PLAY', 16: 'PLAY', 17: 'CELP', 18: 'POSS',
     19: 'SPOS', 20: 'TROO', 21: 'SARG', 22: 'HEAD', 23: 'SKUL',
     24: 'POL5', 25: 'POL1', 26: 'POL6', 27: 'POL4', 28: 'POL2',
@@ -349,15 +394,56 @@ def decode_flat(wad, name, palette):
                     for index in data]
 
 
+def _animated_sequences_for_used(used_names, sequences):
+    """Returns (authored target, rotated sequence) pairs for used frames."""
+    result = []
+    for sequence in sequences:
+        for index, name in enumerate(sequence):
+            if name in used_names:
+                result.append((name, sequence[index:] + sequence[:index]))
+    return result
+
+
+def _thing_runtime_sprite_size(thing_type):
+    if thing_type == DOOM_BARREL_THING_TYPE:
+        return DOOM_RUNTIME_BARREL_HEIGHT, DOOM_RUNTIME_BARREL_MAX_WIDTH
+    if thing_type in DOOM_PICKUP_THING_TYPES:
+        return DOOM_RUNTIME_PICKUP_HEIGHT, DOOM_RUNTIME_PICKUP_MAX_WIDTH
+    return DOOM_RUNTIME_DECORATION_HEIGHT, DOOM_RUNTIME_DECORATION_MAX_WIDTH
+
+
+def _doom_sector_type(sector):
+    return DOOM_DAMAGE_SECTOR_SPECIALS.get(sector['special'], 0)
+
+
+def _doom_door_wall_type(special):
+    # Existing GameEngine door types 26/27/28 now represent blue/yellow/red.
+    # Keep ordinary doors type 1; the mapper only reaches this helper after a
+    # closed door target was positively identified.
+    if special == 26 or special == 32:
+        return 26
+    if special == 27 or special == 34:
+        return 27
+    if special == 28 or special == 33:
+        return 28
+    return 1
+
+
 def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
-                minimum_clearance=64, extract_sprites='none', pvs_mode='doom-reject'):
+                minimum_clearance=64, extract_sprites='none', pvs_mode='auto'):
     """Converts a parsed classic Doom map into a complete compact C3D package."""
     if height_scale <= 0 or world_scale <= 0:
         raise DoomWadError('height/world scale must be positive')
     if minimum_clearance < 50:
         raise DoomWadError('minimum clearance must be at least 50 for this engine')
+    if pvs_mode == 'auto':
+        # Doom REJECT is an AI sight table rather than a true portal PVS. It
+        # behaves acceptably in E1M1, but E1M2's larger connected yard can
+        # visibly lose walls/sectors. Prefer correctness there until a compact
+        # portal-frustum PVS replaces this conservative fallback.
+        pvs_mode = 'doom-reject' if doom_map.name.upper() == 'E1M1' else 'all-visible'
     if pvs_mode not in ('doom-reject', 'all-visible'):
-        raise DoomWadError('pvs_mode must be doom-reject or all-visible')
+        raise DoomWadError('pvs_mode must be auto, doom-reject or all-visible')
 
     palette = parse_palette(wad)
     texture_defs = parse_texture_definitions(wad)
@@ -369,6 +455,16 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     door_targets = _find_closed_door_targets(doom_map)
     sky_names = set(name for name in flat_names if name == 'F_SKY1')
     flat_names -= sky_names
+
+    # Include all frames for a sequence only if one frame appears in geometry.
+    # The C3D surface still points at its authored frame; the manifest rotates
+    # that target through this sequence at runtime without renderer branches.
+    wall_animations = _animated_sequences_for_used(wall_names, DOOM_WALL_ANIMATIONS)
+    flat_animations = _animated_sequences_for_used(flat_names, DOOM_FLAT_ANIMATIONS)
+    for unused_target, frames in wall_animations:
+        wall_names.update(frames)
+    for unused_target, frames in flat_animations:
+        flat_names.update(frames)
     if not wall_names:
         raise DoomWadError('map has no wall textures')
     if len(wall_names) > 127 or len(flat_names) > 127:
@@ -390,7 +486,10 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
                   things=len(doom_map.things), wall_textures=len(wall_slots),
                   flats=len(flat_slots), doors=len(door_targets),
                   exits=sum(1 for line in doom_map.linedefs
-                            if line['special'] in DOOM_EXIT_SPECIALS), enemies=0,
+                            if line['special'] in DOOM_EXIT_SPECIALS),
+                  animated_walls=len(wall_animations), animated_flats=len(flat_animations),
+                  damage_sectors=sum(1 for sector in doom_map.sectors
+                                     if _doom_sector_type(sector) != 0), enemies=0,
                   height_scale=height_scale,
                   world_scale=world_scale, minimum_clearance=minimum_clearance,
                   missing_wall_textures=[], sprites=0)
@@ -437,6 +536,17 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     _write_world_bmp(sky_destination, sky_pixels, sky_width, sky_height, 64, 128)
     manifest_lines.append('sky=textures/sky.bmp')
     material_lines.append('sky=SKY1')
+
+    for target, frames in wall_animations:
+        target_slot = wall_slots[target]
+        frame_slots = ','.join(str(wall_slots[name]) for name in frames)
+        manifest_lines.append('anim.wall.%d=%s' % (target_slot, frame_slots))
+        material_lines.append('animation.wall.%s=%s' % (target, frame_slots))
+    for target, frames in flat_animations:
+        target_slot = flat_slots[target]
+        frame_slots = ','.join(str(flat_slots[name]) for name in frames)
+        manifest_lines.append('anim.flat.%d=%s' % (target_slot, frame_slots))
+        material_lines.append('animation.flat.%s=%s' % (target, frame_slots))
 
     enemy_sprite_slots = _export_runtime_enemy_sprites(wad, palette, package_dir)
     enemy_sprite_count = 0
@@ -705,8 +815,9 @@ def _export_runtime_thing_sprites(wad, doom_map, palette, package_dir, first_slo
             slot = next_slot
             next_slot += 1
             filename = '%02d_%s.bmp' % (slot, _safe_name(prefix))
+            target_height, max_width = _thing_runtime_sprite_size(thing_type)
             _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
-                              DOOM_RUNTIME_ITEM_HEIGHT, DOOM_RUNTIME_ITEM_MAX_WIDTH)
+                              target_height, max_width)
             prefix_slots[prefix] = dict(slot=slot, name=_safe_name(prefix))
         result[thing_type] = prefix_slots[prefix]
     return result
@@ -802,12 +913,13 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
         floor_texture = 51 if raw['floor_texture'] == 'F_SKY1' else flat_slots.get(raw['floor_texture'], 0)
         ceiling_texture = 51 if raw['ceiling_texture'] == 'F_SKY1' else flat_slots.get(raw['ceiling_texture'], 0)
         light = _clamp((raw['light'] + 8) // 17, 0, 15)
-        # Doom specials/tags drive Doom doors, lifts and scripts. They are
-        # deliberately not copied into CovertOps game logic; converted portals
-        # are static/open so the player can explore E1M1 immediately.
+        # Most Doom specials/tags still require dedicated gameplay controllers.
+        # Damage-floor specials are compact enough to preserve now; doors and
+        # exit switches are handled from their linedefs below.
         level.sectors.append(dict(floor=floor, ceil=ceiling,
                                   floor_tex=floor_texture, ceil_tex=ceiling_texture,
-                                  light_packed=light << 4, tag=0, type=0))
+                                  light_packed=light << 4, tag=0,
+                                  type=_doom_sector_type(raw)))
 
     surface_by_side = {}
 
@@ -852,7 +964,8 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
                 and level.surfaces[back]['sector'] == door_sector
         is_exit = raw['special'] in DOOM_EXIT_SPECIALS
         level.walls.append(dict(sv=start, ev=end, flags=8 if is_door else (1 if back < 0 else 0),
-                                type=1 if is_door else (11 if is_exit else 0),
+                                type=_doom_door_wall_type(raw['special']) if is_door
+                                else (11 if is_exit else 0),
                                 special=0, front=front, back=back))
 
     entities = []

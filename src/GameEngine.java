@@ -57,7 +57,9 @@ public final class GameEngine {
     public static int messageTimer = 0;
     public static int interactionTimer = 0;
     public static WallDefinition activeInteractable = null;
-    public static boolean[] keysCollected = new boolean[]{false, false};
+    // Blue, red and yellow Doom key slots. Legacy code uses the first two
+    // unchanged; the third unlocks imported yellow Doom doors.
+    public static boolean[] keysCollected = new boolean[]{false, false, false};
 
     // ==================== Level State ====================
 
@@ -78,6 +80,8 @@ public final class GameEngine {
     private static int enemyAggroDistance = MathUtils.fixedPointMultiply(1310720, 92682);
     private static int cameraBobTimer = 0;
     private static int lastGameLogicTime = 0;
+    // Counts fixed 20 Hz ticks spent in a Doom acid/lava sector.
+    private static int doomFloorDamageTimer = 0;
 
     /**
      * Initializes the game engine and all rendering subsystems.
@@ -161,6 +165,7 @@ public final class GameEngine {
         messageTimer = 0;
         interactionTimer = 0;
         activeInteractable = null;
+        doomFloorDamageTimer = 0;
     }
 
     /**
@@ -288,6 +293,12 @@ public final class GameEngine {
             }
         }
 
+        // Swap any decoded Doom fluid/wall frame references once per fixed
+        // logic tick. The renderer then samples its normal texture pointers.
+        if (LevelLoader.gameWorld != null) {
+            LevelLoader.gameWorld.advanceTextureAnimations();
+        }
+
         // Apply player input forces
         if (inputForward) {
             player.applyHorizontalForce(0, -196608);
@@ -331,7 +342,7 @@ public final class GameEngine {
             if (hitWall != null) {
                 wallType = hitWall.getWallType();
                 if (wallType == 1 || wallType == 11 || wallType == 26
-                        || wallType == 28 || wallType == 51 || wallType == 62) {
+                        || wallType == 27 || wallType == 28 || wallType == 51 || wallType == 62) {
                     activeInteractable = hitWall;
                 } else {
                     activeInteractable = null;
@@ -405,7 +416,7 @@ public final class GameEngine {
                 wallType = wall.getWallType();
 
                 if (wallType == 1 || wallType == 11 || wallType == 26
-                        || wallType == 28 || wallType == 51 || wallType == 62) {
+                        || wallType == 27 || wallType == 28 || wallType == 51 || wallType == 62) {
 
                     Point2D wallStart = vertices[wall.startVertexId & 0xFFFF];
                     Point2D wallEnd = vertices[wall.endVertexId & 0xFFFF];
@@ -453,6 +464,19 @@ public final class GameEngine {
                                     door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
                                 } else {
                                     messageText = keysCollected[1]
+                                            ? TextStrings.OOPS_I_NEED_ANOTHER_KEY
+                                            : TextStrings.OH_I_NEED_A_KEY;
+                                    messageTimer = 50;
+                                }
+                                break;
+
+                            case 27:
+                                if (keysCollected[2]) {
+                                    door = getDoorController(wall.backSurface.linkedSector);
+                                    door.doorState = 1;
+                                    door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
+                                } else {
+                                    messageText = (keysCollected[0] || keysCollected[1])
                                             ? TextStrings.OOPS_I_NEED_ANOTHER_KEY
                                             : TextStrings.OH_I_NEED_A_KEY;
                                     messageTimer = 50;
@@ -826,7 +850,25 @@ public final class GameEngine {
             }
         }
 
-        // Damage floor
+        // Doom 5/10/20% acid and lava sectors deal their authored amount
+        // about once per second (20 fixed ticks), instead of inheriting the
+        // legacy 1 HP-per-tick floor that would empty health almost instantly.
+        int doomFloorDamage = DoomGameMode.getFloorDamage(currentSector.getSectorType());
+        if (doomFloorDamage > 0) {
+            if (++doomFloorDamageTimer >= DoomGameMode.FLOOR_DAMAGE_TICKS) {
+                doomFloorDamageTimer = 0;
+                if (!DoomGameMode.isGodMode()) {
+                    HelperUtils.vibrateDevice(doomFloorDamage * 10);
+                }
+                if (applyDamage(doomFloorDamage)) {
+                    return true;
+                }
+            }
+        } else {
+            doomFloorDamageTimer = 0;
+        }
+
+        // Legacy campaign damage floor.
         if (currentSector.getSectorType() == 555) {
             HelperUtils.vibrateDevice(10);
             if (applyDamage(1)) {
@@ -1012,6 +1054,9 @@ public final class GameEngine {
         DoomGameMode.resetGodMode();
         playerHealth = 100;
         playerArmor = 0;
+        for (int i = 0; i < keysCollected.length; ++i) {
+            keysCollected[i] = false;
+        }
 
         for (int i = 0; i < weaponsAvailable.length; i++) {
             weaponsAvailable[i] = false;
@@ -1033,6 +1078,7 @@ public final class GameEngine {
         screenShake = 0;
         cameraBobTimer = 0;
         lastGameLogicTime = 0;
+        doomFloorDamageTimer = 0;
 
         weaponSwitchAnimationActive = true;
         weaponAnimationState = 1;
