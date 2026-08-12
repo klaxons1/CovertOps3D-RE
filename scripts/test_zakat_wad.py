@@ -50,18 +50,17 @@ def main():
         shared_dir = os.path.join(temp_root, 'doom-zakat-common')
         report = DOOM.convert_map(resources, doom_map, package_dir,
                                   shared_asset_dir=shared_dir,
-                                  pvs_mode='doom-reject',
-                                  allow_bsp_mismatches=True)
+                                  pvs_mode='doom-reject')
 
         assert report['shared_assets']
         assert (report['wall_textures'], report['flats'], report['things']) == (50, 22, 151)
         assert (report['enemies'], report['world_items'], report['lifts']) == (0, 135, 0)
-        assert (report['bsp_nodes'], report['bsp_leaves'], report['bsp_segments']) == (1861, 1862, 5366)
-        # MAP01 contains a small set of Zandronum-style overlapping sector
-        # samples. Geometry is emitted with a documented relaxed validation,
-        # rather than silently lying about it or shipping the source WAD.
-        assert report['bsp_mismatches_allowed']
-        assert report['bsp_failures'] == 12
+        assert (report['bsp_nodes'], report['bsp_leaves'], report['bsp_segments']) == (1709, 1710, 4977)
+        # Runtime C3B uses MAP01's authored Doom BSP, not a generic rebuild
+        # that mistakes the outer sky sector for the playable subsector.
+        assert report['native_doom_bsp']
+        assert not report['bsp_mismatches_allowed']
+        assert report['bsp_failures'] == 0
         assert report['structural_closed_sectors'] == 13
         assert report['pvs_mode'] == 'doom-reject'
         assert report['pvs_visible_pairs'] == 123266
@@ -69,8 +68,8 @@ def main():
         assert report['missing_wall_textures'][0].startswith('SKY1 texture fallback:')
 
         info = C3.read_c3b(os.path.join(package_dir, 'level.c3b'))
-        # BSP splitting introduces deterministic intersection vertices.
-        assert (info['vertices'], info['walls'], info['sectors'], info['objects']) == (2987, 2365, 438, 0)
+        # Authored Doom SEGS reference the original vertex table directly.
+        assert (info['vertices'], info['walls'], info['sectors'], info['objects']) == (2534, 2365, 438, 0)
         assert info['entities'] == 'entities.ini'
         assert os.path.getsize(os.path.join(package_dir, 'level.c3b')) < 262144
 

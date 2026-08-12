@@ -339,6 +339,11 @@ class DoomMap(object):
         self.sidedefs = []
         self.sectors = []
         self.things = []
+        # Original Doom BSP records are retained for runtime C3B emission.
+        # They are essential for PWADs with an overlapping outer sky sector.
+        self.segs = []
+        self.subsectors = []
+        self.doom_nodes = []
         # Classic Doom REJECT bit matrix: 1 means the sector pair cannot see
         # each other in the original map.
         self.reject = b''
@@ -363,6 +368,9 @@ def load_map(wad, map_name='E1M1'):
     result.sidedefs = [_sidedef(record) for record in _records(lumps['SIDEDEFS'], 30)]
     result.sectors = [_sector(record) for record in _records(lumps['SECTORS'], 26)]
     result.things = [_thing(record) for record in _records(lumps['THINGS'], 10)]
+    result.segs = [_doom_seg(record) for record in _records(lumps['SEGS'], 12)]
+    result.subsectors = [_doom_subsector(record) for record in _records(lumps['SSECTORS'], 4)]
+    result.doom_nodes = [_doom_node(record) for record in _records(lumps['NODES'], 28)]
     result.reject = lumps['REJECT']
 
     expected_reject_bytes = (len(result.sectors) * len(result.sectors) + 7) >> 3
@@ -378,6 +386,7 @@ def load_map(wad, map_name='E1M1'):
     for index, side in enumerate(result.sidedefs):
         if side['sector'] >= len(result.sectors):
             raise DoomWadError('sidedef %d has invalid sector' % index)
+    _validate_doom_bsp(result)
     return result
 
 
@@ -569,9 +578,44 @@ def _doom_door_wall_type(special):
     return 1
 
 
+class DoomBspReport(object):
+    def __init__(self):
+        self.splits = 0
+        self.fail_samples = []
+        self.native = True
+
+
+def _install_native_doom_bsp(level, doom_map):
+    """Uses authored Doom SEGS/SSECTORS/NODES for runtime C3B.
+
+    C3B and Doom both store the BSP root last and use a high-bit leaf tag.
+    C3's runtime selects ``back`` on the non-negative node side; that maps to
+    Doom child 1, while the negative side maps to child 0. Keeping the authored
+    ordering preserves the original subsector partition around overlapping
+    outdoor/control geometry instead of approximating it from polygons.
+    """
+    if not doom_map.segs or not doom_map.subsectors or not doom_map.doom_nodes:
+        return False
+    if len(level.vertices) != len(doom_map.vertices) or len(level.walls) != len(doom_map.linedefs):
+        return False
+
+    level.segments = []
+    for seg in doom_map.segs:
+        level.segments.append((seg['start'], seg['end'], seg['linedef'],
+                               0 if seg['direction'] == 0 else 1, seg['offset']))
+    level.leaves = [(sub['count'], sub['first']) for sub in doom_map.subsectors]
+    level.nodes = []
+    for node in doom_map.doom_nodes:
+        # front is selected for the negative side, back for non-negative.
+        level.nodes.append((node['x'], node['y'], node['dx'], node['dy'],
+                            node['child0'], node['child1']))
+    level.pvs = [bytearray(len(level.sectors)) for unused in level.sectors]
+    return True
+
+
 def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
                 minimum_clearance=64, extract_sprites='none', pvs_mode='auto',
-                shared_asset_dir=None, allow_bsp_mismatches=False):
+                shared_asset_dir=None, allow_bsp_mismatches=False, use_native_bsp=True):
     """Converts a parsed classic Doom map into a complete compact C3D package."""
     if height_scale <= 0 or world_scale <= 0:
         raise DoomWadError('height/world scale must be positive')
@@ -780,9 +824,19 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
         report['sprites'] = export_sprites(wad, doom_map, package_dir, palette,
                                            extract_sprites)
 
-    c3b_path, bsp_report = C3.compile_source(os.path.join(package_dir, 'level.c3d.json'),
-                                              os.path.join(package_dir, 'level.c3b'),
-                                              allow_bsp_mismatches=allow_bsp_mismatches)
+    c3b_path = os.path.join(package_dir, 'level.c3b')
+    # Stock IWAD imports retain the proven compact C3 BSP builder. PWADs can
+    # contain overlapping outer/control sectors, so preserve their authored
+    # Doom tree instead of reclassifying those sectors as normal polygons.
+    native_bsp = use_native_bsp and getattr(wad, 'magic', '') == 'PWAD' \
+            and _install_native_doom_bsp(document.level, doom_map)
+    if native_bsp:
+        C3.dump_c3b(document.level, document.materials, c3b_path, document.entities)
+        bsp_report = DoomBspReport()
+    else:
+        c3b_path, bsp_report = C3.compile_source(os.path.join(package_dir, 'level.c3d.json'),
+                                                  c3b_path,
+                                                  allow_bsp_mismatches=allow_bsp_mismatches)
     if pvs_mode == 'doom-reject':
         visible_pairs = _install_doom_reject_pvs(c3b_path, doom_map)
     else:
@@ -794,7 +848,8 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     report['bsp_segments'] = c3b_info['segments']
     report['bsp_splits'] = bsp_report.splits
     report['bsp_failures'] = len(bsp_report.fail_samples)
-    report['bsp_mismatches_allowed'] = allow_bsp_mismatches
+    report['bsp_mismatches_allowed'] = allow_bsp_mismatches and not native_bsp
+    report['native_doom_bsp'] = native_bsp
     report['pvs_mode'] = pvs_mode
     report['pvs_visible_pairs'] = visible_pairs
     _write_text(os.path.join(package_dir, 'doom_conversion.json'),
@@ -1333,6 +1388,43 @@ def _sector(data):
     return dict(floor=floor, ceiling=ceiling, floor_texture=_lump_name(floor_texture),
                 ceiling_texture=_lump_name(ceiling_texture), light=light,
                 special=special, tag=tag)
+
+
+def _doom_seg(data):
+    start, end, unused_angle, linedef, direction, offset = struct.unpack_from('<HHHHHH', data, 0)
+    return dict(start=start, end=end, linedef=linedef, direction=direction, offset=offset)
+
+
+def _doom_subsector(data):
+    count, first = struct.unpack_from('<HH', data, 0)
+    return dict(count=count, first=first)
+
+
+def _doom_node(data):
+    x, y, dx, dy = struct.unpack_from('<hhhh', data, 0)
+    child0, child1 = struct.unpack_from('<HH', data, 24)
+    return dict(x=x, y=y, dx=dx, dy=dy, child0=child0, child1=child1)
+
+
+def _validate_doom_bsp(doom_map):
+    seg_count = len(doom_map.segs)
+    subsector_count = len(doom_map.subsectors)
+    node_count = len(doom_map.doom_nodes)
+    for index, seg in enumerate(doom_map.segs):
+        if seg['start'] >= len(doom_map.vertices) or seg['end'] >= len(doom_map.vertices):
+            raise DoomWadError('seg %d has invalid vertex' % index)
+        if seg['linedef'] >= len(doom_map.linedefs) or seg['direction'] > 1:
+            raise DoomWadError('seg %d has invalid linedef/direction' % index)
+    for index, sub in enumerate(doom_map.subsectors):
+        if sub['count'] == 0 or sub['first'] + sub['count'] > seg_count:
+            raise DoomWadError('subsector %d has invalid seg range' % index)
+    for index, node in enumerate(doom_map.doom_nodes):
+        for child in (node['child0'], node['child1']):
+            if child & 0x8000:
+                if (child & 0x7FFF) >= subsector_count:
+                    raise DoomWadError('node %d has invalid subsector child' % index)
+            elif child >= node_count:
+                raise DoomWadError('node %d has invalid node child' % index)
 
 
 def _thing(data):
