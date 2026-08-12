@@ -228,7 +228,12 @@ public final class MenuSystem {
                             String[] chapterMenuItems = new String[TextStrings.CHAPTER_MENU_DATA.length];
                             chapterMenuItems[0] = TextStrings.CHAPTER_MENU_DATA[0];
                             chapterMenuItems[1] = TextStrings.CHAPTER_MENU_DATA[1];
-                            chapterMenuItems[2] = TextStrings.CHAPTER_MENU_DATA[2];
+                            // The first two chapter entries are genuine Doom
+                            // route choices rather than ambiguous old campaign
+                            // numbers. The first one returns menu result 66;
+                            // the second is mapped to E1M2 in MainGameCanvas.
+                            chapterMenuItems[2] = TextStrings.DOOM_E1M1_TITLE;
+                            chapterMenuItems[3] = TextStrings.DOOM_E1M2_TITLE;
                             chapterMenuItems[chapterMenuItems.length - 1] =
                                     TextStrings.CHAPTER_MENU_DATA[TextStrings.CHAPTER_MENU_DATA.length - 1];
                             stackData = new Object[4];
@@ -246,7 +251,7 @@ public final class MenuSystem {
                             // selection is never hidden behind CovertOps save
                             // records. Maps that are not converted yet can be
                             // replaced independently without changing menu flow.
-                            for (int i = 3; i <= lastItem; ++i) {
+                            for (int i = 4; i <= lastItem; ++i) {
                                 chapterMenuItems[i] = TextStrings.CHAPTER_MENU_DATA[i];
                             }
                             // Store chapter menu into canvas for later usage? Use static holder

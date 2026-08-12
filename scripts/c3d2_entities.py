@@ -25,9 +25,12 @@ FORMAT = 'C3D-ENTITIES-1'
 _REQUIRED_KEYS = ('x', 'z', 'type')
 _OPTIONAL_DEFAULTS = {'angle': 0, 'param': 0}
 # sprite is optional and intentionally omitted when zero so old entity sidecars
-# stay byte-for-byte familiar. frame1..frame6 are Doom actor animation slots;
-# sprite itself is frame0.
-_ANIMATION_KEYS = ('sprite', 'frame1', 'frame2', 'frame3', 'frame4', 'frame5', 'frame6')
+# stay byte-for-byte familiar. frame1..frame6 are Doom actor state slots;
+# sprite itself is frame0. death1..death4 are the in-between Doom death poses
+# between frame5 (first death pose) and frame6 (final corpse).
+_STATE_ANIMATION_KEYS = ('sprite', 'frame1', 'frame2', 'frame3', 'frame4', 'frame5', 'frame6')
+_DEATH_ANIMATION_KEYS = ('death1', 'death2', 'death3', 'death4')
+_ANIMATION_KEYS = _STATE_ANIMATION_KEYS + _DEATH_ANIMATION_KEYS
 _OPTIONAL_KEYS = tuple(_OPTIONAL_DEFAULTS.keys()) + _ANIMATION_KEYS
 _ALL_KEYS = _REQUIRED_KEYS + _OPTIONAL_KEYS
 
@@ -143,6 +146,10 @@ def dump_entities(entities, path):
                 stream.write('sprite=%d\n' % int(entity['sprite']))
             for frame in range(1, 7):
                 key = 'frame%d' % frame
+                if int(entity.get(key, 0)) != 0:
+                    stream.write('%s=%d\n' % (key, int(entity[key])))
+            for frame in range(1, 5):
+                key = 'death%d' % frame
                 if int(entity.get(key, 0)) != 0:
                     stream.write('%s=%d\n' % (key, int(entity[key])))
 

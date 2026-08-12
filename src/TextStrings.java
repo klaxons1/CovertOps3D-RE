@@ -50,6 +50,10 @@ public final class TextStrings {
     public static String ON;
     public static String OFF;
     public static String QUIT;
+    public static String GOD_MODE_ON;
+    public static String GOD_MODE_OFF;
+    public static String DOOM_E1M1_TITLE;
+    public static String DOOM_E1M2_TITLE;
     static String GO_ANNA;
 
     static final String[] mainMenuItems = new String[5];
@@ -57,7 +61,7 @@ public final class TextStrings {
     static final String[] difficultyMenuItems = new String[6];
     static final String[] CHAPTER_MENU_DATA = new String[11];
     static final String[] CONFIRMATION_MENU_ITEMS = new String[3];
-    static final String[] HELP_MENU_ITEMS = new String[12];
+    static final String[] HELP_MENU_ITEMS = new String[13];
     static String[] ABOUT_MENU_TEXT;
     static String[][] storyText;
 
@@ -93,13 +97,13 @@ public final class TextStrings {
             "Controls:", "", "2/up - walk forward", "8/down - step backwards",
             "4/left - turn left", "6/right - turn right", "7 - strafe left",
             "9 - strafe right", "5/action - fire", "1 - open door/move lift",
-            "3 - select weapon", "0 - toggle map"
+            "3 - select weapon", "0 - toggle map", "# - god mode (Doom)"
     };
     private static final String[] RU_HELP = new String[]{
             "Управление:", "", "2/вверх - идти вперёд", "8/вниз - шаг назад",
             "4/влево - поворот влево", "6/вправо - поворот вправо", "7 - шаг влево",
             "9 - шаг вправо", "5/действие - огонь", "1 - дверь или лифт",
-            "3 - выбрать оружие", "0 - карта"
+            "3 - выбрать оружие", "0 - карта", "# - режим бога (Doom)"
     };
 
     private static final String[] EN_ABOUT = new String[]{
@@ -275,6 +279,10 @@ public final class TextStrings {
         ON = "on";
         OFF = "off";
         QUIT = "quit";
+        GOD_MODE_ON = "god mode on";
+        GOD_MODE_OFF = "god mode off";
+        DOOM_E1M1_TITLE = "e1m1: hangar";
+        DOOM_E1M2_TITLE = "e1m2: nuclear plant";
         GO_ANNA = "go now to the agent anna";
 
         copy(mainMenuItems, EN_MAIN_MENU);
@@ -329,6 +337,10 @@ public final class TextStrings {
         ON = "вкл";
         OFF = "выкл";
         QUIT = "выход";
+        GOD_MODE_ON = "режим бога: вкл";
+        GOD_MODE_OFF = "режим бога: выкл";
+        DOOM_E1M1_TITLE = "e1m1: ангар";
+        DOOM_E1M2_TITLE = "e1m2: аэс";
         GO_ANNA = "идите к агенту Анне";
 
         copy(mainMenuItems, RU_MAIN_MENU);

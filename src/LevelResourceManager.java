@@ -49,6 +49,9 @@ public final class LevelResourceManager {
     public boolean loadCustomLevelResources(String c3bPath) {
         try {
             boolean doomMode = DoomGameMode.isDoomLevelPath(c3bPath);
+            boolean keepDoomInventory = doomMode && DoomGameMode.isActive()
+                    && MainGameCanvas.previousLevelId >= 0
+                    && MainGameCanvas.isDoomLevelId(MainGameCanvas.previousLevelId);
             DoomGameMode.setActive(doomMode);
             HelperUtils.freeMemory();
             if (!CustomLevelLoader.load(c3bPath, true)) {
@@ -57,7 +60,14 @@ public final class LevelResourceManager {
             }
             GameEngine.resetLevelState();
             if (doomMode) {
-                DoomGameMode.configurePlayerLoadout(weaponManager);
+                if (keepDoomInventory) {
+                    // Exit switches advance within the same Doom episode, so
+                    // retain health, armour, ammo, selected weapon and god
+                    // mode while only the world/spawn is reset.
+                    DebugLogger.log("LevelResourceManager", "Doom transition keeps inventory");
+                } else {
+                    DoomGameMode.configurePlayerLoadout(weaponManager);
+                }
             }
             HelperUtils.freeMemory();
             DebugLogger.log("LevelResourceManager", "C3B load ok: " + c3bPath);

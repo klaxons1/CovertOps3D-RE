@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Convert classic Doom E1M1 from DOOM.WAD into a compact C3D2 package.
+"""Convert a classic Doom map from DOOM.WAD into a compact C3D2 package.
 
 Examples:
     python3 scripts/convert_doom_e1m1.py

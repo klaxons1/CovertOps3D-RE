@@ -91,10 +91,15 @@ public final class HudRenderer {
             fpsWindowStart = now;
         }
 
+        boolean godMode = DoomGameMode.isGodMode();
         graphics.setColor(0x000000);
-        graphics.fillRect(0, 0, 58, 13);
+        graphics.fillRect(0, 0, godMode ? 88 : 58, 13);
         graphics.setColor(0xE8E8E8);
         graphics.drawString(fpsText, 2, 1, Graphics.TOP | Graphics.LEFT);
+        if (godMode) {
+            graphics.setColor(0xFFCF4A);
+            graphics.drawString("GOD", 60, 1, Graphics.TOP | Graphics.LEFT);
+        }
     }
 
     /** Compact Doom-style status strip; avoids the old CovertOps bar asset. */

@@ -57,6 +57,10 @@ public final class InputManager {
                 switch (keyCode) {
                     case 48: GameEngine.toggleMapInput = true; return;
                     case 49: GameEngine.useKey = true; return;
+                    case 35: // # - Doom god mode toggle
+                    case 42: // * - alternate keypad layout
+                        GameEngine.toggleGodModeInput = true;
+                        return;
                     case 51: GameEngine.selectNextWeapon = true; return;
                     case 53: // also FIRE
                         GameEngine.inputFire = true;
@@ -101,6 +105,7 @@ public final class InputManager {
         GameEngine.inputBack = false;
         GameEngine.useKey = false;
         GameEngine.toggleMapInput = false;
+        GameEngine.toggleGodModeInput = false;
         GameEngine.selectNextWeapon = false;
     }
 }

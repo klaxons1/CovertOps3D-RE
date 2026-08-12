@@ -15,8 +15,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     // Compact C3D2 conversion of classic Doom E1M1. The source DOOM.WAD stays
     // in docs for the converter and is never loaded or bundled as a game map.
     public static final String DOOM_E1M1_LEVEL_PATH = "/gamedata/custom/doom-e1m1/level.c3b";
+    public static final String DOOM_E1M2_LEVEL_PATH = "/gamedata/custom/doom-e1m2/level.c3b";
+    /** The currently shipped Doom episode route: Hangar -> Nuclear Plant. */
+    public static final int DOOM_LEVEL_COUNT = 2;
     public static final String[] LEVEL_FILE_NAMES = new String[]{
-            DOOM_E1M1_LEVEL_PATH, "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
+            DOOM_E1M1_LEVEL_PATH, DOOM_E1M2_LEVEL_PATH, "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
     };
 
     public static WeaponManager weaponManager;
@@ -35,6 +38,29 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static int currentLevelId = 0;
     public static int previousLevelId = -1;
     public static int keyMappingOffset;
+
+    /** True only for the compact Doom maps routed by this edition. */
+    public static boolean isDoomLevelId(int levelId) {
+        return levelId >= 0 && levelId < DOOM_LEVEL_COUNT
+                && DoomGameMode.isDoomLevelPath(LEVEL_FILE_NAMES[levelId]);
+    }
+
+    /**
+     * Handles a converted Doom exit switch without falling through to legacy
+     * CovertOps story/dialog routing. E1M1 advances to E1M2; E1M2 completes
+     * the currently imported episode and returns to the chapter menu.
+     */
+    public static void advanceDoomLevel() {
+        int nextLevelId = currentLevelId + 1;
+        if (isDoomLevelId(nextLevelId)) {
+            previousLevelId = currentLevelId;
+            currentLevelId = nextLevelId;
+            LevelLoader.levelVariant = 0;
+            GameEngine.levelTransitionState = 1;
+        } else {
+            GameEngine.levelTransitionState = GameEngine.LEVEL_TRANSITION_DOOM_EPISODE_COMPLETE;
+        }
+    }
 
     public String[] chapterMenuItems;
 
@@ -257,7 +283,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         break;
                     }
 
-                    int[] levelMap = new int[]{2, 4, 20, 5, 6, 22, 7, 9};
+                    // The first selectable chapter (menu result 66) is
+                    // handled above as E1M1. Replace the old second campaign
+                    // map with E1M2; later chapter entries remain legacy until
+                    // their Doom conversions are added.
+                    int[] levelMap = new int[]{1, 4, 20, 5, 6, 22, 7, 9};
                     int chapterIndex = menuResult - 67;
                     currentLevelId = levelMap[chapterIndex];
                     previousLevelId = -1;
@@ -277,6 +307,17 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
 
                         boolean needLoad = false;
+
+                        if (GameEngine.levelTransitionState
+                                == GameEngine.LEVEL_TRANSITION_DOOM_EPISODE_COMPLETE) {
+                            // No imported E1M3 route yet. Do not accidentally
+                            // load the old CovertOps map that happens to occupy
+                            // the next numeric slot.
+                            GameEngine.levelTransitionState = 0;
+                            DoomGameMode.setActive(false);
+                            menuResult = showMenuScreen(graphics, true);
+                            continue outerGameLoop;
+                        }
 
                         if (GameEngine.levelTransitionState == 1) {
                             switch (currentLevelId) {

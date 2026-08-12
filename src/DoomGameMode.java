@@ -8,17 +8,23 @@
 public final class DoomGameMode {
 
     // Must match converter slots: 3 actor families x 7 state frames = 1..21,
-    // then rocket/plasma/BFG/imp projectiles 22..25.
-    public static final byte ROCKET_SPRITE = -22;
-    public static final byte PLASMA_SPRITE = -23;
-    public static final byte BFG_SPRITE = -24;
-    public static final byte IMP_FIREBALL_SPRITE = -25;
+    // plus four in-between death frames each = 22..33; rocket/plasma/BFG/imp
+    // projectiles then occupy 34..37. BFG now points at the real BFS1 ball,
+    // not the BFUG pickup patch.
+    public static final byte ROCKET_SPRITE = -34;
+    public static final byte PLASMA_SPRITE = -35;
+    public static final byte BFG_SPRITE = -36;
+    public static final byte IMP_FIREBALL_SPRITE = -37;
+
+    /** Three 20 Hz simulation ticks per genuine Doom death pose. */
+    public static final int ACTOR_DEATH_FRAME_TICKS = 3;
 
     /** Custom entity type = DOOM_ITEM_BASE + original Doom thing type. */
     public static final int DOOM_ITEM_BASE = 9000;
     public static final int DOOM_BARREL_TYPE = DOOM_ITEM_BASE + 2035;
 
     private static boolean active;
+    private static boolean godMode;
 
     private DoomGameMode() {
     }
@@ -29,10 +35,30 @@ public final class DoomGameMode {
 
     public static void setActive(boolean enabled) {
         active = enabled;
+        // A cheat must never leak into a legacy CovertOps level. It remains
+        // enabled across a Doom E1M1 -> E1M2 transition because both loads set
+        // enabled=true.
+        if (!enabled) godMode = false;
     }
 
     public static boolean isActive() {
         return active;
+    }
+
+    /** Toggles the Doom-only invulnerability cheat; false outside Doom maps. */
+    public static boolean toggleGodMode() {
+        if (!active) return false;
+        godMode = !godMode;
+        return true;
+    }
+
+    public static boolean isGodMode() {
+        return active && godMode;
+    }
+
+    /** A fresh game always starts without an inherited cheat state. */
+    public static void resetGodMode() {
+        godMode = false;
     }
 
     /** Gives every Doom weapon immediately, as requested for the conversion sandbox. */
@@ -67,6 +93,12 @@ public final class DoomGameMode {
         if (!active || objectType < DOOM_ITEM_BASE) return false;
         int thingType = objectType - DOOM_ITEM_BASE;
         switch (thingType) {
+            case 8: // backpack: compact engine has no ammo-capacity table
+                GameEngine.ammoCounts[WeaponFactory.PISTOL] += 10;
+                GameEngine.ammoCounts[WeaponFactory.SHOTGUN] += 4;
+                GameEngine.ammoCounts[WeaponFactory.ROCKET_LAUNCHER] += 1;
+                GameEngine.ammoCounts[WeaponFactory.PLASMA_RIFLE] += 20;
+                return true;
             case 2007: // clip
                 GameEngine.ammoCounts[WeaponFactory.PISTOL] += 10;
                 return true;

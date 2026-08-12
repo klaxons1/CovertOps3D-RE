@@ -31,6 +31,7 @@ public final class JavaMeSmokeTest {
         testC3BLevel();
         testC3BFrameRenders();
         testDoomE1M1Level();
+        testDoomE1M2Level();
         testRendererFastPaths();
         testFlatSpriteColors();
         testAllShippedLevels();
@@ -150,6 +151,12 @@ public final class JavaMeSmokeTest {
         assertEquals("Doom current weapon", WeaponFactory.PISTOL, GameEngine.currentWeapon);
         assertEquals("Doom bullets", 200, GameEngine.ammoCounts[WeaponFactory.PISTOL]);
         assertEquals("Doom shells", 50, GameEngine.ammoCounts[WeaponFactory.SHOTGUN]);
+        assertTrue("Doom god toggle", DoomGameMode.toggleGodMode() && DoomGameMode.isGodMode());
+        int healthBeforeGodDamage = GameEngine.playerHealth;
+        assertTrue("Doom god damage blocked", !GameEngine.applyDamage(99));
+        assertEquals("Doom god health", healthBeforeGodDamage, GameEngine.playerHealth);
+        DoomGameMode.toggleGodMode();
+        assertTrue("Doom god toggle off", !DoomGameMode.isGodMode());
     }
 
     private static void testC3BLevel() {
@@ -233,8 +240,11 @@ public final class JavaMeSmokeTest {
                 && LevelLoader.getTexture((byte)1).pixelData != null);
         assertTrue("Doom E1M1 enemy sprite texture", LevelLoader.getTexture((byte)-1) != null
                 && LevelLoader.getTexture((byte)-1).pixelData != null);
-        assertTrue("Doom E1M1 projectile sprite texture", LevelLoader.getTexture((byte)-22) != null
-                && LevelLoader.getTexture((byte)-25).pixelData != null);
+        assertTrue("Doom E1M1 projectile sprite texture", LevelLoader.getTexture(DoomGameMode.ROCKET_SPRITE) != null
+                && LevelLoader.getTexture(DoomGameMode.IMP_FIREBALL_SPRITE).pixelData != null);
+        Texture bfgProjectile = LevelLoader.getTexture(DoomGameMode.BFG_SPRITE);
+        assertTrue("Doom E1M1 BFS1 BFG projectile", bfgProjectile != null
+                && bfgProjectile.width == 32 && bfgProjectile.height == 32);
         GameObject doomEnemy = null;
         boolean doomItemBillboard = false;
         for (int i = 0; i < world.staticObjects.length; ++i) {
@@ -250,11 +260,38 @@ public final class JavaMeSmokeTest {
         }
         assertTrue("Doom E1M1 enemy billboard", doomEnemy != null
                 && doomEnemy.getExternalBillboardSpriteId() != 0);
+        assertTrue("Doom E1M1 complete death strip", doomEnemy.hasExternalBillboardDeathAnimation());
+        doomEnemy.beginExternalBillboardDeathAnimation();
+        byte firstDeath = doomEnemy.getExternalBillboardSpriteId();
+        assertTrue("Doom E1M1 death start", firstDeath != 0);
+        for (int frame = 0; frame < 5; ++frame) {
+            doomEnemy.advanceExternalBillboardDeathAnimation();
+        }
+        assertTrue("Doom E1M1 death corpse", doomEnemy.getExternalBillboardSpriteId() != 0
+                && doomEnemy.getExternalBillboardSpriteId() != firstDeath);
         assertTrue("Doom E1M1 item billboards", doomItemBillboard);
         assertTrue("Doom E1M1 flat texture", world.sectors[0].ceilingTexture != null
                 && world.sectors[0].ceilingTexture.flatColors != null);
         assertTrue("Doom E1M1 spawn sector", world.getSectorDataAtPoint(
                 world.worldOrigin.x, world.worldOrigin.z) != null);
+    }
+
+    /** Loads the second routed Doom map and its own compact material package. */
+    private static void testDoomE1M2Level() {
+        LevelLoader.levelVariant = 0;
+        assertTrue("Doom E1M2 C3B load", CustomLevelLoader.load(
+                "/gamedata/custom/doom-e1m2/level.c3b", true));
+        GameWorld world = LevelLoader.gameWorld;
+        assertTrue("Doom E1M2 geometry", world != null && world.wallDefinitions.length == 1033
+                && world.sectors.length == 200 && world.bspNodes.length > 400);
+        assertEquals("Doom E1M2 actors and items", 227, world.staticObjects.length);
+        int exitWalls = 0;
+        for (int i = 0; i < world.wallDefinitions.length; ++i) {
+            if (world.wallDefinitions[i].getWallType() == 11) ++exitWalls;
+        }
+        assertEquals("Doom E1M2 exit switch", 1, exitWalls);
+        assertTrue("Doom E1M2 spawn", world.worldOrigin != null);
+        assertTrue("Doom E1M2 BFG projectile", LevelLoader.getTexture(DoomGameMode.BFG_SPRITE) != null);
     }
 
     /** Verifies the MascotME-inspired bulk clear and unrolled opaque-flat path. */

@@ -22,6 +22,8 @@ public final class GameEngine {
     public static boolean selectNextWeapon;
     public static boolean useKey;
     public static boolean toggleMapInput;
+    // Doom-only cheat toggle, bound to keypad # by InputManager.
+    public static boolean toggleGodModeInput;
 
     // ==================== Player State ====================
 
@@ -60,6 +62,8 @@ public final class GameEngine {
     // ==================== Level State ====================
 
     public static int levelTransitionState;
+    /** E1M2 exit reached; MainGameCanvas returns to the Doom chapter menu. */
+    public static final int LEVEL_TRANSITION_DOOM_EPISODE_COMPLETE = 3;
     public static int difficultyLevel = 1;
 
     // ==================== Effects ====================
@@ -272,6 +276,18 @@ public final class GameEngine {
             messageTimer--;
         }
 
+        // God mode intentionally exists only in the Doom profile. Checking it
+        // once per fixed tick keeps the input path allocation-free and leaves
+        // the legacy campaign's controls untouched.
+        if (toggleGodModeInput) {
+            toggleGodModeInput = false;
+            if (DoomGameMode.toggleGodMode()) {
+                messageText = DoomGameMode.isGodMode()
+                        ? TextStrings.GOD_MODE_ON : TextStrings.GOD_MODE_OFF;
+                messageTimer = 30;
+            }
+        }
+
         // Apply player input forces
         if (inputForward) {
             player.applyHorizontalForce(0, -196608);
@@ -412,6 +428,14 @@ public final class GameEngine {
                                 break;
 
                             case 11:
+                                // Imported Doom exit switches share the legacy
+                                // wall type, but never enter the old campaign
+                                // dialog/minigame routing.
+                                if (DoomGameMode.isActive()
+                                        && MainGameCanvas.isDoomLevelId(MainGameCanvas.currentLevelId)) {
+                                    MainGameCanvas.advanceDoomLevel();
+                                    break;
+                                }
                                 if (MainGameCanvas.currentLevelId == 7 && ammoCounts[6] == 0) {
                                     messageText = TextStrings.WE_LL_NEED_SOME_DYNAMITE_MAYBE_I_SHOULD_LOOK_FOR_SOME;
                                     messageTimer = 50;
@@ -568,6 +592,31 @@ public final class GameEngine {
                 continue;
             }
 
+            // A dead Doom actor must not fall back into wake-up/chase logic
+            // while its sprite strip is playing. The old state-6 path held one
+            // pose for five ticks and then skipped to a corpse; this advances
+            // the real I..N sequence at a stable fixed-tick cadence instead.
+            if (enemy.aiState == 6) {
+                if (enemy.stateTimer > 0) {
+                    enemy.stateTimer--;
+                }
+                if (enemy.stateTimer == 0) {
+                    boolean deathFinished = !enemy.hasExternalBillboardDeathAnimation()
+                            || enemy.advanceExternalBillboardDeathAnimation();
+                    if (deathFinished) {
+                        int deadType = enemy.objectType;
+                        enemy.aiState = -1;
+                        if (!enemy.hasExternalBillboardDeathAnimation()) {
+                            enemy.spriteFrameIndex = (deadType == 3002) ? 5 : 6;
+                        }
+                        LevelLoader.gameWorld.spawnPickUp(enemy);
+                    } else {
+                        enemy.stateTimer = DoomGameMode.ACTOR_DEATH_FRAME_TICKS;
+                    }
+                }
+                continue;
+            }
+
             Transform3D enemyTransform = enemy.transform;
 
             // Check if enemy should wake up
@@ -711,9 +760,8 @@ public final class GameEngine {
                         break;
 
                     case 6:
-                        enemy.aiState = -1;
-                        enemy.spriteFrameIndex = (enemyType == 3002) ? 5 : 6;
-                        LevelLoader.gameWorld.spawnPickUp(enemy);
+                        // Death animation is handled before normal AI so it
+                        // cannot be interrupted by aggro-distance checks.
                         break;
                 }
             }
@@ -867,6 +915,7 @@ public final class GameEngine {
         inputBack = false;
         useKey = false;
         toggleMapInput = false;
+        toggleGodModeInput = false;
         selectNextWeapon = false;
         levelTransitionState = 0;
         weaponCooldownTimer = 0;
@@ -934,6 +983,9 @@ public final class GameEngine {
      * @return true if player died, false otherwise
      */
     public static boolean applyDamage(int damage) {
+        if (DoomGameMode.isGodMode()) {
+            return false;
+        }
         playerArmor -= damage;
         if (playerArmor < 0) {
             damage = -playerArmor;
@@ -957,6 +1009,7 @@ public final class GameEngine {
      * Resets all player progress (health, weapons, keys, etc).
      */
     public static void resetPlayerProgress() {
+        DoomGameMode.resetGodMode();
         playerHealth = 100;
         playerArmor = 0;
 

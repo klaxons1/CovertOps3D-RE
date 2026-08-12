@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 """Classic Doom WAD -> compact C3D2 package converter.
 
-The converter intentionally targets the original binary Doom map format used
-by E1M1. Classic Doom sectors are horizontal floor/ceiling planes, so no slopes
-are required for this source format. It emits a C3D source, C3B, BMP4 material
-set and player starts; the game never reads the WAD at runtime.
+The converter targets original binary Doom maps such as E1M1 and E1M2. Classic
+Doom sectors are horizontal floor/ceiling planes, so no slopes are required for
+this source format. It emits C3D source, C3B, BMP4 materials and player starts;
+the game never reads the WAD at runtime.
 
-Only data needed to walk and fight in the map is put under
-``res/gamedata/custom``: geometry, used wall textures, used flats, sky, player
-starts and three compact Doom enemy billboard families. Remaining Doom things
-are preserved in a small metadata INI for later gameplay conversion.
+Only data needed to walk and fight is put under ``res/gamedata/custom``:
+geometry, used wall textures/flats, sky, starts, current Doom actor families,
+visible things and exit switches. Source metadata remains in a small INI for
+future gameplay conversion.
 """
 
 import hashlib
@@ -29,12 +29,16 @@ class DoomWadError(ValueError):
     pass
 
 
-# These are only used by optional sprite extraction. The gameplay runtime does
-# not yet consume custom Doom billboards, so the default compact conversion
-# leaves sprites outside the JAR package.
+# Optional extra sprite extraction remains separate from the compact runtime
+# billboard set below. The default conversion exports only art used by actors,
+# projectiles and visible map things.
 # Classic Doom lines that are ordinary vertical doors in the first episode.
 # Their closed sector is mapped to the existing CovertOps door controller.
 DOOM_DOOR_SPECIALS = (1, 2, 3, 4, 16, 26, 27, 28, 31, 32, 33, 34)
+# Normal/secret level-exit switches.  The C3D wall type 11 already has a
+# use-key transition path, so preserving this small semantic is enough for
+# E1M1 -> E1M2 without adding a Doom WAD dependency to the MIDlet.
+DOOM_EXIT_SPECIALS = (11, 52)
 
 # First playable mapping: use the existing enemy AI categories while drawing
 # one genuine Doom billboard per monster family through sprite.<slot>.
@@ -43,6 +47,10 @@ DOOM_DOOR_SPECIALS = (1, 2, 3, 4, 16, 26, 27, 28, 31, 32, 33, 34)
 # Doom actors to this physical art height during conversion instead of baking a
 # per-frame scale cost into the Java ME renderer.
 DOOM_RUNTIME_SPRITE_HEIGHT = 160
+# Some classic death poses spread horizontally across several monster widths.
+# C3D billboards accept at most 255 source pixels, so preserve aspect and cap
+# only those frames instead of rejecting the whole map at runtime.
+DOOM_RUNTIME_ACTOR_MAX_WIDTH = 255
 
 # First-person weapon patches are separate from world billboards. Keeping two
 # neutral/firing frames per weapon is enough for the current compact Java ME
@@ -59,15 +67,22 @@ DOOM_HUD_WEAPONS = (
 )
 
 # World projectile sprites are kept separate from HUD patches. Slots begin
-# after the three enemy billboard materials.
+# after all actor-state and actor-death billboard materials. BFUGA0 is the
+# BFG pickup; BFS1A0 is the actual green BFG projectile.
 DOOM_PROJECTILES = (
     ('rocket', 'MISLA1'),
     ('plasma', 'PLSSA0'),
-    ('bfg', 'BFUGA0'),
+    ('bfg', 'BFS1A0'),
     ('imp_fireball', 'BAL1A0'),
 )
 DOOM_RUNTIME_PROJECTILE_HEIGHT = 32
-DOOM_RUNTIME_ITEM_HEIGHT = 64
+# The initial 64-unit conversion made every static prop half the size of the
+# Doom actors. Keep the scale baked into BMPs (no Java ME per-frame cost), but
+# double props/pickups so barrels, medikits and decorations read at gameplay
+# distance. A 192px source-width cap protects the fixed-point sprite loop and
+# remains inside CustomMaterialSet's 255px runtime limit.
+DOOM_RUNTIME_ITEM_HEIGHT = 128
+DOOM_RUNTIME_ITEM_MAX_WIDTH = 192
 DOOM_ITEM_BASE = 9000
 
 # Multiplayer starts have a Doom player sprite prefix but should not become
@@ -75,18 +90,24 @@ DOOM_ITEM_BASE = 9000
 DOOM_NON_WORLD_THING_TYPES = (1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16)
 
 DOOM_ENEMIES = {
-    # frames map directly to GameEngine's 0..6 actor state indexes:
-    # idle, walk, attack-ready, attack, pain, death, corpse.
+    # ``frames`` map directly to GameEngine's 0..6 actor state indexes:
+    # idle, walk, attack-ready, attack, pain, first death frame, corpse.
+    # The four middle death patches are kept separately so the Java ME actor
+    # can play I -> J -> K -> L -> M -> N instead of jumping straight from a
+    # single death pose to the corpse.
     3001: dict(engine_type=3001, sprite='TROOA1', label='imp',
-               frames=('TROOA1', 'TROOB1', 'TROOC1', 'TROOE1', 'TROOH1', 'TROOI0', 'TROON0')),
+               frames=('TROOA1', 'TROOB1', 'TROOC1', 'TROOE1', 'TROOH1', 'TROOI0', 'TROON0'),
+               death_frames=('TROOJ0', 'TROOK0', 'TROOL0', 'TROOM0')),
     3004: dict(engine_type=3004, sprite='POSSA1', label='zombieman',
-               frames=('POSSA1', 'POSSB1', 'POSSC1', 'POSSE1', 'POSSH0', 'POSSI0', 'POSSN0')),
+               frames=('POSSA1', 'POSSB1', 'POSSC1', 'POSSE1', 'POSSH0', 'POSSI0', 'POSSN0'),
+               death_frames=('POSSJ0', 'POSSK0', 'POSSL0', 'POSSM0')),
     9: dict(engine_type=3003, sprite='SPOSA1', label='shotgun_guy',
-            frames=('SPOSA1', 'SPOSB1', 'SPOSC1', 'SPOSE1', 'SPOSH0', 'SPOSI0', 'SPOSN0')),
+            frames=('SPOSA1', 'SPOSB1', 'SPOSC1', 'SPOSE1', 'SPOSH0', 'SPOSI0', 'SPOSN0'),
+            death_frames=('SPOSJ0', 'SPOSK0', 'SPOSL0', 'SPOSM0')),
 }
 
 THING_SPRITES = {
-    9: 'SPOS', 10: 'PLAY', 11: 'PLAY', 12: 'PLAY', 13: 'PLAY',
+    8: 'BPAK', 9: 'SPOS', 10: 'PLAY', 11: 'PLAY', 12: 'PLAY', 13: 'PLAY',
     14: 'PLAY', 15: 'PLAY', 16: 'PLAY', 17: 'CELP', 18: 'POSS',
     19: 'SPOS', 20: 'TROO', 21: 'SARG', 22: 'HEAD', 23: 'SKUL',
     24: 'POL5', 25: 'POL1', 26: 'POL6', 27: 'POL4', 28: 'POL2',
@@ -367,7 +388,9 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
                   vertices=len(doom_map.vertices), linedefs=len(doom_map.linedefs),
                   sidedefs=len(doom_map.sidedefs), sectors=len(doom_map.sectors),
                   things=len(doom_map.things), wall_textures=len(wall_slots),
-                  flats=len(flat_slots), doors=len(door_targets), enemies=0,
+                  flats=len(flat_slots), doors=len(door_targets),
+                  exits=sum(1 for line in doom_map.linedefs
+                            if line['special'] in DOOM_EXIT_SPECIALS), enemies=0,
                   height_scale=height_scale,
                   world_scale=world_scale, minimum_clearance=minimum_clearance,
                   missing_wall_textures=[], sprites=0)
@@ -417,14 +440,23 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
 
     enemy_sprite_slots = _export_runtime_enemy_sprites(wad, palette, package_dir)
     enemy_sprite_count = 0
-    for doom_type, slots in enemy_sprite_slots.items():
+    enemy_death_sprite_count = 0
+    for doom_type in sorted(enemy_sprite_slots):
+        actor_slots = enemy_sprite_slots[doom_type]
         info = DOOM_ENEMIES[doom_type]
-        for frame, slot in enumerate(slots):
+        for frame, slot in enumerate(actor_slots['frames']):
             lump = info['frames'][frame]
             filename = 'sprites/doom/%02d_%s.bmp' % (slot, _safe_name(lump))
             manifest_lines.append('sprite.%d=%s' % (slot, filename))
             material_lines.append('actor.%s.frame%d=%d' % (info['label'], frame, slot))
             enemy_sprite_count += 1
+        for frame, slot in enumerate(actor_slots['death'], 1):
+            lump = info['death_frames'][frame - 1]
+            filename = 'sprites/doom/%02d_%s.bmp' % (slot, _safe_name(lump))
+            manifest_lines.append('sprite.%d=%s' % (slot, filename))
+            material_lines.append('actor.%s.death%d=%d' % (info['label'], frame, slot))
+            enemy_sprite_count += 1
+            enemy_death_sprite_count += 1
     projectile_sprite_slots = _export_runtime_projectile_sprites(wad, palette, package_dir,
                                                                    enemy_sprite_count + 1)
     for name, slot in projectile_sprite_slots.items():
@@ -442,6 +474,7 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     hud_weapon_count = _export_hud_weapon_sprites(wad, palette, package_dir)
     report['enemies'] = sum(1 for thing in doom_map.things if thing['type'] in enemy_sprite_slots)
     report['enemy_sprite_materials'] = enemy_sprite_count
+    report['enemy_death_sprite_materials'] = enemy_death_sprite_count
     report['enemy_sprite_height'] = DOOM_RUNTIME_SPRITE_HEIGHT
     report['projectile_sprite_materials'] = len(projectile_sprite_slots)
     report['projectile_sprite_height'] = DOOM_RUNTIME_PROJECTILE_HEIGHT
@@ -579,12 +612,19 @@ def _find_closed_door_targets(doom_map):
 
 
 def _export_runtime_enemy_sprites(wad, palette, package_dir):
-    """Exports state frames for every E1M1 enemy family (one view angle)."""
+    """Exports state and in-between death frames for each actor family.
+
+    State slots are emitted first for every family to keep their historic order
+    stable.  The four in-between death slots follow them, which lets the Java
+    runtime add a full death sequence without making the normal AI state table
+    or per-frame renderer allocation more complicated.
+    """
     slots = {}
     sprite_dir = os.path.join(package_dir, 'sprites', 'doom')
     if not os.path.isdir(sprite_dir):
         os.makedirs(sprite_dir)
     slot = 1
+
     for doom_type in sorted(DOOM_ENEMIES):
         info = DOOM_ENEMIES[doom_type]
         actor_slots = []
@@ -596,10 +636,25 @@ def _export_runtime_enemy_sprites(wad, palette, package_dir):
                 raise DoomWadError('enemy sprite %s: %s' % (lump, error))
             filename = '%02d_%s.bmp' % (slot, _safe_name(lump))
             _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
-                              DOOM_RUNTIME_SPRITE_HEIGHT)
+                              DOOM_RUNTIME_SPRITE_HEIGHT, DOOM_RUNTIME_ACTOR_MAX_WIDTH)
             actor_slots.append(slot)
             slot += 1
-        slots[doom_type] = actor_slots
+        slots[doom_type] = dict(frames=actor_slots, death=[])
+
+    for doom_type in sorted(DOOM_ENEMIES):
+        info = DOOM_ENEMIES[doom_type]
+        death_slots = slots[doom_type]['death']
+        for lump in info['death_frames']:
+            try:
+                data = wad.lump(lump)
+                width, height, _left, _top, pixels = decode_patch(data, palette)
+            except Exception as error:
+                raise DoomWadError('enemy death sprite %s: %s' % (lump, error))
+            filename = '%02d_%s.bmp' % (slot, _safe_name(lump))
+            _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
+                              DOOM_RUNTIME_SPRITE_HEIGHT, DOOM_RUNTIME_ACTOR_MAX_WIDTH)
+            death_slots.append(slot)
+            slot += 1
     return slots
 
 
@@ -651,7 +706,7 @@ def _export_runtime_thing_sprites(wad, doom_map, palette, package_dir, first_slo
             next_slot += 1
             filename = '%02d_%s.bmp' % (slot, _safe_name(prefix))
             _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
-                              DOOM_RUNTIME_ITEM_HEIGHT, 128)
+                              DOOM_RUNTIME_ITEM_HEIGHT, DOOM_RUNTIME_ITEM_MAX_WIDTH)
             prefix_slots[prefix] = dict(slot=slot, name=_safe_name(prefix))
         result[thing_type] = prefix_slots[prefix]
     return result
@@ -795,8 +850,10 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
         door_sector = door_targets.get(line_index)
         is_door = door_sector is not None and back >= 0 \
                 and level.surfaces[back]['sector'] == door_sector
+        is_exit = raw['special'] in DOOM_EXIT_SPECIALS
         level.walls.append(dict(sv=start, ev=end, flags=8 if is_door else (1 if back < 0 else 0),
-                                type=1 if is_door else 0, special=0, front=front, back=back))
+                                type=1 if is_door else (11 if is_exit else 0),
+                                special=0, front=front, back=back))
 
     entities = []
     doom_things = []
@@ -815,13 +872,16 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
                                  angle=converted_angle, type=raw['type'], param=0))
         elif raw['type'] in enemy_sprite_slots:
             enemy = DOOM_ENEMIES[raw['type']]
-            frames = enemy_sprite_slots[raw['type']]
+            actor_slots = enemy_sprite_slots[raw['type']]
+            frames = actor_slots['frames']
             entity = dict(x=converted_x, z=converted_z,
                           angle=converted_angle,
                           type=enemy['engine_type'], param=0,
                           sprite=frames[0])
             for frame in range(1, len(frames)):
                 entity['frame%d' % frame] = frames[frame]
+            for frame, slot in enumerate(actor_slots['death'], 1):
+                entity['death%d' % frame] = slot
             entities.append(entity)
         elif raw['type'] in thing_sprite_slots:
             entities.append(dict(x=converted_x, z=converted_z,

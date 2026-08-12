@@ -28,6 +28,8 @@ public final class CustomEntitySet {
     private final short[] spriteSlots;
     // frame1..frame6; spriteSlots is frame0.
     private final short[] animationSlots;
+    // death1..death4 fill the middle of the Doom I->N death sequence.
+    private final short[] deathAnimationSlots;
     private final int count;
 
     private CustomEntitySet(int count) {
@@ -39,6 +41,7 @@ public final class CustomEntitySet {
         this.parameters = new short[count];
         this.spriteSlots = new short[count];
         this.animationSlots = new short[count * 6];
+        this.deathAnimationSlots = new short[count * 4];
     }
 
     /** Loads and validates a C3D entity INI resource. */
@@ -89,7 +92,8 @@ public final class CustomEntitySet {
                     short rawAngle = angles[i];
                     GameObject object = new GameObject(createTransform(i), rawAngle,
                             type, parameters[i]);
-                    addExternalSpriteFrames(object, spriteSlots[i], animationSlots, i * 6);
+                    addExternalSpriteFrames(object, spriteSlots[i], animationSlots, i * 6,
+                            deathAnimationSlots, i * 4);
                     if (DoomGameMode.isSolidDoomProp(type)) {
                         // Generic props otherwise start with aiState=-1 and
                         // bypass the existing collision loop entirely.
@@ -114,7 +118,8 @@ public final class CustomEntitySet {
      * not CovertOps legs, and AI frame indexes must not change their anchor.
      */
     private static void addExternalSpriteFrames(GameObject object, short spriteSlot,
-                                                short[] animationSlots, int offset) {
+                                                short[] animationSlots, int offset,
+                                                short[] deathSlots, int deathOffset) {
         if (spriteSlot <= 0) return;
         byte[] frames = new byte[7];
         frames[0] = (byte)-spriteSlot;
@@ -123,6 +128,27 @@ public final class CustomEntitySet {
             frames[frame] = slot > 0 ? (byte)-slot : frames[0];
         }
         object.setExternalBillboardFrames(frames);
+
+        // Doom's first and final death poses are state frame5/frame6. The
+        // sidecar carries only the four in-between poses, keeping normal C3D
+        // entities compact while giving actors the complete I..N death arc.
+        boolean hasDeathFrames = false;
+        for (int frame = 0; frame < 4; ++frame) {
+            if (deathSlots[deathOffset + frame] > 0) {
+                hasDeathFrames = true;
+                break;
+            }
+        }
+        if (hasDeathFrames) {
+            byte[] deathFrames = new byte[6];
+            deathFrames[0] = frames[5];
+            for (int frame = 0; frame < 4; ++frame) {
+                short slot = deathSlots[deathOffset + frame];
+                deathFrames[frame + 1] = slot > 0 ? (byte)-slot : deathFrames[frame];
+            }
+            deathFrames[5] = frames[6];
+            object.setExternalBillboardDeathFrames(deathFrames);
+        }
     }
 
     private static int countEntitySections(String text, String path) throws IOException {
@@ -288,6 +314,17 @@ public final class CustomEntitySet {
                 }
                 entities.animationSlots[index * 6 + frame - 1] = number;
                 return 32 << frame;
+            }
+        }
+        if (startsWith(key, "death") && key.length() == 6) {
+            int frame = key.charAt(5) - '0';
+            if (frame >= 1 && frame <= 4) {
+                if (number < 0 || number > 127) {
+                    throw new IOException(path + ":" + lineNumber
+                            + " death sprite must be a material slot 0..127");
+                }
+                entities.deathAnimationSlots[index * 4 + frame - 1] = number;
+                return 8192 << frame;
             }
         }
         throw new IOException(path + ":" + lineNumber + " unknown entity key: " + key);

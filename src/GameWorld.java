@@ -902,8 +902,9 @@ public final class GameWorld {
         GameObject projectile = new GameObject(projectileTransform, 0, 101, 0);
         projectile.projectileDamage = 12;
         projectile.projectileFromPlayer = false;
-        projectile.addSpriteFrame((byte)0, DoomGameMode.IMP_FIREBALL_SPRITE);
-        projectile.addSpriteFrame((byte)0, DoomGameMode.IMP_FIREBALL_SPRITE);
+        // Doom shots are centered billboards too; using the external path
+        // prevents a fireball/BFG ball from inheriting CovertOps leg anchors.
+        projectile.setExternalBillboardSpriteId(DoomGameMode.IMP_FIREBALL_SPRITE);
         projectile.spriteFrameIndex = 0;
 
         this.projectiles.addElement(projectile);
@@ -987,10 +988,10 @@ public final class GameWorld {
                 new Transform3D(spawnX, spawnY, spawnZ, playerAngle), 0, objectType, 0);
         projectile.projectileDamage = damage;
         projectile.projectileFromPlayer = true;
-        // Type 100 toggles its frame each render, so store the same texture
-        // twice. This keeps the Doom rocket visible without allocating frames.
-        projectile.addSpriteFrame((byte)0, spriteTextureId);
-        projectile.addSpriteFrame((byte)0, spriteTextureId);
+        // The dedicated external billboard path addresses the actual manifest
+        // slot directly. In particular BFG_SPRITE resolves to BFS1 rather than
+        // the BFUG pickup, and no legacy lower-body scale/anchor is involved.
+        projectile.setExternalBillboardSpriteId(spriteTextureId);
         projectile.spriteFrameIndex = 0;
         this.projectiles.addElement(projectile);
     }
@@ -1065,8 +1066,12 @@ public final class GameWorld {
                 case 3004:
                 case 3005:
                 case 3006:
-                    enemy.stateTimer = 5;
-                    enemy.spriteFrameIndex = 5;
+                    if (enemy.beginExternalBillboardDeathAnimation()) {
+                        enemy.stateTimer = DoomGameMode.ACTOR_DEATH_FRAME_TICKS;
+                    } else {
+                        enemy.stateTimer = 5;
+                        enemy.spriteFrameIndex = 5;
+                    }
                     break;
 
                 case 3002:

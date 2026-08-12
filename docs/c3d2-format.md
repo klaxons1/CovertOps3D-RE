@@ -41,8 +41,10 @@ custom/<name>/
 объекта есть отдельная секция; `x`, `z` и `type` обязательны, `angle` и
 `param` по умолчанию равны нулю. Необязательный `sprite=1..127` связывает
 billboard с `sprite.<slot>` из material manifest; `frame1..frame6` задают
-Doom actor animation state frames, где `sprite` является frame0. Все значения
-— signed `int16`, как и в runtime.
+Doom actor state frames, где `sprite` является frame0. Необязательные
+`death1..death4` — четыре промежуточные позы между `frame5` (первая поза
+смерти) и `frame6` (труп), поэтому actor проигрывает полный strip I→N. Все
+значения — signed `int16`, как и в runtime.
 
 ```ini
 # C3D entity placement v1
@@ -62,8 +64,12 @@ param=0
 # frame2=3
 # frame3=4
 # frame4=5
-# frame5=6
-# frame6=7
+# frame5=6        # first death pose
+# frame6=7        # final corpse pose
+# death1=8
+# death2=9
+# death3=10
+# death4=11
 ```
 
 `type=1..4` — точки старта игрока по вариантам сложности. При компиляции C3B
@@ -75,9 +81,9 @@ inline-объектами (`flags=0`) остаются читаемы для с�
 External material pipeline поставляет wall/flat/sky и optional
 `sprite.<slot>` billboards. Entity с `sprite=<slot>` получает texture id
 `-slot`, поэтому не конфликтует с положительными wall slots; для AI frames
-один bitmap безопасно повторяется. Это позволяет Doom E1M1 показать imp,
-zombieman и shotgun guy уже сейчас, а покадровая анимация остаётся следующим
-этапом.
+один bitmap безопасно повторяется. Doom actors используют отдельный
+floor-centered billboard path, а `death1..death4` проигрываются без аллокаций
+в renderer hot path.
 
 ## Внешние материалы
 
@@ -138,10 +144,12 @@ packages, `entities.ini`, installs loose wall/flat/sky BMPs, builds
 `GameWorld`, and then uses the existing `PortalRenderer`. Stock campaign
 loading remains unchanged.
 
-The repository currently routes campaign slot 0 (New Game) to the compact
-C3D2 conversion of Doom E1M1, so the complete custom path is exercised by
-normal game startup. The tiny `custom/demo` package remains a pipeline fixture;
-legacy `level_01a` is retained as an import/compatibility asset.
+The repository routes New Game to compact Doom E1M1 and the second chapter
+entry to E1M2. An imported Doom exit switch advances E1M1 → E1M2 through the
+normal level loader while retaining the Doom inventory; E1M2 currently ends
+back at the chapter menu rather than falling into a legacy CovertOps level.
+The tiny `custom/demo` package remains a pipeline fixture; legacy `level_01a`
+is retained as an import/compatibility asset.
 
 ## C3B v1 runtime layout
 
@@ -202,9 +210,9 @@ sliver-сегменты и нестабильные texture offset.
 [`c3d2-editor.md`](c3d2-editor.md). Старый `level_editor.py` остаётся только
 legacy-редактором/импортёром.
 
-## Doom E1M1 import
+## Doom E1M1/E1M2 import
 
 `scripts/convert_doom_e1m1.py` переводит classic `docs/DOOM.WAD` в компактный
 C3D2 package с BSP, внешними BMP4 world textures и player spawn без чтения WAD
-на Java ME. Размеры, ограничения и намеренно отложенные Doom gameplay/sprite
-возможности описаны в [`doom-e1m1-conversion.md`](doom-e1m1-conversion.md).
+на Java ME. Размеры, ограничения и Doom-specific gameplay details описаны в
+[`doom-e1m1-conversion.md`](doom-e1m1-conversion.md).
