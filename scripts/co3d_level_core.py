@@ -374,10 +374,18 @@ def _java_i32(v):
 
 
 def _in_front(sx, sz, nx, dy, x, z):
-    """Exact Java BSPNode cross-product side test in fixed 16.16 units."""
-    # Python integers deliberately retain Java's long-range cross product.
-    # The old slope approximation overflowed on near-vertical Doom nodes.
-    return (x - sx) * dy - (z - sz) * nx <= 0
+    """sx,sz,nx,dy,x,z — фикс. 16.16 int32. Возвращает True если «front»."""
+    slope = _fixed_div(dy, nx)
+    if slope == MAXI:
+        return _java_i32(sx - x) >= 0
+    if slope == MINI:
+        return _java_i32(x - sx) >= 0
+    dx = _java_i32(x - sx)
+    pred = _java_i32(sz + _java_i32((slope * dx) >> 16))
+    front = _java_i32(z - pred) >= 0
+    if nx < 0:
+        front = not front
+    return front
 
 
 def find_sector_tree(level, nodes, leaves, sectors_of_leaf, x, z):

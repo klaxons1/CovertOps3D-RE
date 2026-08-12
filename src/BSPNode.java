@@ -3,7 +3,7 @@ public final class BSPNode {
     private int splitX;
     private int splitZ;
     private int normalX;
-    private int splitDy;
+    private int splitSlope;
 
     private int frontChildIndex;
     private int backChildIndex;
@@ -22,7 +22,7 @@ public final class BSPNode {
         this.splitX = splitX;
         this.splitZ = splitZ;
         this.normalX = normalX;
-        this.splitDy = splitDy;
+        this.splitSlope = MathUtils.fixedPointDivide(splitDy, normalX);
 
         this.frontChildIndex = frontChildIndex;
         this.backChildIndex  = backChildIndex;
@@ -48,19 +48,22 @@ public final class BSPNode {
         }
     }
 
-    /**
-     * Exact fixed-point side test for a Doom/C3 BSP partition.
-     *
-     * The former slope calculation overflowed for the very steep node lines
-     * common in ZDoom PWADs, routing the camera into a distant outer sky leaf.
-     * A 64-bit cross product is both the original Doom approach and preserves
-     * the existing C3 builder convention: cross <= 0 selects backChild.
-     */
     private boolean isPointInFront(int x, int z) {
-        long relativeX = (long)x - (long)splitX;
-        long relativeZ = (long)z - (long)splitZ;
-        long cross = relativeX * (long)splitDy - relativeZ * (long)normalX;
-        return cross <= 0L;
+        if (splitSlope == Integer.MAX_VALUE) {
+            return splitX - x >= 0;
+        }
+        if (splitSlope == Integer.MIN_VALUE) {
+            return x - splitX >= 0;
+        }
+
+        long dx = x - splitX;
+        long predictedZ = splitZ + ((long)splitSlope * dx >> 16);
+        boolean front = (z - predictedZ) >= 0;
+
+        if (normalX < 0) {
+            front = !front;
+        }
+        return front;
     }
 
     public final void traverseBSP(Transform3D camera, SectorData fromSector) {

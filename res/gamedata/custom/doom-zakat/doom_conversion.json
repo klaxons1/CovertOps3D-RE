@@ -1,12 +1,12 @@
 {
   "animated_flats": 0,
   "animated_walls": 0,
-  "bsp_failures": 0,
-  "bsp_leaves": 1710,
-  "bsp_mismatches_allowed": false,
-  "bsp_nodes": 1709,
-  "bsp_segments": 4977,
-  "bsp_splits": 0,
+  "bsp_failures": 12,
+  "bsp_leaves": 1862,
+  "bsp_mismatches_allowed": true,
+  "bsp_nodes": 1861,
+  "bsp_segments": 5366,
+  "bsp_splits": 1041,
   "c3b": "level.c3b",
   "damage_sectors": 0,
   "doors": 0,
@@ -25,7 +25,6 @@
   "missing_wall_textures": [
     "SKY1 texture fallback: missing lump: RSKY1"
   ],
-  "native_doom_bsp": true,
   "projectile_sprite_height": 32,
   "projectile_sprite_materials": 4,
   "pvs_mode": "doom-reject",

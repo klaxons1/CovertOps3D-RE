@@ -351,7 +351,7 @@ public final class JavaMeSmokeTest {
                 "/gamedata/custom/doom-zakat/level.c3b", true));
         GameWorld world = LevelLoader.gameWorld;
         assertTrue("Doom Zakat geometry", world != null && world.wallDefinitions.length == 2365
-                && world.sectors.length == 438 && world.bspNodes.length == 1709);
+                && world.sectors.length == 438 && world.bspNodes.length == 1861);
         assertEquals("Doom Zakat visible props", 135, world.staticObjects.length);
         int visiblePairs = 0;
         for (int sector = 0; sector < world.sectors.length; ++sector) {
