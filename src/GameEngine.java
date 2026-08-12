@@ -392,11 +392,16 @@ public final class GameEngine {
 
         // Handle use key interactions
         if (useKey) {
-            // Check if standing on elevator
+            // Check if standing on elevator. Doom lifts are tag-driven,
+            // while legacy maps retain their original neighbor-derived path.
             if (currentSector.getSectorType() == 10) {
-                ElevatorController elevator = getElevatorController(currentSector);
-                if (elevator.elevatorState == 0) {
-                    elevator.elevatorState = (short) ((currentSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                if (DoomGameMode.isActive() && currentSector.getSectorTag() != 0) {
+                    activateDoomElevators(currentSector.getSectorTag());
+                } else {
+                    ElevatorController elevator = getElevatorController(currentSector);
+                    if (elevator.elevatorState == 0) {
+                        elevator.elevatorState = (short) ((currentSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                    }
                 }
             }
 
@@ -503,11 +508,15 @@ public final class GameEngine {
                                 break;
 
                             case 62:
-                                SectorData elevatorSector = wall.backSurface.linkedSector;
-                                ElevatorController elevator = getElevatorController(elevatorSector);
-                                if (elevator.elevatorState == 0) {
-                                    elevator.elevatorState =
-                                            (short) ((elevatorSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                                if (DoomGameMode.isActive() && wall.getSpecialType() != 0) {
+                                    activateDoomElevators(wall.getSpecialType());
+                                } else {
+                                    SectorData elevatorSector = wall.backSurface.linkedSector;
+                                    ElevatorController elevator = getElevatorController(elevatorSector);
+                                    if (elevator.elevatorState == 0) {
+                                        elevator.elevatorState =
+                                                (short) ((elevatorSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                                    }
                                 }
                                 break;
                         }
@@ -939,6 +948,60 @@ public final class GameEngine {
         newElevator.controlledSector = sector;
         elevatorControllers.addElement(newElevator);
         return newElevator;
+    }
+
+    /** Activates every Doom lift sector carrying one preserved line tag. */
+    private static void activateDoomElevators(int tag) {
+        SectorData[] sectors = LevelLoader.gameWorld.sectors;
+        for (int index = 0; index < sectors.length; ++index) {
+            SectorData sector = sectors[index];
+            if (sector.getSectorTag() != tag) continue;
+            ElevatorController elevator = getDoomElevatorController(sector);
+            if (elevator.elevatorState != 0 || elevator.minHeight == elevator.maxHeight) continue;
+            elevator.elevatorState = (short) (sector.floorHeight == elevator.minHeight ? 1 : 2);
+        }
+    }
+
+    /**
+     * Finds the adjacent floor range for a tagged Doom platform. Unlike the
+     * legacy lift format, Doom trigger lines may be elsewhere in the map, so
+     * controller limits must come from every portal touching the platform.
+     */
+    private static ElevatorController getDoomElevatorController(SectorData sector) {
+        for (int i = 0; i < elevatorControllers.size(); i++) {
+            ElevatorController elevator = (ElevatorController)elevatorControllers.elementAt(i);
+            if (elevator.controlledSector == sector) {
+                return elevator;
+            }
+        }
+
+        ElevatorController elevator = new ElevatorController();
+        elevator.controlledSector = sector;
+        elevator.elevatorState = 0;
+        elevator.minHeight = sector.floorHeight;
+        elevator.maxHeight = sector.floorHeight;
+
+        WallDefinition[] walls = LevelLoader.gameWorld.wallDefinitions;
+        for (int i = 0; i < walls.length; ++i) {
+            WallDefinition wall = walls[i];
+            SectorData neighbor = null;
+            if (wall.frontSurface.linkedSector == sector && wall.backSurface != null) {
+                neighbor = wall.backSurface.linkedSector;
+            } else if (wall.backSurface != null && wall.backSurface.linkedSector == sector) {
+                neighbor = wall.frontSurface.linkedSector;
+            }
+            if (neighbor != null) {
+                if (neighbor.floorHeight < elevator.minHeight) {
+                    elevator.minHeight = neighbor.floorHeight;
+                }
+                if (neighbor.floorHeight > elevator.maxHeight) {
+                    elevator.maxHeight = neighbor.floorHeight;
+                }
+            }
+        }
+
+        elevatorControllers.addElement(elevator);
+        return elevator;
     }
 
     /**

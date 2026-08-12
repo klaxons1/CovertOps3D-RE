@@ -242,8 +242,8 @@
       "floor_material": 11,
       "floor_sky": false,
       "light": 9,
-      "tag": 0,
-      "type": 0
+      "tag": 5,
+      "type": 10
     },
     {
       "ceiling_height": 200,
@@ -550,8 +550,8 @@
       "floor_material": 12,
       "floor_sky": false,
       "light": 15,
-      "tag": 0,
-      "type": 0
+      "tag": 13,
+      "type": 10
     },
     {
       "ceiling_height": 4,
@@ -990,8 +990,8 @@
       "floor_material": 25,
       "floor_sky": false,
       "light": 7,
-      "tag": 0,
-      "type": 0
+      "tag": 1,
+      "type": 10
     },
     {
       "ceiling_height": 144,
@@ -1078,8 +1078,8 @@
       "floor_material": 16,
       "floor_sky": false,
       "light": 8,
-      "tag": 0,
-      "type": 0
+      "tag": 7,
+      "type": 10
     },
     {
       "ceiling_height": 64,
@@ -1210,8 +1210,8 @@
       "floor_material": 25,
       "floor_sky": false,
       "light": 8,
-      "tag": 0,
-      "type": 0
+      "tag": 4,
+      "type": 10
     },
     {
       "ceiling_height": 84,
@@ -1375,8 +1375,8 @@
       "floor_material": 16,
       "floor_sky": false,
       "light": 15,
-      "tag": 0,
-      "type": 0
+      "tag": 12,
+      "type": 10
     },
     {
       "ceiling_height": 120,
@@ -1430,8 +1430,8 @@
       "floor_material": 16,
       "floor_sky": false,
       "light": 15,
-      "tag": 0,
-      "type": 0
+      "tag": 12,
+      "type": 10
     },
     {
       "ceiling_height": 120,
@@ -1518,8 +1518,8 @@
       "floor_material": 26,
       "floor_sky": false,
       "light": 15,
-      "tag": 0,
-      "type": 0
+      "tag": 11,
+      "type": 10
     },
     {
       "ceiling_height": 188,
@@ -1617,7 +1617,7 @@
       "floor_material": 17,
       "floor_sky": false,
       "light": 15,
-      "tag": 0,
+      "tag": 999,
       "type": 0
     },
     {
@@ -1639,7 +1639,7 @@
       "floor_material": 17,
       "floor_sky": false,
       "light": 15,
-      "tag": 0,
+      "tag": 999,
       "type": 0
     },
     {
@@ -1947,7 +1947,7 @@
       "floor_material": 16,
       "floor_sky": false,
       "light": 15,
-      "tag": 0,
+      "tag": 8,
       "type": 0
     },
     {
@@ -1991,8 +1991,8 @@
       "floor_material": 16,
       "floor_sky": false,
       "light": 15,
-      "tag": 0,
-      "type": 0
+      "tag": 10,
+      "type": 10
     },
     {
       "ceiling_height": 72,
@@ -2079,7 +2079,7 @@
       "floor_material": 17,
       "floor_sky": false,
       "light": 6,
-      "tag": 0,
+      "tag": 6,
       "type": 0
     },
     {
@@ -20814,9 +20814,9 @@
       "end": 196,
       "flags": 0,
       "front": 212,
-      "special": 0,
+      "special": 11,
       "start": 195,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -21804,18 +21804,18 @@
       "end": 289,
       "flags": 0,
       "front": 366,
-      "special": 0,
+      "special": 4,
       "start": 288,
-      "type": 0
+      "type": 62
     },
     {
       "back": 369,
       "end": 291,
       "flags": 0,
       "front": 368,
-      "special": 0,
+      "special": 4,
       "start": 290,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -21993,9 +21993,9 @@
       "end": 313,
       "flags": 0,
       "front": 392,
-      "special": 0,
+      "special": 1,
       "start": 312,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -22029,9 +22029,9 @@
       "end": 315,
       "flags": 0,
       "front": 397,
-      "special": 0,
+      "special": 1,
       "start": 312,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -22047,9 +22047,9 @@
       "end": 316,
       "flags": 0,
       "front": 400,
-      "special": 0,
+      "special": 1,
       "start": 317,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -22452,9 +22452,9 @@
       "end": 347,
       "flags": 0,
       "front": 456,
-      "special": 0,
+      "special": 4,
       "start": 346,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -22713,9 +22713,9 @@
       "end": 370,
       "flags": 1,
       "front": 489,
-      "special": 0,
+      "special": 5,
       "start": 369,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -25188,9 +25188,9 @@
       "end": 568,
       "flags": 1,
       "front": 853,
-      "special": 0,
+      "special": 7,
       "start": 567,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -25413,9 +25413,9 @@
       "end": 587,
       "flags": 1,
       "front": 887,
-      "special": 0,
+      "special": 10,
       "start": 586,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -25557,18 +25557,18 @@
       "end": 602,
       "flags": 0,
       "front": 906,
-      "special": 0,
+      "special": 10,
       "start": 598,
-      "type": 0
+      "type": 62
     },
     {
       "back": 909,
       "end": 590,
       "flags": 0,
       "front": 908,
-      "special": 0,
+      "special": 10,
       "start": 584,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -25647,9 +25647,9 @@
       "end": 607,
       "flags": 0,
       "front": 918,
-      "special": 0,
+      "special": 11,
       "start": 608,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -25692,9 +25692,9 @@
       "end": 610,
       "flags": 0,
       "front": 924,
-      "special": 0,
+      "special": 11,
       "start": 609,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -26205,9 +26205,9 @@
       "end": 206,
       "flags": 0,
       "front": 997,
-      "special": 0,
+      "special": 12,
       "start": 205,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -27033,27 +27033,27 @@
       "end": 715,
       "flags": 0,
       "front": 1117,
-      "special": 0,
+      "special": 13,
       "start": 714,
-      "type": 0
+      "type": 62
     },
     {
       "back": 1120,
       "end": 717,
       "flags": 0,
       "front": 1119,
-      "special": 0,
+      "special": 13,
       "start": 716,
-      "type": 0
+      "type": 62
     },
     {
       "back": 1122,
       "end": 714,
       "flags": 0,
       "front": 1121,
-      "special": 0,
+      "special": 13,
       "start": 717,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -27483,9 +27483,9 @@
       "end": 587,
       "flags": 0,
       "front": 1186,
-      "special": 0,
+      "special": 10,
       "start": 590,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,
@@ -27663,9 +27663,9 @@
       "end": 715,
       "flags": 0,
       "front": 1211,
-      "special": 0,
+      "special": 13,
       "start": 716,
-      "type": 0
+      "type": 62
     },
     {
       "back": -1,

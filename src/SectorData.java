@@ -7,6 +7,7 @@ public final class SectorData {
     public byte  floorTextureId;
 
     private short baseLightLevel;   // 0..16, stored as short
+    private short sectorTag;        // Doom/C3D tag used by lifts and triggers
     private short sectorType;       // special type (door, elevator, damage, etc.)
 
     public boolean[] visitedFlags;     // PVS: true = already visited from current sector
@@ -26,6 +27,7 @@ public final class SectorData {
         this.ceilingTextureId = ceilTex;
         this.floorTextureId   = floorTex;
         this.baseLightLevel   = light;
+        this.sectorTag        = tag;
         this.sectorType       = type;
 
         this.visitedFlags     = null;
@@ -43,6 +45,11 @@ public final class SectorData {
     /** Returns sector special type */
     public final int getSectorType() {
         return sectorType & 0xFFFF;
+    }
+
+    /** Returns the preserved Doom/C3D trigger tag. */
+    public final int getSectorTag() {
+        return sectorTag & 0xFFFF;
     }
 
     /** Portal visibility test */

@@ -9,9 +9,11 @@ python3 scripts/convert_doom_e1m1.py
 
 # Явные пути для первого и второго уровня эпизода
 python3 scripts/convert_doom_e1m1.py docs/DOOM.WAD \
-    res/gamedata/custom/doom-e1m1 --map E1M1
+    res/gamedata/custom/doom-e1m1 --map E1M1 \
+    --shared-assets res/gamedata/custom/doom-common
 python3 scripts/convert_doom_e1m1.py docs/DOOM.WAD \
-    res/gamedata/custom/doom-e1m2 --map E1M2
+    res/gamedata/custom/doom-e1m2 --map E1M2 \
+    --shared-assets res/gamedata/custom/doom-common
 
 # PVS: auto (default) keeps compact REJECT for E1M1 and selects
 # all-visible for E1M2, where Doom REJECT produces visual holes.
@@ -23,15 +25,18 @@ python3 scripts/convert_doom_e1m1.py --sprites used
 ```
 
 Результаты находятся в `res/gamedata/custom/doom-e1m1/` и
-`res/gamedata/custom/doom-e1m2/`. `New Game` запускает E1M1, второй пункт
-главы — E1M2, а normal exit switch E1M1 переводит игрока на E1M2:
+`res/gamedata/custom/doom-e1m2/`, а union wall/flat/sky BMP4 лежит ровно в
+`res/gamedata/custom/doom-common/textures/`. Оба manifest используют
+`../doom-common/...`, поэтому одинаковые E1M1/E1M2 world textures не попадают
+в JAR дважды. `New Game` запускает E1M1, второй пункт главы — E1M2, а normal
+exit switch E1M1 переводит игрока на E1M2:
 
 ```text
 level.c3d.json       # 2D геометрия/сектора/стены
 level.c3b            # BSP-компиляция для Java ME
 entities.ini         # Doom player starts 1..4 → C3D spawn 1..4
-materials.c3m        # только использованные E1M1 wall/flat/sky BMP4
-textures/*.bmp       # 16-цветные indexed BMP4
+materials.c3m        # slot mapping на общие Doom wall/flat/sky BMP4
+../doom-common/textures/*.bmp # общие 16-цветные indexed BMP4
 
 doom_materials.ini   # Doom texture/flat name → C3D material slot
 doom_things.ini      # остальные Doom things как source metadata
@@ -86,9 +91,9 @@ sector остаётся закрытым, а клавиша `1` поднимае
 
 Imp, zombieman и shotgun guy переносятся как существующие AI-типы с
 собственными Doom billboard BMP4 (`sprite.<slot>`). Их state patches теперь
-масштабируются до 128px высоты; tall decorations остаются 128px, но pickups
-экспортируются в 80px, а barrels — в 96px. Это сохраняет читаемость декора,
-не превращая аптечки и ammo в полноразмерные препятствия. Для каждого actor
+масштабируются до 112px высоты; tall decorations остаются 128px, а pickups
+получают native Doom-relative высоту 32–64px, barrels — 64px. Это сохраняет
+читаемость декора, не превращая аптечки и ammo в полноразмерные препятствия. Для каждого actor
 выгружаются семь state frames и четыре промежуточные death frames: runtime
 проигрывает полный I→J→K→L→M→N strip перед трупом.
 
@@ -97,8 +102,10 @@ Imp, zombieman и shotgun guy переносятся как существующ
 в renderer. `special 11/52` exit switch сохраняется как C3D wall type 11 и
 запускает normal E1M1→E1M2 transition с сохранением HP/ammo/weapon. E1M2
 также переносит red keycard (`RKEY`) как collectable Doom item и red locked
-Doors (`special 28`) как type-28 key doors. Doom elevators и остальные specials
-остаются следующим этапом точного Doom gameplay.
+Doors (`special 28`) как type-28 key doors. Lift specials `62`, `88` и `103`
+сохраняются как type-62 trigger walls; tagged platform sectors получают
+существующий fixed-point elevator controller и могут быть вызваны клавишей `1`.
+Остальные Doom specials остаются следующим этапом точного Doom gameplay.
 
 Все восемь Doom weapon slots доступны игроку сразу в E1M1 sandbox:
 fist, pistol, shotgun, chaingun, rocket launcher, plasma rifle, BFG9000 и

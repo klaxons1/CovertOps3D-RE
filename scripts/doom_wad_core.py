@@ -39,6 +39,9 @@ DOOM_DOOR_SPECIALS = (1, 2, 3, 4, 16, 26, 27, 28, 31, 32, 33, 34)
 # use-key transition path, so preserving this small semantic is enough for
 # E1M1 -> E1M2 without adding a Doom WAD dependency to the MIDlet.
 DOOM_EXIT_SPECIALS = (11, 52)
+# E1M2 uses the three classic lift activation variants. They share the fixed
+# elevator controller after conversion; raw line tags identify target sectors.
+DOOM_LIFT_SPECIALS = (62, 88, 103)
 
 # First playable mapping: use the existing enemy AI categories while drawing
 # one genuine Doom billboard per monster family through sprite.<slot>.
@@ -46,8 +49,10 @@ DOOM_EXIT_SPECIALS = (11, 52)
 # Covert billboard projection is tuned for much larger textures, so normalize
 # Doom actors to this physical art height during conversion instead of baking a
 # per-frame scale cost into the Java ME renderer. 160px proved oversized once
-# the dedicated floor-centred billboard path landed, so actors use 128px.
-DOOM_RUNTIME_SPRITE_HEIGHT = 128
+# the dedicated floor-centred billboard path landed, so actors use 112px.
+DOOM_RUNTIME_SPRITE_HEIGHT = 112
+# Native imp art is 57px tall; it gives pickups a stable Doom-relative scale.
+DOOM_NATIVE_ACTOR_SPRITE_HEIGHT = 57
 # Some classic death poses spread horizontally across several monster widths.
 # C3D billboards accept at most 255 source pixels, so preserve aspect and cap
 # only those frames instead of rejecting the whole map at runtime.
@@ -85,10 +90,14 @@ DOOM_RUNTIME_ITEM_HEIGHT = 128       # backward-compatible decoration default
 DOOM_RUNTIME_ITEM_MAX_WIDTH = 192
 DOOM_RUNTIME_DECORATION_HEIGHT = 128
 DOOM_RUNTIME_DECORATION_MAX_WIDTH = 192
-DOOM_RUNTIME_PICKUP_HEIGHT = 80
-DOOM_RUNTIME_PICKUP_MAX_WIDTH = 160
-DOOM_RUNTIME_BARREL_HEIGHT = 96
-DOOM_RUNTIME_BARREL_MAX_WIDTH = 160
+# Pickups use their original patch height relative to a 57px Doom actor,
+# clamped so a tiny clip remains readable while a medikit/backpack is not a
+# giant billboard. Barrels retain their classic ~half-monster height.
+DOOM_RUNTIME_PICKUP_MIN_HEIGHT = 32
+DOOM_RUNTIME_PICKUP_MAX_HEIGHT = 64
+DOOM_RUNTIME_PICKUP_MAX_WIDTH = 128
+DOOM_RUNTIME_BARREL_HEIGHT = 64
+DOOM_RUNTIME_BARREL_MAX_WIDTH = 128
 DOOM_ITEM_BASE = 9000
 
 # Doom's shareware IWAD has no ANIMATED lump: these classic sequences were
@@ -404,11 +413,18 @@ def _animated_sequences_for_used(used_names, sequences):
     return result
 
 
-def _thing_runtime_sprite_size(thing_type):
+def _thing_runtime_sprite_size(thing_type, source_height):
     if thing_type == DOOM_BARREL_THING_TYPE:
         return DOOM_RUNTIME_BARREL_HEIGHT, DOOM_RUNTIME_BARREL_MAX_WIDTH
     if thing_type in DOOM_PICKUP_THING_TYPES:
-        return DOOM_RUNTIME_PICKUP_HEIGHT, DOOM_RUNTIME_PICKUP_MAX_WIDTH
+        target_height = (source_height * DOOM_RUNTIME_SPRITE_HEIGHT
+                         + (DOOM_NATIVE_ACTOR_SPRITE_HEIGHT >> 1)) \
+                        // DOOM_NATIVE_ACTOR_SPRITE_HEIGHT
+        if target_height < DOOM_RUNTIME_PICKUP_MIN_HEIGHT:
+            target_height = DOOM_RUNTIME_PICKUP_MIN_HEIGHT
+        elif target_height > DOOM_RUNTIME_PICKUP_MAX_HEIGHT:
+            target_height = DOOM_RUNTIME_PICKUP_MAX_HEIGHT
+        return target_height, DOOM_RUNTIME_PICKUP_MAX_WIDTH
     return DOOM_RUNTIME_DECORATION_HEIGHT, DOOM_RUNTIME_DECORATION_MAX_WIDTH
 
 
@@ -430,7 +446,8 @@ def _doom_door_wall_type(special):
 
 
 def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
-                minimum_clearance=64, extract_sprites='none', pvs_mode='auto'):
+                minimum_clearance=64, extract_sprites='none', pvs_mode='auto',
+                shared_asset_dir=None):
     """Converts a parsed classic Doom map into a complete compact C3D package."""
     if height_scale <= 0 or world_scale <= 0:
         raise DoomWadError('height/world scale must be positive')
@@ -470,9 +487,13 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     if len(wall_names) > 127 or len(flat_names) > 127:
         raise DoomWadError('map exceeds C3D 127 material slots')
 
+    package_dir = os.path.abspath(package_dir)
+    if shared_asset_dir is not None:
+        shared_asset_dir = os.path.abspath(shared_asset_dir)
     if not os.path.isdir(package_dir):
         os.makedirs(package_dir)
-    texture_dir = os.path.join(package_dir, 'textures')
+    asset_dir = shared_asset_dir if shared_asset_dir is not None else package_dir
+    texture_dir = os.path.join(asset_dir, 'textures')
     if not os.path.isdir(texture_dir):
         os.makedirs(texture_dir)
 
@@ -487,11 +508,14 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
                   flats=len(flat_slots), doors=len(door_targets),
                   exits=sum(1 for line in doom_map.linedefs
                             if line['special'] in DOOM_EXIT_SPECIALS),
+                  lifts=sum(1 for line in doom_map.linedefs
+                            if line['special'] in DOOM_LIFT_SPECIALS),
                   animated_walls=len(wall_animations), animated_flats=len(flat_animations),
                   damage_sectors=sum(1 for sector in doom_map.sectors
                                      if _doom_sector_type(sector) != 0), enemies=0,
                   height_scale=height_scale,
                   world_scale=world_scale, minimum_clearance=minimum_clearance,
+                  shared_assets=shared_asset_dir is not None,
                   missing_wall_textures=[], sprites=0)
 
     manifest_lines = [
@@ -502,7 +526,8 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
 
     for name in sorted(wall_slots):
         slot = wall_slots[name]
-        filename = 'wall_%03d_%s.bmp' % (slot, _safe_name(name))
+        filename = ('wall_%s.bmp' % _safe_name(name)) if shared_asset_dir is not None \
+                else ('wall_%03d_%s.bmp' % (slot, _safe_name(name)))
         destination = os.path.join(texture_dir, filename)
         try:
             texture = texture_defs[name]
@@ -512,17 +537,18 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
             report['missing_wall_textures'].append('%s: %s' % (name, error))
         target_width, target_height = _wall_target(width, height)
         _write_world_bmp(destination, pixels, width, height, target_width, target_height)
-        relative = 'textures/' + filename
+        relative = _material_relative_path(package_dir, destination)
         manifest_lines.append('wall.%d=%s' % (slot, relative))
         material_lines.append('wall.%s=%d' % (name, slot))
 
     for name in sorted(flat_slots):
         slot = flat_slots[name]
-        filename = 'flat_%03d_%s.bmp' % (slot, _safe_name(name))
+        filename = ('flat_%s.bmp' % _safe_name(name)) if shared_asset_dir is not None \
+                else ('flat_%03d_%s.bmp' % (slot, _safe_name(name)))
         destination = os.path.join(texture_dir, filename)
         width, height, pixels = decode_flat(wad, name, palette)
         _write_world_bmp(destination, pixels, width, height, 64, 64)
-        relative = 'textures/' + filename
+        relative = _material_relative_path(package_dir, destination)
         manifest_lines.append('flat.%d=%s' % (slot, relative))
         material_lines.append('flat.%s=%d' % (name, slot))
 
@@ -534,7 +560,7 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
         sky_width, sky_height, sky_pixels = 64, 128, _placeholder_rgba(64, 128, sky=True)
         report['missing_wall_textures'].append('SKY1: texture not found')
     _write_world_bmp(sky_destination, sky_pixels, sky_width, sky_height, 64, 128)
-    manifest_lines.append('sky=textures/sky.bmp')
+    manifest_lines.append('sky=' + _material_relative_path(package_dir, sky_destination))
     material_lines.append('sky=SKY1')
 
     for target, frames in wall_animations:
@@ -815,7 +841,7 @@ def _export_runtime_thing_sprites(wad, doom_map, palette, package_dir, first_slo
             slot = next_slot
             next_slot += 1
             filename = '%02d_%s.bmp' % (slot, _safe_name(prefix))
-            target_height, max_width = _thing_runtime_sprite_size(thing_type)
+            target_height, max_width = _thing_runtime_sprite_size(thing_type, height)
             _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
                               target_height, max_width)
             prefix_slots[prefix] = dict(slot=slot, name=_safe_name(prefix))
@@ -902,6 +928,8 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
                       for x, y in doom_map.vertices]
 
     closed_door_sectors = set(door_targets.values())
+    lift_tags = set(line['tag'] for line in doom_map.linedefs
+                    if line['special'] in DOOM_LIFT_SPECIALS and line['tag'] != 0)
     for sector_index, raw in enumerate(doom_map.sectors):
         floor = int(round(raw['floor'] * height_scale))
         ceiling = int(round(raw['ceiling'] * height_scale))
@@ -916,10 +944,15 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
         # Most Doom specials/tags still require dedicated gameplay controllers.
         # Damage-floor specials are compact enough to preserve now; doors and
         # exit switches are handled from their linedefs below.
+        sector_type = _doom_sector_type(raw)
+        if sector_type == 0 and raw['tag'] in lift_tags:
+            # Existing GameEngine recognizes type 10 as a sector lift. The
+            # tagged trigger walls below provide the actual activation.
+            sector_type = 10
         level.sectors.append(dict(floor=floor, ceil=ceiling,
                                   floor_tex=floor_texture, ceil_tex=ceiling_texture,
-                                  light_packed=light << 4, tag=0,
-                                  type=_doom_sector_type(raw)))
+                                  light_packed=light << 4, tag=raw['tag'],
+                                  type=sector_type))
 
     surface_by_side = {}
 
@@ -963,10 +996,12 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
         is_door = door_sector is not None and back >= 0 \
                 and level.surfaces[back]['sector'] == door_sector
         is_exit = raw['special'] in DOOM_EXIT_SPECIALS
+        is_lift = raw['special'] in DOOM_LIFT_SPECIALS and raw['tag'] != 0
         level.walls.append(dict(sv=start, ev=end, flags=8 if is_door else (1 if back < 0 else 0),
                                 type=_doom_door_wall_type(raw['special']) if is_door
-                                else (11 if is_exit else 0),
-                                special=0, front=front, back=back))
+                                else (62 if is_lift else (11 if is_exit else 0)),
+                                special=raw['tag'] if is_lift else 0,
+                                front=front, back=back))
 
     entities = []
     doom_things = []
@@ -1006,6 +1041,11 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
     level.objects = entities
     level.pvs = [bytearray(len(level.sectors)) for _index in level.sectors]
     return C3.C3DDocument(level, materials='materials.c3m', entities='entities.ini'), doom_things
+
+
+def _material_relative_path(package_dir, asset_path):
+    """Returns a portable C3M path, including ../doom-common references."""
+    return os.path.relpath(asset_path, package_dir).replace(os.sep, '/')
 
 
 def _write_world_bmp(path, pixels, source_width, source_height, target_width, target_height):

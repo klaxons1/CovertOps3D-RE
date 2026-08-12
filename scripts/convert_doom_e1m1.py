@@ -38,6 +38,8 @@ def main(argv=None):
                         help='optional Doom patch sprite export; default none keeps JAR compact')
     parser.add_argument('--pvs', choices=('auto', 'doom-reject', 'all-visible'), default='auto',
                         help='PVS source; auto keeps E1M1 REJECT and uses all-visible for artifact-safe E1M2')
+    parser.add_argument('--shared-assets', default=None,
+                        help='optional shared texture directory, e.g. res/gamedata/custom/doom-common')
     args = parser.parse_args(argv)
 
     try:
@@ -48,7 +50,8 @@ def main(argv=None):
                                   world_scale=args.world_scale,
                                   minimum_clearance=args.clearance,
                                   extract_sprites=args.sprites,
-                                  pvs_mode=args.pvs)
+                                  pvs_mode=args.pvs,
+                                  shared_asset_dir=args.shared_assets)
     except Exception as error:
         print('Doom conversion failed: %s' % error, file=sys.stderr)
         return 2

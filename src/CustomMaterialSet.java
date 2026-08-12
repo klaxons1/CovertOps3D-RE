@@ -383,8 +383,18 @@ public final class CustomMaterialSet {
         return slash < 0 ? "/" : path.substring(0, slash + 1);
     }
 
+    /** Resolves normal C3M relatives, including ../doom-common shared assets. */
     private static String resolvePath(String basePath, String value) {
-        return value.charAt(0) == '/' ? value : basePath + value;
+        String path = value.charAt(0) == '/' ? value : basePath + value;
+        int parent;
+        // Class.getResourceAsStream does not consistently normalize .. across
+        // MIDP implementations, so collapse it here without java.io.File.
+        while ((parent = path.indexOf("/../")) >= 0) {
+            int previous = path.lastIndexOf('/', parent - 1);
+            if (previous < 0) break;
+            path = path.substring(0, previous) + path.substring(parent + 3);
+        }
+        return path;
     }
 
     private static String readResourceText(String path) throws IOException {

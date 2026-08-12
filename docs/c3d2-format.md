@@ -116,7 +116,9 @@ anim.flat.18=18,16,17
 
 `anim.*` entries are parsed at level load. `GameWorld` swaps only the existing
 pixel/palette references once per fixed game tick; `PortalRenderer` retains its
-normal branch-free material lookup.
+normal branch-free material lookup. Material paths may use `../` to point at a
+shared package such as `custom/doom-common/textures`; `CustomMaterialSet`
+normalizes this resource path before calling `getResourceAsStream` on MIDP.
 
 PNG остаётся удобным исходником для художника и редактора, но экспортируется
 в BMP4 через `scripts/png_to_bmp4.py`. В Java ME `CustomMaterialSet` грузит

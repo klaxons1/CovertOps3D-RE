@@ -324,12 +324,21 @@ public final class JavaMeSmokeTest {
         assertTrue("Doom E1M2 red keycard", redKey);
         int exitWalls = 0;
         int redDoors = 0;
+        int liftTriggers = 0;
         for (int i = 0; i < world.wallDefinitions.length; ++i) {
             if (world.wallDefinitions[i].getWallType() == 11) ++exitWalls;
             if (world.wallDefinitions[i].getWallType() == 28) ++redDoors;
+            if (world.wallDefinitions[i].getWallType() == 62) ++liftTriggers;
+        }
+        int liftPlatforms = 0;
+        for (int i = 0; i < world.sectors.length; ++i) {
+            if (world.sectors[i].getSectorType() == 10
+                    && world.sectors[i].getSectorTag() != 0) ++liftPlatforms;
         }
         assertEquals("Doom E1M2 exit switch", 1, exitWalls);
         assertEquals("Doom E1M2 red key doors", 2, redDoors);
+        assertEquals("Doom E1M2 lift triggers", 20, liftTriggers);
+        assertEquals("Doom E1M2 lift platforms", 9, liftPlatforms);
         assertTrue("Doom E1M2 spawn", world.worldOrigin != null);
         assertTrue("Doom E1M2 BFG projectile", LevelLoader.getTexture(DoomGameMode.BFG_SPRITE) != null);
     }

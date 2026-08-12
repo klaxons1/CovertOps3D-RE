@@ -27,14 +27,19 @@ def main():
             len(doom_map.sectors), len(doom_map.things)) == (437, 452, 622, 83, 130)
     assert any(thing['type'] == 1 for thing in doom_map.things)
 
-    with tempfile.TemporaryDirectory() as directory:
-        report = DOOM.convert_map(wad, doom_map, directory, extract_sprites='none')
+    with tempfile.TemporaryDirectory() as temp_root:
+        directory = os.path.join(temp_root, 'doom-e1m1')
+        shared_assets = os.path.join(temp_root, 'doom-common')
+        report = DOOM.convert_map(wad, doom_map, directory, extract_sprites='none',
+                                  shared_asset_dir=shared_assets)
         assert report['missing_wall_textures'] == []
+        assert report['shared_assets']
         assert report['bsp_failures'] == 0
         assert report['pvs_mode'] == 'doom-reject'
         assert report['pvs_visible_pairs'] == 6021
         assert (report['wall_textures'], report['flats']) == (32, 23)
         assert (report['animated_walls'], report['animated_flats'], report['damage_sectors']) == (0, 1, 4)
+        assert report['lifts'] == 0
         assert (report['doors'], report['exits'], report['enemies'],
                 report['enemy_sprite_materials'], report['enemy_death_sprite_materials']) == (8, 1, 29, 33, 12)
         assert report['hud_weapon_frames'] == 16
@@ -96,7 +101,9 @@ def main():
             name = os.path.basename(materials[key])
             data = open(os.path.join(directory, materials[key]), 'rb').read()
             dimensions[name] = struct.unpack_from('<ii', data, 18)
-        assert dimensions['47_medi.bmp'][1] == DOOM.DOOM_RUNTIME_PICKUP_HEIGHT
+        assert DOOM.DOOM_RUNTIME_PICKUP_MIN_HEIGHT <= dimensions['47_medi.bmp'][1] \
+                <= DOOM.DOOM_RUNTIME_PICKUP_MAX_HEIGHT
+        assert dimensions['44_clip.bmp'][1] == DOOM.DOOM_RUNTIME_PICKUP_MIN_HEIGHT
         assert dimensions['53_bar1.bmp'][1] == DOOM.DOOM_RUNTIME_BARREL_HEIGHT
         assert dimensions['40_elec.bmp'][1] == DOOM.DOOM_RUNTIME_DECORATION_HEIGHT
         source = C3.load_source(os.path.join(directory, 'level.c3d.json'))
@@ -139,7 +146,7 @@ def main():
             for slot in (sector['floor_tex'], sector['ceil_tex']):
                 if slot and slot != 51:
                     assert 'flat.%d' % slot in materials
-        texture_dir = os.path.join(directory, 'textures')
+        texture_dir = os.path.join(shared_assets, 'textures')
         assert len(os.listdir(texture_dir)) == 56
         for name in os.listdir(texture_dir):
             data = open(os.path.join(texture_dir, name), 'rb').read()
@@ -159,13 +166,18 @@ def main():
     doom_map = DOOM.load_map(wad, 'E1M2')
     assert (len(doom_map.vertices), len(doom_map.linedefs), len(doom_map.sidedefs),
             len(doom_map.sectors), len(doom_map.things)) == (942, 1033, 1323, 200, 262)
-    with tempfile.TemporaryDirectory() as directory:
-        report = DOOM.convert_map(wad, doom_map, directory, extract_sprites='none')
+    with tempfile.TemporaryDirectory() as temp_root:
+        directory = os.path.join(temp_root, 'doom-e1m2')
+        shared_assets = os.path.join(temp_root, 'doom-common')
+        report = DOOM.convert_map(wad, doom_map, directory, extract_sprites='none',
+                                  shared_asset_dir=shared_assets)
+        assert report['shared_assets']
         assert (report['doors'], report['exits'], report['enemies'], report['world_items']) \
                 == (19, 1, 80, 148)
         assert (report['wall_textures'], report['flats']) == (59, 29)
         assert (report['enemy_sprite_materials'], report['enemy_death_sprite_materials']) == (33, 12)
         assert (report['animated_walls'], report['animated_flats'], report['damage_sectors']) == (1, 1, 5)
+        assert report['lifts'] == 20
         # E1M2 gets a conservative all-visible PVS because Doom REJECT is not
         # a render PVS and was visibly culling the connected outdoor sectors.
         assert report['pvs_mode'] == 'all-visible'
@@ -191,6 +203,10 @@ def main():
                    if sector['type'] == DOOM.DOOM_SECTOR_DAMAGE_5) == 5
         assert sum(1 for wall in source.level.walls if wall['type'] == 11) == 1
         assert sum(1 for wall in source.level.walls if wall['type'] == 28) == 2
+        assert sum(1 for wall in source.level.walls if wall['type'] == 62) == 20
+        lift_sectors = [sector for sector in source.level.sectors if sector['type'] == 10]
+        assert len(lift_sectors) == 9
+        assert set(sector['tag'] for sector in lift_sectors) == set((1, 4, 5, 7, 10, 11, 12, 13))
     print('DOOM E1M1/E1M2: geometry, BMP4 materials, actors, exits and compact C3B: OK')
 
 
