@@ -570,7 +570,13 @@ public class PortalRenderer {
                     Texture texture = gameObject.externalBillboardTexture;
                     int billboardWidth = calculateBillboardSize(texture.width, depth);
                     int billboardHeight = calculateBillboardSize(texture.height, depth);
-                    drawSprite(texture, lightLevel, screenX, screenY, depth,
+                    // projectToScreen() gives the floor contact point. drawSprite()
+                    // expects its top-left corner, so center horizontally and
+                    // lift by full height. This is the key distinction from the
+                    // inherited lower-body/"legs" renderer path.
+                    int billboardLeft = screenX - (billboardWidth >> 1);
+                    int billboardTop = screenY - billboardHeight;
+                    drawSprite(texture, lightLevel, billboardLeft, billboardTop, depth,
                             billboardWidth, billboardHeight);
                 } else if (gameObject.lowerBodyTexture != null) {
                     gameObject.calculateLowerBodyScreenSize();

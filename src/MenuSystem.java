@@ -242,10 +242,12 @@ public final class MenuSystem {
                             firstItem = 2;
                             lastItem = chapterMenuItems.length - 2;
 
+                            // Doom edition starts as a sandbox build: chapter
+                            // selection is never hidden behind CovertOps save
+                            // records. Maps that are not converted yet can be
+                            // replaced independently without changing menu flow.
                             for (int i = 3; i <= lastItem; ++i) {
-                                chapterMenuItems[i] = SaveSystem.saveData[i - 3] != null
-                                        ? TextStrings.CHAPTER_MENU_DATA[i]
-                                        : TextStrings.UNAVAILABLE;
+                                chapterMenuItems[i] = TextStrings.CHAPTER_MENU_DATA[i];
                             }
                             // Store chapter menu into canvas for later usage? Use static holder
                             canvas.chapterMenuItems = chapterMenuItems;
