@@ -7,11 +7,12 @@
  */
 public final class DoomGameMode {
 
-    // Must match converter slots: enemy sprites 1..3, then projectiles 4..6.
-    public static final byte ROCKET_SPRITE = -4;
-    public static final byte PLASMA_SPRITE = -5;
-    public static final byte BFG_SPRITE = -6;
-    public static final byte IMP_FIREBALL_SPRITE = -7;
+    // Must match converter slots: 3 actor families x 7 state frames = 1..21,
+    // then rocket/plasma/BFG/imp projectiles 22..25.
+    public static final byte ROCKET_SPRITE = -22;
+    public static final byte PLASMA_SPRITE = -23;
+    public static final byte BFG_SPRITE = -24;
+    public static final byte IMP_FIREBALL_SPRITE = -25;
 
     /** Custom entity type = DOOM_ITEM_BASE + original Doom thing type. */
     public static final int DOOM_ITEM_BASE = 9000;

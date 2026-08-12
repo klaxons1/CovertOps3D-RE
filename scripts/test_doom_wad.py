@@ -34,7 +34,7 @@ def main():
         assert report['pvs_mode'] == 'doom-reject'
         assert report['pvs_visible_pairs'] == 6021
         assert (report['wall_textures'], report['flats']) == (32, 21)
-        assert (report['doors'], report['enemies'], report['enemy_sprite_materials']) == (8, 29, 3)
+        assert (report['doors'], report['enemies'], report['enemy_sprite_materials']) == (8, 29, 21)
         assert report['hud_weapon_frames'] == 16
         assert (report['projectile_sprite_materials'], report['projectile_sprite_height']) == (4, 32)
         assert (report['thing_sprite_materials'], report['world_items']) == (19, 84)
@@ -52,12 +52,12 @@ def main():
         assert os.path.getsize(os.path.join(directory, 'level.c3b')) < 32768
         assert os.path.getsize(os.path.join(directory, 'materials.c3m')) > 1000
         materials = TEXTURES.load_manifest(os.path.join(directory, 'materials.c3m'))
-        assert len(materials) == 80
+        assert len(materials) == 98
         assert all(os.path.exists(os.path.join(directory, path))
                    for path in materials.values())
         sprite_keys = sorted((key for key in materials if key.startswith('sprite.')),
                              key=lambda key: int(key.split('.')[1]))
-        assert sprite_keys == ['sprite.%d' % index for index in range(1, 27)]
+        assert sprite_keys == ['sprite.%d' % index for index in range(1, 45)]
         for weapon in ('fist', 'pistol', 'shotgun', 'chaingun', 'rocket', 'plasma', 'bfg', 'chainsaw'):
             for frame in ('a', 'b'):
                 assert os.path.exists(os.path.join(directory, 'hud', weapon + '_' + frame + '.bmp'))
@@ -65,9 +65,9 @@ def main():
             sprite = open(os.path.join(directory, materials[key]), 'rb').read()
             width, height, planes, bpp = struct.unpack_from('<iiHH', sprite, 18)
             slot = int(key.split('.')[1])
-            if slot <= 3:
+            if slot <= 21:
                 assert 1 <= width <= 255 and height == DOOM.DOOM_RUNTIME_SPRITE_HEIGHT
-            elif slot <= 7:
+            elif slot <= 25:
                 assert 1 <= width <= 255 and height == DOOM.DOOM_RUNTIME_PROJECTILE_HEIGHT
             else:
                 assert 1 <= width <= 128 and 1 <= height <= DOOM.DOOM_RUNTIME_ITEM_HEIGHT
@@ -76,6 +76,11 @@ def main():
         assert len(source.level.objects) == 117
         assert source.level.objects[0] == dict(x=1056, z=-3616, angle=180, type=1, param=0)
         assert sum(1 for entity in source.level.objects if entity.get('sprite', 0)) == 113
+        animated_enemies = [entity for entity in source.level.objects
+                            if entity['type'] in (3001, 3003, 3004)]
+        assert len(animated_enemies) == 29
+        assert all(all(entity.get('frame%d' % frame, 0) != 0 for frame in range(1, 7))
+                   for entity in animated_enemies)
         assert sum(1 for entity in source.level.objects if entity['type'] >= DOOM.DOOM_ITEM_BASE) == 84
         door_walls = [wall for wall in source.level.walls if wall['type'] == 1]
         assert len(door_walls) == 8

@@ -8,7 +8,7 @@
   "doors": 8,
   "enemies": 29,
   "enemy_sprite_height": 160,
-  "enemy_sprite_materials": 3,
+  "enemy_sprite_materials": 21,
   "flats": 21,
   "height_scale": 0.5,
   "hud_weapon_frames": 16,

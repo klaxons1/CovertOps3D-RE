@@ -233,19 +233,23 @@ public final class JavaMeSmokeTest {
                 && LevelLoader.getTexture((byte)1).pixelData != null);
         assertTrue("Doom E1M1 enemy sprite texture", LevelLoader.getTexture((byte)-1) != null
                 && LevelLoader.getTexture((byte)-1).pixelData != null);
-        assertTrue("Doom E1M1 projectile sprite texture", LevelLoader.getTexture((byte)-4) != null
-                && LevelLoader.getTexture((byte)-7).pixelData != null);
-        assertTrue("Doom E1M1 enemy billboard", world.staticObjects[0]
-                .getExternalBillboardSpriteId() != 0);
+        assertTrue("Doom E1M1 projectile sprite texture", LevelLoader.getTexture((byte)-22) != null
+                && LevelLoader.getTexture((byte)-25).pixelData != null);
+        GameObject doomEnemy = null;
         boolean doomItemBillboard = false;
         for (int i = 0; i < world.staticObjects.length; ++i) {
             GameObject object = world.staticObjects[i];
+            if (object.objectType == 3001 || object.objectType == 3003
+                    || object.objectType == 3004) {
+                doomEnemy = object;
+            }
             if (object.objectType >= DoomGameMode.DOOM_ITEM_BASE
                     && object.getExternalBillboardSpriteId() != 0) {
                 doomItemBillboard = true;
-                break;
             }
         }
+        assertTrue("Doom E1M1 enemy billboard", doomEnemy != null
+                && doomEnemy.getExternalBillboardSpriteId() != 0);
         assertTrue("Doom E1M1 item billboards", doomItemBillboard);
         assertTrue("Doom E1M1 flat texture", world.sectors[0].ceilingTexture != null
                 && world.sectors[0].ceilingTexture.flatColors != null);

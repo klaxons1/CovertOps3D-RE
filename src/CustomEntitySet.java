@@ -26,6 +26,8 @@ public final class CustomEntitySet {
     private final short[] parameters;
     // Optional manifest sprite slot. Slot N is installed in texture id -N.
     private final short[] spriteSlots;
+    // frame1..frame6; spriteSlots is frame0.
+    private final short[] animationSlots;
     private final int count;
 
     private CustomEntitySet(int count) {
@@ -36,6 +38,7 @@ public final class CustomEntitySet {
         this.types = new short[count];
         this.parameters = new short[count];
         this.spriteSlots = new short[count];
+        this.animationSlots = new short[count * 6];
     }
 
     /** Loads and validates a C3D entity INI resource. */
@@ -86,7 +89,7 @@ public final class CustomEntitySet {
                     short rawAngle = angles[i];
                     GameObject object = new GameObject(createTransform(i), rawAngle,
                             type, parameters[i]);
-                    addExternalSpriteFrames(object, spriteSlots[i]);
+                    addExternalSpriteFrames(object, spriteSlots[i], animationSlots, i * 6);
                     if (DoomGameMode.isSolidDoomProp(type)) {
                         // Generic props otherwise start with aiState=-1 and
                         // bypass the existing collision loop entirely.
@@ -110,9 +113,16 @@ public final class CustomEntitySet {
      * bypasses the old upper/lower-body frame convention: Doom monsters are
      * not CovertOps legs, and AI frame indexes must not change their anchor.
      */
-    private static void addExternalSpriteFrames(GameObject object, short spriteSlot) {
+    private static void addExternalSpriteFrames(GameObject object, short spriteSlot,
+                                                short[] animationSlots, int offset) {
         if (spriteSlot <= 0) return;
-        object.setExternalBillboardSpriteId((byte)-spriteSlot);
+        byte[] frames = new byte[7];
+        frames[0] = (byte)-spriteSlot;
+        for (int frame = 1; frame < frames.length; ++frame) {
+            short slot = animationSlots[offset + frame - 1];
+            frames[frame] = slot > 0 ? (byte)-slot : frames[0];
+        }
+        object.setExternalBillboardFrames(frames);
     }
 
     private static int countEntitySections(String text, String path) throws IOException {
@@ -268,6 +278,17 @@ public final class CustomEntitySet {
             }
             entities.spriteSlots[index] = number;
             return 32;
+        }
+        if (startsWith(key, "frame") && key.length() == 6) {
+            int frame = key.charAt(5) - '0';
+            if (frame >= 1 && frame <= 6) {
+                if (number < 0 || number > 127) {
+                    throw new IOException(path + ":" + lineNumber
+                            + " frame sprite must be a material slot 0..127");
+                }
+                entities.animationSlots[index * 6 + frame - 1] = number;
+                return 32 << frame;
+            }
         }
         throw new IOException(path + ":" + lineNumber + " unknown entity key: " + key);
     }

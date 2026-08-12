@@ -20,9 +20,10 @@ public final class GameObject {
     public int screenY;
     public Texture upperBodyTexture;
     public Texture lowerBodyTexture;
-    // C3D custom entities use one centered billboard, not the inherited
-    // CovertOps upper/lower body split.
-    private byte externalBillboardSpriteId;
+    // C3D custom entities use one centered billboard animation, not the
+    // inherited CovertOps upper/lower body split.
+    private byte[] externalBillboardSpriteIds;
+    private int externalBillboardFrameCount;
     public Texture externalBillboardTexture;
     public int upperBodyScreenWidth;
     public int upperBodyScreenHeight;
@@ -44,7 +45,8 @@ public final class GameObject {
         this.screenY = 0;
         this.upperBodyTexture = null;
         this.lowerBodyTexture = null;
-        this.externalBillboardSpriteId = 0;
+        this.externalBillboardSpriteIds = new byte[7];
+        this.externalBillboardFrameCount = 0;
         this.externalBillboardTexture = null;
         this.upperBodyScreenWidth = 0;
         this.upperBodyScreenHeight = 0;
@@ -142,11 +144,34 @@ public final class GameObject {
 
     /** Assigns one C3D billboard that stays centered over the floor. */
     public final void setExternalBillboardSpriteId(byte spriteId) {
-        this.externalBillboardSpriteId = spriteId;
+        this.externalBillboardSpriteIds[0] = spriteId;
+        this.externalBillboardFrameCount = spriteId == 0 ? 0 : 1;
+    }
+
+    /** Assigns seven Doom actor state frames (idle/walk/attack/pain/death). */
+    public final void setExternalBillboardFrames(byte[] frames) {
+        int count = frames == null ? 0 : frames.length;
+        if (count > this.externalBillboardSpriteIds.length) {
+            count = this.externalBillboardSpriteIds.length;
+        }
+        for (int i = 0; i < count; ++i) {
+            this.externalBillboardSpriteIds[i] = frames[i];
+        }
+        for (int i = count; i < this.externalBillboardSpriteIds.length; ++i) {
+            this.externalBillboardSpriteIds[i] = 0;
+        }
+        this.externalBillboardFrameCount = count;
     }
 
     public final byte getExternalBillboardSpriteId() {
-        return this.externalBillboardSpriteId;
+        if (this.externalBillboardFrameCount == 0) return 0;
+        int frame = this.spriteFrameIndex;
+        if (frame < 0) frame = 0;
+        if (frame >= this.externalBillboardFrameCount) {
+            frame = this.externalBillboardFrameCount - 1;
+        }
+        byte spriteId = this.externalBillboardSpriteIds[frame];
+        return spriteId != 0 ? spriteId : this.externalBillboardSpriteIds[0];
     }
 
     public final boolean compareDepth(GameObject other) {

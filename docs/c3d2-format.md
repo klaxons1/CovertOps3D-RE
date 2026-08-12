@@ -40,8 +40,9 @@ custom/<name>/
 `entities.ini` — UTF-8, комментарии начинаются с `#` или `;`. У каждого
 объекта есть отдельная секция; `x`, `z` и `type` обязательны, `angle` и
 `param` по умолчанию равны нулю. Необязательный `sprite=1..127` связывает
-billboard с `sprite.<slot>` из material manifest. Все значения — signed
-`int16`, как и в runtime.
+billboard с `sprite.<slot>` из material manifest; `frame1..frame6` задают
+Doom actor animation state frames, где `sprite` является frame0. Все значения
+— signed `int16`, как и в runtime.
 
 ```ini
 # C3D entity placement v1
@@ -55,8 +56,14 @@ angle=0
 type=1
 param=0
 
-# Optional custom billboard for a non-player object:
+# Optional custom billboard / Doom actor frames:
 # sprite=1
+# frame1=2
+# frame2=3
+# frame3=4
+# frame4=5
+# frame5=6
+# frame6=7
 ```
 
 `type=1..4` — точки старта игрока по вариантам сложности. При компиляции C3B

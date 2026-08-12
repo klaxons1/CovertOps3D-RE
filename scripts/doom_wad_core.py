@@ -75,9 +75,14 @@ DOOM_ITEM_BASE = 9000
 DOOM_NON_WORLD_THING_TYPES = (1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16)
 
 DOOM_ENEMIES = {
-    3001: dict(engine_type=3001, sprite='TROOA1', label='imp'),
-    3004: dict(engine_type=3004, sprite='POSSA1', label='zombieman'),
-    9: dict(engine_type=3003, sprite='SPOSA1', label='shotgun_guy'),
+    # frames map directly to GameEngine's 0..6 actor state indexes:
+    # idle, walk, attack-ready, attack, pain, death, corpse.
+    3001: dict(engine_type=3001, sprite='TROOA1', label='imp',
+               frames=('TROOA1', 'TROOB1', 'TROOC1', 'TROOE1', 'TROOH1', 'TROOI0', 'TROON0')),
+    3004: dict(engine_type=3004, sprite='POSSA1', label='zombieman',
+               frames=('POSSA1', 'POSSB1', 'POSSC1', 'POSSE1', 'POSSH0', 'POSSI0', 'POSSN0')),
+    9: dict(engine_type=3003, sprite='SPOSA1', label='shotgun_guy',
+            frames=('SPOSA1', 'SPOSB1', 'SPOSC1', 'SPOSE1', 'SPOSH0', 'SPOSI0', 'SPOSN0')),
 }
 
 THING_SPRITES = {
@@ -411,20 +416,24 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     material_lines.append('sky=SKY1')
 
     enemy_sprite_slots = _export_runtime_enemy_sprites(wad, palette, package_dir)
-    for doom_type, slot in enemy_sprite_slots.items():
+    enemy_sprite_count = 0
+    for doom_type, slots in enemy_sprite_slots.items():
         info = DOOM_ENEMIES[doom_type]
-        filename = 'sprites/doom/%02d_%s.bmp' % (slot, _safe_name(info['sprite']))
-        manifest_lines.append('sprite.%d=%s' % (slot, filename))
-        material_lines.append('sprite.%s=%d' % (info['sprite'], slot))
+        for frame, slot in enumerate(slots):
+            lump = info['frames'][frame]
+            filename = 'sprites/doom/%02d_%s.bmp' % (slot, _safe_name(lump))
+            manifest_lines.append('sprite.%d=%s' % (slot, filename))
+            material_lines.append('actor.%s.frame%d=%d' % (info['label'], frame, slot))
+            enemy_sprite_count += 1
     projectile_sprite_slots = _export_runtime_projectile_sprites(wad, palette, package_dir,
-                                                                   len(enemy_sprite_slots) + 1)
+                                                                   enemy_sprite_count + 1)
     for name, slot in projectile_sprite_slots.items():
         filename = 'sprites/doom/%02d_%s.bmp' % (slot, name)
         manifest_lines.append('sprite.%d=%s' % (slot, filename))
         material_lines.append('projectile.%s=%d' % (name, slot))
     thing_sprite_slots = _export_runtime_thing_sprites(
             wad, doom_map, palette, package_dir,
-            len(enemy_sprite_slots) + len(projectile_sprite_slots) + 1)
+            enemy_sprite_count + len(projectile_sprite_slots) + 1)
     for thing_type, sprite_info in thing_sprite_slots.items():
         slot = sprite_info['slot']
         filename = 'sprites/doom/%02d_%s.bmp' % (slot, sprite_info['name'])
@@ -432,7 +441,7 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
         material_lines.append('thing.%d=%d' % (thing_type, slot))
     hud_weapon_count = _export_hud_weapon_sprites(wad, palette, package_dir)
     report['enemies'] = sum(1 for thing in doom_map.things if thing['type'] in enemy_sprite_slots)
-    report['enemy_sprite_materials'] = len(enemy_sprite_slots)
+    report['enemy_sprite_materials'] = enemy_sprite_count
     report['enemy_sprite_height'] = DOOM_RUNTIME_SPRITE_HEIGHT
     report['projectile_sprite_materials'] = len(projectile_sprite_slots)
     report['projectile_sprite_height'] = DOOM_RUNTIME_PROJECTILE_HEIGHT
@@ -570,7 +579,7 @@ def _find_closed_door_targets(doom_map):
 
 
 def _export_runtime_enemy_sprites(wad, palette, package_dir):
-    """Exports one compact transparent billboard for each E1M1 enemy family."""
+    """Exports state frames for every E1M1 enemy family (one view angle)."""
     slots = {}
     sprite_dir = os.path.join(package_dir, 'sprites', 'doom')
     if not os.path.isdir(sprite_dir):
@@ -578,16 +587,19 @@ def _export_runtime_enemy_sprites(wad, palette, package_dir):
     slot = 1
     for doom_type in sorted(DOOM_ENEMIES):
         info = DOOM_ENEMIES[doom_type]
-        try:
-            data = wad.lump(info['sprite'])
-            width, height, _left, _top, pixels = decode_patch(data, palette)
-        except Exception as error:
-            raise DoomWadError('enemy sprite %s: %s' % (info['sprite'], error))
-        filename = '%02d_%s.bmp' % (slot, _safe_name(info['sprite']))
-        _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
-                          DOOM_RUNTIME_SPRITE_HEIGHT)
-        slots[doom_type] = slot
-        slot += 1
+        actor_slots = []
+        for lump in info['frames']:
+            try:
+                data = wad.lump(lump)
+                width, height, _left, _top, pixels = decode_patch(data, palette)
+            except Exception as error:
+                raise DoomWadError('enemy sprite %s: %s' % (lump, error))
+            filename = '%02d_%s.bmp' % (slot, _safe_name(lump))
+            _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
+                              DOOM_RUNTIME_SPRITE_HEIGHT)
+            actor_slots.append(slot)
+            slot += 1
+        slots[doom_type] = actor_slots
     return slots
 
 
@@ -803,10 +815,14 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
                                  angle=converted_angle, type=raw['type'], param=0))
         elif raw['type'] in enemy_sprite_slots:
             enemy = DOOM_ENEMIES[raw['type']]
-            entities.append(dict(x=converted_x, z=converted_z,
-                                 angle=converted_angle,
-                                 type=enemy['engine_type'], param=0,
-                                 sprite=enemy_sprite_slots[raw['type']]))
+            frames = enemy_sprite_slots[raw['type']]
+            entity = dict(x=converted_x, z=converted_z,
+                          angle=converted_angle,
+                          type=enemy['engine_type'], param=0,
+                          sprite=frames[0])
+            for frame in range(1, len(frames)):
+                entity['frame%d' % frame] = frames[frame]
+            entities.append(entity)
         elif raw['type'] in thing_sprite_slots:
             entities.append(dict(x=converted_x, z=converted_z,
                                  angle=converted_angle,

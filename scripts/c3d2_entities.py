@@ -25,8 +25,10 @@ FORMAT = 'C3D-ENTITIES-1'
 _REQUIRED_KEYS = ('x', 'z', 'type')
 _OPTIONAL_DEFAULTS = {'angle': 0, 'param': 0}
 # sprite is optional and intentionally omitted when zero so old entity sidecars
-# stay byte-for-byte familiar. A nonzero slot maps to manifest sprite.<slot>.
-_OPTIONAL_KEYS = tuple(_OPTIONAL_DEFAULTS.keys()) + ('sprite',)
+# stay byte-for-byte familiar. frame1..frame6 are Doom actor animation slots;
+# sprite itself is frame0.
+_ANIMATION_KEYS = ('sprite', 'frame1', 'frame2', 'frame3', 'frame4', 'frame5', 'frame6')
+_OPTIONAL_KEYS = tuple(_OPTIONAL_DEFAULTS.keys()) + _ANIMATION_KEYS
 _ALL_KEYS = _REQUIRED_KEYS + _OPTIONAL_KEYS
 
 
@@ -139,6 +141,10 @@ def dump_entities(entities, path):
             stream.write('param=%d\n' % int(entity.get('param', 0)))
             if int(entity.get('sprite', 0)) != 0:
                 stream.write('sprite=%d\n' % int(entity['sprite']))
+            for frame in range(1, 7):
+                key = 'frame%d' % frame
+                if int(entity.get(key, 0)) != 0:
+                    stream.write('%s=%d\n' % (key, int(entity[key])))
 
 
 def validate_entities(entities):
@@ -159,8 +165,9 @@ def validate_entities(entities):
         for key in _ALL_KEYS:
             if key in entity:
                 _i16(entity[key], 'entity %d %s' % (index, key))
-        if 'sprite' in entity and (int(entity['sprite']) < 0 or int(entity['sprite']) > 127):
-            raise ValueError('entity %d sprite must be 0..127' % index)
+        for key in _ANIMATION_KEYS:
+            if key in entity and (int(entity[key]) < 0 or int(entity[key]) > 127):
+                raise ValueError('entity %d %s must be 0..127' % (index, key))
         entity_type = int(entity['type'])
         if 1 <= entity_type <= 4:
             has_spawn = True

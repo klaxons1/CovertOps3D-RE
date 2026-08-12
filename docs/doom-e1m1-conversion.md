@@ -74,10 +74,11 @@ sector остаётся закрытым, а клавиша `1` поднимае
 
 E1M1 imp, zombieman и shotgun guy переносятся как существующие CovertOps AI
 типы с собственными Doom billboard BMP4 (`sprite.<slot>`). Их исходные Doom
-patches масштабируются до 96px высоты при конвертации: это соответствует
+patches масштабируются до 160px высоты при конвертации: это соответствует
 физическому масштабу inherited renderer и не требует per-frame масштабирования
-на Java ME. Для стабильного первого импорта один Doom frame повторяется во
-всех AI frame indexes; обычный combat/movement уже работает через `GameEngine`.
+на Java ME. Для каждого actor выгружаются семь state frames
+(idle/walk/attack/pain/death/corpse), напрямую привязанных к AI frame indexes;
+обычный combat/movement уже работает через `GameEngine`.
 Doom elevators, switches, keys, exit scripting и остальные thing остаются
 metadata в `doom_things.ini` до отдельного этапа точного Doom gameplay.
 
