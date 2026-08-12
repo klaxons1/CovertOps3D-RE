@@ -147,7 +147,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -169,7 +169,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -1676,7 +1676,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -1742,7 +1742,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -2864,7 +2864,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -2897,7 +2897,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -2963,7 +2963,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -2974,7 +2974,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -3007,7 +3007,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -3018,7 +3018,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -3029,7 +3029,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -3183,7 +3183,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,
@@ -3205,7 +3205,7 @@
       "type": 0
     },
     {
-      "ceiling_height": 128,
+      "ceiling_height": 64,
       "ceiling_material": 7,
       "ceiling_sky": false,
       "floor_height": 64,

@@ -33,6 +33,7 @@
   "shared_assets": true,
   "sidedefs": 4325,
   "sprites": 0,
+  "structural_closed_sectors": 13,
   "thing_sprite_materials": 30,
   "things": 151,
   "vertices": 2534,

@@ -54,13 +54,17 @@ walkable import.
 It does contain several overlapping/stacked sector samples. The deterministic
 C3D BSP validation reports **12 local mismatches** in this 438-sector map. The
 converter writes this map only with `--allow-bsp-mismatches`; the count is
-recorded in `doom_conversion.json` rather than being hidden. This is a
-compatibility bridge for the map's ZDoom-style construction, not a claim that
-those local overlapping areas are a full 3D-floor implementation. Test MAP01
-in KEmulator and send a screenshot/location if one of those areas is visibly
-wrong; a true stacked-sector/3D-floor layer should then be implemented from
-actual evidence rather than globally slowing the renderer.
+recorded in `doom_conversion.json` rather than being hidden. Thirteen
+zero-height, untagged structural sectors are retained as closed geometry rather
+than being falsely expanded into 64-unit portal rooms. This removes the large
+sky slivers/false openings caused by treating ZDoom control sectors as walkable
+space. It remains a compatibility bridge rather than a claim that the local
+overlapping areas implement full 3D floors. Test MAP01 in KEmulator and send a
+screenshot/location if one of those areas is visibly wrong; a true
+stacked-sector/3D-floor layer should then be implemented from actual evidence
+rather than globally slowing the renderer.
 
 The mod's `SKY1` texture expects the commercial `RSKY1` patch, which is absent
 from the supplied base WAD. The converter uses the PWAD's authored direct
-`SKY1` patch instead and records that fallback in `doom_conversion.json`.
+`SKY1` patch with a brown RSKY-style tint and records that fallback in
+`doom_conversion.json`.

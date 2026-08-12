@@ -62,6 +62,7 @@ def main():
         # rather than silently lying about it or shipping the source WAD.
         assert report['bsp_mismatches_allowed']
         assert report['bsp_failures'] == 12
+        assert report['structural_closed_sectors'] == 13
         assert report['pvs_mode'] == 'doom-reject'
         assert report['pvs_visible_pairs'] == 123266
         assert len(report['missing_wall_textures']) == 1

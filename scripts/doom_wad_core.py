@@ -544,6 +544,18 @@ def _doom_sector_type(sector):
     return DOOM_DAMAGE_SECTOR_SPECIALS.get(sector['special'], 0)
 
 
+def _structural_closed_sector_count(doom_map, door_targets):
+    lift_tags = set(line['tag'] for line in doom_map.linedefs
+                    if line['special'] in DOOM_LIFT_SPECIALS and line['tag'] != 0)
+    count = 0
+    closed_doors = set(door_targets.values())
+    for index, sector in enumerate(doom_map.sectors):
+        if index not in closed_doors and sector['ceiling'] <= sector['floor'] \
+                and sector['tag'] not in lift_tags:
+            count += 1
+    return count
+
+
 def _doom_door_wall_type(special):
     # Existing GameEngine door types 26/27/28 now represent blue/yellow/red.
     # Keep ordinary doors type 1; the mapper only reaches this helper after a
@@ -628,6 +640,7 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
                   height_scale=height_scale,
                   world_scale=world_scale, minimum_clearance=minimum_clearance,
                   shared_assets=shared_asset_dir is not None,
+                  structural_closed_sectors=_structural_closed_sector_count(doom_map, door_targets),
                   missing_wall_textures=[], sprites=0)
 
     manifest_lines = [
@@ -676,6 +689,8 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
             try:
                 sky_width, sky_height, _left, _top, sky_pixels = _decode_patch_lump(
                     wad, 'SKY1', palette)
+                if 'RSKY1' in str(error):
+                    sky_pixels = _tint_missing_rsky_fallback(sky_pixels)
                 report['missing_wall_textures'].append('SKY1 texture fallback: %s' % error)
             except Exception:
                 sky_width, sky_height, sky_pixels = 64, 128, _placeholder_rgba(64, 128, sky=True)
@@ -1063,11 +1078,20 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
     for sector_index, raw in enumerate(doom_map.sectors):
         floor = int(round(raw['floor'] * height_scale))
         ceiling = int(round(raw['ceiling'] * height_scale))
-        if sector_index not in closed_door_sectors and ceiling < floor + minimum_clearance:
-            ceiling = floor + minimum_clearance
-        elif sector_index in closed_door_sectors:
+        if sector_index in closed_door_sectors:
             # Closed vertical door: GameEngine opens this ceiling on use.
             ceiling = floor
+        elif ceiling <= floor:
+            # Many large PWADs use zero-height sectors as closed structural
+            # geometry. Opening them into 64-unit rooms creates giant visual
+            # slivers and false portals; retain the solid closure. Tagged lift
+            # targets are the intentional exception and need clearance to move.
+            if raw['tag'] in lift_tags:
+                ceiling = floor + minimum_clearance
+            else:
+                ceiling = floor
+        elif ceiling < floor + minimum_clearance:
+            ceiling = floor + minimum_clearance
         floor_texture = 51 if raw['floor_texture'] == 'F_SKY1' else flat_slots.get(raw['floor_texture'], 0)
         ceiling_texture = 51 if raw['ceiling_texture'] == 'F_SKY1' else flat_slots.get(raw['ceiling_texture'], 0)
         light = _clamp((raw['light'] + 8) // 17, 0, 15)
@@ -1176,6 +1200,17 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
 def _material_relative_path(package_dir, asset_path):
     """Returns a portable C3M path, including ../doom-common references."""
     return os.path.relpath(asset_path, package_dir).replace(os.sep, '/')
+
+
+def _tint_missing_rsky_fallback(pixels):
+    """Approximates Doom II's brown RSKY1 when only a grayscale SKY1 exists."""
+    output = []
+    for red, green, blue, alpha in pixels:
+        luminance = (red * 30 + green * 59 + blue * 11) // 100
+        output.append((min(255, luminance * 80 // 100 + 22),
+                       min(255, luminance * 55 // 100 + 12),
+                       min(255, luminance * 38 // 100 + 8), alpha))
+    return output
 
 
 def _write_world_bmp(path, pixels, source_width, source_height, target_width, target_height):
