@@ -54,6 +54,7 @@ public final class TextStrings {
     public static String GOD_MODE_OFF;
     public static String DOOM_E1M1_TITLE;
     public static String DOOM_E1M2_TITLE;
+    public static String DOOM_ZAKAT_TITLE;
     static String GO_ANNA;
 
     static final String[] mainMenuItems = new String[5];
@@ -283,6 +284,7 @@ public final class TextStrings {
         GOD_MODE_OFF = "god mode off";
         DOOM_E1M1_TITLE = "e1m1: hangar";
         DOOM_E1M2_TITLE = "e1m2: nuclear plant";
+        DOOM_ZAKAT_TITLE = "zakat";
         GO_ANNA = "go now to the agent anna";
 
         copy(mainMenuItems, EN_MAIN_MENU);
@@ -341,6 +343,7 @@ public final class TextStrings {
         GOD_MODE_OFF = "режим бога: выкл";
         DOOM_E1M1_TITLE = "e1m1: ангар";
         DOOM_E1M2_TITLE = "e1m2: аэс";
+        DOOM_ZAKAT_TITLE = "закат";
         GO_ANNA = "идите к агенту Анне";
 
         copy(mainMenuItems, RU_MAIN_MENU);

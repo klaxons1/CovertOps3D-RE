@@ -16,10 +16,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     // in docs for the converter and is never loaded or bundled as a game map.
     public static final String DOOM_E1M1_LEVEL_PATH = "/gamedata/custom/doom-e1m1/level.c3b";
     public static final String DOOM_E1M2_LEVEL_PATH = "/gamedata/custom/doom-e1m2/level.c3b";
-    /** The currently shipped Doom episode route: Hangar -> Nuclear Plant. */
-    public static final int DOOM_LEVEL_COUNT = 2;
+    public static final String DOOM_ZAKAT_LEVEL_PATH = "/gamedata/custom/doom-zakat/level.c3b";
+    /** The currently shipped Doom route: Hangar -> Nuclear Plant -> Zakat. */
+    public static final int DOOM_LEVEL_COUNT = 3;
     public static final String[] LEVEL_FILE_NAMES = new String[]{
-            DOOM_E1M1_LEVEL_PATH, DOOM_E1M2_LEVEL_PATH, "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
+            DOOM_E1M1_LEVEL_PATH, DOOM_E1M2_LEVEL_PATH, DOOM_ZAKAT_LEVEL_PATH,
+            "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
     };
 
     public static WeaponManager weaponManager;
@@ -284,10 +286,10 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                     }
 
                     // The first selectable chapter (menu result 66) is
-                    // handled above as E1M1. Replace the old second campaign
-                    // map with E1M2; later chapter entries remain legacy until
-                    // their Doom conversions are added.
-                    int[] levelMap = new int[]{1, 4, 20, 5, 6, 22, 7, 9};
+                    // handled above as E1M1; the next two are E1M2 and the
+                    // converted Zakat MAP01 PWAD. Later entries remain legacy
+                    // until their Doom conversions are added.
+                    int[] levelMap = new int[]{1, 2, 20, 5, 6, 22, 7, 9};
                     int chapterIndex = menuResult - 67;
                     currentLevelId = levelMap[chapterIndex];
                     previousLevelId = -1;
@@ -320,6 +322,12 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         }
 
                         if (GameEngine.levelTransitionState == 1) {
+                            // Doom route IDs deliberately bypass legacy story
+                            // dialogs/minigames. This matters for MAP01 at id
+                            // 2, which historically belonged to CovertOps.
+                            if (isDoomLevelId(currentLevelId)) {
+                                needLoad = true;
+                            } else {
                             switch (currentLevelId) {
                                 case 0:
                                 case 13:
@@ -384,6 +392,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                     break;
                             }
                             needLoad = true;
+                            }
                         } else if (GameEngine.levelTransitionState == -1) {
                             needLoad = true;
                         }

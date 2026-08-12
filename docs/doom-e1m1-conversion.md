@@ -29,7 +29,8 @@ python3 scripts/convert_doom_e1m1.py --sprites used
 `res/gamedata/custom/doom-common/textures/`. Оба manifest используют
 `../doom-common/...`, поэтому одинаковые E1M1/E1M2 world textures не попадают
 в JAR дважды. `New Game` запускает E1M1, второй пункт главы — E1M2, а normal
-exit switch E1M1 переводит игрока на E1M2:
+exit switch E1M1 переводит игрока на E1M2; третья карта использует отдельный
+PWAD package `doom-zakat` (см. [`zakat-conversion.md`](zakat-conversion.md)).
 
 ```text
 level.c3d.json       # 2D геометрия/сектора/стены

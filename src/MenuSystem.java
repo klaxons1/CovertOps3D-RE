@@ -234,6 +234,7 @@ public final class MenuSystem {
                             // the second is mapped to E1M2 in MainGameCanvas.
                             chapterMenuItems[2] = TextStrings.DOOM_E1M1_TITLE;
                             chapterMenuItems[3] = TextStrings.DOOM_E1M2_TITLE;
+                            chapterMenuItems[4] = TextStrings.DOOM_ZAKAT_TITLE;
                             chapterMenuItems[chapterMenuItems.length - 1] =
                                     TextStrings.CHAPTER_MENU_DATA[TextStrings.CHAPTER_MENU_DATA.length - 1];
                             stackData = new Object[4];
@@ -251,7 +252,7 @@ public final class MenuSystem {
                             // selection is never hidden behind CovertOps save
                             // records. Maps that are not converted yet can be
                             // replaced independently without changing menu flow.
-                            for (int i = 4; i <= lastItem; ++i) {
+                            for (int i = 5; i <= lastItem; ++i) {
                                 chapterMenuItems[i] = TextStrings.CHAPTER_MENU_DATA[i];
                             }
                             // Store chapter menu into canvas for later usage? Use static holder

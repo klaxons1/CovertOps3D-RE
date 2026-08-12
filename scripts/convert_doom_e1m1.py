@@ -40,18 +40,26 @@ def main(argv=None):
                         help='PVS source; auto keeps E1M1 REJECT and uses all-visible for artifact-safe E1M2')
     parser.add_argument('--shared-assets', default=None,
                         help='optional shared texture directory, e.g. res/gamedata/custom/doom-common')
+    parser.add_argument('--base-wad', default=None,
+                        help='optional IWAD fallback for a PWAD without PLAYPAL/base sprites')
+    parser.add_argument('--allow-bsp-mismatches', action='store_true',
+                        help='write a map with known ZDoom/overlap BSP validation mismatches')
     args = parser.parse_args(argv)
 
     try:
-        wad = DOOM.WadFile(args.wad)
-        doom_map = DOOM.load_map(wad, args.map)
-        report = DOOM.convert_map(wad, doom_map, args.output,
+        map_wad = DOOM.WadFile(args.wad)
+        resource_wad = map_wad
+        if args.base_wad:
+            resource_wad = DOOM.WadOverlay(map_wad, DOOM.WadFile(args.base_wad))
+        doom_map = DOOM.load_map(map_wad, args.map)
+        report = DOOM.convert_map(resource_wad, doom_map, args.output,
                                   height_scale=args.height_scale,
                                   world_scale=args.world_scale,
                                   minimum_clearance=args.clearance,
                                   extract_sprites=args.sprites,
                                   pvs_mode=args.pvs,
-                                  shared_asset_dir=args.shared_assets)
+                                  shared_asset_dir=args.shared_assets,
+                                  allow_bsp_mismatches=args.allow_bsp_mismatches)
     except Exception as error:
         print('Doom conversion failed: %s' % error, file=sys.stderr)
         return 2

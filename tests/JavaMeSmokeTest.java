@@ -32,6 +32,7 @@ public final class JavaMeSmokeTest {
         testC3BFrameRenders();
         testDoomE1M1Level();
         testDoomE1M2Level();
+        testDoomZakatLevel();
         testRendererFastPaths();
         testFlatSpriteColors();
         testAllShippedLevels();
@@ -341,6 +342,27 @@ public final class JavaMeSmokeTest {
         assertEquals("Doom E1M2 lift platforms", 9, liftPlatforms);
         assertTrue("Doom E1M2 spawn", world.worldOrigin != null);
         assertTrue("Doom E1M2 BFG projectile", LevelLoader.getTexture(DoomGameMode.BFG_SPRITE) != null);
+    }
+
+    /** Loads the third routed Zakat PWAD conversion without any runtime WAD. */
+    private static void testDoomZakatLevel() {
+        LevelLoader.levelVariant = 0;
+        assertTrue("Doom Zakat C3B load", CustomLevelLoader.load(
+                "/gamedata/custom/doom-zakat/level.c3b", true));
+        GameWorld world = LevelLoader.gameWorld;
+        assertTrue("Doom Zakat geometry", world != null && world.wallDefinitions.length == 2365
+                && world.sectors.length == 438 && world.bspNodes.length == 1861);
+        assertEquals("Doom Zakat visible props", 135, world.staticObjects.length);
+        int visiblePairs = 0;
+        for (int sector = 0; sector < world.sectors.length; ++sector) {
+            for (int from = 0; from < world.sectors.length; ++from) {
+                if (!world.sectors[sector].visitedFlags[from]) ++visiblePairs;
+            }
+        }
+        assertEquals("Doom Zakat reject PVS", 123266, visiblePairs);
+        assertTrue("Doom Zakat spawn", world.worldOrigin != null);
+        assertTrue("Doom Zakat shared wall", LevelLoader.getTexture((byte)1) != null
+                && LevelLoader.getTexture((byte)1).pixelData != null);
     }
 
     /** Verifies the MascotME-inspired bulk clear and unrolled opaque-flat path. */

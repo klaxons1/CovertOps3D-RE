@@ -156,10 +156,10 @@ packages, `entities.ini`, installs loose wall/flat/sky BMPs, builds
 `GameWorld`, and then uses the existing `PortalRenderer`. Stock campaign
 loading remains unchanged.
 
-The repository routes New Game to compact Doom E1M1 and the second chapter
-entry to E1M2. An imported Doom exit switch advances E1M1 → E1M2 through the
-normal level loader while retaining the Doom inventory; E1M2 currently ends
-back at the chapter menu rather than falling into a legacy CovertOps level.
+The repository routes New Game to compact Doom E1M1, the second chapter entry
+to E1M2 and the third to the converted Zakat PWAD MAP01. Imported Doom exits
+advance E1M1 → E1M2 → Zakat through the normal loader while retaining Doom
+inventory; a completed Doom route never falls into a legacy CovertOps level.
 The tiny `custom/demo` package remains a pipeline fixture; legacy `level_01a`
 is retained as an import/compatibility asset.
 

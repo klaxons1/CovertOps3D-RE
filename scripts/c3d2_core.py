@@ -169,11 +169,11 @@ def dump_source(document, path):
         stream.write('\n')
 
 
-def compile_source(source_path, output_path=None):
+def compile_source(source_path, output_path=None, allow_bsp_mismatches=False):
     document = load_source(source_path)
     level = copy.deepcopy(document.level)
     report = LEGACY.rebuild_derived(level, validate=True)
-    if report.fail_samples:
+    if report.fail_samples and not allow_bsp_mismatches:
         raise RuntimeError('BSP validation failed: %d mismatches' % len(report.fail_samples))
 
     if output_path is None:

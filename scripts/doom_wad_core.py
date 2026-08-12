@@ -159,6 +159,11 @@ DOOM_ENEMIES = {
             death_frames=('SPOSJ0', 'SPOSK0', 'SPOSL0', 'SPOSM0')),
 }
 
+# A few Doom II hanging-body thing IDs are not in the shareware fallback
+# IWAD. Zandronum PWADs often retain PLAY corpse frames, which make a useful
+# visible fallback instead of silently dropping those map things.
+THING_SPRITE_FALLBACKS = {82: 'PLAYI', 83: 'PLAYJ'}
+
 THING_SPRITES = {
     5: 'BKEY', 6: 'YKEY', 8: 'BPAK', 9: 'SPOS', 10: 'PLAY', 11: 'PLAY', 12: 'PLAY',
     13: 'RKEY',
@@ -235,8 +240,95 @@ class WadFile(object):
             raise DoomWadError('bad namespace %s..%s' % (start_name, end_name))
         return self.lumps[start + 1:end]
 
+    def patch_lump(self, name):
+        """Returns a patch-namespace lump before a same-named flat/lump."""
+        name = name.upper()
+        for start_name, end_name in (('PP_START', 'PP_END'), ('P_START', 'P_END')):
+            try:
+                entries = self.namespace(start_name, end_name)
+            except DoomWadError:
+                continue
+            for entry in entries:
+                if entry['name'] == name:
+                    return self.data[entry['offset']:entry['offset'] + entry['size']]
+        return self.lump(name)
+
     def sha256(self):
         return hashlib.sha256(self.data).hexdigest()
+
+
+class WadOverlay(object):
+    """Read resources from a PWAD first and an IWAD fallback second.
+
+    MAPxx geometry is always parsed from the PWAD separately. This adapter is
+    only for palette, texture definitions, patches, flats and sprites: a
+    classic mod can omit PLAYPAL and individual Doom assets while overriding
+    its own textures. It intentionally keeps the runtime WAD-free.
+    """
+    def __init__(self, primary, fallback):
+        if primary is None or fallback is None:
+            raise DoomWadError('WadOverlay needs primary and fallback WADs')
+        self.primary = primary
+        self.fallback = fallback
+        self.magic = primary.magic
+        self.lumps = primary.lumps
+        self.data = primary.data
+        self.by_name = {}
+        for name in fallback.by_name:
+            self.by_name[name] = fallback.by_name[name]
+        for name in primary.by_name:
+            self.by_name[name] = primary.by_name[name]
+
+    def _source_for(self, name):
+        name = name.upper()
+        if name in self.primary.by_name:
+            return self.primary
+        if name in self.fallback.by_name:
+            return self.fallback
+        raise DoomWadError('missing lump: ' + name)
+
+    def lump(self, name, occurrence=-1):
+        return self._source_for(name).lump(name, occurrence)
+
+    def lump_entry(self, name, occurrence=-1):
+        return self._source_for(name).lump_entry(name, occurrence)
+
+    def patch_lump(self, name):
+        name = name.upper()
+        for source in (self.primary, self.fallback):
+            try:
+                return source.patch_lump(name)
+            except DoomWadError:
+                pass
+        return self.lump(name)
+
+    def namespace(self, start_name, end_name):
+        # A mod namespace is authoritative when both markers are present;
+        # callers that need fallback sprite names use sprite_lump_names().
+        try:
+            return self.primary.namespace(start_name, end_name)
+        except DoomWadError:
+            return self.fallback.namespace(start_name, end_name)
+
+    def sprite_lump_names(self):
+        names = {}
+        for source in (self.fallback, self.primary):
+            try:
+                entries = source.namespace('S_START', 'S_END')
+            except DoomWadError:
+                try:
+                    entries = source.namespace('SS_START', 'SS_END')
+                except DoomWadError:
+                    continue
+            for entry in entries:
+                names[entry['name']] = True
+        return list(names.keys())
+
+    def sha256(self):
+        return self.primary.sha256()
+
+    def fallback_sha256(self):
+        return self.fallback.sha256()
 
 
 class DoomMap(object):
@@ -374,11 +466,31 @@ def decode_patch(data, palette):
     return width, height, left_offset, top_offset, pixels
 
 
+def _decode_patch_lump(wad, name, palette):
+    """Decodes a patch, retrying the base IWAD for broken PWAD placeholders."""
+    try:
+        source = wad.patch_lump(name) if hasattr(wad, 'patch_lump') else wad.lump(name)
+        return decode_patch(source, palette)
+    except Exception:
+        if isinstance(wad, WadOverlay) and name.upper() in wad.fallback.by_name:
+            return decode_patch(wad.fallback.patch_lump(name), palette)
+        raise
+
+
+def _sprite_lump_names(wad):
+    if isinstance(wad, WadOverlay):
+        return wad.sprite_lump_names()
+    try:
+        return [entry['name'] for entry in wad.namespace('S_START', 'S_END')]
+    except DoomWadError:
+        return [entry['name'] for entry in wad.namespace('SS_START', 'SS_END')]
+
+
 def render_texture(wad, texture, palette):
     pixels = [(0, 0, 0, 255)] * (texture['width'] * texture['height'])
     for patch_info in texture['patches']:
-        patch = wad.lump(patch_info['name'])
-        width, height, _left, _top, patch_pixels = decode_patch(patch, palette)
+        width, height, _left, _top, patch_pixels = _decode_patch_lump(
+            wad, patch_info['name'], palette)
         for y in range(height):
             target_y = patch_info['y'] + y
             if target_y < 0 or target_y >= texture['height']:
@@ -447,7 +559,7 @@ def _doom_door_wall_type(special):
 
 def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
                 minimum_clearance=64, extract_sprites='none', pvs_mode='auto',
-                shared_asset_dir=None):
+                shared_asset_dir=None, allow_bsp_mismatches=False):
     """Converts a parsed classic Doom map into a complete compact C3D package."""
     if height_scale <= 0 or world_scale <= 0:
         raise DoomWadError('height/world scale must be positive')
@@ -555,7 +667,19 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     sky_texture = texture_defs.get('SKY1')
     sky_destination = os.path.join(texture_dir, 'sky.bmp')
     if sky_texture is not None:
-        sky_width, sky_height, sky_pixels = render_texture(wad, sky_texture, palette)
+        try:
+            sky_width, sky_height, sky_pixels = render_texture(wad, sky_texture, palette)
+        except Exception as error:
+            # Some Doom II/Zandronum PWADs define SKY1 through RSKY1 but also
+            # include a direct SKY1 patch. Prefer that authored patch when the
+            # required commercial-IWAD RSKY1 resource is not present.
+            try:
+                sky_width, sky_height, _left, _top, sky_pixels = _decode_patch_lump(
+                    wad, 'SKY1', palette)
+                report['missing_wall_textures'].append('SKY1 texture fallback: %s' % error)
+            except Exception:
+                sky_width, sky_height, sky_pixels = 64, 128, _placeholder_rgba(64, 128, sky=True)
+                report['missing_wall_textures'].append('SKY1: ' + str(error))
     else:
         sky_width, sky_height, sky_pixels = 64, 128, _placeholder_rgba(64, 128, sky=True)
         report['missing_wall_textures'].append('SKY1: texture not found')
@@ -602,10 +726,13 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     thing_sprite_slots = _export_runtime_thing_sprites(
             wad, doom_map, palette, package_dir,
             enemy_sprite_count + len(projectile_sprite_slots) + 1)
+    written_thing_slots = set()
     for thing_type, sprite_info in thing_sprite_slots.items():
         slot = sprite_info['slot']
         filename = 'sprites/doom/%02d_%s.bmp' % (slot, sprite_info['name'])
-        manifest_lines.append('sprite.%d=%s' % (slot, filename))
+        if slot not in written_thing_slots:
+            manifest_lines.append('sprite.%d=%s' % (slot, filename))
+            written_thing_slots.add(slot)
         material_lines.append('thing.%d=%d' % (thing_type, slot))
     hud_weapon_count = _export_hud_weapon_sprites(wad, palette, package_dir)
     report['enemies'] = sum(1 for thing in doom_map.things if thing['type'] in enemy_sprite_slots)
@@ -639,7 +766,8 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
                                            extract_sprites)
 
     c3b_path, bsp_report = C3.compile_source(os.path.join(package_dir, 'level.c3d.json'),
-                                              os.path.join(package_dir, 'level.c3b'))
+                                              os.path.join(package_dir, 'level.c3b'),
+                                              allow_bsp_mismatches=allow_bsp_mismatches)
     if pvs_mode == 'doom-reject':
         visible_pairs = _install_doom_reject_pvs(c3b_path, doom_map)
     else:
@@ -651,6 +779,7 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     report['bsp_segments'] = c3b_info['segments']
     report['bsp_splits'] = bsp_report.splits
     report['bsp_failures'] = len(bsp_report.fail_samples)
+    report['bsp_mismatches_allowed'] = allow_bsp_mismatches
     report['pvs_mode'] = pvs_mode
     report['pvs_visible_pairs'] = visible_pairs
     _write_text(os.path.join(package_dir, 'doom_conversion.json'),
@@ -766,8 +895,7 @@ def _export_runtime_enemy_sprites(wad, palette, package_dir):
         actor_slots = []
         for lump in info['frames']:
             try:
-                data = wad.lump(lump)
-                width, height, _left, _top, pixels = decode_patch(data, palette)
+                width, height, _left, _top, pixels = _decode_patch_lump(wad, lump, palette)
             except Exception as error:
                 raise DoomWadError('enemy sprite %s: %s' % (lump, error))
             filename = '%02d_%s.bmp' % (slot, _safe_name(lump))
@@ -782,8 +910,7 @@ def _export_runtime_enemy_sprites(wad, palette, package_dir):
         death_slots = slots[doom_type]['death']
         for lump in info['death_frames']:
             try:
-                data = wad.lump(lump)
-                width, height, _left, _top, pixels = decode_patch(data, palette)
+                width, height, _left, _top, pixels = _decode_patch_lump(wad, lump, palette)
             except Exception as error:
                 raise DoomWadError('enemy death sprite %s: %s' % (lump, error))
             filename = '%02d_%s.bmp' % (slot, _safe_name(lump))
@@ -803,7 +930,7 @@ def _export_runtime_projectile_sprites(wad, palette, package_dir, first_slot):
     slot = first_slot
     for name, lump in DOOM_PROJECTILES:
         try:
-            width, height, _left, _top, pixels = decode_patch(wad.lump(lump), palette)
+            width, height, _left, _top, pixels = _decode_patch_lump(wad, lump, palette)
         except Exception as error:
             raise DoomWadError('projectile sprite %s: %s' % (lump, error))
         _write_sprite_bmp(os.path.join(sprite_dir, '%02d_%s.bmp' % (slot, name)),
@@ -815,8 +942,7 @@ def _export_runtime_projectile_sprites(wad, palette, package_dir, first_slot):
 
 def _export_runtime_thing_sprites(wad, doom_map, palette, package_dir, first_slot):
     """Exports one billboard for every visible pickup, barrel and decoration in E1M1."""
-    entries = wad.namespace('S_START', 'S_END')
-    names = [entry['name'] for entry in entries]
+    names = _sprite_lump_names(wad)
     sprite_dir = os.path.join(package_dir, 'sprites', 'doom')
     if not os.path.isdir(sprite_dir):
         os.makedirs(sprite_dir)
@@ -832,10 +958,15 @@ def _export_runtime_thing_sprites(wad, doom_map, palette, package_dir, first_slo
             continue
         sprite_lump = _first_sprite_lump(names, prefix)
         if sprite_lump is None:
+            prefix = THING_SPRITE_FALLBACKS.get(thing_type)
+            if prefix:
+                sprite_lump = _first_sprite_lump(names, prefix)
+        if sprite_lump is None:
             continue
         if prefix not in prefix_slots:
             try:
-                width, height, _left, _top, pixels = decode_patch(wad.lump(sprite_lump), palette)
+                width, height, _left, _top, pixels = _decode_patch_lump(
+                    wad, sprite_lump, palette)
             except Exception:
                 continue
             slot = next_slot
@@ -869,7 +1000,7 @@ def _export_hud_weapon_sprites(wad, palette, package_dir):
     for weapon, idle_lump, fire_lump in DOOM_HUD_WEAPONS:
         for suffix, lump in (('a', idle_lump), ('b', fire_lump)):
             try:
-                width, height, _left, _top, pixels = decode_patch(wad.lump(lump), palette)
+                width, height, _left, _top, pixels = _decode_patch_lump(wad, lump, palette)
             except Exception as error:
                 raise DoomWadError('HUD weapon patch %s: %s' % (lump, error))
             _write_sprite_bmp(os.path.join(hud_dir, weapon + '_' + suffix + '.bmp'),
@@ -904,8 +1035,7 @@ def export_sprites(wad, doom_map, package_dir, palette, mode='used'):
         if wanted_prefixes is not None and name[:4] not in wanted_prefixes:
             continue
         try:
-            width, height, _left, _top, pixels = decode_patch(
-                wad.data[entry['offset']:entry['offset'] + entry['size']], palette)
+            width, height, _left, _top, pixels = _decode_patch_lump(wad, name, palette)
         except Exception:
             continue
         destination_name = _safe_name(name) + '.bmp'
