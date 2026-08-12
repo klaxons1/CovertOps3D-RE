@@ -67,6 +67,12 @@ DOOM_PROJECTILES = (
     ('imp_fireball', 'BAL1A0'),
 )
 DOOM_RUNTIME_PROJECTILE_HEIGHT = 32
+DOOM_RUNTIME_ITEM_HEIGHT = 64
+DOOM_ITEM_BASE = 9000
+
+# Multiplayer starts have a Doom player sprite prefix but should not become
+# world props in the single-player E1M1 import.
+DOOM_NON_WORLD_THING_TYPES = (1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16)
 
 DOOM_ENEMIES = {
     3001: dict(engine_type=3001, sprite='TROOA1', label='imp'),
@@ -416,12 +422,23 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
         filename = 'sprites/doom/%02d_%s.bmp' % (slot, name)
         manifest_lines.append('sprite.%d=%s' % (slot, filename))
         material_lines.append('projectile.%s=%d' % (name, slot))
+    thing_sprite_slots = _export_runtime_thing_sprites(
+            wad, doom_map, palette, package_dir,
+            len(enemy_sprite_slots) + len(projectile_sprite_slots) + 1)
+    for thing_type, sprite_info in thing_sprite_slots.items():
+        slot = sprite_info['slot']
+        filename = 'sprites/doom/%02d_%s.bmp' % (slot, sprite_info['name'])
+        manifest_lines.append('sprite.%d=%s' % (slot, filename))
+        material_lines.append('thing.%d=%d' % (thing_type, slot))
     hud_weapon_count = _export_hud_weapon_sprites(wad, palette, package_dir)
     report['enemies'] = sum(1 for thing in doom_map.things if thing['type'] in enemy_sprite_slots)
     report['enemy_sprite_materials'] = len(enemy_sprite_slots)
     report['enemy_sprite_height'] = DOOM_RUNTIME_SPRITE_HEIGHT
     report['projectile_sprite_materials'] = len(projectile_sprite_slots)
     report['projectile_sprite_height'] = DOOM_RUNTIME_PROJECTILE_HEIGHT
+    report['thing_sprite_materials'] = len(thing_sprite_slots)
+    report['world_items'] = sum(1 for thing in doom_map.things
+                                if thing['type'] in thing_sprite_slots)
     report['hud_weapon_frames'] = hud_weapon_count
 
     _write_text(os.path.join(package_dir, 'materials.c3m'), '\n'.join(manifest_lines) + '\n')
@@ -430,7 +447,7 @@ def convert_map(wad, doom_map, package_dir, height_scale=0.5, world_scale=1.0,
     document, doom_things = _build_c3d_document(doom_map, wall_slots, flat_slots,
                                                  fallback_wall, height_scale, world_scale,
                                                  minimum_clearance, door_targets,
-                                                 enemy_sprite_slots)
+                                                 enemy_sprite_slots, thing_sprite_slots)
     document.materials = 'materials.c3m'
     document.entities = 'entities.ini'
     C3.dump_source(document, os.path.join(package_dir, 'level.c3d.json'))
@@ -593,6 +610,52 @@ def _export_runtime_projectile_sprites(wad, palette, package_dir, first_slot):
     return slots
 
 
+def _export_runtime_thing_sprites(wad, doom_map, palette, package_dir, first_slot):
+    """Exports one billboard for every visible pickup, barrel and decoration in E1M1."""
+    entries = wad.namespace('S_START', 'S_END')
+    names = [entry['name'] for entry in entries]
+    sprite_dir = os.path.join(package_dir, 'sprites', 'doom')
+    if not os.path.isdir(sprite_dir):
+        os.makedirs(sprite_dir)
+
+    prefix_slots = {}
+    result = {}
+    next_slot = first_slot
+    for thing_type in sorted(set(thing['type'] for thing in doom_map.things)):
+        if thing_type in DOOM_NON_WORLD_THING_TYPES or thing_type in DOOM_ENEMIES:
+            continue
+        prefix = THING_SPRITES.get(thing_type)
+        if not prefix:
+            continue
+        sprite_lump = _first_sprite_lump(names, prefix)
+        if sprite_lump is None:
+            continue
+        if prefix not in prefix_slots:
+            try:
+                width, height, _left, _top, pixels = decode_patch(wad.lump(sprite_lump), palette)
+            except Exception:
+                continue
+            slot = next_slot
+            next_slot += 1
+            filename = '%02d_%s.bmp' % (slot, _safe_name(prefix))
+            _write_sprite_bmp(os.path.join(sprite_dir, filename), width, height, pixels,
+                              DOOM_RUNTIME_ITEM_HEIGHT, 128)
+            prefix_slots[prefix] = dict(slot=slot, name=_safe_name(prefix))
+        result[thing_type] = prefix_slots[prefix]
+    return result
+
+
+def _first_sprite_lump(names, prefix):
+    for suffix in ('A0', 'A1', 'B0'):
+        candidate = prefix + suffix
+        if candidate in names:
+            return candidate
+    for name in names:
+        if name.startswith(prefix):
+            return name
+    return None
+
+
 def _export_hud_weapon_sprites(wad, palette, package_dir):
     """Exports the two primary first-person frames for all Doom weapons."""
     hud_dir = os.path.join(package_dir, 'hud')
@@ -652,7 +715,7 @@ def export_sprites(wad, doom_map, package_dir, palette, mode='used'):
 
 def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
                         height_scale, world_scale, minimum_clearance, door_targets,
-                        enemy_sprite_slots):
+                        enemy_sprite_slots, thing_sprite_slots):
     level = LEGACY.Level()
     # Keep Doom's x/y plane directly as C3D x/z. Classic Doom front/right
     # sidedefs then retain their original winding, so the imported E1M1 is not
@@ -744,6 +807,11 @@ def _build_c3d_document(doom_map, wall_slots, flat_slots, fallback_wall,
                                  angle=converted_angle,
                                  type=enemy['engine_type'], param=0,
                                  sprite=enemy_sprite_slots[raw['type']]))
+        elif raw['type'] in thing_sprite_slots:
+            entities.append(dict(x=converted_x, z=converted_z,
+                                 angle=converted_angle,
+                                 type=DOOM_ITEM_BASE + raw['type'], param=0,
+                                 sprite=thing_sprite_slots[raw['type']]['slot']))
     if not entities:
         raise DoomWadError('map has no Doom player starts (things 1..4)')
     level.objects = entities
@@ -758,9 +826,16 @@ def _write_world_bmp(path, pixels, source_width, source_height, target_width, ta
     TEXTURES.write_bmp4(path, target_width, target_height, palette, indices)
 
 
-def _write_sprite_bmp(path, width, height, pixels, target_height=0):
-    if target_height > 0 and height != target_height:
+def _write_sprite_bmp(path, width, height, pixels, target_height=0, max_width=0):
+    target_width = width
+    if target_height > 0:
         target_width = max(1, (width * target_height + (height >> 1)) // height)
+    else:
+        target_height = height
+    if max_width > 0 and target_width > max_width:
+        target_width = max_width
+        target_height = max(1, (height * target_width + (width >> 1)) // width)
+    if width != target_width or height != target_height:
         pixels = TEXTURES.resize_rgba(pixels, width, height, target_width, target_height,
                                       fit=False)
         width = target_width

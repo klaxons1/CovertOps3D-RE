@@ -214,7 +214,7 @@ public final class JavaMeSmokeTest {
         assertTrue("Doom E1M1 geometry", world != null && world.wallDefinitions.length == 452
                 && world.sectors.length == 83 && world.bspNodes.length > 100);
         assertTrue("Doom E1M1 spawn", world.worldOrigin != null);
-        assertEquals("Doom E1M1 enemy count", 29, world.staticObjects.length);
+        assertEquals("Doom E1M1 actors and items", 113, world.staticObjects.length);
         int doomDoorWalls = 0;
         for (int i = 0; i < world.wallDefinitions.length; ++i) {
             if (world.wallDefinitions[i].getWallType() == 1) ++doomDoorWalls;
@@ -235,8 +235,18 @@ public final class JavaMeSmokeTest {
                 && LevelLoader.getTexture((byte)-1).pixelData != null);
         assertTrue("Doom E1M1 projectile sprite texture", LevelLoader.getTexture((byte)-4) != null
                 && LevelLoader.getTexture((byte)-7).pixelData != null);
-        assertTrue("Doom E1M1 enemy sprite frame", world.staticObjects[0]
-                .getCurrentLowerBodySpriteId() != 0);
+        assertTrue("Doom E1M1 enemy billboard", world.staticObjects[0]
+                .getExternalBillboardSpriteId() != 0);
+        boolean doomItemBillboard = false;
+        for (int i = 0; i < world.staticObjects.length; ++i) {
+            GameObject object = world.staticObjects[i];
+            if (object.objectType >= DoomGameMode.DOOM_ITEM_BASE
+                    && object.getExternalBillboardSpriteId() != 0) {
+                doomItemBillboard = true;
+                break;
+            }
+        }
+        assertTrue("Doom E1M1 item billboards", doomItemBillboard);
         assertTrue("Doom E1M1 flat texture", world.sectors[0].ceilingTexture != null
                 && world.sectors[0].ceilingTexture.flatColors != null);
         assertTrue("Doom E1M1 spawn sector", world.getSectorDataAtPoint(

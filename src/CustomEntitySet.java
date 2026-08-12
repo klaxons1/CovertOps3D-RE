@@ -87,6 +87,11 @@ public final class CustomEntitySet {
                     GameObject object = new GameObject(createTransform(i), rawAngle,
                             type, parameters[i]);
                     addExternalSpriteFrames(object, spriteSlots[i]);
+                    if (DoomGameMode.isSolidDoomProp(type)) {
+                        // Generic props otherwise start with aiState=-1 and
+                        // bypass the existing collision loop entirely.
+                        object.aiState = 0;
+                    }
                     objects[objectIndex++] = object;
                 }
             }
@@ -101,20 +106,13 @@ public final class CustomEntitySet {
     }
 
     /**
-     * Enemy AI switches among frame indexes 0..6. Reusing one authored Doom
-     * billboard across those indexes keeps the object visible even before a
-     * future frame-by-frame Doom animation importer is added.
+     * C3D actor art is a single floor-centered billboard. It deliberately
+     * bypasses the old upper/lower-body frame convention: Doom monsters are
+     * not CovertOps legs, and AI frame indexes must not change their anchor.
      */
     private static void addExternalSpriteFrames(GameObject object, short spriteSlot) {
         if (spriteSlot <= 0) return;
-        byte textureId = (byte)-spriteSlot;
-        for (int frame = 0; frame < 7; ++frame) {
-            // Floor billboards use the lower-body projection path. Its
-            // rounding is stable for small Doom patch dimensions; the upper
-            // path intentionally subtracts a half-pixel and can become -1 at
-            // a distance, which made the custom enemy disappear.
-            object.addSpriteFrame((byte)0, textureId);
-        }
+        object.setExternalBillboardSpriteId((byte)-spriteSlot);
     }
 
     private static int countEntitySections(String text, String path) throws IOException {

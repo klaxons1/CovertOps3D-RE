@@ -20,6 +20,10 @@ public final class GameObject {
     public int screenY;
     public Texture upperBodyTexture;
     public Texture lowerBodyTexture;
+    // C3D custom entities use one centered billboard, not the inherited
+    // CovertOps upper/lower body split.
+    private byte externalBillboardSpriteId;
+    public Texture externalBillboardTexture;
     public int upperBodyScreenWidth;
     public int upperBodyScreenHeight;
     public int lowerBodyScreenWidth;
@@ -40,6 +44,8 @@ public final class GameObject {
         this.screenY = 0;
         this.upperBodyTexture = null;
         this.lowerBodyTexture = null;
+        this.externalBillboardSpriteId = 0;
+        this.externalBillboardTexture = null;
         this.upperBodyScreenWidth = 0;
         this.upperBodyScreenHeight = 0;
         this.lowerBodyScreenWidth = 0;
@@ -132,6 +138,15 @@ public final class GameObject {
         this.upperBodySpriteIds[this.spriteFrameCount] = upperSpriteId;
         this.lowerBodySpriteIds[this.spriteFrameCount] = lowerSpriteId;
         this.spriteFrameCount++;
+    }
+
+    /** Assigns one C3D billboard that stays centered over the floor. */
+    public final void setExternalBillboardSpriteId(byte spriteId) {
+        this.externalBillboardSpriteId = spriteId;
+    }
+
+    public final byte getExternalBillboardSpriteId() {
+        return this.externalBillboardSpriteId;
     }
 
     public final boolean compareDepth(GameObject other) {

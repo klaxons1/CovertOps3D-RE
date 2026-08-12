@@ -59,7 +59,8 @@ def main(argv=None):
     print('assets: wall=%d flat=%d enemySprites=%d optionalSprites=%d' %
           (report['wall_textures'], report['flats'], report['enemy_sprite_materials'],
            report['sprites']))
-    print('gameplay: doors=%d enemies=%d' % (report['doors'], report['enemies']))
+    print('gameplay: doors=%d enemies=%d worldItems=%d' %
+          (report['doors'], report['enemies'], report['world_items']))
     print('PVS: %s visible=%d/%d' % (report['pvs_mode'], report['pvs_visible_pairs'],
           report['sectors'] * report['sectors']))
     print('C3B: nodes=%d leaves=%d segments=%d splits=%d failures=%d' %

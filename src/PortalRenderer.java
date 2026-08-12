@@ -497,8 +497,9 @@ public class PortalRenderer {
             if (gameObject.projectionData.y > NEAR_CLIP_DISTANCE) {
                 byte spriteIndex1 = gameObject.getCurrentUpperBodySpriteId();
                 byte spriteIndex2 = gameObject.getCurrentLowerBodySpriteId();
+                byte billboardSpriteId = gameObject.getExternalBillboardSpriteId();
 
-                if (spriteIndex1 != 0 || spriteIndex2 != 0) {
+                if (billboardSpriteId != 0 || spriteIndex1 != 0 || spriteIndex2 != 0) {
                     int objectHeight;
 
                     // Ceiling-mounted objects
@@ -521,6 +522,9 @@ public class PortalRenderer {
                             : null;
                     gameObject.lowerBodyTexture = (spriteIndex2 != 0)
                             ? LevelLoader.textureTable[spriteIndex2 + 128]
+                            : null;
+                    gameObject.externalBillboardTexture = (billboardSpriteId != 0)
+                            ? LevelLoader.textureTable[billboardSpriteId + 128]
                             : null;
 
                     visibleGameObjects[visibleObjectsCount++] = gameObject;
@@ -562,13 +566,20 @@ public class PortalRenderer {
                 int screenY = (gameObject.screenY >> 16) + HALF_VIEWPORT_HEIGHT;
                 int depth = gameObject.projectionData.y;
 
-                if (gameObject.lowerBodyTexture != null) {
+                if (gameObject.externalBillboardTexture != null) {
+                    Texture texture = gameObject.externalBillboardTexture;
+                    int billboardWidth = calculateBillboardSize(texture.width, depth);
+                    int billboardHeight = calculateBillboardSize(texture.height, depth);
+                    drawSprite(texture, lightLevel, screenX, screenY, depth,
+                            billboardWidth, billboardHeight);
+                } else if (gameObject.lowerBodyTexture != null) {
                     gameObject.calculateLowerBodyScreenSize();
                     drawSprite(gameObject.lowerBodyTexture, lightLevel, screenX, screenY,
                             depth, gameObject.lowerBodyScreenWidth, gameObject.lowerBodyScreenHeight);
                 }
 
-                if (gameObject.upperBodyTexture != null) {
+                if (gameObject.externalBillboardTexture == null
+                        && gameObject.upperBodyTexture != null) {
                     gameObject.calculateUpperBodyScreenSize();
                     drawSprite(gameObject.upperBodyTexture, lightLevel, screenX, screenY,
                             depth, gameObject.upperBodyScreenWidth, gameObject.upperBodyScreenHeight);
@@ -699,6 +710,13 @@ public class PortalRenderer {
         if (pixels == 0) return fallback;
         return 0xFF000000 | ((red / pixels) << 16)
                 | ((green / pixels) << 8) | (blue / pixels);
+    }
+
+    /** Calculates a centered C3D billboard dimension without body-frame rounding. */
+    private static int calculateBillboardSize(int textureSize, int depth) {
+        if (textureSize <= 0 || depth <= 0) return 0;
+        int size = (MathUtils.fixedPointDivide(textureSize << 16, depth) * 120 + 65536) >> 17;
+        return size > 0 ? size : 1;
     }
 
     /**

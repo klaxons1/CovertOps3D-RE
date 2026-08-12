@@ -308,6 +308,7 @@ public final class GameWorld {
                         case 3004:
                         case 3005:
                         case 3006:
+                        case DoomGameMode.DOOM_BARREL_TYPE:
                             return false;
                     }
                 }
@@ -368,6 +369,7 @@ public final class GameWorld {
                 case 3004:
                 case 3005:
                 case 3006:
+                case DoomGameMode.DOOM_BARREL_TYPE:
                     Transform3D objTransform = obj.transform;
                     int deltaX = this.collisionTestPoint.x - objTransform.x;
                     int deltaZ = this.collisionTestPoint.y - objTransform.z;
@@ -472,6 +474,12 @@ public final class GameWorld {
             int absDeltaZ = deltaZ < 0 ? -deltaZ : deltaZ;
 
             if (absDeltaX >= PICKUP_RADIUS || absDeltaZ >= PICKUP_RADIUS) continue;
+
+            if (DoomGameMode.collectDoomItem(objType)) {
+                this.staticObjects[i] = null;
+                HelperUtils.playSound(1, false, 80, 0);
+                continue;
+            }
 
             boolean collected = true;
             boolean triggerTransition = false;

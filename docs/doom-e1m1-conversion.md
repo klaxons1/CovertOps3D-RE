@@ -44,6 +44,8 @@ doom_conversion.json # размеры, hash исходника и BSP report
 - игроки Doom things `1..4` → `entities.ini`;
 - 16 HUD weapon frames: fist, pistol, shotgun, chaingun, rocket, plasma,
   BFG и chainsaw;
+- все видимые E1M1 things: barrels, medkits, ammo, armor, weapon pickups,
+  bonus/decorative props как C3D billboard entities;
 - свет секторов `0..255` → C3D `0..15`;
 - необязательные Doom sprite patch lumps (`--sprites used|all`).
 
@@ -83,8 +85,11 @@ metadata в `doom_things.ini` до отдельного этапа точног�
 fist, pistol, shotgun, chaingun, rocket launcher, plasma rifle, BFG9000 и
 chainsaw. Их HUD BMP4 patch frames выгружаются в `hud/`. Rocket, plasma и BFG
 сразу создают видимый world projectile с отдельным Doom BMP4, а imp использует
-`BAL1A0` fireball вместо legacy Covert projectile. Точные spread, splash
-falloff и BFG tracer states останутся следующим gameplay-проходом.
+`BAL1A0` fireball вместо legacy Covert projectile. Ammo, shells, rockets,
+cells, medkits, stimpacks, armor, bonus items и weapon pickups уже
+конвертируются как collectable Doom items; barrels и decorations остаются
+world props. Точные spread, splash falloff и BFG tracer states останутся
+следующим gameplay-проходом.
 
 `--sprites used|all` по-прежнему экспортирует дополнительные quantized Doom
 patch BMP4 для редактора и будущей покадровой анимации, но не нужен для уже
