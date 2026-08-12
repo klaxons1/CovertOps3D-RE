@@ -76,7 +76,9 @@ doom_conversion.json # размеры, hash исходника и BSP report
 
 Classic Doom в этом WAD не имеет slope-поверхностей: сектор хранит только
 горизонтальные `floorHeight` и `ceilingHeight`. Поэтому slope support для
-E1M1 не нужен и не добавляется в Java ME renderer hot path. `--pvs auto`
+E1M1 не нужен и не добавляется в Java ME renderer hot path. Runtime C3B
+сохраняет authored Doom `SEGS`/`SSECTORS`/`NODES` вместо повторной BSP-сборки,
+так что сложные outdoor/sky subsectors остаются в исходном секторе. `--pvs auto`
 оставляет симметричный Doom `REJECT` для компактного E1M1, но сознательно
 выбирает `all-visible` для E1M2: REJECT — это таблица зрения AI, а не строгий
 portal PVS, и на большой связной карте E1M2 он давал пропадающие сектора.

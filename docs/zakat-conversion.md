@@ -22,8 +22,7 @@ python3 scripts/convert_doom_e1m1.py \
     --map MAP01 \
     --base-wad docs/DOOM.WAD \
     --shared-assets res/gamedata/custom/doom-zakat-common \
-    --pvs doom-reject \
-    --allow-bsp-mismatches
+    --pvs doom-reject
 ```
 
 The PWAD has no `PLAYPAL` and refers to a few stock resources, so
@@ -42,7 +41,7 @@ written to `res/`; the MIDlet does not need either WAD at runtime.
 - player spawn, pickups, props, native Doom weapons/HUD and fixed-point/BSP
   geometry;
 - `doom-reject` PVS for this very large outdoor map, avoiding an all-visible
-  traversal over 1,862 C3D BSP leaves on a small Java ME heap.
+  traversal over 1,710 authored Doom BSP leaves on a small Java ME heap.
 
 ## Zandronum note and known geometry limit
 
@@ -51,18 +50,21 @@ classic Doom binary map lump layout and does not contain ACS/UDMF data or
 linedef specials that require a Zandronum runtime feature for the initial
 walkable import.
 
-It does contain several overlapping/stacked sector samples. The deterministic
-C3D BSP validation reports **12 local mismatches** in this 438-sector map. The
-converter writes this map only with `--allow-bsp-mismatches`; the count is
-recorded in `doom_conversion.json` rather than being hidden. Thirteen
-zero-height, untagged structural sectors are retained as closed geometry rather
-than being falsely expanded into 64-unit portal rooms. This removes the large
-sky slivers/false openings caused by treating ZDoom control sectors as walkable
-space. It remains a compatibility bridge rather than a claim that the local
-overlapping areas implement full 3D floors. Test MAP01 in KEmulator and send a
-screenshot/location if one of those areas is visibly wrong; a true
-stacked-sector/3D-floor layer should then be implemented from actual evidence
-rather than globally slowing the renderer.
+It does contain several overlapping/stacked sector samples. Instead of
+rebuilding an approximate C3D BSP from the overlapping polygons, the converter
+now preserves the authored classic Doom `SEGS`, `SSECTORS` and `NODES` tree in
+the C3B runtime package. This keeps the player in the original MAP01
+subsector rather than the giant outer sky sector, and reduces the runtime BSP
+to 1,709 nodes / 1,710 leaves. Thirteen zero-height, untagged structural
+sectors are additionally retained as closed geometry rather than being falsely
+expanded into 64-unit portal rooms. This removes the large sky slivers/false
+openings caused by treating ZDoom control sectors as walkable space.
+
+This is still not a claim that arbitrary overlapping areas implement full
+Zandronum 3D floors. Test MAP01 in KEmulator and send a screenshot/location if
+one of those local areas is visibly wrong; a true stacked-sector/3D-floor layer
+should then be implemented from actual evidence rather than globally slowing
+the renderer.
 
 The mod's `SKY1` texture expects the commercial `RSKY1` patch, which is absent
 from the supplied base WAD. The converter uses the PWAD's authored direct
