@@ -27,7 +27,7 @@ public final class LevelResourceManager {
             Image crosshair = Image.createImage("/gamedata/sprites/aim.png");
             hudRenderer.setStatusBarImage(statusBar);
             hudRenderer.setCrosshairImage(crosshair);
-            fontRenderer.loadLargeFont("/gamedata/sprites/font.png");
+            fontRenderer.loadFont(TextStrings.getFontConfigPath());
 
             weaponManager.initialize();
 
@@ -41,10 +41,67 @@ public final class LevelResourceManager {
         }
     }
 
+    /**
+     * Loads a standalone C3B level package with its external BMP materials.
+     * This is the entry point used by the forthcoming C3D2 editor/browser;
+     * stock campaign loading below remains legacy-compatible.
+     */
+    public boolean loadCustomLevelResources(String c3bPath) {
+        try {
+            boolean doomMode = DoomGameMode.isDoomLevelPath(c3bPath);
+            boolean keepDoomInventory = doomMode && DoomGameMode.isActive()
+                    && MainGameCanvas.previousLevelId >= 0
+                    && MainGameCanvas.isDoomLevelId(MainGameCanvas.previousLevelId);
+            DoomGameMode.setActive(doomMode);
+            HelperUtils.freeMemory();
+            if (!CustomLevelLoader.load(c3bPath, true)) {
+                DebugLogger.log("LevelResourceManager", "C3B load failed: " + c3bPath);
+                return false;
+            }
+            GameEngine.resetLevelState();
+            if (doomMode) {
+                if (keepDoomInventory) {
+                    // Exit switches advance within the same Doom episode, so
+                    // retain health, armour, ammo, selected weapon and god
+                    // mode while only the world/spawn is reset.
+                    DebugLogger.log("LevelResourceManager", "Doom transition keeps inventory");
+                } else {
+                    DoomGameMode.configurePlayerLoadout(weaponManager);
+                }
+            }
+            HelperUtils.freeMemory();
+            DebugLogger.log("LevelResourceManager", "C3B load ok: " + c3bPath);
+            return true;
+        } catch (Exception e) {
+            DebugLogger.logException("LevelResourceManager.loadCustom", e);
+            return false;
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("LevelResourceManager.loadCustom", e);
+            return false;
+        }
+    }
+
     public void loadLevelResources() {
         try {
             HelperUtils.freeMemory();
-            String fullLevelPath = MainGameCanvas.LEVEL_PATH_PREFIX + MainGameCanvas.LEVEL_FILE_NAMES[MainGameCanvas.currentLevelId];
+            String levelEntry = MainGameCanvas.LEVEL_FILE_NAMES[MainGameCanvas.currentLevelId];
+            boolean customC3B = endsWith(levelEntry, ".c3b");
+            String fullLevelPath = customC3B ? levelEntry
+                    : MainGameCanvas.LEVEL_PATH_PREFIX + levelEntry;
+
+            if (customC3B) {
+                // C3B owns its objects and external material set; campaign
+                // object backtracking and legacy atlas preloading do not apply.
+                cachedStaticObjects = null;
+                nextLevelObjects = null;
+                for (int i = 0; i < GameEngine.keysCollected.length; ++i) {
+                    GameEngine.keysCollected[i] = false;
+                }
+                if (!loadCustomLevelResources(fullLevelPath)) return;
+                return;
+            }
+
+            DoomGameMode.setActive(false);
             if (MainGameCanvas.previousLevelId < MainGameCanvas.currentLevelId) {
                 if (MainGameCanvas.previousLevelId > -1) {
                     cachedStaticObjects = LevelLoader.gameWorld.staticObjects;
@@ -60,8 +117,9 @@ public final class LevelResourceManager {
                     LevelLoader.gameWorld.staticObjects = nextLevelObjects;
                     nextLevelObjects = null;
                 } else {
-                    GameEngine.keysCollected[0] = false;
-                    GameEngine.keysCollected[1] = false;
+                    for (int i = 0; i < GameEngine.keysCollected.length; ++i) {
+                        GameEngine.keysCollected[i] = false;
+                    }
                 }
             } else {
                 nextLevelObjects = LevelLoader.gameWorld.staticObjects;
@@ -253,5 +311,10 @@ public final class LevelResourceManager {
         } catch (OutOfMemoryError e) {
             DebugLogger.logOutOfMemory("LevelResourceManager.loadLevel", e);
         }
+    }
+
+    private static boolean endsWith(String text, String suffix) {
+        return text.length() >= suffix.length()
+                && text.substring(text.length() - suffix.length()).equals(suffix);
     }
 }

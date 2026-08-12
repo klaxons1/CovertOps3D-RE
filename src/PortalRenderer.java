@@ -57,11 +57,15 @@ public class PortalRenderer {
     /** Screen pixel buffer for rendering */
     public static int[] screenBuffer;
 
-    /** History of floor clipping arrays for each visible sector */
-    public static Vector floorClipHistory;
-
-    /** History of ceiling clipping arrays for each visible sector */
-    public static Vector ceilingClipHistory;
+    /**
+     * Saved clip state for each traversed sector. Plain arrays avoid Vector's
+     * synchronized size/elementAt calls in the per-frame portal traversal.
+     * Inner arrays are still allocated lazily, exactly when a sector becomes
+     * visible for the first time.
+     */
+    private static short[][] floorClipHistory;
+    private static short[][] ceilingClipHistory;
+    private static final int INITIAL_CLIP_HISTORY_CAPACITY = 8;
 
     /** Flag indicating if gun fire lighting effect is active */
     public static boolean gunFireLighting = false;
@@ -113,6 +117,9 @@ public class PortalRenderer {
     /** Current skybox texture */
     private static Texture skyboxTexture;
 
+    /** Average neutral sky color used by the optional flat-sky mode. */
+    private static int skyFlatColor = 0xFF405070;
+
     /** Depth buffer for span rendering */
     static short[] depthBuffer;
 
@@ -142,6 +149,41 @@ public class PortalRenderer {
 
     /** Lookup table for reciprocal values (1/x) */
     static int[] reciprocalTable;
+
+    /** Allocates only the small outer clip-history arrays during engine setup. */
+    static void initializeClipHistory() {
+        floorClipHistory = new short[INITIAL_CLIP_HISTORY_CAPACITY][];
+        ceilingClipHistory = new short[INITIAL_CLIP_HISTORY_CAPACITY][];
+    }
+
+    /**
+     * Ensures a reusable pair of clip snapshots exists for a visible-sector
+     * index. The normal frame path only performs two array reads here.
+     */
+    private static void ensureClipHistory(int sectorIndex) {
+        if (floorClipHistory == null || ceilingClipHistory == null) {
+            initializeClipHistory();
+        }
+
+        if (sectorIndex >= floorClipHistory.length) {
+            int newCapacity = floorClipHistory.length;
+            while (sectorIndex >= newCapacity) {
+                newCapacity <<= 1;
+            }
+
+            short[][] expandedFloor = new short[newCapacity][];
+            short[][] expandedCeiling = new short[newCapacity][];
+            System.arraycopy(floorClipHistory, 0, expandedFloor, 0, floorClipHistory.length);
+            System.arraycopy(ceilingClipHistory, 0, expandedCeiling, 0, ceilingClipHistory.length);
+            floorClipHistory = expandedFloor;
+            ceilingClipHistory = expandedCeiling;
+        }
+
+        if (floorClipHistory[sectorIndex] == null) {
+            floorClipHistory[sectorIndex] = new short[VIEWPORT_WIDTH];
+            ceilingClipHistory[sectorIndex] = new short[VIEWPORT_WIDTH];
+        }
+    }
 
     /**
      * Clips a wall segment to the near clipping plane and projects it to screen coordinates.
@@ -315,6 +357,18 @@ public class PortalRenderer {
         int backCeilingHeight = -cameraY + (-backSector.ceilingHeight << 16);
         int backFloorHeight = -cameraY + (-backSector.floorHeight << 16);
 
+        // Doom's F_SKY1 convention treats neighboring sky ceilings as one
+        // infinite sky plane even when their numeric ceiling heights differ.
+        // Without this, a portal between two outdoor sectors grows a tall
+        // upper wall into the horizon (the visible stripe in E1M1's yard).
+        // Inherited field naming is inverted: floorTextureId == 51 means the
+        // physical ceiling is sky.
+        boolean sharedSkyCeiling = frontSector.floorTextureId == 51
+                && backSector.floorTextureId == 51;
+        if (sharedSkyCeiling) {
+            backCeilingHeight = frontCeilingHeight;
+        }
+
         int startVertexIndex = wallSegment.startVertexIndex & 0xFFFF;
         int endVertexIndex = wallSegment.endVertexIndex & 0xFFFF;
         int textureOffset = wallSegment.textureOffset & 0xFFFF;
@@ -338,7 +392,8 @@ public class PortalRenderer {
             int backCeilingEndY = (MathUtils.fixedPointDivide(backCeilingHeight, screenEnd.y) * HALF_VIEWPORT_WIDTH + HALF_VIEWPORT_HEIGHT_FP) >> 16;
             int backFloorEndY = (MathUtils.fixedPointDivide(backFloorHeight, screenEnd.y) * HALF_VIEWPORT_WIDTH + HALF_VIEWPORT_HEIGHT_FP) >> 16;
 
-            int upperWallHeight = frontSector.ceilingHeight - backSector.ceilingHeight;
+            int upperWallHeight = sharedSkyCeiling ? 0
+                    : frontSector.ceilingHeight - backSector.ceilingHeight;
             int lowerWallHeight = backSector.floorHeight - frontSector.floorHeight;
 
             Texture upperTexture = LevelLoader.getTexture(frontSurface.upperTextureId);
@@ -423,10 +478,13 @@ public class PortalRenderer {
 
         SectorData sectorData = sector.getSectorData();
         Vector dynamicObjects = sector.dynamicObjects;
+        int dynamicObjectCount = dynamicObjects.size();
         visibleObjectsCount = 0;
 
-        // Transform objects to view space and collect visible ones
-        for (int i = 0; i < dynamicObjects.size(); i++) {
+        // Transform objects to view space and collect visible ones.
+        // Vector.size() is synchronized on CLDC, so read it once: this method
+        // does not mutate the sector list during rendering.
+        for (int i = 0; i < dynamicObjectCount; i++) {
             GameObject gameObject = (GameObject)dynamicObjects.elementAt(i);
             Transform3D transform = gameObject.transform;
 
@@ -439,8 +497,9 @@ public class PortalRenderer {
             if (gameObject.projectionData.y > NEAR_CLIP_DISTANCE) {
                 byte spriteIndex1 = gameObject.getCurrentUpperBodySpriteId();
                 byte spriteIndex2 = gameObject.getCurrentLowerBodySpriteId();
+                byte billboardSpriteId = gameObject.getExternalBillboardSpriteId();
 
-                if (spriteIndex1 != 0 || spriteIndex2 != 0) {
+                if (billboardSpriteId != 0 || spriteIndex1 != 0 || spriteIndex2 != 0) {
                     int objectHeight;
 
                     // Ceiling-mounted objects
@@ -464,6 +523,9 @@ public class PortalRenderer {
                     gameObject.lowerBodyTexture = (spriteIndex2 != 0)
                             ? LevelLoader.textureTable[spriteIndex2 + 128]
                             : null;
+                    gameObject.externalBillboardTexture = (billboardSpriteId != 0)
+                            ? LevelLoader.textureTable[billboardSpriteId + 128]
+                            : null;
 
                     visibleGameObjects[visibleObjectsCount++] = gameObject;
 
@@ -473,6 +535,14 @@ public class PortalRenderer {
                 }
             }
         }
+
+        if (visibleObjectsCount == 0) {
+            return;
+        }
+
+        // All collected objects belong to this sector, so their light is the
+        // same for the whole pass. Avoid calling getLightLevel per sprite.
+        int lightLevel = sectorData.getLightLevel();
 
         // Sort objects by depth (insertion sort)
         for (int i = 1; i < visibleObjectsCount; i++) {
@@ -492,18 +562,30 @@ public class PortalRenderer {
             GameObject gameObject = visibleGameObjects[i];
 
             if (gameObject.projectToScreen()) {
-                int lightLevel = sectorData.getLightLevel();
                 int screenX = (gameObject.projectionData.x >> 16) + HALF_VIEWPORT_WIDTH;
                 int screenY = (gameObject.screenY >> 16) + HALF_VIEWPORT_HEIGHT;
                 int depth = gameObject.projectionData.y;
 
-                if (gameObject.lowerBodyTexture != null) {
+                if (gameObject.externalBillboardTexture != null) {
+                    Texture texture = gameObject.externalBillboardTexture;
+                    int billboardWidth = calculateBillboardSize(texture.width, depth);
+                    int billboardHeight = calculateBillboardSize(texture.height, depth);
+                    // projectToScreen() gives the floor contact point. drawSprite()
+                    // expects its top-left corner, so center horizontally and
+                    // lift by full height. This is the key distinction from the
+                    // inherited lower-body/"legs" renderer path.
+                    int billboardLeft = screenX - (billboardWidth >> 1);
+                    int billboardTop = screenY - billboardHeight;
+                    drawSprite(texture, lightLevel, billboardLeft, billboardTop, depth,
+                            billboardWidth, billboardHeight);
+                } else if (gameObject.lowerBodyTexture != null) {
                     gameObject.calculateLowerBodyScreenSize();
                     drawSprite(gameObject.lowerBodyTexture, lightLevel, screenX, screenY,
                             depth, gameObject.lowerBodyScreenWidth, gameObject.lowerBodyScreenHeight);
                 }
 
-                if (gameObject.upperBodyTexture != null) {
+                if (gameObject.externalBillboardTexture == null
+                        && gameObject.upperBodyTexture != null) {
                     gameObject.calculateUpperBodyScreenSize();
                     drawSprite(gameObject.upperBodyTexture, lightLevel, screenX, screenY,
                             depth, gameObject.upperBodyScreenWidth, gameObject.upperBodyScreenHeight);
@@ -535,7 +617,8 @@ public class PortalRenderer {
         int sinAngle = MathUtils.fastSin(playerAngle);
         int cosAngle = MathUtils.fastCos(playerAngle);
 
-        gunFireLighting = MainGameCanvas.weaponSpriteFrame == 1 && GameEngine.currentWeapon != 0;
+        gunFireLighting = SaveSystem.muzzleLightingEnabled != 0
+                && MainGameCanvas.weaponSpriteFrame == 1 && GameEngine.currentWeapon != 0;
 
         renderUtils.resetRenderer();
         Sector.resetClipArrays();
@@ -549,19 +632,13 @@ public class PortalRenderer {
                 break;
             }
 
-            // Expand clip history if needed
-            if (sectorIndex >= floorClipHistory.size()) {
-                short[] floorClipCopy = new short[VIEWPORT_WIDTH];
-                short[] ceilingClipCopy = new short[VIEWPORT_WIDTH];
-                floorClipHistory.addElement(floorClipCopy);
-                ceilingClipHistory.addElement(ceilingClipCopy);
-            }
+            ensureClipHistory(sectorIndex);
+            short[] savedFloorClip = floorClipHistory[sectorIndex];
+            short[] savedCeilingClip = ceilingClipHistory[sectorIndex];
 
-            // Save current clip state
-            System.arraycopy(Sector.floorClip, 0,
-                    (short[])floorClipHistory.elementAt(sectorIndex), 0, VIEWPORT_WIDTH);
-            System.arraycopy(Sector.ceilingClip, 0,
-                    (short[])ceilingClipHistory.elementAt(sectorIndex), 0, VIEWPORT_WIDTH);
+            // Save current clip state.
+            System.arraycopy(Sector.floorClip, 0, savedFloorClip, 0, VIEWPORT_WIDTH);
+            System.arraycopy(Sector.ceilingClip, 0, savedCeilingClip, 0, VIEWPORT_WIDTH);
 
             // Render all walls in sector
             WallSegment[] walls = currentSector.walls;
@@ -578,10 +655,10 @@ public class PortalRenderer {
         for (int sectorIndex = BSPNode.visibleSectorsCount - 1; sectorIndex >= 0; sectorIndex--) {
             Sector currentSector = BSPNode.visibleSectorsList[sectorIndex];
 
-            // Restore clip state for this sector
-            System.arraycopy(floorClipHistory.elementAt(sectorIndex), 0,
+            // Restore clip state for this sector.
+            System.arraycopy(floorClipHistory[sectorIndex], 0,
                     Sector.floorClip, 0, VIEWPORT_WIDTH);
-            System.arraycopy(ceilingClipHistory.elementAt(sectorIndex), 0,
+            System.arraycopy(ceilingClipHistory[sectorIndex], 0,
                     Sector.ceilingClip, 0, VIEWPORT_WIDTH);
 
             renderDynamicObjects(currentSector, playerX, playerY, playerZ,
@@ -596,6 +673,56 @@ public class PortalRenderer {
      */
     static void setSkyboxTexture(Texture texture) {
         skyboxTexture = texture;
+        skyFlatColor = calculateTextureAverageColor(texture, 8, skyFlatColor);
+    }
+
+    /**
+     * Computes a representative texture color once when the sky is assigned.
+     * Texture data is packed as two horizontal texels per byte.
+     */
+    private static int calculateTextureAverageColor(Texture texture, int lightLevel, int fallback) {
+        if (texture == null || texture.pixelData == null || texture.colorPalettes == null) {
+            return fallback;
+        }
+
+        int[] palette = texture.colorPalettes[lightLevel];
+        byte[][] columns = texture.pixelData;
+        int textureWidth = texture.width;
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+        int pixels = 0;
+
+        for (int pair = 0; pair < columns.length; ++pair) {
+            byte[] column = columns[pair];
+            for (int y = 0; y < column.length; ++y) {
+                int packed = column[y] & 0xFF;
+                int high = palette[(packed >> 4) & 15];
+                red += (high >> 16) & 0xFF;
+                green += (high >> 8) & 0xFF;
+                blue += high & 0xFF;
+                pixels++;
+
+                if ((pair << 1) + 1 < textureWidth) {
+                    int low = palette[packed & 15];
+                    red += (low >> 16) & 0xFF;
+                    green += (low >> 8) & 0xFF;
+                    blue += low & 0xFF;
+                    pixels++;
+                }
+            }
+        }
+
+        if (pixels == 0) return fallback;
+        return 0xFF000000 | ((red / pixels) << 16)
+                | ((green / pixels) << 8) | (blue / pixels);
+    }
+
+    /** Calculates a centered C3D billboard dimension without body-frame rounding. */
+    private static int calculateBillboardSize(int textureSize, int depth) {
+        if (textureSize <= 0 || depth <= 0) return 0;
+        int size = (MathUtils.fixedPointDivide(textureSize << 16, depth) * 120 + 65536) >> 17;
+        return size > 0 ? size : 1;
     }
 
     /**
@@ -611,6 +738,14 @@ public class PortalRenderer {
      */
     private static void drawSprite(Texture texture, int lightLevel, int screenX, int screenY,
                                    int depth, int spriteWidth, int spriteHeight) {
+        // Small custom billboards can quantize below one screen pixel at a
+        // distance. The legacy formulas may then produce -1 dimensions, and
+        // spriteWidth + 1 used to divide by zero below. Dropping a sub-pixel
+        // sprite is both visually correct and keeps one malformed/far enemy
+        // from aborting the complete HUD/world frame.
+        if (texture == null || spriteWidth <= 0 || spriteHeight <= 0) {
+            return;
+        }
 
         // Apply horizontal offset
         if (texture.horizontalOffset > 0) {
@@ -647,6 +782,7 @@ public class PortalRenderer {
         int textureStepU = (textureWidth << 16) / (spriteWidth + 1);
         int textureU = clipLeft * textureStepU;
         int textureColumn = textureU >>> 16;
+        byte[][] textureColumns = texture.pixelData;
 
         // Calculate light level with depth attenuation
         int depthFactor = depth >> 22;
@@ -656,13 +792,24 @@ public class PortalRenderer {
         } else {
             effectiveLightLevel = lightLevel - depthFactor;
         }
-        effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
+        if (effectiveLightLevel < 0) {
+            effectiveLightLevel = 0;
+        } else if (effectiveLightLevel > 15) {
+            effectiveLightLevel = 15;
+        }
 
         int[] colorPalette = texture.colorPalettes[effectiveLightLevel];
         int bottomY = screenY + spriteHeight;
 
         for (int column = clipLeft; column <= clipRight; column++) {
-            drawSpriteColumn(texture.getPixelRow(textureColumn), textureColumn & 1, colorPalette,
+            // Normally textureColumn is in [0, width): textureStepU divides
+            // by spriteWidth + 1, so even the final source column cannot
+            // reach width. Keep the old wrapped accessor as a defensive
+            // fallback for malformed/custom sprite dimensions.
+            byte[] textureColumnPixels = textureColumn < textureWidth
+                    ? textureColumns[textureColumn >> 1]
+                    : texture.getPixelRow(textureColumn);
+            drawSpriteColumn(textureColumnPixels, textureColumn & 1, colorPalette,
                     column + screenX, screenY, bottomY, 0, textureHeight);
             textureU += textureStepU;
             textureColumn = textureU >>> 16;
@@ -779,7 +926,11 @@ public class PortalRenderer {
                 } else {
                     effectiveLightLevel = lightLevel - depthFactor;
                 }
-                effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
+                if (effectiveLightLevel < 0) {
+                    effectiveLightLevel = 0;
+                } else if (effectiveLightLevel > 15) {
+                    effectiveLightLevel = 15;
+                }
 
                 int screenCeilingY = ceilingY >> 16;
                 int screenUpperBottomY = upperBottomY >> 16;
@@ -796,7 +947,8 @@ public class PortalRenderer {
                     }
                 }
 
-                // Draw skybox for floor if no floor texture
+                // The inherited field naming is inverted: a missing
+                // floorTexture means the upper physical ceiling is sky.
                 if (floorTexture == null) {
                     drawSkyboxColumn(column, 0, screenCeilingY, viewAngle);
                 }
@@ -821,7 +973,7 @@ public class PortalRenderer {
                     }
                 }
 
-                // Draw skybox for ceiling if no ceiling texture
+                // A missing ceilingTexture means the lower physical floor is sky.
                 if (ceilingTexture == null) {
                     drawSkyboxColumn(column, screenFloorY + 1, MAX_VIEWPORT_Y, viewAngle);
                 }
@@ -903,7 +1055,11 @@ public class PortalRenderer {
         } else {
             effectiveLightLevel = lightLevel - depthFactor;
         }
-        effectiveLightLevel = Math.max(0, Math.min(15, effectiveLightLevel));
+        if (effectiveLightLevel < 0) {
+            effectiveLightLevel = 0;
+        } else if (effectiveLightLevel > 15) {
+            effectiveLightLevel = 15;
+        }
 
         int[] colorPalette = colorPalettes[effectiveLightLevel];
 
@@ -921,11 +1077,73 @@ public class PortalRenderer {
         int endPixelIndex = endColumn + rowOffset;
         int[] buffer = screenBuffer;
 
-        for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex++) {
-            buffer[pixelIndex] = colorPalette[texturePixels[(textureU & 16515072) + (textureV & 1056964608) >> 18]];
+        // Opaque flats are the common case. Following MascotME's rasterizer
+        // fast path, process four texels per loop to reduce loop-control work
+        // while retaining the exact same U/V update order.
+        int pixelIndex = startPixelIndex;
+        int unrolledEnd = endPixelIndex - 3;
+        while (pixelIndex <= unrolledEnd) {
+            buffer[pixelIndex++] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+
+            buffer[pixelIndex++] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+
+            buffer[pixelIndex++] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+
+            buffer[pixelIndex++] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
             textureU += textureStepU;
             textureV += textureStepV;
         }
+
+        for (; pixelIndex <= endPixelIndex; pixelIndex++) {
+            buffer[pixelIndex] = colorPalette[texturePixels[
+                    ((textureU & 16515072) + (textureV & 1056964608)) >> 18]];
+            textureU += textureStepU;
+            textureV += textureStepV;
+        }
+    }
+
+    /**
+     * Fast optional floor/ceiling mode: preserve the same per-row distance
+     * lighting, but fill a representative color instead of texture-mapping
+     * every pixel in the span.
+     */
+    public static void drawFlatColorSpan(int startColumn, int endColumn, int row,
+                                         int[] flatColors, int lightLevel, int heightOffset) {
+        if (endColumn < startColumn || flatColors == null) return;
+
+        int rowFromCenter = row - HALF_VIEWPORT_HEIGHT;
+        int perspectiveFactor = rowFromCenter < 0
+                ? -reciprocalTable[-rowFromCenter]
+                : reciprocalTable[rowFromCenter];
+        int scaledPerspective = (heightOffset * perspectiveFactor) >> 8;
+        int depthFactor = scaledPerspective >> 14;
+        int effectiveLightLevel;
+
+        if (gunFireLighting && depthFactor < 3) {
+            effectiveLightLevel = lightLevel + (4 >> depthFactor);
+        } else {
+            effectiveLightLevel = lightLevel - depthFactor;
+        }
+        if (effectiveLightLevel < 0) {
+            effectiveLightLevel = 0;
+        } else if (effectiveLightLevel >= flatColors.length) {
+            effectiveLightLevel = flatColors.length - 1;
+        }
+
+        int startPixelIndex = row * VIEWPORT_WIDTH + startColumn;
+        int pixelCount = endColumn - startColumn + 1;
+        screenBuffer[startPixelIndex] = flatColors[effectiveLightLevel];
+        HelperUtils.fastArrayFill(screenBuffer, startPixelIndex, pixelCount);
     }
 
     /**
@@ -1255,7 +1473,19 @@ public class PortalRenderer {
         if (bottomY > ceilingClipY) {
             clippedBottomY = ceilingClipY;
         }
+        if (clippedTopY > clippedBottomY) {
+            return;
+        }
 
+        if (SaveSystem.texturedSkyEnabled == 0) {
+            int startPixelIndex = clippedTopY * VIEWPORT_WIDTH + column;
+            int endPixelIndex = clippedBottomY * VIEWPORT_WIDTH + column;
+            int[] buffer = screenBuffer;
+            for (int pixelIndex = startPixelIndex; pixelIndex <= endPixelIndex; pixelIndex += VIEWPORT_WIDTH) {
+                buffer[pixelIndex] = skyFlatColor;
+            }
+            return;
+        }
 
         int columnAngle = MathUtils.fixedPointMultiply((column - HALF_VIEWPORT_WIDTH) << 16, skyboxAngleFactor);
         int angleCos = MathUtils.fastCos(columnAngle);

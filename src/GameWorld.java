@@ -77,16 +77,41 @@ public final class GameWorld {
     public BSPNode[] bspNodes;
     public Sector[] bspSectors;
     public WallSegment[] wallSegments;
+    private int rootBSPNodeIndex = -1;
+
+    // Doom custom-material animations. Targets stay registered in the normal
+    // renderer tables; only their backing pixel/palette references rotate at
+    // the fixed game tick, so the portal renderer gets no new hot-path branch.
+    private Texture[] animatedWallTargets;
+    private Texture[][] animatedWallFrames;
+    private Sprite[] animatedFlatTargets;
+    private Sprite[][] animatedFlatFrames;
+    private int textureAnimationTimer;
+    private int textureAnimationFrame;
 
     public GameWorld() {
-        new Point2D(0, 0);
         this.projectiles = new Vector();
         this.pickupItems = new Vector();
         this.lastWallIndex = -1;
+        this.animatedWallTargets = null;
+        this.animatedWallFrames = null;
+        this.animatedFlatTargets = null;
+        this.animatedFlatFrames = null;
+        this.textureAnimationTimer = 0;
+        this.textureAnimationFrame = 0;
     }
 
     public final BSPNode getRootBSPNode() {
-        return this.bspNodes[this.bspNodes.length - 1];
+        int root = rootBSPNodeIndex >= 0 ? rootBSPNodeIndex : this.bspNodes.length - 1;
+        return this.bspNodes[root];
+    }
+
+    /** C3B supplies an explicit root; legacy maps retain the final-node convention. */
+    public final void setRootBSPNodeIndex(int rootNodeIndex) {
+        if (rootNodeIndex < 0 || rootNodeIndex >= this.bspNodes.length) {
+            throw new IllegalArgumentException("Invalid BSP root");
+        }
+        rootBSPNodeIndex = rootNodeIndex;
     }
 
     public final void setVertices(Point2D[] newVertices) {
@@ -151,6 +176,54 @@ public final class GameWorld {
 
         this.updateWorld();
         this.getRootBSPNode().calculateVisibleSectors();
+    }
+
+    /** Installs load-time decoded custom texture animation references. */
+    public final void installTextureAnimations(Texture[] wallTargets, Texture[][] wallFrames,
+                                               Sprite[] flatTargets, Sprite[][] flatFrames) {
+        this.animatedWallTargets = wallTargets;
+        this.animatedWallFrames = wallFrames;
+        this.animatedFlatTargets = flatTargets;
+        this.animatedFlatFrames = flatFrames;
+        this.textureAnimationTimer = 0;
+        this.textureAnimationFrame = 0;
+    }
+
+    /**
+     * Advances Doom wall/fluid material frames at a stable gameplay cadence.
+     * It swaps only existing arrays/references; no renderer allocations or
+     * material parsing occurs during play.
+     */
+    public final void advanceTextureAnimations() {
+        if ((animatedWallTargets == null || animatedWallTargets.length == 0)
+                && (animatedFlatTargets == null || animatedFlatTargets.length == 0)) {
+            return;
+        }
+        if (++textureAnimationTimer < DoomGameMode.TEXTURE_ANIMATION_TICKS) {
+            return;
+        }
+        textureAnimationTimer = 0;
+        ++textureAnimationFrame;
+
+        if (animatedWallTargets != null) {
+            for (int index = 0; index < animatedWallTargets.length; ++index) {
+                Texture[] frames = animatedWallFrames[index];
+                Texture frame = frames[textureAnimationFrame % frames.length];
+                Texture target = animatedWallTargets[index];
+                target.pixelData = frame.pixelData;
+                target.colorPalettes = frame.colorPalettes;
+            }
+        }
+        if (animatedFlatTargets != null) {
+            for (int index = 0; index < animatedFlatTargets.length; ++index) {
+                Sprite[] frames = animatedFlatFrames[index];
+                Sprite frame = frames[textureAnimationFrame % frames.length];
+                Sprite target = animatedFlatTargets[index];
+                target.pixelData = frame.pixelData;
+                target.colorPalettes = frame.colorPalettes;
+                target.flatColors = frame.flatColors;
+            }
+        }
     }
 
     /**
@@ -299,6 +372,7 @@ public final class GameWorld {
                         case 3004:
                         case 3005:
                         case 3006:
+                        case DoomGameMode.DOOM_BARREL_TYPE:
                             return false;
                     }
                 }
@@ -359,6 +433,7 @@ public final class GameWorld {
                 case 3004:
                 case 3005:
                 case 3006:
+                case DoomGameMode.DOOM_BARREL_TYPE:
                     Transform3D objTransform = obj.transform;
                     int deltaX = this.collisionTestPoint.x - objTransform.x;
                     int deltaZ = this.collisionTestPoint.y - objTransform.z;
@@ -463,6 +538,12 @@ public final class GameWorld {
             int absDeltaZ = deltaZ < 0 ? -deltaZ : deltaZ;
 
             if (absDeltaX >= PICKUP_RADIUS || absDeltaZ >= PICKUP_RADIUS) continue;
+
+            if (DoomGameMode.collectDoomItem(objType)) {
+                this.staticObjects[i] = null;
+                HelperUtils.playSound(1, false, 80, 0);
+                continue;
+            }
 
             boolean collected = true;
             boolean triggerTransition = false;
@@ -883,8 +964,11 @@ public final class GameWorld {
         Transform3D projectileTransform = new Transform3D(spawnX, spawnY, spawnZ, angleToPlayer);
 
         GameObject projectile = new GameObject(projectileTransform, 0, 101, 0);
-        projectile.addSpriteFrame((byte)0, (byte)-46);
-        projectile.addSpriteFrame((byte)0, (byte)-47);
+        projectile.projectileDamage = 12;
+        projectile.projectileFromPlayer = false;
+        // Doom shots are centered billboards too; using the external path
+        // prevents a fireball/BFG ball from inheriting CovertOps leg anchors.
+        projectile.setExternalBillboardSpriteId(DoomGameMode.IMP_FIREBALL_SPRITE);
         projectile.spriteFrameIndex = 0;
 
         this.projectiles.addElement(projectile);
@@ -955,119 +1039,79 @@ public final class GameWorld {
         return false;
     }
 
-    /**
-     * Fires the player's current weapon.
-     */
+    /** Spawns a player-owned Doom projectile using the fixed-point world path. */
+    private void spawnDoomProjectile(int objectType, int damage, byte spriteTextureId) {
+        int playerAngle = GameEngine.player.rotation;
+        int forwardX = MathUtils.fastSin(playerAngle);
+        int forwardZ = MathUtils.fastCos(playerAngle);
+        int spawnX = GameEngine.player.x + 20 * forwardX;
+        int spawnZ = GameEngine.player.z + 20 * forwardZ;
+        int spawnY = GameEngine.cameraHeight - (10 << 16);
+
+        GameObject projectile = new GameObject(
+                new Transform3D(spawnX, spawnY, spawnZ, playerAngle), 0, objectType, 0);
+        projectile.projectileDamage = damage;
+        projectile.projectileFromPlayer = true;
+        // The dedicated external billboard path addresses the actual manifest
+        // slot directly. In particular BFG_SPRITE resolves to BFS1 rather than
+        // the BFUG pickup, and no legacy lower-body scale/anchor is involved.
+        projectile.setExternalBillboardSpriteId(spriteTextureId);
+        projectile.spriteFrameIndex = 0;
+        this.projectiles.addElement(projectile);
+    }
+
+    /** Fires a Doom-profile weapon. */
     public final void fireWeapon() {
         int currentWeaponId = GameEngine.currentWeapon;
         int playerAngle = GameEngine.player.rotation;
         int sinAngle = MathUtils.fastSin(ANGLE_90_DEGREES - playerAngle);
         int cosAngle = MathUtils.fastCos(ANGLE_90_DEGREES - playerAngle);
 
-        boolean isShortRangeWeapon = currentWeaponId == WeaponFactory.FIST
-                || currentWeaponId == WeaponFactory.PANZERFAUST
-                || currentWeaponId == WeaponFactory.SONIC;
-        int weaponRange = isShortRangeWeapon ? OBJECT_COLLISION_RADIUS : MAX_HITSCAN_RANGE;
-
+        boolean closeWeapon = currentWeaponId == WeaponFactory.FIST
+                || currentWeaponId == WeaponFactory.CHAINSAW;
+        int weaponRange = closeWeapon ? OBJECT_COLLISION_RADIUS << 2 : MAX_HITSCAN_RANGE;
         int targetX = GameEngine.player.x + MathUtils.fixedPointMultiply(weaponRange, cosAngle);
         int targetZ = GameEngine.player.z + MathUtils.fixedPointMultiply(weaponRange, sinAngle);
 
-        if (currentWeaponId == WeaponFactory.PANZERFAUST) {
-            HelperUtils.playSound(4, false, 100, 2);
-            Transform3D rocketTransform = new Transform3D(targetX,
-                    GameEngine.cameraHeight - COLLISION_RADIUS, targetZ, playerAngle);
-
-            if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
-                    rocketTransform.x, rocketTransform.z, rocketTransform.y)) {
-                GameObject rocket = new GameObject(rocketTransform, 0, 100, 0);
-                rocket.addSpriteFrame((byte)0, (byte)-44);
-                rocket.addSpriteFrame((byte)0, (byte)-45);
-                rocket.spriteFrameIndex = 0;
-                this.projectiles.addElement(rocket);
-            }
+        Weapon weapon = MainGameCanvas.weaponManager.getCurrentWeapon();
+        if (currentWeaponId == WeaponFactory.ROCKET_LAUNCHER) {
+            spawnDoomProjectile(100, weapon.getDamage(GameEngine.difficultyLevel),
+                    DoomGameMode.ROCKET_SPRITE);
+            return;
+        }
+        if (currentWeaponId == WeaponFactory.PLASMA_RIFLE) {
+            spawnDoomProjectile(102, weapon.getDamage(GameEngine.difficultyLevel),
+                    DoomGameMode.PLASMA_SPRITE);
+            return;
+        }
+        if (currentWeaponId == WeaponFactory.BFG9000) {
+            spawnDoomProjectile(102, weapon.getDamage(GameEngine.difficultyLevel),
+                    DoomGameMode.BFG_SPRITE);
             return;
         }
 
-        if (currentWeaponId == WeaponFactory.SONIC) {
-            HelperUtils.playSound(5, false, 100, 2);
-
-            sinAngle = MathUtils.fastSin(playerAngle);
-            cosAngle = MathUtils.fastCos(playerAngle);
-            int offsetX = 10 * cosAngle;
-            int offsetZ = -10 * sinAngle;
-
-            Transform3D leftTransform = new Transform3D(targetX - offsetX,
-                    GameEngine.cameraHeight - COLLISION_RADIUS, targetZ - offsetZ, playerAngle);
-            if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
-                    leftTransform.x, leftTransform.z, leftTransform.y)) {
-                GameObject leftProjectile = new GameObject(leftTransform, 0, 102, 0);
-                leftProjectile.addSpriteFrame((byte)0, (byte)-71);
-                leftProjectile.spriteFrameIndex = 0;
-                this.projectiles.addElement(leftProjectile);
-            }
-
-            Transform3D rightTransform = new Transform3D(targetX + offsetX,
-                    GameEngine.cameraHeight - COLLISION_RADIUS, targetZ + offsetZ, playerAngle);
-            if (!this.isProjectilePathBlocked(GameEngine.player.x, GameEngine.player.z,
-                    rightTransform.x, rightTransform.z, rightTransform.y)) {
-                GameObject rightProjectile = new GameObject(rightTransform, 0, 102, 0);
-                rightProjectile.addSpriteFrame((byte)0, (byte)-71);
-                rightProjectile.spriteFrameIndex = 0;
-                this.projectiles.addElement(rightProjectile);
-            }
-            return;
-        }
-
+        int pelletCount = currentWeaponId == WeaponFactory.SHOTGUN ? 7 : 1;
+        int damage = weapon.getDamage(GameEngine.difficultyLevel);
         boolean hitEnemy = false;
-        Weapon currentWeapon = MainGameCanvas.weaponManager.getCurrentWeapon();
 
-        for (int i = 0; i < this.staticObjects.length; i++) {
-            GameObject enemy = this.staticObjects[i];
-            if (enemy == null || enemy.aiState == -1) continue;
-
-            Transform3D enemyTransform = enemy.transform;
-
-            if (!this.checkLineOfSight(GameEngine.player, enemyTransform)) continue;
-
-            if (doesLineIntersectCircle(GameEngine.player.x, GameEngine.player.z,
-                    targetX, targetZ, enemyTransform.x, enemyTransform.z, ENEMY_HIT_RADIUS)) {
-
-                int damage = currentWeapon.getDamage(GameEngine.difficultyLevel);
-                int hitSound = 0;
-
-                switch (currentWeaponId) {
-                    case WeaponFactory.FIST:
-                        break;
-
-                    case WeaponFactory.LUGER:
-                    case WeaponFactory.MAUSER:
-                        hitSound = 7;
-                        break;
-
-                    case WeaponFactory.RIFLE:
-                    case WeaponFactory.STEN:
-                        hitSound = 9;
-                        break;
-                }
-
-                if (hitSound != 0) {
-                    HelperUtils.playSound(hitSound, false, 100, 1);
+        for (int pellet = 0; pellet < pelletCount; ++pellet) {
+            for (int i = 0; i < this.staticObjects.length; i++) {
+                GameObject enemy = this.staticObjects[i];
+                if (enemy == null || enemy.aiState == -1) continue;
+                Transform3D enemyTransform = enemy.transform;
+                if (!this.checkLineOfSight(GameEngine.player, enemyTransform)) continue;
+                if (doesLineIntersectCircle(GameEngine.player.x, GameEngine.player.z,
+                        targetX, targetZ, enemyTransform.x, enemyTransform.z, ENEMY_HIT_RADIUS)) {
+                    applyDamageToEnemy(enemy, damage);
                     hitEnemy = true;
+                    break;
                 }
-
-                applyDamageToEnemy(enemy, damage);
-                break;
             }
         }
 
-        if (!hitEnemy) {
-            if (currentWeaponId == WeaponFactory.LUGER || currentWeaponId == WeaponFactory.MAUSER) {
-                HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 2 : 6, false, 100, 1);
-            }
-            if (currentWeaponId == WeaponFactory.RIFLE || currentWeaponId == WeaponFactory.STEN) {
-                HelperUtils.playSound((GameEngine.random.nextInt() & 1) == 0 ? 3 : 8, false, 100, 1);
-            }
-        }
+        // Reuse the tiny existing sound table until Doom sound extraction is
+        // migrated; no CovertOps weapon branching remains in the fire path.
+        HelperUtils.playSound(hitEnemy ? 7 : 2, false, 100, 1);
     }
 
     /**
@@ -1086,8 +1130,12 @@ public final class GameWorld {
                 case 3004:
                 case 3005:
                 case 3006:
-                    enemy.stateTimer = 5;
-                    enemy.spriteFrameIndex = 5;
+                    if (enemy.beginExternalBillboardDeathAnimation()) {
+                        enemy.stateTimer = DoomGameMode.ACTOR_DEATH_FRAME_TICKS;
+                    } else {
+                        enemy.stateTimer = 5;
+                        enemy.spriteFrameIndex = 5;
+                    }
                     break;
 
                 case 3002:
@@ -1177,7 +1225,9 @@ public final class GameWorld {
                     }
                 }
 
-                GameEngine.screenShake = 16;
+                if (SaveSystem.screenEffectsEnabled != 0) {
+                    GameEngine.screenShake = 16;
+                }
 
                 if (MainGameCanvas.currentLevelId == 4) {
                     Transform3D grenadePos = projectile.transform;
@@ -1200,14 +1250,19 @@ public final class GameWorld {
             int newZ = projTransform.z;
             boolean projectileHit = false;
 
-            int projectileDamage;
-            if (projectile.objectType == 102) {
-                projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.SONIC).getDamage(GameEngine.difficultyLevel);
-            } else {
-                projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.PANZERFAUST).getDamage(GameEngine.difficultyLevel);
+            int projectileDamage = projectile.projectileDamage;
+            if (projectileDamage <= 0) {
+                if (projectile.objectType == 102) {
+                    projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.PLASMA_RIFLE)
+                            .getDamage(GameEngine.difficultyLevel);
+                } else {
+                    projectileDamage = MainGameCanvas.weaponManager.getWeapon(WeaponFactory.ROCKET_LAUNCHER)
+                            .getDamage(GameEngine.difficultyLevel);
+                }
             }
 
-            if (doesLineIntersectCircle(prevX, prevZ, newX, newZ,
+            if (!projectile.projectileFromPlayer
+                    && doesLineIntersectCircle(prevX, prevZ, newX, newZ,
                     GameEngine.player.x, GameEngine.player.z, COLLISION_RADIUS)) {
                 if (projectile.objectType == 101) {
                     HelperUtils.playSound(4, false, 100, 2);
@@ -1219,17 +1274,19 @@ public final class GameWorld {
                 projectileHit = true;
             }
 
-            for (int j = 0; j < this.staticObjects.length; j++) {
-                GameObject enemy = this.staticObjects[j];
-                if (enemy == null || enemy.aiState == -1) continue;
+            if (projectile.projectileFromPlayer) {
+                for (int j = 0; j < this.staticObjects.length; j++) {
+                    GameObject enemy = this.staticObjects[j];
+                    if (enemy == null || enemy.aiState == -1) continue;
 
-                Transform3D enemyTransform = enemy.transform;
-                int hitRadius = (projectile.objectType == 102) ? COLLISION_RADIUS : ENEMY_HIT_RADIUS;
+                    Transform3D enemyTransform = enemy.transform;
+                    int hitRadius = (projectile.objectType == 102) ? COLLISION_RADIUS : ENEMY_HIT_RADIUS;
 
-                if (doesLineIntersectCircle(prevX, prevZ, newX, newZ,
-                        enemyTransform.x, enemyTransform.z, hitRadius)) {
-                    applyDamageToEnemy(enemy, projectileDamage);
-                    projectileHit = true;
+                    if (doesLineIntersectCircle(prevX, prevZ, newX, newZ,
+                            enemyTransform.x, enemyTransform.z, hitRadius)) {
+                        applyDamageToEnemy(enemy, projectileDamage);
+                        projectileHit = true;
+                    }
                 }
             }
 

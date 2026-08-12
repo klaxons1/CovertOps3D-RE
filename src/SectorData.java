@@ -7,6 +7,7 @@ public final class SectorData {
     public byte  floorTextureId;
 
     private short baseLightLevel;   // 0..16, stored as short
+    private short sectorTag;        // Doom/C3D tag used by lifts and triggers
     private short sectorType;       // special type (door, elevator, damage, etc.)
 
     public boolean[] visitedFlags;     // PVS: true = already visited from current sector
@@ -26,14 +27,15 @@ public final class SectorData {
         this.ceilingTextureId = ceilTex;
         this.floorTextureId   = floorTex;
         this.baseLightLevel   = light;
+        this.sectorTag        = tag;
         this.sectorType       = type;
 
         this.visitedFlags     = null;
     }
 
-    /** Returns current light level (0-16) with screen-shake flash effect */
+    /** Returns current light level (0-16), including optional explosion flash. */
     public final int getLightLevel() {
-        if (GameEngine.screenShake > 0) {
+        if (SaveSystem.screenEffectsEnabled != 0 && GameEngine.screenShake > 0) {
             int boosted = (baseLightLevel & 0xFFFF) + (GameEngine.screenShake >> 1);
             return (boosted > 16) ? 16 : boosted;
         }
@@ -43,6 +45,11 @@ public final class SectorData {
     /** Returns sector special type */
     public final int getSectorType() {
         return sectorType & 0xFFFF;
+    }
+
+    /** Returns the preserved Doom/C3D trigger tag. */
+    public final int getSectorTag() {
+        return sectorTag & 0xFFFF;
     }
 
     /** Portal visibility test */

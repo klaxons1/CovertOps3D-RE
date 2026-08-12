@@ -1,4 +1,5 @@
-IMG=/languages/font.png
-SELECTED_IMG=/languages/gfont.png
-ACTIVE_IMG=/languages/rfont.png
-CHARS=ΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡÒΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώÿ0123456789!"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_abcdefghijklmnopqrstuvwxyz{|}Έ¨
+# Quantum bitmap font assets; metadata normalized to UTF-8 for CLDC.
+IMG=/gamedata/font/font.png
+SELECTED_IMG=/gamedata/font/gfont.png
+ACTIVE_IMG=/gamedata/font/rfont.png
+CHARS=ΠΠ‘Π’Π“Π”Π•Π–Π—ΠΠ™ΠΠ›ΠΠΠΠΠ Π΅ΠΆΠ£Π¤Π¥Π¦Π§Π¨Π©ΠªΠ«Π¬Π­Π®Π―Π°Π±Π²Π³Π΄ΠµΠ¶Π·ΠΈΠΉΠΊΠ»ΠΌΠ½ΠΎΠΏΡ€ΡΡ‚ΡƒΡ„Ρ…Ρ†Ρ‡ΡΡ‰ΡΡ‹ΡΡΡΡ0123456789!"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_abcdefghijklmnopqrstuvwxyz{|}Ρ‘Π

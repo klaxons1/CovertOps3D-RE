@@ -22,6 +22,8 @@ public final class GameEngine {
     public static boolean selectNextWeapon;
     public static boolean useKey;
     public static boolean toggleMapInput;
+    // Doom-only cheat toggle, bound to keypad # by InputManager.
+    public static boolean toggleGodModeInput;
 
     // ==================== Player State ====================
 
@@ -55,11 +57,15 @@ public final class GameEngine {
     public static int messageTimer = 0;
     public static int interactionTimer = 0;
     public static WallDefinition activeInteractable = null;
-    public static boolean[] keysCollected = new boolean[]{false, false};
+    // Blue, red and yellow Doom key slots. Legacy code uses the first two
+    // unchanged; the third unlocks imported yellow Doom doors.
+    public static boolean[] keysCollected = new boolean[]{false, false, false};
 
     // ==================== Level State ====================
 
     public static int levelTransitionState;
+    /** E1M2 exit reached; MainGameCanvas returns to the Doom chapter menu. */
+    public static final int LEVEL_TRANSITION_DOOM_EPISODE_COMPLETE = 3;
     public static int difficultyLevel = 1;
 
     // ==================== Effects ====================
@@ -74,6 +80,8 @@ public final class GameEngine {
     private static int enemyAggroDistance = MathUtils.fixedPointMultiply(1310720, 92682);
     private static int cameraBobTimer = 0;
     private static int lastGameLogicTime = 0;
+    // Counts fixed 20 Hz ticks spent in a Doom acid/lava sector.
+    private static int doomFloorDamageTimer = 0;
 
     /**
      * Initializes the game engine and all rendering subsystems.
@@ -86,8 +94,7 @@ public final class GameEngine {
         player = new PhysicsBody(0, 1572864, 0, 65536);
         tempTransform = new Transform3D(0, 0, 0, 0);
 
-        PortalRenderer.floorClipHistory = new Vector();
-        PortalRenderer.ceilingClipHistory = new Vector();
+        PortalRenderer.initializeClipHistory();
         doorControllers = new Vector();
         elevatorControllers = new Vector();
 
@@ -158,6 +165,7 @@ public final class GameEngine {
         messageTimer = 0;
         interactionTimer = 0;
         activeInteractable = null;
+        doomFloorDamageTimer = 0;
     }
 
     /**
@@ -187,10 +195,14 @@ public final class GameEngine {
         cameraBobTimer += (deltaTime * movementSpeed) >> 2;
         int headBobOffset = MathUtils.fastSin(cameraBobTimer);
 
-        // Apply screen shake effect
-        int shakeOffset = screenShake << 15;
-        if ((screenShake & 1) > 0) {
-            shakeOffset = -shakeOffset;
+        // Apply optional screen shake effect. Gameplay state still advances
+        // normally when disabled; only the visual camera offset is omitted.
+        int shakeOffset = 0;
+        if (SaveSystem.screenEffectsEnabled != 0) {
+            shakeOffset = screenShake << 15;
+            if ((screenShake & 1) > 0) {
+                shakeOffset = -shakeOffset;
+            }
         }
 
         cameraHeight = ((currentSector.floorHeight + GameWorld.PLAYER_HEIGHT_OFFSET) << 16)
@@ -199,11 +211,14 @@ public final class GameEngine {
         // Render the 3D world
         PortalRenderer.renderWorld(player.x, -cameraHeight, player.z, player.rotation);
 
-        // Apply damage flash effect
+        // Apply optional damage flash effect. Skipping it saves a full
+        // framebuffer pass on damage-heavy scenes without affecting damage.
         if (damageFlash) {
-            int pixelCount = PortalRenderer.SCREEN_BUFFER_SIZE;
-            for (int i = 0; i < pixelCount; i++) {
-                PortalRenderer.screenBuffer[i] |= 0xFF0000;
+            if (SaveSystem.screenEffectsEnabled != 0) {
+                int pixelCount = PortalRenderer.SCREEN_BUFFER_SIZE;
+                for (int i = 0; i < pixelCount; i++) {
+                    PortalRenderer.screenBuffer[i] |= 0xFF0000;
+                }
             }
             damageFlash = false;
         }
@@ -266,6 +281,24 @@ public final class GameEngine {
             messageTimer--;
         }
 
+        // God mode intentionally exists only in the Doom profile. Checking it
+        // once per fixed tick keeps the input path allocation-free and leaves
+        // the legacy campaign's controls untouched.
+        if (toggleGodModeInput) {
+            toggleGodModeInput = false;
+            if (DoomGameMode.toggleGodMode()) {
+                messageText = DoomGameMode.isGodMode()
+                        ? TextStrings.GOD_MODE_ON : TextStrings.GOD_MODE_OFF;
+                messageTimer = 30;
+            }
+        }
+
+        // Swap any decoded Doom fluid/wall frame references once per fixed
+        // logic tick. The renderer then samples its normal texture pointers.
+        if (LevelLoader.gameWorld != null) {
+            LevelLoader.gameWorld.advanceTextureAnimations();
+        }
+
         // Apply player input forces
         if (inputForward) {
             player.applyHorizontalForce(0, -196608);
@@ -309,7 +342,7 @@ public final class GameEngine {
             if (hitWall != null) {
                 wallType = hitWall.getWallType();
                 if (wallType == 1 || wallType == 11 || wallType == 26
-                        || wallType == 28 || wallType == 51 || wallType == 62) {
+                        || wallType == 27 || wallType == 28 || wallType == 51 || wallType == 62) {
                     activeInteractable = hitWall;
                 } else {
                     activeInteractable = null;
@@ -359,11 +392,16 @@ public final class GameEngine {
 
         // Handle use key interactions
         if (useKey) {
-            // Check if standing on elevator
+            // Check if standing on elevator. Doom lifts are tag-driven,
+            // while legacy maps retain their original neighbor-derived path.
             if (currentSector.getSectorType() == 10) {
-                ElevatorController elevator = getElevatorController(currentSector);
-                if (elevator.elevatorState == 0) {
-                    elevator.elevatorState = (short) ((currentSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                if (DoomGameMode.isActive() && currentSector.getSectorTag() != 0) {
+                    activateDoomElevators(currentSector.getSectorTag());
+                } else {
+                    ElevatorController elevator = getElevatorController(currentSector);
+                    if (elevator.elevatorState == 0) {
+                        elevator.elevatorState = (short) ((currentSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                    }
                 }
             }
 
@@ -383,7 +421,7 @@ public final class GameEngine {
                 wallType = wall.getWallType();
 
                 if (wallType == 1 || wallType == 11 || wallType == 26
-                        || wallType == 28 || wallType == 51 || wallType == 62) {
+                        || wallType == 27 || wallType == 28 || wallType == 51 || wallType == 62) {
 
                     Point2D wallStart = vertices[wall.startVertexId & 0xFFFF];
                     Point2D wallEnd = vertices[wall.endVertexId & 0xFFFF];
@@ -406,6 +444,14 @@ public final class GameEngine {
                                 break;
 
                             case 11:
+                                // Imported Doom exit switches share the legacy
+                                // wall type, but never enter the old campaign
+                                // dialog/minigame routing.
+                                if (DoomGameMode.isActive()
+                                        && MainGameCanvas.isDoomLevelId(MainGameCanvas.currentLevelId)) {
+                                    MainGameCanvas.advanceDoomLevel();
+                                    break;
+                                }
                                 if (MainGameCanvas.currentLevelId == 7 && ammoCounts[6] == 0) {
                                     messageText = TextStrings.WE_LL_NEED_SOME_DYNAMITE_MAYBE_I_SHOULD_LOOK_FOR_SOME;
                                     messageTimer = 50;
@@ -423,6 +469,19 @@ public final class GameEngine {
                                     door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
                                 } else {
                                     messageText = keysCollected[1]
+                                            ? TextStrings.OOPS_I_NEED_ANOTHER_KEY
+                                            : TextStrings.OH_I_NEED_A_KEY;
+                                    messageTimer = 50;
+                                }
+                                break;
+
+                            case 27:
+                                if (keysCollected[2]) {
+                                    door = getDoorController(wall.backSurface.linkedSector);
+                                    door.doorState = 1;
+                                    door.targetCeilingHeight = wall.frontSurface.linkedSector.ceilingHeight;
+                                } else {
+                                    messageText = (keysCollected[0] || keysCollected[1])
                                             ? TextStrings.OOPS_I_NEED_ANOTHER_KEY
                                             : TextStrings.OH_I_NEED_A_KEY;
                                     messageTimer = 50;
@@ -449,11 +508,15 @@ public final class GameEngine {
                                 break;
 
                             case 62:
-                                SectorData elevatorSector = wall.backSurface.linkedSector;
-                                ElevatorController elevator = getElevatorController(elevatorSector);
-                                if (elevator.elevatorState == 0) {
-                                    elevator.elevatorState =
-                                            (short) ((elevatorSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                                if (DoomGameMode.isActive() && wall.getSpecialType() != 0) {
+                                    activateDoomElevators(wall.getSpecialType());
+                                } else {
+                                    SectorData elevatorSector = wall.backSurface.linkedSector;
+                                    ElevatorController elevator = getElevatorController(elevatorSector);
+                                    if (elevator.elevatorState == 0) {
+                                        elevator.elevatorState =
+                                                (short) ((elevatorSector.floorHeight == elevator.minHeight) ? 1 : 2);
+                                    }
                                 }
                                 break;
                         }
@@ -559,6 +622,31 @@ public final class GameEngine {
             GameObject enemy = enemies[i];
 
             if (enemy == null || enemy.aiState == -1) {
+                continue;
+            }
+
+            // A dead Doom actor must not fall back into wake-up/chase logic
+            // while its sprite strip is playing. The old state-6 path held one
+            // pose for five ticks and then skipped to a corpse; this advances
+            // the real I..N sequence at a stable fixed-tick cadence instead.
+            if (enemy.aiState == 6) {
+                if (enemy.stateTimer > 0) {
+                    enemy.stateTimer--;
+                }
+                if (enemy.stateTimer == 0) {
+                    boolean deathFinished = !enemy.hasExternalBillboardDeathAnimation()
+                            || enemy.advanceExternalBillboardDeathAnimation();
+                    if (deathFinished) {
+                        int deadType = enemy.objectType;
+                        enemy.aiState = -1;
+                        if (!enemy.hasExternalBillboardDeathAnimation()) {
+                            enemy.spriteFrameIndex = (deadType == 3002) ? 5 : 6;
+                        }
+                        LevelLoader.gameWorld.spawnPickUp(enemy);
+                    } else {
+                        enemy.stateTimer = DoomGameMode.ACTOR_DEATH_FRAME_TICKS;
+                    }
+                }
                 continue;
             }
 
@@ -705,9 +793,8 @@ public final class GameEngine {
                         break;
 
                     case 6:
-                        enemy.aiState = -1;
-                        enemy.spriteFrameIndex = (enemyType == 3002) ? 5 : 6;
-                        LevelLoader.gameWorld.spawnPickUp(enemy);
+                        // Death animation is handled before normal AI so it
+                        // cannot be interrupted by aggro-distance checks.
                         break;
                 }
             }
@@ -772,7 +859,25 @@ public final class GameEngine {
             }
         }
 
-        // Damage floor
+        // Doom 5/10/20% acid and lava sectors deal their authored amount
+        // about once per second (20 fixed ticks), instead of inheriting the
+        // legacy 1 HP-per-tick floor that would empty health almost instantly.
+        int doomFloorDamage = DoomGameMode.getFloorDamage(currentSector.getSectorType());
+        if (doomFloorDamage > 0) {
+            if (++doomFloorDamageTimer >= DoomGameMode.FLOOR_DAMAGE_TICKS) {
+                doomFloorDamageTimer = 0;
+                if (!DoomGameMode.isGodMode()) {
+                    HelperUtils.vibrateDevice(doomFloorDamage * 10);
+                }
+                if (applyDamage(doomFloorDamage)) {
+                    return true;
+                }
+            }
+        } else {
+            doomFloorDamageTimer = 0;
+        }
+
+        // Legacy campaign damage floor.
         if (currentSector.getSectorType() == 555) {
             HelperUtils.vibrateDevice(10);
             if (applyDamage(1)) {
@@ -845,6 +950,60 @@ public final class GameEngine {
         return newElevator;
     }
 
+    /** Activates every Doom lift sector carrying one preserved line tag. */
+    private static void activateDoomElevators(int tag) {
+        SectorData[] sectors = LevelLoader.gameWorld.sectors;
+        for (int index = 0; index < sectors.length; ++index) {
+            SectorData sector = sectors[index];
+            if (sector.getSectorTag() != tag) continue;
+            ElevatorController elevator = getDoomElevatorController(sector);
+            if (elevator.elevatorState != 0 || elevator.minHeight == elevator.maxHeight) continue;
+            elevator.elevatorState = (short) (sector.floorHeight == elevator.minHeight ? 1 : 2);
+        }
+    }
+
+    /**
+     * Finds the adjacent floor range for a tagged Doom platform. Unlike the
+     * legacy lift format, Doom trigger lines may be elsewhere in the map, so
+     * controller limits must come from every portal touching the platform.
+     */
+    private static ElevatorController getDoomElevatorController(SectorData sector) {
+        for (int i = 0; i < elevatorControllers.size(); i++) {
+            ElevatorController elevator = (ElevatorController)elevatorControllers.elementAt(i);
+            if (elevator.controlledSector == sector) {
+                return elevator;
+            }
+        }
+
+        ElevatorController elevator = new ElevatorController();
+        elevator.controlledSector = sector;
+        elevator.elevatorState = 0;
+        elevator.minHeight = sector.floorHeight;
+        elevator.maxHeight = sector.floorHeight;
+
+        WallDefinition[] walls = LevelLoader.gameWorld.wallDefinitions;
+        for (int i = 0; i < walls.length; ++i) {
+            WallDefinition wall = walls[i];
+            SectorData neighbor = null;
+            if (wall.frontSurface.linkedSector == sector && wall.backSurface != null) {
+                neighbor = wall.backSurface.linkedSector;
+            } else if (wall.backSurface != null && wall.backSurface.linkedSector == sector) {
+                neighbor = wall.frontSurface.linkedSector;
+            }
+            if (neighbor != null) {
+                if (neighbor.floorHeight < elevator.minHeight) {
+                    elevator.minHeight = neighbor.floorHeight;
+                }
+                if (neighbor.floorHeight > elevator.maxHeight) {
+                    elevator.maxHeight = neighbor.floorHeight;
+                }
+            }
+        }
+
+        elevatorControllers.addElement(elevator);
+        return elevator;
+    }
+
     /**
      * Clears all input flags.
      */
@@ -861,6 +1020,7 @@ public final class GameEngine {
         inputBack = false;
         useKey = false;
         toggleMapInput = false;
+        toggleGodModeInput = false;
         selectNextWeapon = false;
         levelTransitionState = 0;
         weaponCooldownTimer = 0;
@@ -928,6 +1088,9 @@ public final class GameEngine {
      * @return true if player died, false otherwise
      */
     public static boolean applyDamage(int damage) {
+        if (DoomGameMode.isGodMode()) {
+            return false;
+        }
         playerArmor -= damage;
         if (playerArmor < 0) {
             damage = -playerArmor;
@@ -951,8 +1114,12 @@ public final class GameEngine {
      * Resets all player progress (health, weapons, keys, etc).
      */
     public static void resetPlayerProgress() {
+        DoomGameMode.resetGodMode();
         playerHealth = 100;
         playerArmor = 0;
+        for (int i = 0; i < keysCollected.length; ++i) {
+            keysCollected[i] = false;
+        }
 
         for (int i = 0; i < weaponsAvailable.length; i++) {
             weaponsAvailable[i] = false;
@@ -974,6 +1141,7 @@ public final class GameEngine {
         screenShake = 0;
         cameraBobTimer = 0;
         lastGameLogicTime = 0;
+        doomFloorDamageTimer = 0;
 
         weaponSwitchAnimationActive = true;
         weaponAnimationState = 1;

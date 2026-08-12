@@ -12,8 +12,16 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int HALF_UI_HEIGHT = UI_HEIGHT / 2;
 
     public static final String LEVEL_PATH_PREFIX = "/gamedata/levels/level_";
+    // Compact C3D2 conversion of classic Doom E1M1. The source DOOM.WAD stays
+    // in docs for the converter and is never loaded or bundled as a game map.
+    public static final String DOOM_E1M1_LEVEL_PATH = "/gamedata/custom/doom-e1m1/level.c3b";
+    public static final String DOOM_E1M2_LEVEL_PATH = "/gamedata/custom/doom-e1m2/level.c3b";
+    public static final String DOOM_ZAKAT_LEVEL_PATH = "/gamedata/custom/doom-zakat/level.c3b";
+    /** The currently shipped Doom route: Hangar -> Nuclear Plant -> Zakat. */
+    public static final int DOOM_LEVEL_COUNT = 3;
     public static final String[] LEVEL_FILE_NAMES = new String[]{
-            "01a", "01b", "02a", "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
+            DOOM_E1M1_LEVEL_PATH, DOOM_E1M2_LEVEL_PATH, DOOM_ZAKAT_LEVEL_PATH,
+            "02b", "04", "05", "06a", "06b", "06c", "07a", "07b", "08a", "08b"
     };
 
     public static WeaponManager weaponManager;
@@ -33,6 +41,29 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static int previousLevelId = -1;
     public static int keyMappingOffset;
 
+    /** True only for the compact Doom maps routed by this edition. */
+    public static boolean isDoomLevelId(int levelId) {
+        return levelId >= 0 && levelId < DOOM_LEVEL_COUNT
+                && DoomGameMode.isDoomLevelPath(LEVEL_FILE_NAMES[levelId]);
+    }
+
+    /**
+     * Handles a converted Doom exit switch without falling through to legacy
+     * CovertOps story/dialog routing. E1M1 advances to E1M2; E1M2 completes
+     * the currently imported episode and returns to the chapter menu.
+     */
+    public static void advanceDoomLevel() {
+        int nextLevelId = currentLevelId + 1;
+        if (isDoomLevelId(nextLevelId)) {
+            previousLevelId = currentLevelId;
+            currentLevelId = nextLevelId;
+            LevelLoader.levelVariant = 0;
+            GameEngine.levelTransitionState = 1;
+        } else {
+            GameEngine.levelTransitionState = GameEngine.LEVEL_TRANSITION_DOOM_EPISODE_COMPLETE;
+        }
+    }
+
     public String[] chapterMenuItems;
 
     public long frameDeltaTime;
@@ -44,18 +75,19 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
     public static boolean mapEnabled = false;
 
-    public static final int[] DAMAGE_3003 = new int[]{10, 15, 20};
-    public static final int[] DAMAGE_3004 = new int[]{15, 20, 25};
+    // Doom E1 actor tuning: type 3003 = shotgun guy, 3004 = zombieman.
+    public static final int[] DAMAGE_3003 = new int[]{15, 15, 15};
+    public static final int[] DAMAGE_3004 = new int[]{5, 5, 5};
     public static final int[] DAMAGE_3005 = new int[]{20, 25, 30};
     public static final int[] DAMAGE_3006 = new int[]{25, 30, 40};
     public static final int[] SNIPER_DAMAGE_SMALL = new int[]{1, 2, 3};
     public static final int[] SNIPER_DAMAGE_MEDIUM = new int[]{2, 4, 5};
     public static final int[] SNIPER_DAMAGE_LARGE = new int[]{3, 5, 7};
-    public static final int[] HP_3003 = new int[]{50, 100, 150};
-    public static final int[] HP_3004 = new int[]{100, 200, 300};
+    public static final int[] HP_3003 = new int[]{30, 30, 30};
+    public static final int[] HP_3004 = new int[]{20, 20, 20};
     public static final int[] HP_3005 = new int[]{100, 200, 300};
     public static final int[] HP_3006 = new int[]{100, 200, 300};
-    public static final int[] HP_3001 = new int[]{200, 400, 600};
+    public static final int[] HP_3001 = new int[]{60, 60, 60};
     public static final int[] HP_3002 = new int[]{300, 600, 900};
     public static final int[] ENEMY_STATE_TRANSITION_TIME = new int[]{64, 64, 64};
     public static final int[] ENEMY_ATTACK_DELAY_MIN = new int[]{6, 4, 2};
@@ -65,11 +97,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
     public static final int[] ENEMY_SPAWN_DELAY_VARIANCE = new int[]{128, 128, 128};
     public static final int[] ENEMY_ATTACK_DELAY_BASE = new int[]{128, 64, 32};
     public static final int[] ENEMY_ATTACK_DELAY_VARIANCE = new int[]{32, 32, 32};
-    public static final int[] SPEED_3003 = new int[]{131072, 196608, 262144};
-    public static final int[] SPEED_3004 = new int[]{131072, 196608, 262144};
+    public static final int[] SPEED_3003 = new int[]{131072, 131072, 131072};
+    public static final int[] SPEED_3004 = new int[]{131072, 131072, 131072};
     public static final int[] SPEED_3005 = new int[]{196608, 262144, 327680};
     public static final int[] SPEED_3006 = new int[]{196608, 262144, 327680};
-    public static final int[] SPEED_3001 = new int[]{196608, 262144, 327680};
+    public static final int[] SPEED_3001 = new int[]{131072, 131072, 131072};
     public static final int[] SPEED_3002 = new int[]{196608, 262144, 327680};
     public static final int[] ENEMY_STRAFE_CHANCE_DIVISOR = new int[]{4, 3, 2};
 
@@ -208,11 +240,15 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
             graphics.setClip(0, 0, PortalRenderer.VIEWPORT_WIDTH, UI_HEIGHT);
             DebugLogger.log("MainGameCanvas", "splash");
             drawSplash(graphics);
+            // Settings must be available before resources so the selected
+            // language picks the correct bitmap-font configuration.
+            DebugLogger.log("MainGameCanvas", "loadSettings");
+            SaveSystem.loadSettingsFromRMS();
+            TextStrings.setLanguage(SaveSystem.language);
             DebugLogger.log("MainGameCanvas", "initResources");
             initializeGameResources();
             DebugLogger.log("MainGameCanvas", "loadSave");
             SaveSystem.loadSaveData();
-            SaveSystem.loadSettingsFromRMS();
             this.areResourcesLoaded = true;
             sniperController = new SniperGameController(this, sniperMiniGame, fontRenderer, hudRenderer.getStatusBarImage());
 
@@ -249,7 +285,11 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                         break;
                     }
 
-                    int[] levelMap = new int[]{2, 4, 20, 5, 6, 22, 7, 9};
+                    // The first selectable chapter (menu result 66) is
+                    // handled above as E1M1; the next two are E1M2 and the
+                    // converted Zakat MAP01 PWAD. Later entries remain legacy
+                    // until their Doom conversions are added.
+                    int[] levelMap = new int[]{1, 2, 20, 5, 6, 22, 7, 9};
                     int chapterIndex = menuResult - 67;
                     currentLevelId = levelMap[chapterIndex];
                     previousLevelId = -1;
@@ -270,7 +310,24 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
 
                         boolean needLoad = false;
 
+                        if (GameEngine.levelTransitionState
+                                == GameEngine.LEVEL_TRANSITION_DOOM_EPISODE_COMPLETE) {
+                            // No imported E1M3 route yet. Do not accidentally
+                            // load the old CovertOps map that happens to occupy
+                            // the next numeric slot.
+                            GameEngine.levelTransitionState = 0;
+                            DoomGameMode.setActive(false);
+                            menuResult = showMenuScreen(graphics, true);
+                            continue outerGameLoop;
+                        }
+
                         if (GameEngine.levelTransitionState == 1) {
+                            // Doom route IDs deliberately bypass legacy story
+                            // dialogs/minigames. This matters for MAP01 at id
+                            // 2, which historically belonged to CovertOps.
+                            if (isDoomLevelId(currentLevelId)) {
+                                needLoad = true;
+                            } else {
                             switch (currentLevelId) {
                                 case 0:
                                 case 13:
@@ -335,6 +392,7 @@ public class MainGameCanvas extends GameCanvas implements Runnable {
                                     break;
                             }
                             needLoad = true;
+                            }
                         } else if (GameEngine.levelTransitionState == -1) {
                             needLoad = true;
                         }

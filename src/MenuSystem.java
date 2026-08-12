@@ -12,6 +12,16 @@ public final class MenuSystem {
     private static final int MENU_ITEM_HEIGHT = 23;
     private static final int UI_HEIGHT = 320;
 
+    private static final int SETTINGS_SOUND_MODE = 50;
+    private static final int SETTINGS_MUSIC_MODE = 51;
+    private static final int SETTINGS_VIBRATION_MODE = 52;
+    private static final int SETTINGS_FLOORS_MODE = 53;
+    private static final int SETTINGS_SKY_MODE = 54;
+    private static final int SETTINGS_MUZZLE_LIGHT_MODE = 55;
+    private static final int SETTINGS_SCREEN_EFFECTS_MODE = 56;
+    private static final int SETTINGS_LANGUAGE_MODE = 57;
+    private static final int SETTINGS_ITEM_COUNT = 11;
+
     private final FontRenderer fontRenderer;
     private final MainGameCanvas canvas; // for flushGraphics and timing fields access
     private String[] settingsMenuItems;
@@ -19,6 +29,32 @@ public final class MenuSystem {
     public MenuSystem(FontRenderer fontRenderer, MainGameCanvas canvas) {
         this.fontRenderer = fontRenderer;
         this.canvas = canvas;
+    }
+
+    /** Refreshes the persistent visual/performance settings shown in the menu. */
+    private void updateSettingsMenuItems() {
+        if (settingsMenuItems == null || settingsMenuItems.length != SETTINGS_ITEM_COUNT) {
+            settingsMenuItems = new String[SETTINGS_ITEM_COUNT];
+        }
+
+        settingsMenuItems[0] = TextStrings.SETTINGS;
+        settingsMenuItems[1] = TextStrings.EMPTY_SPACE;
+        settingsMenuItems[2] = TextStrings.SOUND
+                + (SaveSystem.soundEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[3] = TextStrings.MUSIC
+                + (SaveSystem.musicEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[4] = TextStrings.VIBRATION
+                + (SaveSystem.vibrationEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[5] = TextStrings.FLOORS
+                + (SaveSystem.texturedFlatsEnabled == 1 ? TextStrings.TEXTURED : TextStrings.FLAT);
+        settingsMenuItems[6] = TextStrings.SKY
+                + (SaveSystem.texturedSkyEnabled == 1 ? TextStrings.TEXTURED : TextStrings.SOLID);
+        settingsMenuItems[7] = TextStrings.MUZZLE_LIGHT
+                + (SaveSystem.muzzleLightingEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[8] = TextStrings.SCREEN_EFFECTS
+                + (SaveSystem.screenEffectsEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
+        settingsMenuItems[9] = TextStrings.LANGUAGE + TextStrings.getLanguageName();
+        settingsMenuItems[10] = TextStrings.BACK;
     }
 
     public void drawStripedBackground(Graphics graphics, Image background) {
@@ -104,15 +140,23 @@ public final class MenuSystem {
                         itemIndex = i + scrollOffset;
                     }
                     String itemText = menuItems[itemIndex];
-                    int textX = (PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(itemText)) / 2;
+                    int textWidth = fontRenderer.getLargeTextWidth(itemText);
+                    int textX = (PortalRenderer.VIEWPORT_WIDTH - textWidth) / 2;
+                    boolean selectedItem = (menuMode & 15) == itemIndex;
+                    int textY = menuY + (MENU_ITEM_HEIGHT - fontRenderer.getLargeCharHeight()) / 2;
 
-                    if ((menuMode & 15) == itemIndex) {
-                        int boxWidth = 4 * 30;
+                    if (selectedItem) {
+                        int boxWidth = textWidth + 16;
+                        if (boxWidth < 80) boxWidth = 80;
+                        if (boxWidth > PortalRenderer.VIEWPORT_WIDTH - 8) {
+                            boxWidth = PortalRenderer.VIEWPORT_WIDTH - 8;
+                        }
                         graphics.fillRoundRect((PortalRenderer.VIEWPORT_WIDTH - boxWidth) / 2, menuY,
-                                boxWidth, MENU_ITEM_HEIGHT, 10, 10);
+                                boxWidth, MENU_ITEM_HEIGHT, 8, 8);
                     }
 
-                    fontRenderer.drawLargeString(itemText, graphics, textX, menuY);
+                    fontRenderer.drawLargeString(itemText, graphics, textX, textY,
+                            selectedItem ? FontRenderer.STYLE_SELECTED : FontRenderer.STYLE_NORMAL);
                     menuY += MENU_ITEM_HEIGHT;
                 }
 
@@ -124,10 +168,11 @@ public final class MenuSystem {
 
                 String actionText = menuItems == settingsMenuItems ? TextStrings.CHANGE :
                         (menuItems == TextStrings.CONFIRMATION_MENU_ITEMS ? TextStrings.YES : TextStrings.SELECT);
-                fontRenderer.drawLargeString(actionText, graphics, 3, UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
+                fontRenderer.drawLargeString(actionText, graphics, 3,
+                        UI_HEIGHT - MENU_ITEM_HEIGHT - 3, FontRenderer.STYLE_SELECTED);
                 fontRenderer.drawLargeString(menuItems[totalItems], graphics,
                         PortalRenderer.VIEWPORT_WIDTH - fontRenderer.getLargeTextWidth(menuItems[totalItems]) - 3,
-                        UI_HEIGHT - MENU_ITEM_HEIGHT - 3);
+                        UI_HEIGHT - MENU_ITEM_HEIGHT - 3, FontRenderer.STYLE_NORMAL);
                 canvas.flushGraphicsPublic();
                 HelperUtils.yieldToOtherThreads();
 
@@ -154,13 +199,7 @@ public final class MenuSystem {
 
                         case 1:
                         case 34:
-                            settingsMenuItems = new String[6];
-                            settingsMenuItems[0] = TextStrings.SETTINGS;
-                            settingsMenuItems[1] = TextStrings.EMPTY_SPACE;
-                            settingsMenuItems[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
-                            settingsMenuItems[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
-                            settingsMenuItems[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
-                            settingsMenuItems[5] = TextStrings.BACK;
+                            updateSettingsMenuItems();
                             stackData = new Object[4];
                             stackData[0] = menuItems;
                             stackData[1] = new Integer(menuMode);
@@ -189,7 +228,13 @@ public final class MenuSystem {
                             String[] chapterMenuItems = new String[TextStrings.CHAPTER_MENU_DATA.length];
                             chapterMenuItems[0] = TextStrings.CHAPTER_MENU_DATA[0];
                             chapterMenuItems[1] = TextStrings.CHAPTER_MENU_DATA[1];
-                            chapterMenuItems[2] = TextStrings.CHAPTER_MENU_DATA[2];
+                            // The first two chapter entries are genuine Doom
+                            // route choices rather than ambiguous old campaign
+                            // numbers. The first one returns menu result 66;
+                            // the second is mapped to E1M2 in MainGameCanvas.
+                            chapterMenuItems[2] = TextStrings.DOOM_E1M1_TITLE;
+                            chapterMenuItems[3] = TextStrings.DOOM_E1M2_TITLE;
+                            chapterMenuItems[4] = TextStrings.DOOM_ZAKAT_TITLE;
                             chapterMenuItems[chapterMenuItems.length - 1] =
                                     TextStrings.CHAPTER_MENU_DATA[TextStrings.CHAPTER_MENU_DATA.length - 1];
                             stackData = new Object[4];
@@ -203,10 +248,12 @@ public final class MenuSystem {
                             firstItem = 2;
                             lastItem = chapterMenuItems.length - 2;
 
-                            for (int i = 3; i <= lastItem; ++i) {
-                                chapterMenuItems[i] = SaveSystem.saveData[i - 3] != null
-                                        ? TextStrings.CHAPTER_MENU_DATA[i]
-                                        : TextStrings.UNAVAILABLE;
+                            // Doom edition starts as a sandbox build: chapter
+                            // selection is never hidden behind CovertOps save
+                            // records. Maps that are not converted yet can be
+                            // replaced independently without changing menu flow.
+                            for (int i = 5; i <= lastItem; ++i) {
+                                chapterMenuItems[i] = TextStrings.CHAPTER_MENU_DATA[i];
                             }
                             // Store chapter menu into canvas for later usage? Use static holder
                             canvas.chapterMenuItems = chapterMenuItems;
@@ -214,9 +261,8 @@ public final class MenuSystem {
                             menuMode = 66;
                             break;
 
-                        case 50:
+                        case SETTINGS_SOUND_MODE:
                             SaveSystem.soundEnabled = (byte)(SaveSystem.soundEnabled ^ 1);
-                            settingsMenuItems[2] = TextStrings.SOUND + (SaveSystem.soundEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.musicEnabled != 1) {
                                 if (SaveSystem.soundEnabled == 1) {
                                     HelperUtils.playSound(1, false, 80, 0);
@@ -224,27 +270,61 @@ public final class MenuSystem {
                                     HelperUtils.stopCurrentSound();
                                 }
                             }
+                            updateSettingsMenuItems();
                             SaveSystem.saveSettingsToRMS();
                             break;
 
-                        case 51:
+                        case SETTINGS_MUSIC_MODE:
                             SaveSystem.musicEnabled = (byte)(SaveSystem.musicEnabled ^ 1);
-                            settingsMenuItems[3] = TextStrings.MUSIC + (SaveSystem.musicEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.musicEnabled == 1) {
                                 HelperUtils.stopCurrentSound();
                                 HelperUtils.playSound(0, true, 80, 2);
                             } else {
                                 HelperUtils.stopCurrentSound();
                             }
+                            updateSettingsMenuItems();
                             SaveSystem.saveSettingsToRMS();
                             break;
 
-                        case 52:
+                        case SETTINGS_VIBRATION_MODE:
                             SaveSystem.vibrationEnabled = (byte)(SaveSystem.vibrationEnabled ^ 1);
-                            settingsMenuItems[4] = TextStrings.VIBRATION + (SaveSystem.vibrationEnabled == 1 ? TextStrings.ON : TextStrings.OFF);
                             if (SaveSystem.vibrationEnabled == 1) {
                                 HelperUtils.vibrateDevice(100);
                             }
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_FLOORS_MODE:
+                            SaveSystem.texturedFlatsEnabled = (byte)(SaveSystem.texturedFlatsEnabled ^ 1);
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_SKY_MODE:
+                            SaveSystem.texturedSkyEnabled = (byte)(SaveSystem.texturedSkyEnabled ^ 1);
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_MUZZLE_LIGHT_MODE:
+                            SaveSystem.muzzleLightingEnabled = (byte)(SaveSystem.muzzleLightingEnabled ^ 1);
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_SCREEN_EFFECTS_MODE:
+                            SaveSystem.screenEffectsEnabled = (byte)(SaveSystem.screenEffectsEnabled ^ 1);
+                            updateSettingsMenuItems();
+                            SaveSystem.saveSettingsToRMS();
+                            break;
+
+                        case SETTINGS_LANGUAGE_MODE:
+                            SaveSystem.language = (byte)(SaveSystem.language == TextStrings.LANGUAGE_RUSSIAN
+                                    ? TextStrings.LANGUAGE_ENGLISH : TextStrings.LANGUAGE_RUSSIAN);
+                            TextStrings.setLanguage(SaveSystem.language);
+                            fontRenderer.loadFont(TextStrings.getFontConfigPath());
+                            updateSettingsMenuItems();
                             SaveSystem.saveSettingsToRMS();
                             break;
 
@@ -270,8 +350,9 @@ public final class MenuSystem {
 
                 if (GameEngine.inputBack) {
                     GameEngine.inputBack = false;
-                    if (menuItems[menuItems.length - 1] != TextStrings.BACK && !menuItems[menuItems.length - 1].equals("no")) {
-                        if (menuItems[menuItems.length - 1] == TextStrings.QUIT) {
+                    if (!menuItems[menuItems.length - 1].equals(TextStrings.BACK)
+                            && !menuItems[menuItems.length - 1].equals(TextStrings.NO)) {
+                        if (menuItems[menuItems.length - 1].equals(TextStrings.QUIT)) {
                             stackData = new Object[4];
                             stackData[0] = menuItems;
                             stackData[1] = new Integer(menuMode);

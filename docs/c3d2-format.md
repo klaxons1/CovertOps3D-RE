@@ -1,0 +1,230 @@
+# C3D2: новый формат пользовательских уровней
+
+`level_XX`, `tx*` и `sp*` остаются **legacy**-форматами: их можно
+импортировать и проверять старым редактором, но новые карты не обязаны
+наследовать их ограничения.
+
+Новый pipeline разделяет редактируемые данные и runtime-данные:
+
+```text
+custom/<name>/
+  level.c3d.json       # исходник геометрии редактора
+  level.c3b            # скомпилированная геометрия/BSP для Java ME
+  entities.ini         # координаты спавнов и объектов
+  materials.c3m        # manifest внешних материалов
+  textures/*.bmp       # indexed BMP4/BMP8
+```
+
+## Ориентация стен
+
+Координаты вершины записываются как `[x, z]`. У `front`-поверхности сектор
+должен находиться **справа** от направленного ребра `start -> end`; у `back`
+сторона автоматически идёт в обратном направлении. Поэтому внешний контур
+обычной комнаты рисуется **по часовой стрелке** в плоскости `x,z`.
+
+Это не косметика: текущий быстрый `PortalRenderer` принимает только
+проецируемые слева-направо front-сегменты. Контур против часовой стрелки может
+успешно пройти BSP-компиляцию, но все стены будут отсечены как back-to-front и
+экран останется чёрным. `c3d2_core.py` проверяет это до записи `.c3b` и выдаёт
+понятную ошибку; редактор должен показывать направление стен стрелками.
+
+## Энтити в отдельном INI
+
+Координаты и параметры энтити не участвуют в BSP, поэтому новый C3D2 source
+не хранит их в `level.c3d.json`, а указывает только путь:
+
+```json
+"entities": "entities.ini"
+```
+
+`entities.ini` — UTF-8, комментарии начинаются с `#` или `;`. У каждого
+объекта есть отдельная секция; `x`, `z` и `type` обязательны, `angle` и
+`param` по умолчанию равны нулю. Необязательный `sprite=1..127` связывает
+billboard с `sprite.<slot>` из material manifest; `frame1..frame6` задают
+Doom actor state frames, где `sprite` является frame0. Необязательные
+`death1..death4` — четыре промежуточные позы между `frame5` (первая поза
+смерти) и `frame6` (труп), поэтому actor проигрывает полный strip I→N. Все
+значения — signed `int16`, как и в runtime.
+
+```ini
+# C3D entity placement v1
+[entities]
+format=C3D-ENTITIES-1
+
+[entity.0]
+x=0
+z=0
+angle=0
+type=1
+param=0
+
+# Optional custom billboard / Doom actor frames:
+# sprite=1
+# frame1=2
+# frame2=3
+# frame3=4
+# frame4=5
+# frame5=6        # first death pose
+# frame6=7        # final corpse pose
+# death1=8
+# death2=9
+# death3=10
+# death4=11
+```
+
+`type=1..4` — точки старта игрока по вариантам сложности. При компиляции C3B
+получает header flag `external entities`, нулевой счётчик inline-объектов и
+относительный путь к INI; загрузчик Java ME читает INI отдельно. Поэтому
+перемещение спавна/предмета не меняет геометрию или BSP. Ранние C3B v1 с
+inline-объектами (`flags=0`) остаются читаемы для совместимости.
+
+External material pipeline поставляет wall/flat/sky и optional
+`sprite.<slot>` billboards. Entity с `sprite=<slot>` получает texture id
+`-slot`, поэтому не конфликтует с положительными wall slots; для AI frames
+один bitmap безопасно повторяется. Doom actors используют отдельный
+floor-centered billboard path, а `death1..death4` проигрываются без аллокаций
+в renderer hot path.
+
+## Внешние материалы
+
+`materials.c3m` - UTF-8 текстовый manifest. Пустые строки, `#` и `;`
+игнорируются. Пути относительны самому manifest.
+
+```ini
+wall.1=textures/brick.bmp
+wall.2=textures/steel_door.bmp
+flat.1=textures/floor.bmp
+flat.2=textures/ceiling.bmp
+sky=textures/sky.bmp
+sprite.1=sprites/doom/imp.bmp
+# Animation values are slot lists, not filesystem paths. Their target slot
+# is the authored initial frame and rotates at the fixed game tick.
+anim.wall.12=12,13,14
+anim.flat.18=18,16,17
+```
+
+Ограничения runtime (они намеренно простые и детерминированные):
+
+| Вид | Формат | Размер |
+| --- | --- | --- |
+| `wall.<slot>` | indexed BMP4/BMP8, используются индексы 0..15 | power-of-two ширина, высота 16/64/128 |
+| `flat.<slot>` | indexed BMP4/BMP8, используются индексы 0..15 | 64×64 |
+| `sky` | indexed BMP4/BMP8, используются индексы 0..15 | 64×128 |
+| `sprite.<slot>` | indexed BMP4/BMP8, index 0 прозрачен | 1..255 × 1..255 |
+| `anim.wall.<slot>` | comma-separated existing `wall` slots | same dimensions as target `wall.<slot>` |
+| `anim.flat.<slot>` | comma-separated existing `flat` slots | all frames 64×64 |
+
+`anim.*` entries are parsed at level load. `GameWorld` swaps only the existing
+pixel/palette references once per fixed game tick; `PortalRenderer` retains its
+normal branch-free material lookup. Material paths may use `../` to point at a
+shared package such as `custom/doom-common/textures`; `CustomMaterialSet`
+normalizes this resource path before calling `getResourceAsStream` on MIDP.
+
+PNG остаётся удобным исходником для художника и редактора, но экспортируется
+в BMP4 через `scripts/png_to_bmp4.py`. В Java ME `CustomMaterialSet` грузит
+BMP напрямую через существующий `BMPLoader`; атлас не требуется.
+
+Материал сохраняет palette indices, поэтому получает те же 16 световых строк
+`Texture.createColorPalettes`, что и стоковые текстуры. `flat` режим качества
+также работает с внешними полами/потолками.
+
+Поля C3D `floor_material`/`floor_sky` всегда означают физический пол, а
+`ceiling_material`/`ceiling_sky` — физический потолок. Внутренние имена
+наследованного `PortalRenderer` вертикально инвертированы; `CustomLevelLoader`
+адаптирует их один раз во время загрузки, не меняя legacy-карты. Поэтому C3D
+автору не нужно помнить о старом перепутанном представлении.
+
+В репозитории есть минимальный проверочный пакет:
+
+```text
+res/gamedata/custom/demo/materials.c3m
+res/gamedata/custom/demo/textures/
+```
+
+## Runtime entry point
+
+Java ME code can load a package directly through:
+
+```java
+levelResourceManager.loadCustomLevelResources(
+    "/gamedata/custom/demo/level.c3b"
+);
+```
+
+This loads `level.c3b`, resolves its relative `materials.c3m` and, for new
+packages, `entities.ini`, installs loose wall/flat/sky BMPs, builds
+`GameWorld`, and then uses the existing `PortalRenderer`. Stock campaign
+loading remains unchanged.
+
+The repository routes New Game to compact Doom E1M1, the second chapter entry
+to E1M2 and the third to the converted Zakat PWAD MAP01. Imported Doom exits
+advance E1M1 → E1M2 → Zakat through the normal loader while retaining Doom
+inventory; a completed Doom route never falls into a legacy CovertOps level.
+The tiny `custom/demo` package remains a pipeline fixture; legacy `level_01a`
+is retained as an import/compatibility asset.
+
+## C3B v1 runtime layout
+
+`level.c3b` уже генерируется `scripts/c3d2_core.py`. Он little-endian и не
+использует legacy section-size blocks.
+
+```text
+C3B1 magic          4 bytes
+version             u8 (=1)
+flags               u8 (bit 0 = external entities)
+rootNode            s16
+counts              8 x u16
+materialPathLength  u16
+materialPath        UTF-8 bytes, relative to C3B
+entityPathLength    u16, only if flags & 1
+entityPath          UTF-8 bytes, only if flags & 1
+vertices            x,z: s16,s16
+walls               start,end:u16; front,back:s16; flags,type,special,reserved:u8
+objects             x,z,angle,type,param: s16; only if flags & 1 == 0
+surfaces            offsetX,offsetY:s16; upper,lower,main,reserved:u8; sector:u16
+sectors             floor,ceiling:s16; floorSlot,ceilingSlot,light,flags:u8; tag,type:s16
+nodes               x,z,dx,dz,frontChild,backChild: s16
+leaves              sector,firstSegment,segmentCount: u16
+segments            start,end,definition:u16; frontFacing:u8; textureOffset:s16
+pvsByteCount        u32
+PVS                 LSB-first, bit from*sectorCount+to, 1=visible
+```
+
+При `flags & 1` поле `objects` count равно нулю: координаты находятся только
+в указанном INI. Node children не используют `0x8000` на диске: `>=0` означает
+node index, `<0` означает leaf index `-child-1`. Корень хранится явно, поэтому
+node array можно свободно перестраивать. Для текущего Java renderer loader
+преобразует эти ссылки во внутреннее legacy-представление только в памяти.
+
+### Преимущества перед legacy
+
+| Legacy | C3D2/C3B |
+| --- | --- |
+| размер каждой секции хранится в байтах, поля надо знать вручную | фиксированные records и явные counts |
+| root = последний node, leaf sector выводится из первого сегмента | explicit root и explicit `leaf.sectorId` |
+| child использует high-bit tag, PVS имеет обратную семантику | signed child refs, PVS `1=visible` |
+| surface может ссылаться только на byte sector ID | surface sector ID `u16` |
+| текстуры требуют глобальных tx/sp atlas | отдельный manifest и BMP рядом с уровнем |
+| координаты объектов смешаны с геометрией | `entities.ini` рядом с C3B, BSP от них не зависит |
+| формат данных и формат редактора смешаны | JSON source отдельно от compiled C3B |
+| BSP rebuild привязан к байт-в-байт legacy compatibility | чистый deterministic integer builder |
+
+BSP построитель остаётся integer, Doom-style и детерминированным. `shapely`
+допустим как **опциональный** валидатор геометрии в редакторе, но не как
+обязательная зависимость и не как основа BSP: float-геометрия даёт
+sliver-сегменты и нестабильные texture offset.
+
+## Pygame редактор
+
+Для C3D2 есть отдельный `scripts/c3d2_editor.py`: 2D редактирование геометрии
+и entity, импорт произвольных изображений в BMP4 через K-means, автоматическое
+обновление `materials.c3m` и 3D flythrough. Инструкции и клавиши — в
+[`c3d2-editor.md`](c3d2-editor.md). Старый `level_editor.py` остаётся только
+legacy-редактором/импортёром.
+
+## Doom E1M1/E1M2 import
+
+`scripts/convert_doom_e1m1.py` переводит classic `docs/DOOM.WAD` в компактный
+C3D2 package с BSP, внешними BMP4 world textures и player spawn без чтения WAD
+на Java ME. Размеры, ограничения и Doom-specific gameplay details описаны в
+[`doom-e1m1-conversion.md`](doom-e1m1-conversion.md).

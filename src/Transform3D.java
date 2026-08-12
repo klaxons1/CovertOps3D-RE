@@ -24,18 +24,26 @@ public class Transform3D {
         this.y += deltaY;
         this.z += deltaZ;
 
-        // Add angular velocity and wrap around 360 degrees
-        this.rotation += deltaRotation;
-
-        // Normalize positive overflow
-        while (this.rotation >= FULL_CIRCLE) {
-            this.rotation -= FULL_CIRCLE;
+        // The normal game path crosses at most one turn, so retain the cheap
+        // add/subtract path there.  A loaded or scripted transform can carry
+        // several turns, however; the old while-loops made that case take an
+        // unbounded number of iterations on the game thread.
+        int rotation = this.rotation + deltaRotation;
+        if (rotation >= FULL_CIRCLE) {
+            if (rotation >= FULL_CIRCLE + FULL_CIRCLE) {
+                rotation %= FULL_CIRCLE;
+            } else {
+                rotation -= FULL_CIRCLE;
+            }
+        } else if (rotation < 0) {
+            if (rotation <= -FULL_CIRCLE) {
+                rotation %= FULL_CIRCLE;
+            }
+            if (rotation < 0) {
+                rotation += FULL_CIRCLE;
+            }
         }
-
-        // Normalize negative values
-        while (this.rotation < 0) {
-            this.rotation += FULL_CIRCLE;
-        }
+        this.rotation = rotation;
     }
 
     /** Copies position and rotation from another transform */

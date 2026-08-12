@@ -1,317 +1,407 @@
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 
 /**
- * Класс для рендеринга текста с использованием bitmap-шрифтов.
- * Поддерживает два размера шрифта: большой (для меню) и маленький (для диалогов).
+ * Unicode bitmap-font renderer.
+ *
+ * Font assets originate from Quantum with the author's permission supplied by
+ * the project maintainer. The loader and lookup code are purpose-built for
+ * this MIDP game: glyph lookup is O(1), there are no per-character objects,
+ * and the same renderer is used by menus, HUD and dialogs.
  */
-public class FontRenderer {
+public final class FontRenderer {
 
-    // ==================== Константы для большого шрифта ====================
+    public static final int STYLE_NORMAL = 0;
+    public static final int STYLE_SELECTED = 1;
+    public static final int STYLE_ACTIVE = 2;
 
-    private static final int LARGE_FONT_CHARS_PER_ROW = 18;
-    private static final int LARGE_FONT_CHAR_HEIGHT = 23;
-    private static final int LARGE_FONT_SPACE_WIDTH = 4;
+    private static final int ASCII_LIMIT = 128;
+    private static final int CYRILLIC_BASE = 0x0400;
+    private static final int CYRILLIC_COUNT = 0x60;
+    private static final int DEFAULT_SPACE_WIDTH = 6;
+    private static final int SMALL_LETTER_SPACING = 1;
 
-    /** Позиции символов в текстуре большого шрифта */
-    private static final int[] LARGE_FONT_OFFSETS = {
-            1, 11, 22, 31, 42, 52, 62, 70, 82, 91, 101, 112, 120, 130, 142, 151, 161, 171,
-            2, 12, 20, 31, 40, 51, 61, 72, 80, 90, 100, 110, 120, 130, 142, 151, 160, 170,
-            1, 12, 21, 31, 41, 51, 61, 71, 81, 91, 100, 110, 120, 130, 140, 150, 160, 170
-    };
+    private Image normalImage;
+    private Image selectedImage;
+    private Image activeImage;
+    private String activeImagePath;
+    private String normalImagePath;
+    private String selectedImagePath;
+    private String activeLoadedPath;
+    private String loadedCharacters;
+    private int sourceImageWidth;
+    private int sourceImageHeight;
 
-    /** Ширина символов большого шрифта */
-    private static final int[] LARGE_FONT_WIDTHS = {
-            9, 9, 7, 8, 7, 7, 7, 10, 6, 6, 9, 6, 10, 10, 7, 9, 8, 8,
-            7, 6, 10, 8, 10, 9, 8, 7, 4, 4, 4, 8, 4, 4, 7, 4, 0, 0,
-            8, 6, 8, 8, 9, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0
-    };
-
-    // ==================== Константы для маленького шрифта ====================
-
-    private static final int SMALL_FONT_CHARS_PER_ROW = 26;
-    private static final int SMALL_FONT_CHAR_HEIGHT = 10;
-    private static final int SMALL_FONT_SPACE_WIDTH = 3;
-
-    /** Позиции символов в текстуре маленького шрифта */
-    private static final int[] SMALL_FONT_X = {
-            0, 8, 14, 21, 29, 36, 42, 49, 58, 64, 71, 78, 85, 91, 98, 106, 112, 120, 126, 134, 140, 148, 154, 162, 169, 176,
-            1, 8, 15, 22, 29, 36, 43, 50, 59, 65, 71, 80, 84, 92, 99, 106, 113, 121, 127, 135, 141, 148, 155, 162, 169, 177,
-            1, 9, 15, 22, 29, 36, 43, 50, 57, 64, 71, 77, 85, 92, 99, 105, 112, 121, 127, 133, 140, 147, 154, 161, 168, 175
-    };
-
-    /** Ширина символов маленького шрифта */
-    private static final int[] SMALL_FONT_WIDTHS = {
-            6, 5, 6, 6, 5, 5, 6, 6, 3, 3, 5, 4, 5, 6, 6, 5, 6, 5, 5, 5, 6, 5, 7, 5, 5, 5,
-            5, 5, 5, 5, 5, 4, 5, 5, 1, 2, 5, 2, 7, 5, 5, 5, 5, 3, 5, 2, 5, 5, 5, 4, 5, 3,
-            4, 3, 4, 4, 5, 4, 4, 4, 4, 4, 1, 2, 1, 4, 1, 2, 4, 3, 2, 7, 0, 0, 0, 0, 0, 0
-    };
-
-    // ==================== Изображения шрифтов ====================
-
-    private Image largeFontImage;
-    private Image smallFontImage;
-
-    // ==================== Буфер для координат (избегаем создания массивов) ====================
-
-    private final int[] coordsBuffer = new int[2];
-
-    // ==================== Конструктор ====================
-
-    public FontRenderer() {
-    }
-
-    // ==================== Инициализация ====================
+    private int[] glyphX;
+    private int[] glyphWidth;
+    private short[] asciiGlyph;
+    private short[] cyrillicGlyph;
+    private int fallbackGlyph = -1;
+    private int glyphHeight;
+    private int spaceWidth = DEFAULT_SPACE_WIDTH;
+    private String loadedConfigPath;
 
     /**
-     * Загружает изображение большого шрифта
+     * Loads one Quantum-compatible font strip. The first image row contains
+     * opaque black glyph separators; all remaining rows are glyph pixels.
+     * The configuration file is UTF-8 and supplies image paths plus CHARS.
+     */
+    public void loadFont(String configPath) {
+        if (configPath == null) return;
+
+        try {
+            String config = readResourceText(configPath);
+            String normalPath = getConfigValue(config, "IMG");
+            String selectedPath = getConfigValue(config, "SELECTED_IMG");
+            String activePath = getConfigValue(config, "ACTIVE_IMG");
+            String characters = getConfigValue(config, "CHARS");
+            String configuredSpace = getConfigValue(config, "SPACE");
+
+            if (normalPath == null || characters == null || characters.length() == 0) {
+                throw new IOException("Invalid font config: " + configPath);
+            }
+            if (selectedPath == null) selectedPath = normalPath;
+            if (activePath == null) activePath = normalPath;
+
+            // English and Russian currently use the same Quantum atlas. Keep
+            // it resident and only rebuild character lookup tables on a live
+            // language switch instead of allocating another pair of images.
+            if (normalImage != null && normalPath.equals(normalImagePath)
+                    && selectedPath.equals(selectedImagePath)
+                    && characters.equals(loadedCharacters)) {
+                updateConfiguredSpace(configuredSpace);
+                if (!activePath.equals(activeLoadedPath)) {
+                    activeImage = null;
+                    activeImagePath = activePath;
+                    activeLoadedPath = activePath;
+                }
+                buildGlyphLookup(characters);
+                loadedConfigPath = configPath;
+                return;
+            }
+
+            Image rawNormal = Image.createImage(normalPath);
+            Image rawSelected = normalPath.equals(selectedPath)
+                    ? rawNormal : Image.createImage(selectedPath);
+            int imageWidth = rawNormal.getWidth();
+            int imageHeight = rawNormal.getHeight();
+
+            if (imageHeight <= 1 || rawSelected.getWidth() != imageWidth
+                    || rawSelected.getHeight() != imageHeight) {
+                throw new IOException("Incompatible font images: " + configPath);
+            }
+
+            int[] markerRow = new int[imageWidth];
+            rawNormal.getRGB(markerRow, 0, imageWidth, 0, 0, imageWidth, 1);
+            int[] boundaries = buildBoundaries(markerRow, characters.length(), imageWidth);
+
+            int[] newGlyphX = new int[characters.length()];
+            int[] newGlyphWidth = new int[characters.length()];
+            for (int glyph = 0; glyph < characters.length(); ++glyph) {
+                int width = boundaries[glyph + 1] - boundaries[glyph];
+                if (width <= 0) throw new IOException("Invalid glyph width: " + configPath);
+                newGlyphX[glyph] = boundaries[glyph];
+                newGlyphWidth[glyph] = width;
+            }
+
+            int newSpaceWidth = averageWidth(newGlyphWidth);
+            if (configuredSpace != null) {
+                try {
+                    newSpaceWidth = Integer.parseInt(configuredSpace);
+                } catch (NumberFormatException ignored) {
+                    // Keep the measured value when an optional setting is bad.
+                }
+            }
+            if (newSpaceWidth <= 0) newSpaceWidth = DEFAULT_SPACE_WIDTH;
+
+            // Assign only after every resource and metric has been validated,
+            // so changing language cannot leave a half-loaded font behind.
+            normalImage = Image.createImage(rawNormal, 0, 1, imageWidth, imageHeight - 1, 0);
+            selectedImage = rawSelected == rawNormal ? normalImage
+                    : Image.createImage(rawSelected, 0, 1, imageWidth, imageHeight - 1, 0);
+            activeImage = normalPath.equals(activePath) ? normalImage : null;
+            activeImagePath = activeImage == null ? activePath : null;
+            normalImagePath = normalPath;
+            selectedImagePath = selectedPath;
+            activeLoadedPath = activePath;
+            loadedCharacters = characters;
+            sourceImageWidth = imageWidth;
+            sourceImageHeight = imageHeight;
+            glyphX = newGlyphX;
+            glyphWidth = newGlyphWidth;
+            glyphHeight = imageHeight - 1;
+            spaceWidth = newSpaceWidth;
+            buildGlyphLookup(characters);
+            loadedConfigPath = configPath;
+        } catch (Exception e) {
+            DebugLogger.logException("FontRenderer.loadFont", e);
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("FontRenderer.loadFont", e);
+        }
+    }
+
+    /**
+     * Compatibility entry point retained for existing callers. New code should
+     * call loadFont with a language-specific configuration path.
      */
     public void loadLargeFont(String path) {
-        try {
-            largeFontImage = Image.createImage(path);
-        } catch (Exception e) {
-        DebugLogger.logException("FontRenderer.java", e);
+        if (path != null && endsWith(path, ".txt")) {
+            loadFont(path);
+        } else if (normalImage == null) {
+            loadFont(TextStrings.getFontConfigPath());
         }
     }
 
-    /**
-     * Загружает изображение маленького шрифта
-     */
-    public void loadSmallFont(String path) {
-        try {
-            smallFontImage = Image.createImage(path);
-        } catch (Exception e) {
-        DebugLogger.logException("FontRenderer.java", e);
+    /** The unified Quantum strip serves both former large and small fonts. */
+    public void loadSmallFont(String ignoredPath) {
+        if (normalImage == null) {
+            loadFont(TextStrings.getFontConfigPath());
         }
     }
 
-    /**
-     * Выгружает маленький шрифт для освобождения памяти
-     */
+    /** Keep the shared font resident; dialogs no longer thrash image memory. */
     public void unloadSmallFont() {
-        smallFontImage = null;
     }
 
-    /**
-     * Проверяет, загружен ли маленький шрифт
-     */
     public boolean isSmallFontLoaded() {
-        return smallFontImage != null;
+        return normalImage != null;
     }
-
-    // ==================== Геттеры констант ====================
 
     public int getLargeCharHeight() {
-        return LARGE_FONT_CHAR_HEIGHT;
+        return glyphHeight > 0 ? glyphHeight : 12;
     }
 
     public int getSmallCharHeight() {
-        return SMALL_FONT_CHAR_HEIGHT;
+        return glyphHeight > 0 ? glyphHeight : 12;
     }
 
     public int getSmallSpaceWidth() {
-        return SMALL_FONT_SPACE_WIDTH;
+        return spaceWidth;
     }
 
-    // ==================== Рендеринг большого шрифта ====================
-
-    /**
-     * Рисует строку большим шрифтом
-     */
     public void drawLargeString(String text, Graphics graphics, int x, int y) {
-        text = text.toLowerCase();
+        drawLargeString(text, graphics, x, y, STYLE_NORMAL);
+    }
 
+    /** Draws a menu/UI string with the normal, selected or active Quantum tint. */
+    public void drawLargeString(String text, Graphics graphics, int x, int y, int style) {
+        if (text == null) return;
+        if (normalImage == null) {
+            graphics.drawString(text, x, y, Graphics.TOP | Graphics.LEFT);
+            return;
+        }
+
+        Image image = getStyleImage(style);
         for (int i = 0; i < text.length(); ++i) {
-            char c = text.charAt(i);
-
-            if (c == ' ') {
-                x += LARGE_FONT_SPACE_WIDTH;
+            char character = text.charAt(i);
+            int glyph = findGlyph(character);
+            if (glyph < 0) {
+                x += character == '\t' ? spaceWidth << 2 : spaceWidth;
             } else {
-                getLargeFontCoordinates(c, coordsBuffer);
-                int fontIdx = coordsBuffer[1] * LARGE_FONT_CHARS_PER_ROW + coordsBuffer[0];
-                int charWidth = LARGE_FONT_WIDTHS[fontIdx];
-                int charX = LARGE_FONT_OFFSETS[fontIdx];
-                int charY = coordsBuffer[1] * LARGE_FONT_CHAR_HEIGHT;
-
-                graphics.drawRegion(largeFontImage, charX, charY, charWidth, LARGE_FONT_CHAR_HEIGHT,
-                        0, x, y, 20);
-                x += charWidth;
+                int width = glyphWidth[glyph];
+                graphics.drawRegion(image, glyphX[glyph], 0, width, glyphHeight,
+                        0, x, y, Graphics.TOP | Graphics.LEFT);
+                x += width;
             }
         }
     }
 
-    /**
-     * Вычисляет ширину строки большим шрифтом
-     */
     public int getLargeTextWidth(String text) {
-        text = text.toLowerCase();
+        if (text == null) return 0;
         int width = 0;
-
         for (int i = 0; i < text.length(); ++i) {
-            char c = text.charAt(i);
-            if (c == ' ') {
-                width += LARGE_FONT_SPACE_WIDTH;
-            } else {
-                getLargeFontCoordinates(c, coordsBuffer);
-                int charWidth = LARGE_FONT_WIDTHS[coordsBuffer[1] * LARGE_FONT_CHARS_PER_ROW + coordsBuffer[0]];
-                width += charWidth;
-            }
+            width += getGlyphAdvance(text.charAt(i), 0);
         }
-
         return width;
     }
 
-    /**
-     * Рисует число по центру указанной позиции (для HUD)
-     */
     public void drawCenteredNumber(int value, Graphics graphics, int centerX, int y) {
         String text = Integer.toString(value);
-        int offset = getLargeTextWidth(text) / 2;
-        drawLargeString(text, graphics, centerX - offset, y);
+        drawLargeString(text, graphics, centerX - (getLargeTextWidth(text) >> 1), y);
     }
 
-    // ==================== Рендеринг маленького шрифта ====================
-
-    /**
-     * Рисует строку маленьким шрифтом
-     */
     public void drawSmallString(String text, Graphics graphics, int x, int y) {
+        if (text == null) return;
         for (int i = 0; i < text.length(); ++i) {
-            char c = text.charAt(i);
-
-            if (c == ' ') {
-                x += SMALL_FONT_SPACE_WIDTH;
-            } else {
-                getSmallFontCoordinates(c, coordsBuffer);
-                int fontIdx = coordsBuffer[1] * SMALL_FONT_CHARS_PER_ROW + coordsBuffer[0];
-                int charWidth = SMALL_FONT_WIDTHS[fontIdx];
-                int charX = SMALL_FONT_X[fontIdx];
-                int charY = coordsBuffer[1] * SMALL_FONT_CHAR_HEIGHT;
-
-                graphics.drawRegion(smallFontImage, charX, charY, charWidth, SMALL_FONT_CHAR_HEIGHT,
-                        0, x, y, 20);
-                x += charWidth + 1;
-            }
+            x += drawSmallChar(text.charAt(i), graphics, x, y);
         }
     }
 
-    /**
-     * Рисует один символ маленьким шрифтом и возвращает его ширину
-     */
-    public int drawSmallChar(char c, Graphics graphics, int x, int y) {
-        if (c == ' ') {
-            return SMALL_FONT_SPACE_WIDTH;
+    /** Draws one glyph and returns the horizontal advance for dialog layout. */
+    public int drawSmallChar(char character, Graphics graphics, int x, int y) {
+        int glyph = findGlyph(character);
+        if (glyph < 0) {
+            return character == '\t' ? spaceWidth << 2 : spaceWidth;
         }
 
-        getSmallFontCoordinates(c, coordsBuffer);
-        int fontIdx = coordsBuffer[1] * SMALL_FONT_CHARS_PER_ROW + coordsBuffer[0];
-        int charWidth = SMALL_FONT_WIDTHS[fontIdx];
-        int charX = SMALL_FONT_X[fontIdx];
-        int charY = coordsBuffer[1] * SMALL_FONT_CHAR_HEIGHT;
+        if (normalImage == null) {
+            graphics.drawChar(character, x, y, Graphics.TOP | Graphics.LEFT);
+            return spaceWidth;
+        }
 
-        graphics.drawRegion(smallFontImage, charX, charY, charWidth, SMALL_FONT_CHAR_HEIGHT,
-                0, x, y, 20);
-
-        return charWidth + 1;
+        int width = glyphWidth[glyph];
+        graphics.drawRegion(normalImage, glyphX[glyph], 0, width, glyphHeight,
+                0, x, y, Graphics.TOP | Graphics.LEFT);
+        return width + SMALL_LETTER_SPACING;
     }
 
-    /**
-     * Вычисляет ширину строки маленьким шрифтом
-     */
     public int getSmallTextWidth(String text) {
+        if (text == null) return 0;
         int width = 0;
-
         for (int i = 0; i < text.length(); ++i) {
-            char c = text.charAt(i);
-            if (c == ' ') {
-                width += SMALL_FONT_SPACE_WIDTH;
-            } else {
-                getSmallFontCoordinates(c, coordsBuffer);
-                int charWidth = SMALL_FONT_WIDTHS[coordsBuffer[1] * SMALL_FONT_CHARS_PER_ROW + coordsBuffer[0]];
-                width += charWidth + 1;
-            }
+            width += getGlyphAdvance(text.charAt(i), SMALL_LETTER_SPACING);
         }
-
         return width;
     }
 
-    /**
-     * Получает ширину символа маленького шрифта
-     */
-    public int getSmallCharWidth(char c) {
-        if (c == ' ') {
-            return SMALL_FONT_SPACE_WIDTH;
-        }
-        getSmallFontCoordinates(c, coordsBuffer);
-        return SMALL_FONT_WIDTHS[coordsBuffer[1] * SMALL_FONT_CHARS_PER_ROW + coordsBuffer[0]] + 1;
+    public int getSmallCharWidth(char character) {
+        return getGlyphAdvance(character, SMALL_LETTER_SPACING);
     }
 
-    // ==================== Вспомогательные методы для координат символов ====================
+    public String getLoadedConfigPath() {
+        return loadedConfigPath;
+    }
 
-    /**
-     * Получает координаты символа в текстуре большого шрифта
-     * @param c символ
-     * @param result массив [x, y] для записи результата
-     */
-    private void getLargeFontCoordinates(char c, int[] result) {
-        result[0] = LARGE_FONT_CHARS_PER_ROW - 1;
-        result[1] = 2;
+    private Image getStyleImage(int style) {
+        if (style == STYLE_SELECTED && selectedImage != null) return selectedImage;
+        if (style == STYLE_ACTIVE) {
+            ensureActiveImage();
+            if (activeImage != null) return activeImage;
+        }
+        return normalImage;
+    }
 
-        if (c >= 'a' && c <= 'r') {
-            result[0] = c - 'a';
-            result[1] = 0;
-        } else if (c >= 's' && c <= 'z') {
-            result[0] = c - 's';
-            result[1] = 1;
-        } else if (c >= '0' && c <= '9') {
-            result[0] = c - '0';
-            result[1] = 2;
-        } else {
-            result[1] = 1;
-            switch (c) {
-                case '!': result[0] = 10; break;
-                case '\'': result[0] = 15; break;
-                case ',': result[0] = 9; break;
-                case '.': result[0] = 8; break;
-                case '/': result[0] = 14; break;
-                case ':': result[0] = 12; break;
-                case ';': result[0] = 13; break;
-                case '?': result[0] = 11; break;
+    /** Active/red glyphs are not needed by ordinary rendering, so load them lazily. */
+    private void ensureActiveImage() {
+        if (activeImage != null || activeImagePath == null) return;
+        try {
+            Image raw = Image.createImage(activeImagePath);
+            if (raw.getWidth() != sourceImageWidth || raw.getHeight() != sourceImageHeight) {
+                throw new IOException("Incompatible active font image");
+            }
+            activeImage = Image.createImage(raw, 0, 1, sourceImageWidth, sourceImageHeight - 1, 0);
+        } catch (Exception e) {
+            DebugLogger.logException("FontRenderer.activeImage", e);
+            activeImagePath = null;
+        } catch (OutOfMemoryError e) {
+            DebugLogger.logOutOfMemory("FontRenderer.activeImage", e);
+            activeImagePath = null;
+        }
+    }
+
+    private int getGlyphAdvance(char character, int spacing) {
+        int glyph = findGlyph(character);
+        if (glyph < 0) {
+            return (character == '\t' ? spaceWidth << 2 : spaceWidth) + spacing;
+        }
+        return glyphWidth[glyph] + spacing;
+    }
+
+    private int findGlyph(char character) {
+        if (character == ' ') return -1;
+        int glyph = -1;
+        if (character < ASCII_LIMIT && asciiGlyph != null) {
+            glyph = asciiGlyph[character] - 1;
+        } else if (character >= CYRILLIC_BASE && character < CYRILLIC_BASE + CYRILLIC_COUNT
+                && cyrillicGlyph != null) {
+            glyph = cyrillicGlyph[character - CYRILLIC_BASE] - 1;
+        }
+        return glyph >= 0 ? glyph : fallbackGlyph;
+    }
+
+    private void buildGlyphLookup(String characters) {
+        asciiGlyph = new short[ASCII_LIMIT];
+        cyrillicGlyph = new short[CYRILLIC_COUNT];
+        fallbackGlyph = -1;
+
+        for (int glyph = 0; glyph < characters.length(); ++glyph) {
+            char character = characters.charAt(glyph);
+            if (character < ASCII_LIMIT) {
+                asciiGlyph[character] = (short)(glyph + 1);
+            } else if (character >= CYRILLIC_BASE && character < CYRILLIC_BASE + CYRILLIC_COUNT) {
+                cyrillicGlyph[character - CYRILLIC_BASE] = (short)(glyph + 1);
+            }
+            if (character == '?') fallbackGlyph = glyph;
+        }
+        if (fallbackGlyph < 0 && glyphWidth.length > 0) fallbackGlyph = 0;
+    }
+
+    private static int[] buildBoundaries(int[] markerRow, int glyphCount, int imageWidth)
+            throws IOException {
+        int[] boundaries = new int[glyphCount + 1];
+        boundaries[0] = 0;
+        int markerCount = 0;
+
+        for (int x = 0; x < markerRow.length; ++x) {
+            if (markerRow[x] == 0xFF000000) {
+                markerCount++;
+                if (markerCount < glyphCount) boundaries[markerCount] = x;
             }
         }
+        if (markerCount != glyphCount - 1) {
+            throw new IOException("Font marker count mismatch");
+        }
+        boundaries[glyphCount] = imageWidth;
+        return boundaries;
     }
 
-    /**
-     * Получает координаты символа в текстуре маленького шрифта
-     * @param c символ
-     * @param result массив [x, y] для записи результата
-     */
-    private void getSmallFontCoordinates(char c, int[] result) {
-        result[0] = SMALL_FONT_CHARS_PER_ROW - 1;
-        result[1] = 2;
+    private void updateConfiguredSpace(String configuredSpace) {
+        if (configuredSpace == null) return;
+        try {
+            int value = Integer.parseInt(configuredSpace);
+            if (value > 0) spaceWidth = value;
+        } catch (NumberFormatException ignored) {
+        }
+    }
 
-        if (c >= 'A' && c <= 'Z') {
-            result[0] = c - 'A';
-            result[1] = 0;
-        } else if (c >= 'a' && c <= 'z') {
-            result[0] = c - 'a';
-            result[1] = 1;
-        } else if (c >= '0' && c <= '9') {
-            result[0] = c - '0';
-            result[1] = 2;
-        } else {
-            result[1] = 2;
-            switch (c) {
-                case '!': result[0] = 12; break;
-                case '\'': result[0] = 18; break;
-                case ',': result[0] = 11; break;
-                case '-': result[0] = 17; break;
-                case '.': result[0] = 10; break;
-                case '/': result[0] = 16; break;
-                case ':': result[0] = 14; break;
-                case ';': result[0] = 15; break;
-                case '?': result[0] = 13; break;
-                case '@': result[0] = 19; break;
+    private static int averageWidth(int[] widths) {
+        int total = 0;
+        for (int i = 0; i < widths.length; ++i) total += widths[i];
+        return widths.length == 0 ? DEFAULT_SPACE_WIDTH : total / widths.length;
+    }
+
+    private static boolean endsWith(String text, String suffix) {
+        return text.length() >= suffix.length()
+                && text.substring(text.length() - suffix.length()).equals(suffix);
+    }
+
+    private static String getConfigValue(String config, String key) {
+        int lineStart = 0;
+        while (lineStart < config.length()) {
+            int lineEnd = config.indexOf('\n', lineStart);
+            if (lineEnd < 0) lineEnd = config.length();
+            String line = config.substring(lineStart, lineEnd).trim();
+            lineStart = lineEnd + 1;
+
+            if (line.length() == 0 || line.charAt(0) == '#') continue;
+            int equals = line.indexOf('=');
+            if (equals < 0) continue;
+            if (line.substring(0, equals).trim().equals(key)) {
+                return line.substring(equals + 1).trim();
+            }
+        }
+        return null;
+    }
+
+    private static String readResourceText(String path) throws IOException {
+        InputStream input = FontRenderer.class.getResourceAsStream(path);
+        if (input == null) throw new IOException("Font config not found: " + path);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[256];
+        try {
+            int count;
+            while ((count = input.read(buffer)) != -1) {
+                if (count > 0) output.write(buffer, 0, count);
+            }
+            return new String(output.toByteArray(), "UTF-8");
+        } finally {
+            try {
+                input.close();
+            } catch (IOException ignored) {
             }
         }
     }

@@ -790,20 +790,80 @@ OBJ_NAMES = {
 }
 
 
+# Must stay byte-for-byte in sync with Texture.createColorPalettes().
+# Level 8 is the authored palette. The rest are approximately -3 .. +2 EV
+# around it in linear light; the upper half uses a soft highlight roll-off.
+_LIGHT_EXPOSURES = (32, 42, 54, 70, 91, 118, 152, 198,
+                    256, 312, 380, 464, 566, 690, 841, 1024)
+_DISPLAY_WHITE = 255
+_LINEAR_WHITE = _DISPLAY_WHITE * _DISPLAY_WHITE
+
+
+def _rounded_square_root(value):
+    # value never exceeds 255^2, so double sqrt is exact enough to floor it
+    # on every supported CPython version (keeps the editor Python 3.6-friendly).
+    root = int(math.sqrt(value))
+    next_root = root + 1
+    if next_root <= _DISPLAY_WHITE and value - root * root >= next_root * next_root - value:
+        return next_root
+    return root
+
+
+# Java uses this compact table with interpolation. The low range is handled
+# exactly in _encode_linear_channel to retain one-digit channel detail.
+_LINEAR_TO_DISPLAY = [_rounded_square_root(segment * _DISPLAY_WHITE)
+                      for segment in range(_DISPLAY_WHITE + 1)]
+
+
+def _encode_linear_channel(linear):
+    if linear <= _DISPLAY_WHITE:
+        return _rounded_square_root(linear)
+    segment, remainder = divmod(linear, _DISPLAY_WHITE)
+    low = _LINEAR_TO_DISPLAY[segment]
+    if remainder == 0 or segment == _DISPLAY_WHITE:
+        return low
+    high = _LINEAR_TO_DISPLAY[segment + 1]
+    return low + ((high - low) * remainder + (_DISPLAY_WHITE >> 1)) // _DISPLAY_WHITE
+
+
+def _shade_palette_channel(channel, exposure):
+    """Java Texture.shadeChannel(), using gamma-2 as a CLDC-friendly
+    approximation of display transfer."""
+    linear = channel * channel
+    if exposure <= 256:
+        shaded = (linear * exposure + 128) >> 8
+    else:
+        denominator = _LINEAR_WHITE * 256 + linear * (exposure - 256)
+        shaded = (linear * exposure * _LINEAR_WHITE + (denominator >> 1)) // denominator
+    return _encode_linear_channel(max(0, min(_LINEAR_WHITE, shaded)))
+
+
+# Same 16 x 256 cache as Texture.getShadedChannels(). Palette construction
+# below therefore stays cheap even when an editor reloads several atlases.
+_SHADED_CHANNELS = [[_shade_palette_channel(channel, exposure)
+                     for channel in range(_DISPLAY_WHITE + 1)]
+                    for exposure in _LIGHT_EXPOSURES]
+
+
 def create_color_palettes(colors):
-    """Texture.createColorPalettes: 16 уровней яркости, шаг 16, уровень 8 —
-    нейтральный."""
+    """Texture.createColorPalettes: гамма-корректное приближение освещения.
+
+    Нейтральная строка 8 сохраняет авторские цвета точно. Тёмные строки
+    масштабируют освещённость, а яркие мягко сжимают highlights, поэтому
+    тени не становятся неестественно насыщенными, а светлые пиксели не
+    выгорают в белый.
+    """
     pals = []
-    for level in range(16):
-        d = (level - 8) * 16
+    for level in range(len(_LIGHT_EXPOSURES)):
         row = []
+        channel_shade = _SHADED_CHANNELS[level]
         for c in colors:
-            r = (c >> 16) & 0xFF
-            g = (c >> 8) & 0xFF
-            b = c & 0xFF
-            r = max(0, min(255, r + d))
-            g = max(0, min(255, g + d))
-            b = max(0, min(255, b + d))
+            if level == 8:
+                row.append(c & 0xFFFFFF)
+                continue
+            r = channel_shade[(c >> 16) & 0xFF]
+            g = channel_shade[(c >> 8) & 0xFF]
+            b = channel_shade[c & 0xFF]
             row.append((r << 16) | (g << 8) | b)
         pals.append(row)
     return pals
@@ -978,10 +1038,13 @@ class Assets(object):
             return (96, 128, 192)
         if t is None:
             return (48, 48, 48)
-        d = (min(16, max(0, light)) - 8) * 16
-        return (max(0, min(255, t.avg[0] + d)),
-                max(0, min(255, t.avg[1] + d)),
-                max(0, min(255, t.avg[2] + d)))
+        level = min(15, max(0, light))
+        if level == 8:
+            return t.avg
+        exposure = _LIGHT_EXPOSURES[level]
+        return (_shade_palette_channel(t.avg[0], exposure),
+                _shade_palette_channel(t.avg[1], exposure),
+                _shade_palette_channel(t.avg[2], exposure))
 
     def sky_tex(self):
         return self.wall_tex.get(25)

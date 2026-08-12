@@ -34,6 +34,20 @@ public class WeaponManager {
         weapons[currentWeaponId].loadSprites();
     }
 
+    /** Selects the Doom pistol immediately after a Doom C3B level loads. */
+    public void activateDoomLoadout() {
+        if (currentWeaponId != WeaponFactory.PISTOL) {
+            weapons[currentWeaponId].unloadSprites();
+            currentWeaponId = WeaponFactory.PISTOL;
+            pendingWeaponId = WeaponFactory.PISTOL;
+            weapons[currentWeaponId].loadSprites();
+        }
+        switchAnimationActive = false;
+        animationState = 0;
+        spriteFrame = 0;
+        cooldownTimer = -32768;
+    }
+
     // ==================== Геттеры ====================
 
     public Weapon getCurrentWeapon() {
@@ -311,12 +325,6 @@ public class WeaponManager {
             }
         }
 
-        // Panzerfaust special case - show empty tube frame then switch
-        if (weapon.id == WeaponFactory.PANZERFAUST && spriteFrame == 1) {
-            spriteFrame = 2;
-            pendingWeaponId = findAvailableWeapon(WeaponFactory.PANZERFAUST, ammoCounts, weaponsAvailable);
-            startSwitch();
-        }
     }
     public void forceWeaponSwitch(int weaponId) {
         if (switchAnimationActive) {
@@ -370,10 +378,6 @@ public class WeaponManager {
     }
 
     public int getDisplayAmmoType() {
-        Weapon weapon = getCurrentWeapon();
-        if (weapon.id == WeaponFactory.RIFLE || weapon.id == WeaponFactory.STEN) {
-            return WeaponFactory.LUGER;
-        }
-        return weapon.getAmmoType();
+        return getCurrentWeapon().getAmmoType();
     }
 }

@@ -2,6 +2,10 @@ public final class GameObject {
     public Transform3D transform;
     public int objectType;
     public int detonationTimer;
+    // Optional Doom projectile data. Zero keeps all legacy projectiles on
+    // their original behavior without allocating a separate subtype.
+    public int projectileDamage;
+    public boolean projectileFromPlayer;
     // Sprite frame id lists: plain arrays instead of Vector - these are read
     // every frame in the renderer and Vector.elementAt is synchronized + boxes
     // every id into a Byte. Counts stay tiny (<=7 frames), arrays are exact.
@@ -16,6 +20,17 @@ public final class GameObject {
     public int screenY;
     public Texture upperBodyTexture;
     public Texture lowerBodyTexture;
+    // C3D custom entities use one centered billboard animation, not the
+    // inherited CovertOps upper/lower body split.
+    private byte[] externalBillboardSpriteIds;
+    private int externalBillboardFrameCount;
+    // Optional I..N Doom death sequence. Kept separate from normal AI states
+    // so idle/walk/attack indexes remain compact and legacy body sprites stay
+    // entirely untouched.
+    private byte[] externalBillboardDeathSpriteIds;
+    private int externalBillboardDeathFrameCount;
+    private int externalBillboardDeathFrameIndex;
+    public Texture externalBillboardTexture;
     public int upperBodyScreenWidth;
     public int upperBodyScreenHeight;
     public int lowerBodyScreenWidth;
@@ -27,6 +42,8 @@ public final class GameObject {
         this.projectionData = new Point2D(0, 0);
         this.objectType = type;
         this.detonationTimer = fuseTime;
+        this.projectileDamage = 0;
+        this.projectileFromPlayer = false;
         this.upperBodySpriteIds = new byte[4];
         this.lowerBodySpriteIds = new byte[4];
         this.spriteFrameCount = 0;
@@ -34,6 +51,12 @@ public final class GameObject {
         this.screenY = 0;
         this.upperBodyTexture = null;
         this.lowerBodyTexture = null;
+        this.externalBillboardSpriteIds = new byte[7];
+        this.externalBillboardFrameCount = 0;
+        this.externalBillboardDeathSpriteIds = null;
+        this.externalBillboardDeathFrameCount = 0;
+        this.externalBillboardDeathFrameIndex = 0;
+        this.externalBillboardTexture = null;
         this.upperBodyScreenWidth = 0;
         this.upperBodyScreenHeight = 0;
         this.lowerBodyScreenWidth = 0;
@@ -126,6 +149,94 @@ public final class GameObject {
         this.upperBodySpriteIds[this.spriteFrameCount] = upperSpriteId;
         this.lowerBodySpriteIds[this.spriteFrameCount] = lowerSpriteId;
         this.spriteFrameCount++;
+    }
+
+    /** Assigns one C3D billboard that stays centered over the floor. */
+    public final void setExternalBillboardSpriteId(byte spriteId) {
+        this.externalBillboardSpriteIds[0] = spriteId;
+        this.externalBillboardFrameCount = spriteId == 0 ? 0 : 1;
+    }
+
+    /** Assigns seven Doom actor state frames (idle/walk/attack/pain/death). */
+    public final void setExternalBillboardFrames(byte[] frames) {
+        int count = frames == null ? 0 : frames.length;
+        if (count > this.externalBillboardSpriteIds.length) {
+            count = this.externalBillboardSpriteIds.length;
+        }
+        for (int i = 0; i < count; ++i) {
+            this.externalBillboardSpriteIds[i] = frames[i];
+        }
+        for (int i = count; i < this.externalBillboardSpriteIds.length; ++i) {
+            this.externalBillboardSpriteIds[i] = 0;
+        }
+        this.externalBillboardFrameCount = count;
+    }
+
+    /** Assigns the complete Doom death strip: first pose through corpse. */
+    public final void setExternalBillboardDeathFrames(byte[] frames) {
+        int count = frames == null ? 0 : frames.length;
+        if (count > 8) count = 8;
+        if (count == 0) {
+            this.externalBillboardDeathFrameCount = 0;
+            this.externalBillboardDeathFrameIndex = 0;
+            return;
+        }
+        if (this.externalBillboardDeathSpriteIds == null
+                || this.externalBillboardDeathSpriteIds.length < count) {
+            this.externalBillboardDeathSpriteIds = new byte[8];
+        }
+        for (int i = 0; i < count; ++i) {
+            this.externalBillboardDeathSpriteIds[i] = frames[i];
+        }
+        for (int i = count; i < this.externalBillboardDeathSpriteIds.length; ++i) {
+            this.externalBillboardDeathSpriteIds[i] = 0;
+        }
+        this.externalBillboardDeathFrameCount = count;
+        this.externalBillboardDeathFrameIndex = 0;
+    }
+
+    /** Starts the optional external death strip and reports whether it exists. */
+    public final boolean beginExternalBillboardDeathAnimation() {
+        if (this.externalBillboardDeathFrameCount == 0) return false;
+        this.externalBillboardDeathFrameIndex = 0;
+        this.spriteFrameIndex = 5;
+        return true;
+    }
+
+    /** Moves to the next death pose; true once the final corpse pose is held. */
+    public final boolean advanceExternalBillboardDeathAnimation() {
+        if (this.externalBillboardDeathFrameCount == 0) return true;
+        if (this.externalBillboardDeathFrameIndex < this.externalBillboardDeathFrameCount - 1) {
+            ++this.externalBillboardDeathFrameIndex;
+            this.spriteFrameIndex = 5;
+            return false;
+        }
+        this.spriteFrameIndex = 6;
+        return true;
+    }
+
+    public final boolean hasExternalBillboardDeathAnimation() {
+        return this.externalBillboardDeathFrameCount > 0;
+    }
+
+    public final byte getExternalBillboardSpriteId() {
+        if (this.externalBillboardFrameCount == 0) return 0;
+        if (this.externalBillboardDeathFrameCount > 0 && this.spriteFrameIndex >= 5) {
+            int deathFrame = this.externalBillboardDeathFrameIndex;
+            if (deathFrame < 0) deathFrame = 0;
+            if (deathFrame >= this.externalBillboardDeathFrameCount) {
+                deathFrame = this.externalBillboardDeathFrameCount - 1;
+            }
+            byte deathSpriteId = this.externalBillboardDeathSpriteIds[deathFrame];
+            if (deathSpriteId != 0) return deathSpriteId;
+        }
+        int frame = this.spriteFrameIndex;
+        if (frame < 0) frame = 0;
+        if (frame >= this.externalBillboardFrameCount) {
+            frame = this.externalBillboardFrameCount - 1;
+        }
+        byte spriteId = this.externalBillboardSpriteIds[frame];
+        return spriteId != 0 ? spriteId : this.externalBillboardSpriteIds[0];
     }
 
     public final boolean compareDepth(GameObject other) {
